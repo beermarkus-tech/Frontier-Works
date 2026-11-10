@@ -18,6 +18,7 @@ Once installed it runs fullscreen and works offline. Saves live in the browser (
 - Conveyors Mk1–5, pipelines, splitters, mergers, sorting splitters, crossings, storage, tanks
 - Power grid with poles, fuses, and four generator types up to a fission reactor
 - Production planner (☰ Menu): plan a line from a node, or work backwards from a target rate
+- 2D map or full 3D view with zoom, rotate and tilt (button on the right, or V)
 - Overclocking, production stats, recipe codex, 1×/2×/4× speed, autosave
 
 ## Controls
@@ -31,6 +32,8 @@ Once installed it runs fullscreen and works offline. Saves live in the browser (
 | Dismantle | 🗑 button | X |
 | Copy building under cursor | — | Q |
 | Center on Base Core | ⌖ button | H |
+| 2D / 3D view | 3D/2D button | V |
+| Rotate / tilt (3D) | twist / two-finger slide up-down | right-drag, Ctrl+wheel, E/Z |
 
 ## Project layout
 ```
@@ -41,6 +44,8 @@ js/sim.js             state, map generation, entities, item transfer, topology, 
 js/render.js          terrain bake, building/item sprites, belts & pipes, particles, main render
 js/ui.js              toolbar, panels, actions
 js/plan.js            production planner (maths only, own localStorage key)
+js/view3d.js          optional 3D view (Three.js), same world and input actions as 2D
+js/lib/three.min.js   Three.js r149 (MIT, see js/lib/THREE-LICENSE.txt)
 js/input.js           pointer/touch/keyboard input, camera, minimap
 js/pwa.js             service-worker registration, update prompt, install button
 js/main.js            save/load, main loop, boot

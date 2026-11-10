@@ -24,7 +24,7 @@ function frame(now){
   else{cam.x+=(camT.x-cam.x)*k;cam.y+=(camT.y-cam.y)*k;cam.z+=(camT.z-cam.z)*k;}
  }
  if(keys.size){const sp=14*el/cam.z;let mx=0,my=0;if(keys.has('w')||keys.has('arrowup'))my-=sp;if(keys.has('s')||keys.has('arrowdown'))my+=sp;if(keys.has('a')||keys.has('arrowleft'))mx-=sp;if(keys.has('d')||keys.has('arrowright'))mx+=sp;if(mx||my){camT.x+=mx;camT.y+=my;cam.x+=mx;cam.y+=my;clampCam();}}
- render();drawMini(el);
+ if(V3.on)render3D(el);else{render();drawMini(el);}
  uiT+=el;if(uiT>0.3){uiT=0;updTop();if(UI.panel)renderPanel(false);}
  requestAnimationFrame(frame);
 }
@@ -42,5 +42,6 @@ let loaded=false;try{const s=localStorage.getItem('frontierworks_save');if(s){lo
 if(!loaded){newGame();}
 buildCats();layoutVars();
 requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
+if(V3.want)setView3D(true);
 setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),500);if(!loaded)openPanel('menu');},250);
-window.__fw={get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam};
+window.__fw={get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam,V3,C3,setView3D,v3Pick:(x,y)=>V3.ready&&(v3Cam(),v3Pick(x,y))};

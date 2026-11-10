@@ -167,3 +167,73 @@ Choices he made: **inside ☰ Menu**, **a "Show locked" switch** to plan with un
 ### Open questions for Markus
 - Should tapping a resource node on the map offer "Plan this node", opening the planner already filled in?
 - Session 1's open questions (session length per tier, vehicles/trains, save slots, sharing) are still open.
+
+---
+
+## Session 4 — 2026-11-10 (Claude Code, cloud session)
+
+### What Markus asked for
+A 3D view with a 2D/3D toggle: an airplane-eye view of the factory like Google Maps, with zoom, rotate and tilt.
+He chose the real-3D option (B), approved adding the Three.js library (~0.6 MB), and asked for the biggest safe step
+("all if you can"): view, inspect and build in 3D, and nice graphics.
+
+### What was built
+- `js/view3d.js` (new) and `js/lib/three.min.js` (Three.js r149, MIT, licence in `js/lib/THREE-LICENSE.txt`).
+  Three.js is loaded only the first time 3D is switched on, so the 2D start-up isn't slower; it's precached for offline use.
+- **Toggle:** a "3D"/"2D" button above ⌖ on the right, key V, and ☰ Menu → View. The camera position carries over both ways,
+  and the choice is remembered between visits.
+- **Camera:** one-finger pan with momentum; pinch zoom; two-finger twist rotates; two-finger slide up/down tilts
+  (about 17° to 87°); a compass button (shown in 3D) eases back to north and the default tilt; ⌖ / H flies to the Core.
+  Mouse: left-drag pan, right-drag rotate+tilt, wheel zoom to cursor, Ctrl+wheel tilt. Keys: WASD (relative to view), E/Z rotate.
+- **Everything playable in 3D:** tap to inspect (opens the same panels), tap to place, drag belts/pipes (green/red ghost
+  tiles plus a "N × Conveyor" label), dismantle by tap or drag. Ghost box under the mouse, selection and hover frames,
+  power-range rings while placing power buildings, grid while a tool is selected.
+- **World:** the existing painted terrain on a 3D ground with sunken lakes, an animated transparent water surface,
+  the map as an island in the sea with a sky gradient and soft distance fog. Trees, bushes and boulders as decoration
+  (hidden under buildings). Resource nodes as coloured rocks with purity dots; oil wells as glossy pools.
+- **Buildings:** a model for every building type (34) built from simple shapes in the 2D colours, with animations while working:
+  drill bits spin, presses stamp, assembler arms swing, fabricator gantry slides, blender drum turns, pump wheels and
+  pumpjack beams move, turbine fans spin, furnaces and incinerators glow, refinery flare flickers, reactor ring glows,
+  Core beacon rotates. Smoke and steam rise from chimneys and cooling towers. Status lights in the same colours as 2D.
+  Tanks show their fill level and fluid colour.
+- **Logistics:** belts with tier-coloured rails and moving treads (curves are real curves), items riding on belts with
+  15 different 3D shapes in their item colours, routers and crossings carrying items, pipes as tubes with a coloured
+  ring showing the fluid inside, sagging power wires (red when a fuse trips).
+- **Performance:** one draw call per building type, belt shape and item shape (InstancedMesh). The showcase factory
+  draws in about 30–60 calls. ☰ Menu → 3D quality High/Low (Low: no shadows, 1× resolution, no antialiasing until reload).
+  If High stays under 24 fps for 6 s, a toast suggests Low. If the browser drops the 3D context, the game returns to 2D.
+- `sw.js` VERSION → `fw-2026-11-10-4`, `view3d.js` + `three.min.js` added to `ASSETS`. DESIGN.md (§8a, §9, §10), README, CLAUDE.md updated.
+
+### Decisions (and why)
+- **Three.js r149**, not the newest: it's the last release that ships a plain-script build (global `THREE`). That fits the
+  no-build, classic-script setup and keeps offline caching simple.
+- **Same sim, same input actions:** 3D only converts a touch into a tile and calls the 2D `tap()`/`linePath()`/`buildPath()`.
+  So the rules can't drift between 2D and 3D. Saves are unchanged.
+- **Lazy loading:** players who stay in 2D never pay the parse cost. The file is still precached so 3D works offline.
+- Machines don't rotate in 3D (they're square and have no ports, as in 2D). Only 1×1 logistics pieces turn with their direction.
+- Trees are decoration only: they don't block building and vanish when you build on their tile.
+
+### Verified
+- `npm test`: 17/17 pass. New 3D checks: switch to 3D, tap the Core → its panel opens, tap with a Smelter selected → it's
+  placed on the right tile, drag with a belt selected → 7 belts in the right direction, it renders, switching back to 2D keeps the position.
+- Simulated phone touch (390×844, CDP touch events): pinch out zooms in, a clockwise twist rotates the map clockwise,
+  two fingers up tilts toward the horizon, one finger pans the right way.
+- Screenshots (desktop and phone) of a showcase with every building: close-up, oblique, top-down and low airplane views.
+  Low quality and Menu toggles checked, no page errors.
+
+### Known issues / not yet verified
+- **Not yet tried on a real phone.** Performance with big factories on older phones is unknown. Low quality is the fallback.
+- Terrain looks soft when zoomed very close (it's the 16 px/tile 2D painting stretched onto the ground).
+- Buildings next to a lake edge can overhang the sloped bank slightly. Buildings on the outermost map tiles overhang the island edge.
+- The 2D power-range circles and the build grid have simpler 3D equivalents. There's no "output item badge" on buildings in 3D yet.
+- No two-finger pan in 3D (two fingers zoom/rotate/tilt; one finger pans). This matches common map apps.
+
+### Next up
+- Markus: try 3D on the phone (button "3D" on the right), especially speed with a bigger factory, and the feel of rotate/tilt.
+- Possible polish: day/night lighting, item badges over machines, nicer power-tower lattice, a sharper close-up ground texture.
+- Then Session 1's list (playtest tiers 1–5, onboarding, undo) and "Plan this node" from the map.
+
+### Open questions for Markus
+- Does 3D feel smooth on your phone with High quality, or should Low be the default on phones?
+- Should 3D become the default view for new players, or stay opt-in?
+- Session 1's open questions are still open.

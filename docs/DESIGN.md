@@ -105,14 +105,28 @@ Hand mining gives +5 ore from a node.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
+### 8a. 3D view (agreed with Markus in Session 4)
+- A **2D/3D button** (right-side buttons, or key V, or ☰ Menu → View) switches between the flat map and a real 3D view
+  of the same world. It's the same game and the same save; only the drawing differs. The choice is remembered.
+- Camera like an online map: one finger drags, pinch zooms, twisting two fingers rotates, sliding two fingers up/down
+  tilts (from straight down to a low "airplane" angle). The compass button resets to north and the default tilt.
+  Mouse: left-drag pans, right-drag rotates/tilts, wheel zooms, Ctrl+wheel tilts. Keys: WASD move, E/Z rotate.
+- Everything works in 3D as in 2D: tap to inspect, place buildings, drag belts/pipes, dismantle (incl. drag-clear).
+- 3D look: the painted 2D terrain on the ground with sunken lakes and an animated water surface, the map as an island
+  in the sea, trees/bushes/boulders as decoration (they vanish where you build), resource nodes as coloured rocks,
+  each building as its own model built from simple shapes, animated while working (drill bits spin, presses stamp,
+  arms swing, furnaces glow, smoke/steam rise), moving belt treads with items riding on them, pipes showing their fluid,
+  sagging power wires, status lights, soft sun shadows.
+- **3D quality: High / Low** in ☰ Menu (Low: no shadows, lower resolution). If High runs slowly the game suggests Low.
+
 ## 9. Art direction
 - Top-down, soft lighting from the top-left, drop shadows, dark metal bases with a coloured machine body per type.
-- Everything is drawn in code (Canvas 2D). There are no image assets except the app icons.
+- Everything is drawn in code (Canvas 2D for the map, Three.js shapes for 3D). There are no image assets except the app icons.
 - Status LED per building (green working, yellow waiting, orange blocked, red no power) and an output-item badge.
 - Accent colour `#ffb547` (amber). Fonts: Inter (UI) and Rajdhani (headings), self-hosted.
 
 ## 10. Technical decisions
-- Plain JavaScript, no framework, no build step. Hosted on GitHub Pages and installable as a PWA (offline via `sw.js`).
+- Plain JavaScript, no framework, no build step. The only library is Three.js (MIT, vendored in `js/lib/`), loaded only when 3D is first used. Hosted on GitHub Pages and installable as a PWA (offline via `sw.js`).
 - Fixed-step simulation at 20 ticks/s, decoupled from rendering. Game speed can be 1×/2×/4×.
 - Saves: localStorage autosave every 30 s plus Export/Import as text. Saves are tied to the site's address.
 - New features must keep old saves loading.
