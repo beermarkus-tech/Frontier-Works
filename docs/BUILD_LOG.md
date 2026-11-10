@@ -84,3 +84,35 @@ if something changed, say so in a new entry. Design truth lives in `DESIGN.md`.
 - Should vehicles or trains ever come (currently out of scope)?
 - One save or several save slots?
 - Should the game be shareable (public link, leaderboard), or is it just for the family?
+
+---
+
+## Session 2 — 2026-11-10 (Claude Code, cloud session)
+
+### What Markus asked for
+"Look at the repo, read the relevant documents, and make sure that everything is there that you need."
+
+### What was checked
+- Read `CLAUDE.md`, `README.md`, `docs/DESIGN.md`, `docs/BUILD_LOG.md`, `sw.js`, `index.html`, the manifest and the tests.
+- Every file the README's project layout lists exists. Fonts (with OFL licences) and all icons are present.
+- Data matches the docs: 56 items, 56 recipes, 34 building types, 10 milestones, every milestone has `b` and `r`.
+- Every request the page makes on load succeeds (no 404s).
+- `npm test` passes all 6 checks without `npm install` (the cloud container has Playwright and Chromium preinstalled).
+
+### What was changed
+- `sw.js`: added `icons/icon.svg` to `ASSETS`. `index.html` uses it as the favicon, but it wasn't cached, so it was missing offline.
+  `VERSION` bumped to `fw-2026-11-10-2`.
+
+### Known issues / not yet verified
+- **GitHub Pages still unconfirmed.** This cloud session can't reach `github.io` (network policy), so whether
+  https://beermarkus-tech.github.io/Frontier-Works/ is live has to be checked by Markus in a browser.
+- **Claude Code sessions work on a `claude/...` branch, but Pages serves `main`.** Changes reach the phone only after
+  that branch is merged into `main` (via a pull request). Decide how Markus wants this to work (see open questions).
+- Everything from Session 1's known issues still stands.
+
+### Next up
+Unchanged from Session 1 — start with confirming the Pages deploy and installing on the phone.
+
+### Open questions for Markus
+- After each session, should Claude open a pull request for you to merge, or is there a different flow you prefer?
+- Session 1's open questions (session length per tier, vehicles/trains, save slots, sharing) are still open.
