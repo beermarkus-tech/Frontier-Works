@@ -80,7 +80,7 @@ function v3Init(){
  // shared geometry (unit sized; parts are scaled by matrices)
  const G={box:new T3.BoxGeometry(1,1,1),cyl:new T3.CylinderGeometry(0.5,0.5,1,18),cyl6:new T3.CylinderGeometry(0.5,0.5,1,6),cone:new T3.ConeGeometry(0.5,1,16),
   sph:new T3.SphereGeometry(0.5,16,12),tor:new T3.TorusGeometry(0.5,0.09,8,28),torThin:new T3.TorusGeometry(0.5,0.035,6,40),oct:new T3.OctahedronGeometry(0.5),dod:new T3.DodecahedronGeometry(0.5),
-  frust:new T3.CylinderGeometry(0.22,0.5,1,4),lowcone:new T3.ConeGeometry(0.5,1,7),tower:new T3.LatheGeometry([...Array(9)].map((_,i)=>{const t=i/8;return new T3.Vector2(0.5-0.2*Math.sin(t*Math.PI*0.85)+0.02*t,t-0.5);}),20)};
+  frust:new T3.CylinderGeometry(0.22,0.5,1,4),lowcone:new T3.ConeGeometry(0.5,1,7,1,true),lowcyl:new T3.CylinderGeometry(0.5,0.5,1,6,1,true),lowsph:new T3.SphereGeometry(0.5,7,5),ico:new T3.IcosahedronGeometry(0.5,0),tower:new T3.LatheGeometry([...Array(9)].map((_,i)=>{const t=i/8;return new T3.Vector2(0.5-0.2*Math.sin(t*Math.PI*0.85)+0.02*t,t-0.5);}),20)};
  G.frust.rotateY(Math.PI/4);V3.G=G;
  V3.mat=v3Mat();V3.glowMat=new T3.MeshBasicMaterial({color:0xffffff});
  v3Models();v3Lines();v3ItemsInit();v3SmokeInit();v3Overlays();
@@ -96,37 +96,76 @@ function v3Quality(){
 }
 
 /* ---------- terrain, water, decoration ---------- */
+function v3H(x,z){   // ground height at a mesh vertex: lakes sink, the map edge drops into the sea
+ if(x<=0.01||z<=0.01||x>=MW-0.01||z>=MH-0.01)return -1.6;
+ const isW=(x,y)=>x<0||y<0||x>=MW||y>=MH||terr[y*MW+x]===1,fx=Math.floor(x),fz=Math.floor(z),cx=x-fx,cz=z-fz;
+ if(cx>0.25&&cz>0.25)return isW(fx,fz)?-0.55:0;
+ const xs=cx<0.25?[fx-1,fx]:[fx],zs=cz<0.25?[fz-1,fz]:[fz];for(const a of xs)for(const b of zs)if(!isW(a,b))return 0;return -0.5;
+}
+/* Ground = one coarse piece per chunk (overview texture, always there) + detailed chunks near the camera (chunk texture). */
 function v3Terrain(){
- const sc=V3.scene;V3.seed=S.seed;
- for(const k of ['ground','water','floor'])if(V3[k]){sc.remove(V3[k]);V3[k].geometry.dispose();}
- if(V3.tex)V3.tex.dispose();
- const geo=new T3.PlaneGeometry(MW,MH,MW*2,MH*2);geo.rotateX(-Math.PI/2);geo.translate(MW/2,0,MH/2);
- const P=geo.attributes.position,isW=(x,y)=>x<0||y<0||x>=MW||y>=MH||terr[y*MW+x]===1;
- for(let i=0;i<P.count;i++){const x=P.getX(i),z=P.getZ(i);let h=0;
-  if(x<=0.01||z<=0.01||x>=MW-0.01||z>=MH-0.01)h=-1.6;
-  else{const fx=Math.floor(x),fz=Math.floor(z),cx=x-fx,cz=z-fz;
-   if(cx>0.25&&cz>0.25){if(isW(fx,fz))h=-0.55;}          // tile centre
-   else{const xs=cx<0.25?[fx-1,fx]:[fx],zs=cz<0.25?[fz-1,fz]:[fz];let all=true;for(const a of xs)for(const b of zs)if(!isW(a,b))all=false;if(all)h=-0.5;}}
-  P.setY(i,h);}
- geo.computeVertexNormals();
- const tex=new T3.CanvasTexture(terrC);tex.anisotropy=Math.min(8,V3.r.capabilities.getMaxAnisotropy());V3.tex=tex;
- V3.ground=new T3.Mesh(geo,new T3.MeshStandardMaterial({map:tex,roughness:1,metalness:0}));V3.ground.receiveShadow=true;sc.add(V3.ground);
+ const sc=V3.scene;V3.mapGen=mapGen;C3L.dmax=Math.max(170,MW*1.3);
+ for(const k of ['water','floor'])if(V3[k]){sc.remove(V3[k]);V3[k].geometry.dispose();}
+ v3ClearChunks();
+ if(V3.coarse)for(const m of V3.coarse){sc.remove(m);m.geometry.dispose();}
+ if(V3.oTex)V3.oTex.dispose();
+ const ot=new T3.CanvasTexture(terrO);ot.anisotropy=Math.min(8,V3.r.capabilities.getMaxAnisotropy());V3.oTex=ot;
+ if(!V3.oMat)V3.oMat=new T3.MeshStandardMaterial({roughness:1,metalness:0});V3.oMat.map=ot;V3.oMat.needsUpdate=true;
+ V3.coarse=[];const NX=MW/CH,NY=MH/CH;
+ for(let cy=0;cy<NY;cy++)for(let cx=0;cx<NX;cx++){const g=new T3.PlaneGeometry(CH,CH,CH/2,CH/2);g.rotateX(-Math.PI/2);g.translate(cx*CH+CH/2,0,cy*CH+CH/2);
+  const P=g.attributes.position,UV=g.attributes.uv;for(let i=0;i<P.count;i++){const x=P.getX(i),z=P.getZ(i);P.setY(i,v3H(x,z)-0.05);UV.setXY(i,x/MW,1-z/MH);}
+  g.computeVertexNormals();const m=new T3.Mesh(g,V3.oMat);m.receiveShadow=true;sc.add(m);V3.coarse.push(m);}
  // sea floor around the island and the animated water surface
- V3.floor=new T3.Mesh(new T3.PlaneGeometry(3000,3000).rotateX(-Math.PI/2),new T3.MeshStandardMaterial({color:'#123a5e',roughness:1}));V3.floor.position.set(MW/2,-1.55,MH/2);sc.add(V3.floor);
+ V3.floor=new T3.Mesh(new T3.PlaneGeometry(4000,4000).rotateX(-Math.PI/2),new T3.MeshStandardMaterial({color:'#123a5e',roughness:1}));V3.floor.position.set(MW/2,-1.55,MH/2);sc.add(V3.floor);
  if(!V3.wNorm){V3.wNorm=new T3.CanvasTexture(v3Canvas(128,128,(g,w,h)=>{const im=g.createImageData(w,h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const a=2*Math.PI/w;
     const dx=Math.cos(x*a*3+y*a*2)*0.5+Math.cos(x*a*7-y*a*5)*0.3+Math.sin(x*a*11+y*a*13)*0.2,dy=Math.cos(y*a*4-x*a*1)*0.5+Math.sin(y*a*9+x*a*6)*0.3+Math.cos(x*a*5+y*a*12)*0.2;
     const i=(y*w+x)*4;im.data[i]=128+dx*60;im.data[i+1]=128+dy*60;im.data[i+2]=255;im.data[i+3]=255;}g.putImageData(im,0,0);}));
-  V3.wNorm.wrapS=V3.wNorm.wrapT=T3.RepeatWrapping;V3.wNorm.repeat.set(220,220);}
- V3.water=new T3.Mesh(new T3.PlaneGeometry(3000,3000).rotateX(-Math.PI/2),new T3.MeshStandardMaterial({color:'#3f93d6',transparent:true,opacity:0.58,roughness:0.12,metalness:0.05,normalMap:V3.wNorm,normalScale:new T3.Vector2(0.45,0.45),depthWrite:false}));
+  V3.wNorm.wrapS=V3.wNorm.wrapT=T3.RepeatWrapping;V3.wNorm.repeat.set(290,290);}
+ V3.water=new T3.Mesh(new T3.PlaneGeometry(4000,4000).rotateX(-Math.PI/2),new T3.MeshStandardMaterial({color:'#3f93d6',transparent:true,opacity:0.58,roughness:0.12,metalness:0.05,normalMap:V3.wNorm,normalScale:new T3.Vector2(0.45,0.45),depthWrite:false}));
  V3.water.position.set(MW/2,-0.12,MH/2);V3.water.receiveShadow=true;V3.water.renderOrder=2;sc.add(V3.water);
- // decoration candidates (hidden where something is built)
- const dec=V3.dec=[];
- for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++){const t=terr[y*MW+x],h=hash2(x*3+1,y*5+2),d=Math.hypot(x-MW/2,y-MH/2);
-  if(nodeAt[y*MW+x])continue;
-  if(t===3&&h<0.42)dec.push({k:'rock',x,y,h});
-  else if(t===0&&d>11&&h<0.035)dec.push({k:'tree',x,y,h});
-  else if(t===0&&d>8&&h>0.965)dec.push({k:'bush',x,y,h});}
- V3.sig=null;
+ if(V3.grid){sc.remove(V3.grid);V3.grid.geometry.dispose();}
+ V3.grid=new T3.GridHelper(MW,MW,0xffffff,0xffffff);V3.grid.position.set(MW/2,0.03,MH/2);V3.grid.material.transparent=true;V3.grid.material.opacity=0.07;V3.grid.material.depthWrite=false;V3.grid.visible=false;sc.add(V3.grid);
+ // decoration candidates per biome (shown near the camera, hidden where something is built)
+ const dec=V3.dec=[],KD=['tree','snowtree','cactus','dead','bush','reed','rockg','crack'];
+ for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++){const i=y*MW+x,t=terr[i];if(t===1||nodeAt[i])continue;
+  const sp=BIOMES[bio[i]].d3,h=hash2(x*3+1,y*5+2),h2=hash2(y*7+3,x*11+5),d=Math.hypot(x-MW/2,y-MH/2);
+  if(t===3){if(h<(sp.rock||0))dec.push({k:'rock',x,y,h,c:sp.rockc});else if(sp.crack&&h2<sp.crack*2)dec.push({k:'crack',x,y,h});continue;}
+  if(d<10)continue;
+  const wet=terr[i-1]===1||terr[i+1]===1||terr[i-MW]===1||terr[i+MW]===1;let acc=0;
+  for(const k of KD){let pr=sp[k]||0;if(k==='reed'&&!wet)pr=0;if((k==='tree'||k==='snowtree'||k==='bush')&&t===2)pr=0;
+   if(h<acc+pr){dec.push({k:k==='rockg'?'rock':k,x,y,h:h2,c:sp.rockc});break;}acc+=pr;}}
+ V3.sig=null;V3.decDirty=true;
+}
+function v3ClearChunks(){if(!V3.chunks)V3.chunks=new Map();for(const o of V3.chunks.values()){V3.scene.remove(o);o.geometry.dispose();o.material.map.dispose();o.material.dispose();}V3.chunks.clear();}
+function v3Chunks(){
+ const NX=MW/CH,NY=MH/CH,want=new Map(),max=V3.q==='high'?28:16;
+ if(C3.dist<150){const R=v3cl(C3.dist*1.5,24,96),L=[];
+  for(let cy=0;cy<NY;cy++)for(let cx=0;cx<NX;cx++){const dx=Math.max(0,Math.abs(cx*CH+CH/2-C3.x)-CH/2),dz=Math.max(0,Math.abs(cy*CH+CH/2-C3.y)-CH/2),d=Math.hypot(dx,dz);if(d<R)L.push([d,cx,cy]);}
+  L.sort((a,b)=>a[0]-b[0]);for(const [,cx,cy] of L.slice(0,max))want.set(cy*1024+cx,[cx,cy]);}
+ for(const [k,o] of V3.chunks)if(!want.has(k)){V3.scene.remove(o);o.geometry.dispose();o.material.map.dispose();o.material.dispose();V3.coarse[o.userData.ci].visible=true;V3.chunks.delete(k);}
+ bakeT0=performance.now();
+ for(const [k,[cx,cy]] of want){if(V3.chunks.has(k))continue;const c=getChunk(cx,cy,bakeBudget());if(!c)continue;
+  const g=new T3.PlaneGeometry(CH,CH,CH*2,CH*2);g.rotateX(-Math.PI/2);g.translate(cx*CH+CH/2,0,cy*CH+CH/2);const P=g.attributes.position;
+  for(let i=0;i<P.count;i++)P.setY(i,v3H(P.getX(i),P.getZ(i)));g.computeVertexNormals();
+  const tex=new T3.CanvasTexture(c);tex.anisotropy=Math.min(8,V3.r.capabilities.getMaxAnisotropy());
+  const m=new T3.Mesh(g,new T3.MeshStandardMaterial({map:tex,roughness:1,metalness:0}));m.receiveShadow=true;m.userData.ci=cy*NX+cx;V3.scene.add(m);V3.chunks.set(k,m);V3.coarse[m.userData.ci].visible=false;}
+}
+function v3Decor(){
+ const R=v3cl(30+C3.dist*0.9,40,120),A=V3.decAt,keep=C3.dist<70?1:70/C3.dist;
+ if(!V3.decDirty&&A&&Math.abs(C3.x-A.x)<R*0.25&&Math.abs(C3.y-A.y)<R*0.25&&Math.abs(R-A.R)<R*0.15)return;
+ V3.decDirty=false;V3.decAt={x:C3.x,y:C3.y,R};
+ const T=V3T,P=V3.decP,D={rock:[],tree:[],snowtree:[],bush:[],cactus:[],reed:[],dead:[],crack:[]};
+ for(const d of V3.dec){if(Math.abs(d.x-C3.x)>R||Math.abs(d.y-C3.y)>R||grid[d.y*MW+d.x])continue;if(keep<1&&hash2(d.x+17,d.y+31)>keep)continue;D[d.k].push(d);}
+ const at=(d,jx,jz)=>T.v.set(d.x+0.5+(hash2(d.x,d.y)-0.5)*jx,0,d.y+0.5+(hash2(d.y,d.x)-0.5)*jz);
+ let ms=v3PoolN(P.rock,D.rock.length);D.rock.forEach((d,i)=>{T.e.set(0,d.h*40,0);T.q.setFromEuler(T.e);const s=0.7+d.h*1.2;ms.setMatrixAt(i,T.m.compose(at(d,0.4,0.4),T.q,T.s.set(s,s*(0.8+hash2(d.x+5,d.y)),s)));ms.setColorAt(i,T.c.set(d.c||'#8b857a').offsetHSL(0,0,(hash2(d.x*2,d.y)-0.5)*0.12));});
+ const trees=[...D.tree,...D.snowtree],stems=[...trees,...D.dead];
+ const tr=v3PoolN(P.trunk,stems.length),cr=v3PoolN(P.crown,trees.length);
+ stems.forEach((d,i)=>{const dead=d.k==='dead',s=0.8+hash2(d.x,d.y*3)*0.6;T.e.set(dead?(d.h-0.5)*0.4:0,d.h*90,0);T.q.setFromEuler(T.e);T.m.compose(at(d,0,0),T.q,T.s.set(s,dead?s*1.9:s,s));tr.setMatrixAt(i,T.m);
+  tr.setColorAt(i,T.c.set(dead?'#7c7268':'#6a4a30'));if(!dead){cr.setMatrixAt(i,T.m);cr.setColorAt(i,d.k==='snowtree'?T.c.set('#e6eef3').offsetHSL(0,0,(hash2(d.x,d.y*9)-0.5)*0.06):T.c.set('#3f7a3a').offsetHSL((hash2(d.y,d.x*7)-0.5)*0.05,0,(hash2(d.x,d.y*9)-0.5)*0.12));}});
+ ms=v3PoolN(P.bush,D.bush.length);D.bush.forEach((d,i)=>{const s=0.6+hash2(d.x*3,d.y)*0.8;ms.setMatrixAt(i,T.m.compose(at(d,0.5,0.5),T.q.identity(),T.s.set(s,s,s)));ms.setColorAt(i,T.c.set('#5d8f3e').offsetHSL(0,0,(hash2(d.y*4,d.x)-0.5)*0.12));});
+ ms=v3PoolN(P.cactus,D.cactus.length);D.cactus.forEach((d,i)=>{const s=0.7+d.h*0.6;T.e.set(0,d.h*50,0);T.q.setFromEuler(T.e);ms.setMatrixAt(i,T.m.compose(at(d,0.4,0.4),T.q,T.s.set(s,s,s)));ms.setColorAt(i,T.c.set('#4f8a3a').offsetHSL(0,0,(d.h-0.5)*0.1));});
+ ms=v3PoolN(P.reed,D.reed.length);D.reed.forEach((d,i)=>{const s=0.8+d.h*0.5;T.e.set(0,d.h*70,0);T.q.setFromEuler(T.e);ms.setMatrixAt(i,T.m.compose(at(d,0.5,0.5),T.q,T.s.set(s,s,s)));ms.setColorAt(i,T.c.set('#8d9a52').offsetHSL(0,0,(d.h-0.5)*0.12));});
+ ms=v3PoolN(P.crack,D.crack.length);D.crack.forEach((d,i)=>{T.e.set(0,d.h*60,0);T.q.setFromEuler(T.e);ms.setMatrixAt(i,T.m.compose(at(d,0.5,0.5),T.q,T.s.set(0.8+d.h,1,1)));ms.setColorAt(i,T.c.set('#e0561c').multiplyScalar(0.75+d.h*0.4));});
 }
 
 /* ---------- building models ----------
@@ -275,14 +314,16 @@ function v3Overlays(){
  V3.range=v3Pool(ring,new T3.MeshBasicMaterial({color:0xffd75a,transparent:true,opacity:0.55,depthWrite:false}),{order:6});
  const disc=new T3.CircleGeometry(1,48);disc.rotateX(-Math.PI/2);
  V3.rangeFill=v3Pool(disc,new T3.MeshBasicMaterial({color:0xffd75a,transparent:true,opacity:0.07,depthWrite:false}),{order:5});
- V3.grid=new T3.GridHelper(MW,MW,0xffffff,0xffffff);V3.grid.position.set(MW/2,0.03,MH/2);V3.grid.material.transparent=true;V3.grid.material.opacity=0.07;V3.grid.material.depthWrite=false;V3.grid.visible=false;V3.scene.add(V3.grid);
  const dg=V3.G;
- V3.decP={rock:v3Pool(v3Merge([{g:dg.dod,m:new T3.Matrix4().makeScale(0.55,0.36,0.5),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.95,flatShading:true}),{color:1,cast:1,recv:1}),
-  trunk:v3Pool(v3Merge([{g:dg.cyl,m:new T3.Matrix4().compose(new T3.Vector3(0,0.3,0),new T3.Quaternion(),new T3.Vector3(0.14,0.6,0.14)),c:v3col('#6a4a30')}]),V3.mat,{cast:1}),
+ V3.decP={rock:v3Pool(v3Merge([{g:dg.ico,m:new T3.Matrix4().makeScale(0.55,0.36,0.5),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.95,flatShading:true}),{color:1,cast:1,recv:1}),
+  trunk:v3Pool(v3Merge([{g:dg.lowcyl,m:new T3.Matrix4().compose(new T3.Vector3(0,0.3,0),new T3.Quaternion(),new T3.Vector3(0.14,0.6,0.14)),c:v3col('#ffffff')}]),V3.mat,{cast:1,color:1}),
+  cactus:v3Pool(v3Merge([{g:dg.lowcyl,m:new T3.Matrix4().compose(new T3.Vector3(0,0.5,0),new T3.Quaternion(),new T3.Vector3(0.24,1.0,0.24)),c:v3col('#ffffff')},{g:dg.lowcyl,m:new T3.Matrix4().compose(new T3.Vector3(0.2,0.55,0),new T3.Quaternion(),new T3.Vector3(0.14,0.34,0.14)),c:v3col('#ffffff')},{g:dg.lowcyl,m:new T3.Matrix4().compose(new T3.Vector3(-0.19,0.7,0),new T3.Quaternion(),new T3.Vector3(0.13,0.3,0.13)),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.8,vertexColors:true}),{color:1,cast:1,recv:1}),
+  reed:v3Pool(v3Merge([[-0.12,0.05,0.7],[0.08,-0.1,0.85],[0.1,0.12,0.6],[-0.05,0.14,0.75]].map(([x,z,h])=>({g:dg.lowcyl,m:new T3.Matrix4().compose(new T3.Vector3(x,h/2,z),new T3.Quaternion(),new T3.Vector3(0.05,h,0.05)),c:v3col('#ffffff')}))),new T3.MeshStandardMaterial({roughness:0.9,vertexColors:true}),{color:1,cast:1}),
+  crack:v3Pool(v3Merge([[0,0,0.36,0],[0.2,0.07,0.3,0.75],[0.36,0.2,0.22,-0.4],[-0.2,-0.04,0.28,0.5]].map(([x,z,l,r])=>({g:dg.box,m:new T3.Matrix4().compose(new T3.Vector3(x,0.015,z),new T3.Quaternion().setFromEuler(new T3.Euler(0,r,0)),new T3.Vector3(l,0.02,0.045)),c:v3col('#ffffff')}))),V3.glowMat,{color:1}),
   crown:v3Pool(v3Merge([{g:dg.lowcone,m:new T3.Matrix4().compose(new T3.Vector3(0,1.05,0),new T3.Quaternion(),new T3.Vector3(0.85,1.3,0.85)),c:v3col('#ffffff')},{g:dg.lowcone,m:new T3.Matrix4().compose(new T3.Vector3(0,1.55,0),new T3.Quaternion(),new T3.Vector3(0.6,0.9,0.6)),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.9,flatShading:true}),{color:1,cast:1,recv:1}),
-  bush:v3Pool(v3Merge([{g:dg.sph,m:new T3.Matrix4().compose(new T3.Vector3(0,0.15,0),new T3.Quaternion(),new T3.Vector3(0.5,0.35,0.45)),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.9,flatShading:true}),{color:1,cast:1,recv:1}),
-  node:v3Pool(v3Merge([{g:dg.dod,m:new T3.Matrix4().makeScale(1,0.8,1),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.6,metalness:0.15,flatShading:true}),{color:1,cast:1,recv:1}),
-  pur:v3Pool(dg.sph,V3.glowMat,{color:1}),
+  bush:v3Pool(v3Merge([{g:dg.lowsph,m:new T3.Matrix4().compose(new T3.Vector3(0,0.15,0),new T3.Quaternion(),new T3.Vector3(0.5,0.35,0.45)),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.9,flatShading:true}),{color:1,cast:1,recv:1}),
+  node:v3Pool(v3Merge([{g:dg.ico,m:new T3.Matrix4().makeScale(1,0.8,1),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.6,metalness:0.15,flatShading:true}),{color:1,cast:1,recv:1}),
+  pur:v3Pool(dg.ico,V3.glowMat,{color:1}),
   oil:v3Pool(v3Merge([{g:dg.cyl,m:new T3.Matrix4().makeScale(0.8,0.04,0.65),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.05,metalness:0.6}),{color:1,recv:1})};
 }
 
@@ -315,12 +356,9 @@ function v3Layout(){
  if(V3.wires){V3.scene.remove(V3.wires);V3.wires.geometry.dispose();}
  const wg=new T3.BufferGeometry();wg.setAttribute('position',new T3.Float32BufferAttribute(pos,3));wg.setAttribute('color',new T3.Float32BufferAttribute(col,3));
  V3.wires=new T3.LineSegments(wg,V3.wireMat);V3.wires.frustumCulled=false;V3.scene.add(V3.wires);V3.trip=v3TripSig();
- // decoration and resource nodes (hidden under buildings)
- const D={rock:[],tree:[],bush:[]};for(const d of V3.dec)if(!grid[d.y*MW+d.x])D[d.k].push(d);
- const P=V3.decP;
- let ms=v3PoolN(P.rock,D.rock.length);D.rock.forEach((d,i)=>{T.e.set(0,d.h*40,0);T.q.setFromEuler(T.e);const s=0.7+d.h*1.2;ms.setMatrixAt(i,T.m.compose(T.v.set(d.x+0.3+hash2(d.x,d.y)*0.4,0,d.y+0.3+hash2(d.y,d.x)*0.4),T.q,T.s.set(s,s*(0.8+hash2(d.x+5,d.y)),s)));ms.setColorAt(i,T.c.set('#8b857a').offsetHSL(0,0,(hash2(d.x*2,d.y)-0.5)*0.12));});
- const tr=v3PoolN(P.trunk,D.tree.length),cr=v3PoolN(P.crown,D.tree.length);D.tree.forEach((d,i)=>{const s=0.8+hash2(d.x,d.y*3)*0.6;T.e.set(0,d.h*90,0);T.q.setFromEuler(T.e);T.m.compose(T.v.set(d.x+0.5,0,d.y+0.5),T.q,T.s.set(s,s,s));tr.setMatrixAt(i,T.m);cr.setMatrixAt(i,T.m);cr.setColorAt(i,T.c.set('#3f7a3a').offsetHSL((hash2(d.y,d.x*7)-0.5)*0.05,0,(hash2(d.x,d.y*9)-0.5)*0.12));});
- ms=v3PoolN(P.bush,D.bush.length);D.bush.forEach((d,i)=>{const s=0.6+hash2(d.x*3,d.y)*0.8;ms.setMatrixAt(i,T.m.compose(T.v.set(d.x+0.5,0,d.y+0.5),T.q.identity(),T.s.set(s,s,s)));ms.setColorAt(i,T.c.set('#5d8f3e').offsetHSL(0,0,(hash2(d.y*4,d.x)-0.5)*0.12));});
+ V3.decDirty=true;
+ // resource nodes (hidden under buildings)
+ let ms;const P=V3.decP;
  const nd=[],pu=[],oil=[];for(const n of nodes){if(grid[n.y*MW+n.x])continue;if(n.t==='oil')oil.push(n);else{for(let k=0;k<4;k++)nd.push([n,k]);for(let k=0;k<=n.p;k++)pu.push([n,k]);}}
  ms=v3PoolN(P.node,nd.length);nd.forEach(([n,k],i)=>{const ox=(hash2(n.x*7+k,n.y)-0.5)*0.5,oz=(hash2(n.x,n.y*7+k)-0.5)*0.45,r=0.34+hash2(k,n.x+n.y)*0.2;T.e.set(hash2(k,n.x)*3,hash2(n.y,k)*6,0);T.q.setFromEuler(T.e);
   ms.setMatrixAt(i,T.m.compose(T.v.set(n.x+0.5+ox,r*0.25,n.y+0.5+oz),T.q,T.s.set(r,r,r)));ms.setColorAt(i,T.c.set(NODE_T[n.t][1]));});
@@ -462,7 +500,7 @@ function v3Input(){
 function render3D(el){
  if(!V3.ready)return;
  const t=animT;
- if(S.seed!==V3.seed)v3Terrain();
+ if(V3.mapGen!==mapGen)v3Terrain();
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
@@ -470,9 +508,11 @@ function render3D(el){
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}
- V3.sky.position.copy(V3.camera.position);
+ const cm=V3.camera,nr=Math.max(0.3,C3.dist*0.02),fr=Math.max(1400,C3.dist*3+700);if(cm.near!==nr||cm.far!==fr){cm.near=nr;cm.far=fr;cm.updateProjectionMatrix();}
+ V3.sky.position.copy(V3.camera.position);V3.sky.scale.setScalar(fr/1500);
  V3.scene.fog.near=C3.dist*1.4+10;V3.scene.fog.far=C3.dist*4.5+80;
  V3.smU.scale.value=V3.r.domElement.height/(2*Math.tan(22.5*Math.PI/180));
+ v3Chunks();v3Decor();
  V3.r.render(V3.scene,V3.camera);
  // suggest low quality if the phone struggles
  V3.fps=V3.fps*0.95+(1/Math.max(0.001,el))*0.05;

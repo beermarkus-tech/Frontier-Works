@@ -237,3 +237,70 @@ He chose the real-3D option (B), approved adding the Three.js library (~0.6 MB),
 - Does 3D feel smooth on your phone with High quality, or should Low be the default on phones?
 - Should 3D become the default view for new players, or stay opt-in?
 - Session 1's open questions are still open.
+
+---
+
+## Session 5 — 2026-11-10 (Claude Code, cloud session)
+
+### What Markus asked for
+"The map needs to be a lot bigger, and how about different biomes with specific resource probabilities."
+He went with my recommendations: **384×384** (9× the area), **seven biomes affecting look and resources only**,
+**old saves keep their map**, and a **planner hint** for where to find resources.
+
+### What was built
+- **Map size per save:** `MW`/`MH` are now variables. New games are 384×384 (`S.gen=2`, `S.mw=384`). Old saves
+  (no `gen`) load as 128×128 through the unchanged classic generator (`genClassic`), so buildings stay on their nodes.
+- **Biome generator** (`genBiome`): biome seed points on a jittered 48-tile grid get a biome by distance from the start
+  (Greenvale near the middle, Emberfield/Frostmark toward the edge). Each tile takes the nearest point, with warped
+  coordinates for organic borders. Every biome is guaranteed to appear. Terrain thresholds (water, sand, rock) are
+  per biome and blended across borders. About 1 node per 105 land tiles (~1,300 on a 384 map), chosen by the biome's resource weights,
+  distance gates and purity bias. Each resource is topped up to at least 8 nodes in its favourite biomes. The start area,
+  guaranteed starter nodes and pond are the same as before.
+- **`BIOMES` table in `js/data.js`:** names, descriptions, terrain thresholds, ground palette (8 colours), 2D detail
+  (tufts, flowers, stones, snow/ember specks), 3D decoration odds, resource weights, purity bias, density.
+- **Chunked terrain painter** (`js/render.js`): the whole-map 2048² canvas is replaced by 32×32-tile chunks painted on demand
+  (512² px each, ~20 ms, an 8 ms budget per frame, nearest first, LRU of 48) plus one overview picture (3 px/tile on big maps)
+  for the minimap, far zoom and as a stand-in while a chunk paints. Biome colours blend smoothly between tiles. All
+  random detail is hashed per tile, so chunk edges match. Old maps use the Greenvale palette, which is the original one.
+- **3D** (`js/view3d.js`): the ground is one coarse piece per chunk (overview texture) plus up to 28 detailed chunks
+  (16 on Low) near the camera. Biome decoration (pines, snowy pines, cacti, reeds, dead trees, bushes, biome-coloured
+  rocks, glowing lava cracks) is drawn only near the camera and thinned out when zoomed out. Zoom-out goes up to the whole island.
+  The depth range follows the zoom (fixes stripes when very high). Cheaper shapes for decoration, node rocks and purity dots.
+- **UI:** the node panel shows the biome; an "Entering Pinewood: …" message when the view moves into another biome;
+  the planner's raw-resource rows say "found mostly in Frostmark and Emberfield"; the New-map dialog mentions the size.
+- `sw.js` VERSION → `fw-2026-11-10-5`. DESIGN.md §3 (World), README, CLAUDE.md updated.
+
+### Decisions (and why)
+- **Old saves untouched:** regenerating an old seed with biomes would move resources under existing buildings.
+  A check compares the classic generator's output with the previous release: identical.
+- **Biomes don't change rules** (Markus's choice): everything stays buildable everywhere. Dustreach simply has few lakes.
+- **Chunks instead of one picture:** a 384-tile map at full detail would be a 6144² canvas, beyond what phones allow.
+  Painting on demand also makes startup lighter. A new map paints about 1.3 M overview pixels vs 4.2 M before.
+- Biome borders blend over ~7 tiles in colour and terrain, so there are no hard seams.
+
+### Verified
+- `npm test`: 21/21 pass. New checks: new map is 384×384 with all 7 biomes (each > 2,000 tiles) and Greenvale at the start;
+  all 9 resources exist and uranium is mostly in Frostmark/Emberfield (84 of 96 in the test seed); a chunk paints;
+  save → load keeps the big map; an old-format save loads as the 128 classic map (core and nodes where they were).
+- Separately, the classic map from this version was compared with the previous release for the same seed: terrain and nodes are identical.
+- Generation of a 384 map ≈ 0.5 s on the test machine (likely 1–2 s on a phone). One chunk ≈ 22 ms to paint.
+- 3D on the big map: 20–160 draw calls, ~0.2–0.5 M triangles (it was 1–2.5 M before slimming the decoration).
+- Screenshots of 2D (far, biome border) and 3D (whole island from above, low airplane view, each biome close up).
+
+### Known issues / not yet verified
+- **Not tried on a real phone yet:** generation time on load, chunk painting while panning fast, and 3D speed on the big map.
+- When panning fast, chunks show the softer overview for a moment until they're painted.
+- Loading a save regenerates the map from its seed each time (as before, just a bigger map now). If loading feels slow on the phone, cache it.
+- Snowy pines read a bit grey under the 3D lighting. Dead trees are simple poles.
+- Biome borders near the map edge can be thin slivers.
+
+### Next up
+- Markus: start a **new map** (☰ Menu → New game) to get the big biome island. Your current factory stays on the old map until you do.
+  Then explore (2D or 3D) and check loading time and smoothness on the phone.
+- Ideas: show biome names on the minimap; biome-specific building rules later (e.g. no water pumps on ice) if wanted;
+  vehicles/trains become more interesting with distances this big (open question from Session 1).
+
+### Open questions for Markus
+- Is 384×384 the right size once you've explored a bit, or bigger/smaller?
+- Should starting a new map ask before replacing the current one with an option to keep both (save slots)? This ties in with Session 1's save-slots question.
+- With this much distance, do you want faster transport (trains/vehicles) on the roadmap?

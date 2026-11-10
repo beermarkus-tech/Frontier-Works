@@ -13,7 +13,7 @@ until you launch the **Orbital Beacon**.
 Once installed it runs fullscreen and works offline. Saves live in the browser (☰ Menu → Export/Import to move them).
 
 ## Features
-- 10 raw resources on a procedurally generated 128×128 map (impure / normal / pure nodes)
+- 10 raw resources on a procedurally generated 384×384 island with seven biomes (impure / normal / pure nodes)
 - 56 items (6 fluids), 56 recipes incl. 10 alternates, 7 production machines
 - Conveyors Mk1–5, pipelines, splitters, mergers, sorting splitters, crossings, storage, tanks
 - Power grid with poles, fuses, and four generator types up to a fission reactor

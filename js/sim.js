@@ -1,7 +1,7 @@
 'use strict';
 /* ================= STATE ================= */
 let S, ents=new Map(), grid=new Int32Array(MW*MH), nextId=1;
-let terr, nodeAt, nodes=[], terrC;
+let terr, nodeAt, nodes=[], terrC, bio;
 let topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[];
 let tickNo=0;
 const stat={p:{},c:{},hist:[],acc:0};
@@ -11,7 +11,9 @@ function mkNoise(r,cell){const gw=Math.ceil(MW/cell)+2,gh=Math.ceil(MH/cell)+2,v
  const sm=t=>t*t*(3-2*t);return(x,y)=>{const fx=x/cell,fy=y/cell,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy);
  const a=v[iy*gw+ix],b=v[iy*gw+ix+1],c=v[(iy+1)*gw+ix],d=v[(iy+1)*gw+ix+1];return a+(b-a)*tx+(c-a)*ty+(a-b-c+d)*tx*ty;};}
 
-function genMap(seed){
+function genMap(seed){if(S&&S.gen===2)genBiome(seed);else genClassic(seed);}
+function genClassic(seed){   // maps made before biomes: must stay exactly as they were
+ bio=new Uint8Array(MW*MH);
  const r=rng(seed), n1=mkNoise(r,18), n2=mkNoise(r,7), n3=mkNoise(r,4);
  terr=new Uint8Array(MW*MH); nodeAt=new Array(MW*MH).fill(null); nodes=[];
  const cx=MW/2, cy=MH/2;
@@ -29,11 +31,54 @@ function genMap(seed){
  const place=(t,count,minD,maxD)=>{let k=0;for(let a=0;a<6000&&k<count;a++){const x=2+Math.floor(r()*(MW-4)),y=2+Math.floor(r()*(MH-4));const d=Math.hypot(x-cx,y-cy);if(d<minD||d>maxD)continue;if(Math.abs(x-cx)<5&&Math.abs(y-cy)<5)continue;const i=y*MW+x;if(t!=='oil'&&terr[i]===1)continue;if(t==='oil'&&terr[i]===1&&r()<0.5)continue;if(near(x,y,4))continue;const q=r();if(add(t,x,y,q<0.3?0:q<0.8?1:2))k++;}};
  place('iron',26,12,62);place('copper',20,12,62);place('limestone',18,12,62);place('coal',18,14,62);
  place('sulfur',10,24,62);place('quartz',10,24,62);place('bauxite',10,28,62);place('oil',12,24,62);place('uranium',6,38,62);
- bakeTerrain(seed);
+ prepTerrain(seed);
 }
 
+/* Biome maps: jittered seed points get a biome by distance from the start, tiles take the nearest point
+   (with warped coordinates for organic borders), then terrain thresholds and resource odds follow the biome. */
+function genBiome(seed){
+ const r=rng((seed^0x2f6b1a3c)>>>0),n1=mkNoise(r,18),n2=mkNoise(r,7),n3=mkNoise(r,4),wx=mkNoise(r,40),wy=mkNoise(r,40),vx=mkNoise(r,13),vy=mkNoise(r,13);
+ const T=MW*MH,cx=MW/2,cy=MH/2,NB=BIOMES.length;
+ terr=new Uint8Array(T);bio=new Uint8Array(T);nodeAt=new Array(T).fill(null);nodes=[];
+ const pick=w=>{let s=0;for(const v of w)s+=v;let q=r()*s;for(let i=0;i<w.length;i++){q-=w[i];if(q<=0)return i;}return 0;};
+ const band=d=>d<55?[1,0,0,0,0,0,0]:d<115?[1,3,2,2,2,0,0]:d<170?[0,1,2,2,2,2,0.6]:[0,0,1,1,0.5,2,2.5];
+ const G=48,pts=[];
+ for(let gy=0;gy<MH/G;gy++)for(let gx=0;gx<MW/G;gx++){const x=(gx+0.15+r()*0.7)*G,y=(gy+0.15+r()*0.7)*G,d=Math.hypot(x-cx,y-cy);pts.push({x,y,d,b:pick(band(d))});}
+ for(let b=1;b<NB;b++)if(!pts.some(p=>p.b===b)){const c=pts.filter(p=>p.d>=55&&band(p.d)[b]>0&&pts.filter(q=>q.b===p.b).length>1);if(c.length)c[Math.floor(r()*c.length)].b=b;}
+ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+  const qx=x+(wx(x,y)-0.5)*44+(vx(x,y)-0.5)*12,qy=y+(wy(x,y)-0.5)*44+(vy(x,y)-0.5)*12;let best=0,bd=1e9;
+  for(let k=0;k<pts.length;k++){const dx=pts[k].x-qx,dy=pts[k].y-qy,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;best=k;}}
+  bio[y*MW+x]=Math.hypot(x-cx,y-cy)<36?0:pts[best].b;}
+ // terrain thresholds blend across biome borders (box blur of the per-biome parameters)
+ const par=[0,1,2,3].map(k=>{const a=new Float32Array(T);for(let i=0;i<T;i++)a[i]=BIOMES[bio[i]].t[k];return boxBlur(a,MW,MH,5);});
+ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=y*MW+x;
+  let v=n1(x,y)*0.65+n2(x,y)*0.35;const d=Math.hypot(x-cx,y-cy);if(d<14)v=Math.max(v,0.45+(14-d)*0.01);
+  const wt=par[0][i];let t=0;if(v<wt)t=1;else if(v<wt+par[1][i])t=2;else if(v>par[2][i]&&n3(x,y)>par[3][i])t=3;terr[i]=t;}
+ for(let y=-5;y<=5;y++)for(let x=-6;x<=6;x++){const d=Math.hypot(x/1.3,y);const X=cx+16+x,Y=cy+5+y;if(d<4.2)terr[Y*MW+X]=1;else if(d<5.2&&terr[Y*MW+X]!==1)terr[Y*MW+X]=2;}
+ const add=(t,x,y,p)=>{const i=y*MW+x;if(nodeAt[i])return false;if(t!=='oil'&&terr[i]===1)return false;terr[i]=terr[i]===1?2:(terr[i]===3?3:terr[i]);const n={t,x,y,p};nodes.push(n);nodeAt[i]=n;return true;};
+ add('iron',cx-9,cy-3,2);add('iron',cx-8,cy+6,1);add('copper',cx+8,cy-7,1);add('copper',cx+3,cy-11,0);add('limestone',cx+6,cy+8,1);add('limestone',cx-2,cy+11,1);add('coal',cx-4,cy-10,1);add('coal',cx-12,cy+1,0);
+ const near=(x,y,rr)=>{for(let j=-rr;j<=rr;j++)for(let i=-rr;i<=rr;i++){const X=x+i,Y=y+j;if(X>=0&&Y>=0&&X<MW&&Y<MH&&nodeAt[Y*MW+X])return true;}return false;};
+ const RES=Object.keys(NODE_T),gate={sulfur:24,quartz:24,bauxite:28,oil:24,uranium:45};
+ const tryAt=(x,y,t)=>{const i=y*MW+x,d=Math.hypot(x-cx,y-cy),Bm=BIOMES[bio[i]];if(d<12||(Math.abs(x-cx)<5&&Math.abs(y-cy)<5))return false;
+  if(!t){const w=RES.map(k=>gate[k]&&d<gate[k]?0:(Bm.res[k]||0));t=RES[pick(w)];}
+  if(t!=='oil'&&terr[i]===1)return false;if(t==='oil'&&terr[i]===1&&r()<0.5)return false;if(near(x,y,4))return false;
+  const q=r(),pb=Bm.pure;return add(t,x,y,q<0.3-pb*0.12?0:q<0.8-pb*0.15?1:2);};
+ let land=0;for(let i=0;i<T;i++)if(terr[i]!==1)land++;
+ const target=Math.round(land/105);
+ for(let a=0,k=0;a<target*25&&k<target;a++){const x=2+Math.floor(r()*(MW-4)),y=2+Math.floor(r()*(MH-4));if(r()>BIOMES[bio[y*MW+x]].dens)continue;if(tryAt(x,y))k++;}
+ // every resource must exist: top up rare ones in the biomes that favour them
+ for(const t of RES){let c=nodes.filter(n=>n.t===t).length;const fav=BIOMES.map((b,i)=>[b.res[t]||0,i]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]);
+  for(let a=0;a<40000&&c<8;a++){const x=2+Math.floor(r()*(MW-4)),y=2+Math.floor(r()*(MH-4));if(fav.includes(bio[y*MW+x])&&tryAt(x,y,t))c++;}}
+ prepTerrain(seed);
+}
+function boxBlur(a,w,h,rad){const t=new Float32Array(a.length),o=new Float32Array(a.length);
+ for(let y=0;y<h;y++){let s=0,n=0;for(let x=-rad;x<w+rad;x++){if(x+rad<w){s+=a[y*w+x+rad];n++;}if(x-rad-1>=0){s-=a[y*w+x-rad-1];n--;}if(x>=0&&x<w)t[y*w+x]=s/n;}}
+ for(let x=0;x<w;x++){let s=0,n=0;for(let y=-rad;y<h+rad;y++){if(y+rad<h){s+=t[(y+rad)*w+x];n++;}if(y-rad-1>=0){s-=t[(y-rad-1)*w+x];n--;}if(y>=0&&y<h)o[y*w+x]=s/n;}}
+ return o;}
+const biomeAt=(x,y)=>bio&&x>=0&&y>=0&&x<MW&&y<MH?BIOMES[bio[(y|0)*MW+(x|0)]]:BIOMES[0];
 function newGame(seed){
- S={seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};
+ MW=MH=MAP_NEW;
+ S={gen:2,mw:MAP_NEW,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};
  ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  genMap(S.seed);
  placeEnt('core',MW/2-2,MH/2-2,0,true);

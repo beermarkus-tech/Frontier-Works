@@ -23,10 +23,27 @@ Find a node → drill it → belt ore into machines → belt products into the *
 spend the stock on new buildings → submit parts in **Goals** to unlock the next tier → scale up and add power.
 
 ## 3. World
-- 128×128 tile map, procedurally generated from a seed (`genMap` in `js/sim.js`), with lakes, sand, rock and grass.
+- **384×384 tile map** for new games (agreed with Markus in Session 5), procedurally generated from a seed (`genBiome` in `js/sim.js`),
+  with lakes, sand, rock and grass. Saves made before Session 5 keep their 128×128 map, generated exactly as before (`genClassic`);
+  the map size is stored in the save (`S.mw`, `S.gen:2` for biome maps).
+- **Seven biomes** (new maps only). They affect look, decoration and resource odds, **not** building rules (agreed in Session 5).
+  The start is always Greenvale; biomes get harder and richer further out. Borders are organic and blend over a few tiles.
+
+| Biome | Look | More common | Rarer |
+|---|---|---|---|
+| Greenvale (start, radius ~36–55) | meadows, ponds, flowers | iron, copper, limestone, coal | — |
+| Pinewood | dense conifer forest | coal, limestone, iron | sulfur |
+| Dustreach | dunes, red rock, cacti, few lakes | oil, sulfur, raw quartz | coal |
+| Craglands | bare grey rock | iron, bauxite, quartz; more pure nodes | oil |
+| Mirefen | marsh, many pools, reeds | oil, coal, sulfur | quartz |
+| Frostmark | snow, ice, snowy pines | quartz, bauxite, uranium | limestone |
+| Emberfield (outer ring) | ash, basalt, glowing cracks | sulfur, uranium; many pure nodes | iron, copper |
+
+  Every resource is guaranteed to exist. Tapping a node shows its biome; moving into a new biome shows a short message;
+  the planner's "For a target" mode says which biomes a raw resource is most common in.
 - The start area around the Core is always dry and has guaranteed iron, copper, limestone and coal nodes, plus a pond.
 - **Resources (10):** iron ore, copper ore, limestone, coal, sulfur, raw quartz, bauxite, uranium ore, crude oil (wells), water (any lake).
-  Rarer resources sit further from the start.
+  Rarer resources sit further from the start (sulfur/quartz/oil ≥ 24 tiles, bauxite ≥ 28, uranium ≥ 45).
 - **Node purity:** impure ×0.5, normal ×1, pure ×2 extraction rate.
 - **Building rules:** buildings can't sit on water; belts, pipes, poles, splitters and crossings can (bridges).
   The water pump must sit fully on water. Drills need an ore node and oil pumps an oil well inside their footprint.

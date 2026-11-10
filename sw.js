@@ -1,5 +1,5 @@
 // Frontier Works service worker — bump VERSION on every release so players get the update.
-const VERSION = 'fw-2026-11-10-4';
+const VERSION = 'fw-2026-11-10-5';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './js/data.js', './js/sim.js', './js/render.js', './js/ui.js', './js/plan.js', './js/view3d.js', './js/lib/three.min.js', './js/input.js', './js/pwa.js', './js/main.js',

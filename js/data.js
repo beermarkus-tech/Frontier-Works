@@ -1,6 +1,7 @@
 'use strict';
 /* ================= DATA ================= */
-const TS=24, MW=128, MH=128, DX=[1,0,-1,0], DY=[0,1,0,-1], ARW=['→','↓','←','↑'];
+let MW=128, MH=128;   // map size: 128 for maps made before biomes, MAP_NEW for new maps (stored in the save as S.mw)
+const MAP_NEW=384, TS=24, DX=[1,0,-1,0], DY=[0,1,0,-1], ARW=['→','↓','←','↑'];
 const IT={};
 function I(id,n,c,f,e){IT[id]={id,n,c,f:!!f,e:e||0};}
 I('iron_ore','Iron Ore','#a0614e');I('copper_ore','Copper Ore','#d27a3a');I('limestone','Limestone','#d9cfb0');
@@ -140,5 +141,46 @@ MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
 const START_B=['belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
 const START_R=['r_iron_ingot','r_copper_ingot','r_iron_plate','r_iron_rod','r_bolts','r_wire','r_cable','r_concrete'];
 const START_INV={coal:40,iron_plate:120,iron_rod:80,wire:120,cable:60,concrete:60,bolts:200};
+/* Biomes (new maps only; old 128×128 maps are all Greenvale). Index = value in bio[].
+   t: [water below, sand band width, rock if noise above, rock detail above]  ·  pal: ground colours for the painter
+   res: resource weights · pure: purity bias (+ = more pure nodes) · dens: node density
+   d2: 2D painted detail · d3: 3D decoration chances per tile */
+const BIOMES=[
+ {id:'greenvale',n:'Greenvale',desc:'Gentle meadows around the landing site.',t:[0.30,0.04,0.70,0.45],
+  pal:{ga:[40,74,42],gb:[62,102,50],gc:[98,134,60],sa:[212,192,140],ra:[122,118,110],rb:[108,105,99],sh:[66,160,204],dp:[18,62,118]},
+  d2:{tuft:['rgba(18,44,20,0.5)','rgba(160,200,100,0.32)'],flower:0.05,stone:0.012,rock:'#8a8680'},
+  d3:{tree:0.035,bush:0.035,rock:0.42,rockc:'#8b857a'},
+  res:{iron:5,copper:4,limestone:3.5,coal:3.5,sulfur:0.6,quartz:0.6,bauxite:0.4,oil:0.5,uranium:0.1},pure:0,dens:1},
+ {id:'pinewood',n:'Pinewood',desc:'Dense conifer forest. Rich in coal and limestone.',t:[0.28,0.03,0.72,0.5],
+  pal:{ga:[28,58,34],gb:[42,80,42],gc:[68,102,50],sa:[190,172,128],ra:[112,110,104],rb:[98,97,92],sh:[60,140,180],dp:[16,54,96]},
+  d2:{tuft:['rgba(10,30,14,0.55)','rgba(120,170,80,0.28)'],flower:0.012,stone:0.01,rock:'#7e7c76'},
+  d3:{tree:0.3,bush:0.05,rock:0.35,rockc:'#7d7a72'},
+  res:{iron:3,copper:2,limestone:4,coal:5,sulfur:0.4,quartz:0.8,bauxite:0.6,oil:0.6,uranium:0.2},pure:0,dens:1},
+ {id:'dustreach',n:'Dustreach',desc:'Dry dunes and red rock. Oil, sulfur and quartz.',t:[0.17,0.25,0.66,0.4],
+  pal:{ga:[150,128,78],gb:[176,152,96],gc:[196,170,112],sa:[228,202,142],ra:[168,118,84],rb:[150,104,74],sh:[70,150,180],dp:[22,70,110]},
+  d2:{tuft:['rgba(110,84,40,0.45)','rgba(230,210,150,0.3)'],flower:0,stone:0.01,rock:'#a8775a',sand:'rgba(150,110,60,0.4)'},
+  d3:{cactus:0.03,dead:0.006,rock:0.25,rockc:'#b07a58'},
+  res:{iron:1.5,copper:2.5,limestone:2,coal:0.5,sulfur:3.5,quartz:3.5,bauxite:1.5,oil:4,uranium:0.5},pure:0.3,dens:0.9},
+ {id:'craglands',n:'Craglands',desc:'Bare grey rock. Iron, bauxite and quartz, often pure.',t:[0.24,0.03,0.55,0.3],
+  pal:{ga:[62,80,52],gb:[84,102,64],gc:[110,122,80],sa:[182,172,150],ra:[134,132,128],rb:[116,114,110],sh:[62,140,190],dp:[18,58,104]},
+  d2:{tuft:['rgba(30,44,24,0.45)','rgba(170,190,120,0.25)'],flower:0.004,stone:0.04,rock:'#96938c'},
+  d3:{tree:0.02,rock:0.6,rockg:0.04,rockc:'#9a968e'},
+  res:{iron:5,copper:2,limestone:2,coal:1.5,sulfur:0.8,quartz:3,bauxite:4,oil:0.3,uranium:0.8},pure:1,dens:1},
+ {id:'mirefen',n:'Mirefen',desc:'Wet marshland with many pools. Oil, coal and sulfur.',t:[0.40,0.03,0.80,0.6],
+  pal:{ga:[44,62,36],gb:[60,78,42],gc:[82,94,50],sa:[122,106,72],ra:[98,96,84],rb:[86,84,74],sh:[72,112,92],dp:[28,60,58]},
+  d2:{tuft:['rgba(20,32,14,0.55)','rgba(140,150,80,0.3)'],flower:0.008,stone:0.006,rock:'#706e62',sand:'rgba(60,48,30,0.45)'},
+  d3:{reed:0.35,dead:0.02,bush:0.06,rock:0.2,rockc:'#6f6d62'},
+  res:{iron:1.5,copper:2,limestone:1.5,coal:4,sulfur:3,quartz:0.4,bauxite:1,oil:5,uranium:0.3},pure:0,dens:1},
+ {id:'frostmark',n:'Frostmark',desc:'Snowfields and ice. Quartz, bauxite and uranium.',t:[0.27,0.02,0.62,0.38],
+  pal:{ga:[206,218,228],gb:[224,232,240],gc:[240,246,250],sa:[188,198,206],ra:[118,126,138],rb:[102,110,122],sh:[120,182,216],dp:[40,92,142]},
+  d2:{tuft:null,flower:0,stone:0.01,rock:'#8a94a0',speck:['rgba(140,164,190,0.55)',0.12]},
+  d3:{snowtree:0.08,rock:0.4,rockc:'#c8d2dc'},
+  res:{iron:2,copper:2.5,limestone:0.6,coal:1.5,sulfur:0.8,quartz:4,bauxite:3,oil:1,uranium:3},pure:0.5,dens:1},
+ {id:'emberfield',n:'Emberfield',desc:'Volcanic ash and basalt at the far edge. Sulfur and uranium, many pure nodes.',t:[0.20,0.03,0.58,0.35],
+  pal:{ga:[52,46,44],gb:[66,58,54],gc:[84,72,64],sa:[92,76,62],ra:[44,40,40],rb:[34,31,31],sh:[64,96,116],dp:[22,40,58]},
+  d2:{tuft:null,flower:0,stone:0.02,rock:'#3a3636',speck:['rgba(255,120,40,0.85)',0.02]},
+  d3:{dead:0.01,rockg:0.05,rock:0.35,rockc:'#3b3736',crack:0.02},
+  res:{iron:0.8,copper:0.8,limestone:1,coal:1.5,sulfur:5,quartz:1.5,bauxite:1.5,oil:1.5,uranium:4},pure:1.5,dens:1.15},
+];
 const NODE_T={iron:['iron_ore','#b0705a'],copper:['copper_ore','#e0843f'],limestone:['limestone','#e6dcbc'],coal:['coal','#3a3a3a'],sulfur:['sulfur','#f0dc40'],quartz:['quartz','#f0c0ee'],bauxite:['bauxite','#c4542e'],uranium:['uranium','#80f050'],oil:['crude','#1a1420']};
 const PUR=[[0.5,'Impure'],[1,'Normal'],[2,'Pure']];

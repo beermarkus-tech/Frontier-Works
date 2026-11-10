@@ -71,7 +71,7 @@ addEventListener('blur',()=>keys.clear());
 const mini=document.getElementById('mini'),mg=mini.getContext('2d');let miniBase=null,miniT=0;
 function drawMini(el){
  if(innerWidth<=700)return;const W=Math.round(164*DPR);if(mini.width!==W){mini.width=mini.height=W;miniBase=null;}
- miniT-=el;if(!miniBase||miniT<=0){miniT=1;miniBase=miniBase||document.createElement('canvas');miniBase.width=miniBase.height=W;const g=miniBase.getContext('2d');g.imageSmoothingEnabled=true;g.drawImage(terrC,0,0,W,W);g.fillStyle='rgba(0,0,0,0.15)';g.fillRect(0,0,W,W);const k=W/MW;
+ miniT-=el;if(!miniBase||miniT<=0){miniT=1;miniBase=miniBase||document.createElement('canvas');miniBase.width=miniBase.height=W;const g=miniBase.getContext('2d');g.imageSmoothingEnabled=true;g.drawImage(terrO,0,0,W,W);g.fillStyle='rgba(0,0,0,0.15)';g.fillRect(0,0,W,W);const k=W/MW;
   for(const e of ents.values()){g.fillStyle=e.k==='belt'?'#c9ced4':e.k==='pipe'?'#8fb6d9':e.k==='core'?'#ffb547':B[e.d].col;g.fillRect(e.x*k,e.y*k,Math.max(1,e.w*k),Math.max(1,e.h*k));}}
  mg.clearRect(0,0,W,W);mg.save();rrg(mg,0,0,W,W,14*DPR);mg.clip();mg.drawImage(miniBase,0,0);
  const k=W/MW,vw=innerWidth/(TS*cam.z),vh=innerHeight/(TS*cam.z);mg.strokeStyle='#ffb547';mg.lineWidth=1.5*DPR;mg.fillStyle='rgba(255,181,71,0.12)';mg.fillRect((cam.x-vw/2)*k,(cam.y-vh/2)*k,vw*k,vh*k);mg.strokeRect((cam.x-vw/2)*k,(cam.y-vh/2)*k,vw*k,vh*k);mg.restore();

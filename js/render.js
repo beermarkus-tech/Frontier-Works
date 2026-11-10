@@ -16,55 +16,87 @@ const easeBack=t=>{const c=1.70158;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1
 
 /* ---------- terrain bake ---------- */
 const TPX=16;
-function bakeTerrain(seed){
+/* Terrain is painted on demand in CH×CH-tile chunks at TPX px/tile (a whole 384-tile map would be too big for one
+   canvas on phones), plus one small overview picture (terrO) for zoomed-out views, the minimap and far 3D ground.
+   Per-tile fields are prepared once per map; every random choice is hashed from the tile, so chunks match at edges. */
+const CH=32,CHMAX=48,chunkC=new Map();let TF=null,terrO=null,mapGen=0;
+const PALK=['ga','gb','gc','sa','ra','rb','sh','dp'];
+function prepTerrain(seed){
+ mapGen++;chunkC.clear();
  const r=rng((seed^0x5bd1e995)>>>0),nA=mkNoise(r,11),nB=mkNoise(r,3.5),nW=mkNoise(r,1.3);
- const N=MW*TPX,T=MW*MH;
- const dist=new Int16Array(T).fill(999),q=[];
+ const T=MW*MH,dist=new Int16Array(T).fill(999),q=[];
  for(let i=0;i<T;i++)if(terr[i]!==1){dist[i]=0;q.push(i);}
  for(let h=0;h<q.length;h++){const i=q[h],x=i%MW,y=(i/MW)|0;for(let k=0;k<4;k++){const nx=x+DX[k],ny=y+DY[k];if(nx<0||ny<0||nx>=MW||ny>=MH)continue;const j=ny*MW+nx;if(dist[j]>dist[i]+1){dist[j]=dist[i]+1;q.push(j);}}}
  const Wf=new Float32Array(T),Sf=new Float32Array(T),Rf=new Float32Array(T),Df=new Float32Array(T),Gf=new Float32Array(T);
  for(let i=0;i<T;i++){const x=i%MW,y=(i/MW)|0,t=terr[i];Wf[i]=t===1?1:0;Sf[i]=t===2?1:0;Rf[i]=t===3?1:0;Df[i]=Math.min(1,Math.max(0,(dist[i]-1)/5));Gf[i]=nA(x,y)*0.65+nB(x,y)*0.35;}
- const img=new ImageData(N,N),D=img.data;
- const GA=[40,74,42],GB=[62,102,50],GC=[98,134,60],SA=[212,192,140],WS=[146,128,92],RA=[122,118,110],RB=[108,105,99],SH=[66,160,204],DP=[18,62,118],FO=[230,244,250];
- let c0,c1,c2;
- for(let py=0;py<N;py++){const fy=(py+0.5)/TPX-0.5,iy=Math.floor(fy),ty=fy-iy,y0=Math.max(0,iy)*MW,y1=Math.min(MH-1,iy+1)*MW;
-  for(let px=0;px<N;px++){const fx=(px+0.5)/TPX-0.5,ix=Math.floor(fx),tx=fx-ix,x0=Math.max(0,ix),x1=Math.min(MW-1,ix+1);
-   const a=y0+x0,b=y0+x1,cc=y1+x0,d=y1+x1,w00=(1-tx)*(1-ty),w10=tx*(1-ty),w01=(1-tx)*ty,w11=tx*ty;
-   const gn=Gf[a]*w00+Gf[b]*w10+Gf[cc]*w01+Gf[d]*w11, gr=hash2(px,py)-0.5;
-   if(gn<0.5){const t=gn*2;c0=GA[0]+(GB[0]-GA[0])*t;c1=GA[1]+(GB[1]-GA[1])*t;c2=GA[2]+(GB[2]-GA[2])*t;}
-   else{const t=(gn-0.5)*2;c0=GB[0]+(GC[0]-GB[0])*t;c1=GB[1]+(GC[1]-GB[1])*t;c2=GB[2]+(GC[2]-GB[2])*t;}
-   const wp=(nW(fx+0.5,fy+0.5)-0.5)*0.24,w=Wf[a]*w00+Wf[b]*w10+Wf[cc]*w01+Wf[d]*w11+wp, sd=Sf[a]*w00+Sf[b]*w10+Sf[cc]*w01+Sf[d]*w11, rk=Rf[a]*w00+Rf[b]*w10+Rf[cc]*w01+Rf[d]*w11;
-   let t=Math.max(sstep(0.2,0.55,sd),sstep(0.24,0.44,w));
-   if(t>0){c0+=(SA[0]-c0)*t;c1+=(SA[1]-c1)*t;c2+=(SA[2]-c2)*t;}
-   if(rk>0.2){t=sstep(0.36,0.62,rk+wp*1.3+(hash2(px>>2,py>>2)-0.5)*0.1);if(t>0){const R=gr>0?RA:RB;c0+=(R[0]-c0)*t;c1+=(R[1]-c1)*t;c2+=(R[2]-c2)*t;}}
-   t=sstep(0.4,0.5,w)*0.7;if(t>0){c0+=(WS[0]-c0)*t;c1+=(WS[1]-c1)*t;c2+=(WS[2]-c2)*t;}
-   const wa=sstep(0.485,0.515,w);
-   if(wa>0){const dp=sstep(0,1,Df[a]*w00+Df[b]*w10+Df[cc]*w01+Df[d]*w11);let r0=SH[0]+(DP[0]-SH[0])*dp,r1=SH[1]+(DP[1]-SH[1])*dp,r2=SH[2]+(DP[2]-SH[2])*dp;
-    const fo=sstep(0.5,0.55,w)*(1-sstep(0.56,0.7,w))*0.6;r0+=(FO[0]-r0)*fo;r1+=(FO[1]-r1)*fo;r2+=(FO[2]-r2)*fo;
-    c0+=(r0-c0)*wa;c1+=(r1-c1)*wa;c2+=(r2-c2)*wa;}
-   const gv=gr*9*(1-wa*0.7),o=(py*N+px)*4;D[o]=c0+gv;D[o+1]=c1+gv;D[o+2]=c2+gv;D[o+3]=255;}}
- terrC=document.createElement('canvas');terrC.width=terrC.height=N;const g=terrC.getContext('2d');g.putImageData(img,0,0);
- // decorations
- const dark=new Path2D(),light=new Path2D();
- for(let i=0;i<T;i++){if(terr[i]!==0||nodeAt[i])continue;const X=(i%MW)*TPX,Y=((i/MW)|0)*TPX;const n=2+Math.floor(r()*3);
-  for(let k=0;k<n;k++){const x=X+r()*TPX,y=Y+r()*TPX,l=2+r()*3.5,p=r()<0.55?dark:light;p.moveTo(x,y);p.lineTo(x-1.6,y-l);p.moveTo(x,y);p.lineTo(x+1.4,y-l*0.85);p.moveTo(x,y);p.lineTo(x,y-l*1.1);}}
- g.lineCap='round';g.lineWidth=1.1;g.strokeStyle='rgba(18,44,20,0.5)';g.stroke(dark);g.strokeStyle='rgba(160,200,100,0.32)';g.stroke(light);
- const FL=['#f6e27a','#f59ac0','#ffffff','#b7d0ff','#ffb36b'];
- for(let i=0;i<T;i++){if(terr[i]!==0||nodeAt[i]||r()>0.05)continue;const X=(i%MW)*TPX,Y=((i/MW)|0)*TPX,col=FL[Math.floor(r()*FL.length)];for(let k=0;k<3;k++){g.fillStyle=col;g.beginPath();g.arc(X+r()*TPX,Y+r()*TPX,1.4,0,7);g.fill();}}
- const stone=(x,y,rad,base)=>{g.fillStyle='rgba(0,0,0,0.3)';g.beginPath();g.ellipse(x+1.2,y+1.6,rad*1.1,rad*0.8,0,0,7);g.fill();const gr=g.createRadialGradient(x-rad*0.4,y-rad*0.4,0,x,y,rad*1.2);gr.addColorStop(0,shade(base,40));gr.addColorStop(1,shade(base,-30));g.fillStyle=gr;g.beginPath();g.ellipse(x,y,rad*1.1,rad*0.85,r()*3,0,7);g.fill();};
- for(let i=0;i<T;i++){const t=terr[i],X=(i%MW)*TPX,Y=((i/MW)|0)*TPX;if(nodeAt[i])continue;
-  if(t===3){if(r()<0.28)stone(X+3+r()*(TPX-6),Y+3+r()*(TPX-6),2+r()*3,'#8a8680');}
-  else if(t===0&&r()<0.012)stone(X+TPX/2,Y+TPX/2,3+r()*3,'#7e7a72');
-  else if(t===2&&r()<0.6){g.fillStyle='rgba(120,100,70,0.45)';for(let k=0;k<3;k++){g.beginPath();g.arc(X+r()*TPX,Y+r()*TPX,0.9,0,7);g.fill();}}}
- // node beds (darker soil ring under resource nodes)
- for(const n of nodes){const x=(n.x+0.5)*TPX,y=(n.y+0.5)*TPX;const gr=g.createRadialGradient(x,y,2,x,y,TPX*1.25);gr.addColorStop(0,'rgba(40,30,20,0.55)');gr.addColorStop(1,'rgba(40,30,20,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,TPX*1.25,0,7);g.fill();}
+ // per-tile ground palette, blurred so biome borders fade over a few tiles; U[i]=1 where the 2×2 block is uniform (fast path)
+ const PAL=new Uint8ClampedArray(T*24),U=new Uint8Array(T);let mixed=false;for(let i=1;i<T;i++)if(bio[i]!==bio[0]){mixed=true;break;}
+ for(let k=0;k<8;k++)for(let c=0;c<3;c++){const a=new Float32Array(T);for(let i=0;i<T;i++)a[i]=BIOMES[bio[i]].pal[PALK[k]][c];const bl=mixed?boxBlur(a,MW,MH,3):a;for(let i=0;i<T;i++)PAL[i*24+k*3+c]=Math.round(bl[i]);}
+ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=y*MW+x,b=Math.min(MW-1,x+1)-x,d=(Math.min(MH-1,y+1)-y)*MW;let u=1;for(let k=0;k<24&&u;k++){const v=PAL[i*24+k];if(PAL[(i+b)*24+k]!==v||PAL[(i+d)*24+k]!==v||PAL[(i+b+d)*24+k]!==v)u=0;}U[i]=u;}
+ TF={seed,nW,Wf,Sf,Rf,Df,Gf,PAL,U};
+ const op=MW>200?3:4;terrO=paintTerrain(0,0,MW,MH,op);terrO.ppt=op;terrC=terrO;
  // cloud shadows
  const cn=mkNoise(rng(seed+99),14),cn2=mkNoise(rng(seed+7),5);cloudC=document.createElement('canvas');cloudC.width=cloudC.height=128;const cg=cloudC.getContext('2d'),ci=cg.createImageData(128,128);
  for(let i=0;i<128*128;i++){const x=i%128,y=(i/128)|0;const v=cn(x,y)*0.75+cn2(x,y)*0.25;ci.data[i*4+3]=sstep(0.55,0.78,v)*60;}
  cg.putImageData(ci,0,0);
 }
-
-/* ---------- building sprites ---------- */
+/* Paint tiles [x0,x0+w)×[y0,y0+h) at ppt pixels per tile. Same blend as the original single-canvas painter. */
+function paintTerrain(x0,y0,w,h,ppt){
+ const {nW,Wf,Sf,Rf,Df,Gf,PAL,U}=TF,Wp=w*ppt,Hp=h*ppt,img=new ImageData(Wp,Hp),D=img.data,k16=TPX/ppt,P=new Float32Array(24),WS=[146,128,92],FO=[230,244,250];
+ let c0,c1,c2;
+ for(let py=0;py<Hp;py++){const gpy=y0*ppt+py,fy=(gpy+0.5)/ppt-0.5,iy=Math.floor(fy),ty=fy-iy,y0r=Math.max(0,iy)*MW,y1r=Math.min(MH-1,iy+1)*MW;
+  for(let px=0;px<Wp;px++){const gpx=x0*ppt+px,fx=(gpx+0.5)/ppt-0.5,ix=Math.floor(fx),tx=fx-ix,x0c=Math.max(0,ix),x1c=Math.min(MW-1,ix+1);
+   const a=y0r+x0c,b=y0r+x1c,cc=y1r+x0c,d=y1r+x1c,w00=(1-tx)*(1-ty),w10=tx*(1-ty),w01=(1-tx)*ty,w11=tx*ty;
+   if(U[a]){const o=a*24;for(let k=0;k<24;k++)P[k]=PAL[o+k];}
+   else{const oa=a*24,ob=b*24,oc=cc*24,od=d*24;for(let k=0;k<24;k++)P[k]=PAL[oa+k]*w00+PAL[ob+k]*w10+PAL[oc+k]*w01+PAL[od+k]*w11;}
+   const gn=Gf[a]*w00+Gf[b]*w10+Gf[cc]*w01+Gf[d]*w11,gr=hash2(Math.floor(gpx*k16),Math.floor(gpy*k16))-0.5;
+   if(gn<0.5){const t=gn*2;c0=P[0]+(P[3]-P[0])*t;c1=P[1]+(P[4]-P[1])*t;c2=P[2]+(P[5]-P[2])*t;}
+   else{const t=(gn-0.5)*2;c0=P[3]+(P[6]-P[3])*t;c1=P[4]+(P[7]-P[4])*t;c2=P[5]+(P[8]-P[5])*t;}
+   const wp=(nW(fx+0.5,fy+0.5)-0.5)*0.24,wv=Wf[a]*w00+Wf[b]*w10+Wf[cc]*w01+Wf[d]*w11+wp,sd=Sf[a]*w00+Sf[b]*w10+Sf[cc]*w01+Sf[d]*w11,rk=Rf[a]*w00+Rf[b]*w10+Rf[cc]*w01+Rf[d]*w11;
+   let t=Math.max(sstep(0.2,0.55,sd),sstep(0.24,0.44,wv));
+   if(t>0){c0+=(P[9]-c0)*t;c1+=(P[10]-c1)*t;c2+=(P[11]-c2)*t;}
+   if(rk>0.2){t=sstep(0.36,0.62,rk+wp*1.3+(hash2(Math.floor(gpx*k16)>>2,Math.floor(gpy*k16)>>2)-0.5)*0.1);if(t>0){const o=gr>0?12:15;c0+=(P[o]-c0)*t;c1+=(P[o+1]-c1)*t;c2+=(P[o+2]-c2)*t;}}
+   t=sstep(0.4,0.5,wv)*0.7;if(t>0){c0+=(WS[0]-c0)*t;c1+=(WS[1]-c1)*t;c2+=(WS[2]-c2)*t;}
+   const wa=sstep(0.485,0.515,wv);
+   if(wa>0){const dp=sstep(0,1,Df[a]*w00+Df[b]*w10+Df[cc]*w01+Df[d]*w11);let r0=P[18]+(P[21]-P[18])*dp,r1=P[19]+(P[22]-P[19])*dp,r2=P[20]+(P[23]-P[20])*dp;
+    const fo=sstep(0.5,0.55,wv)*(1-sstep(0.56,0.7,wv))*0.6;r0+=(FO[0]-r0)*fo;r1+=(FO[1]-r1)*fo;r2+=(FO[2]-r2)*fo;
+    c0+=(r0-c0)*wa;c1+=(r1-c1)*wa;c2+=(r2-c2)*wa;}
+   const gv=gr*9*(1-wa*0.7),o=(py*Wp+px)*4;D[o]=c0+gv;D[o+1]=c1+gv;D[o+2]=c2+gv;D[o+3]=255;}}
+ const cv2=document.createElement('canvas');cv2.width=Wp;cv2.height=Hp;cv2.getContext('2d').putImageData(img,0,0);return cv2;
+}
+/* Full-detail chunk: ground + painted details (grass tufts, flowers, stones, specks) + soil beds under nodes. */
+function bakeChunk(cx,cy){
+ const x0=cx*CH,y0=cy*CH,c=paintTerrain(x0,y0,CH,CH,TPX),g=c.getContext('2d');g.translate(-x0*TPX,-y0*TPX);
+ const seed=TF.seed,paths=new Map(),P=(k)=>{if(!paths.has(k))paths.set(k,new Path2D());return paths.get(k);};
+ const stone=(r,x,y,rad,base)=>{g.fillStyle='rgba(0,0,0,0.3)';g.beginPath();g.ellipse(x+1.2,y+1.6,rad*1.1,rad*0.8,0,0,7);g.fill();const gr=g.createRadialGradient(x-rad*0.4,y-rad*0.4,0,x,y,rad*1.2);gr.addColorStop(0,shade(base,40));gr.addColorStop(1,shade(base,-30));g.fillStyle=gr;g.beginPath();g.ellipse(x,y,rad*1.1,rad*0.85,r()*3,0,7);g.fill();};
+ const FL=['#f6e27a','#f59ac0','#ffffff','#b7d0ff','#ffb36b'],dots=[];
+ for(let y=Math.max(0,y0-1);y<Math.min(MH,y0+CH+1);y++)for(let x=Math.max(0,x0-1);x<Math.min(MW,x0+CH+1);x++){const i=y*MW+x;if(nodeAt[i])continue;
+  const t=terr[i],bm=BIOMES[bio[i]].d2,r=rng((Math.imul(seed,31)+Math.imul(i,2654435761))>>>0),X=x*TPX,Y=y*TPX;
+  if(t===0&&bm.tuft){const n=2+Math.floor(r()*3);for(let k=0;k<n;k++){const px=X+r()*TPX,py=Y+r()*TPX,l=2+r()*3.5,p=P(bm.tuft[r()<0.55?0:1]);p.moveTo(px,py);p.lineTo(px-1.6,py-l);p.moveTo(px,py);p.lineTo(px+1.4,py-l*0.85);p.moveTo(px,py);p.lineTo(px,py-l*1.1);}}
+  if(t===0&&r()<bm.flower){const col=FL[Math.floor(r()*FL.length)];for(let k=0;k<3;k++)dots.push([col,X+r()*TPX,Y+r()*TPX,1.4]);}
+  if(bm.speck&&t!==1&&r()<bm.speck[1]*3)dots.push([bm.speck[0],X+r()*TPX,Y+r()*TPX,0.8+r()*0.8]);
+  if(t===3){if(r()<0.28)stone(r,X+3+r()*(TPX-6),Y+3+r()*(TPX-6),2+r()*3,bm.rock);}
+  else if(t===0&&r()<bm.stone)stone(r,X+TPX/2,Y+TPX/2,3+r()*3,shade(bm.rock,-8));
+  else if(t===2&&r()<0.6){const col=bm.sand||'rgba(120,100,70,0.45)';for(let k=0;k<3;k++)dots.push([col,X+r()*TPX,Y+r()*TPX,0.9]);}}
+ g.lineCap='round';g.lineWidth=1.1;for(const [k,p] of paths){g.strokeStyle=k;g.stroke(p);}
+ for(const [col,x,y,rad] of dots){g.fillStyle=col;g.beginPath();g.arc(x,y,rad,0,7);g.fill();}
+ for(const n of nodes){if(n.x<x0-2||n.y<y0-2||n.x>x0+CH+1||n.y>y0+CH+1)continue;const x=(n.x+0.5)*TPX,y=(n.y+0.5)*TPX;const gr=g.createRadialGradient(x,y,2,x,y,TPX*1.25);gr.addColorStop(0,'rgba(40,30,20,0.55)');gr.addColorStop(1,'rgba(40,30,20,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,TPX*1.25,0,7);g.fill();}
+ return c;
+}
+/* Cached chunk canvas (LRU). bake=false returns null instead of painting a missing chunk. */
+function getChunk(cx,cy,bake){const key=cy*1024+cx;let c=chunkC.get(key);
+ if(c){chunkC.delete(key);chunkC.set(key,c);return c;}
+ if(!bake)return null;c=bakeChunk(cx,cy);chunkC.set(key,c);while(chunkC.size>CHMAX)chunkC.delete(chunkC.keys().next().value);return c;}
+let bakeT0=0;const bakeBudget=()=>performance.now()-bakeT0<8;   // ms of chunk painting allowed per frame
+function drawTerrain(ox,oy,s,W,H){
+ const op=terrO.ppt;bakeT0=performance.now();
+ if(s<=4.5){ctx.drawImage(terrO,ox,oy,MW*s,MH*s);return;}
+ const nx=MW/CH,ny=MH/CH,cx0=Math.max(0,Math.floor(-ox/s/CH)),cx1=Math.min(nx-1,Math.floor((W-ox)/s/CH)),cy0=Math.max(0,Math.floor(-oy/s/CH)),cy1=Math.min(ny-1,Math.floor((H-oy)/s/CH));
+ // nearest chunks first, so the view sharpens from the middle out
+ const list=[];for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++)list.push([cx,cy,Math.hypot(ox+(cx+0.5)*CH*s-W/2,oy+(cy+0.5)*CH*s-H/2)]);list.sort((a,b)=>a[2]-b[2]);
+ for(const [cx,cy] of list){const c=getChunk(cx,cy,bakeBudget()),X0=Math.floor(ox+cx*CH*s),X1=Math.floor(ox+(cx+1)*CH*s),Y0=Math.floor(oy+cy*CH*s),Y1=Math.floor(oy+(cy+1)*CH*s);
+  if(c)ctx.drawImage(c,X0,Y0,X1-X0,Y1-Y0);else ctx.drawImage(terrO,cx*CH*op,cy*CH*op,CH*op,CH*op,X0,Y0,X1-X0,Y1-Y0);}
+}
 const SPR=new Map();
 function bkt(s){return Math.max(6,Math.min(180,Math.pow(2,Math.round(Math.log2(s)*3)/3)));}
 function getSprite(id,s){const b=bkt(s),key=id+'|'+b;let c=SPR.get(key);if(c)return c;const w=B[id].w,pad=Math.ceil(b*0.35);
@@ -272,7 +304,7 @@ function render(){
  const W=cv.width,H=cv.height;ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#123a5e';ctx.fillRect(0,0,W,H);
  const s=TS*cam.z*DPR,ox=W/2-cam.x*s,oy=H/2-cam.y*s;
  const sx=x=>ox+x*s,sy=y=>oy+y*s;
- ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=s<TPX?'high':'low';ctx.drawImage(terrC,ox,oy,MW*s,MH*s);
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=s<TPX?'high':'low';drawTerrain(ox,oy,s,W,H);
  const x0=Math.max(0,Math.floor(-ox/s)-1),y0=Math.max(0,Math.floor(-oy/s)-1),x1=Math.min(MW,Math.ceil((W-ox)/s)+1),y1=Math.min(MH,Math.ceil((H-oy)/s)+1);
  // water shimmer
  if(s>=12){ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1,s*0.04);ctx.lineCap='round';

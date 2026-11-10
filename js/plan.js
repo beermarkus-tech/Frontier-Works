@@ -30,6 +30,9 @@ function plFix(){
  const targets=plTargets();if(!targets.includes(r.item))r.item=targets.includes('iron_plate')?'iron_plate':targets[0];
 }
 
+/* Biomes where a resource is most common (new maps only) */
+const plWhere=res=>BIOMES.map(b=>[b.res[res]||0,b.n]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]).join(' and ');
+
 /* ---------- maths ---------- */
 const plPerMin=(r,amt)=>amt*60/r.t;   // per machine at 100% clock
 function plPower(pw,n){const full=Math.floor(n+PL_EPS),fr=n-full;return pw*full+(fr>PL_EPS?pw*Math.pow(fr,1.6):0);}
@@ -153,7 +156,7 @@ function plRevHtml(){
  const rk=Object.keys(o.raw);
  h+=`<h4>Raw resources</h4><div class="card">`+(rk.length?rk.map(k=>{
   const res=PL_RES.find(x=>plResItem(x)===k),ex=plExtractors(res),best=ex.filter(id=>ub(id)).pop()||ex[0],per=B[best].rate*60;
-  return plRate(k,o.raw[k])+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(o.raw[k]/per)} × ${B[best].n} on ${k==='water'?'water':'normal nodes'}</div>`;}).join(''):'<div class="muted">none</div>')+`</div>`;
+  return plRate(k,o.raw[k])+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(o.raw[k]/per)} × ${B[best].n} on ${k==='water'?'water':'normal nodes'}${S.gen===2&&res!=='water'?` · found mostly in ${plWhere(res)}`:''}</div>`;}).join(''):'<div class="muted">none</div>')+`</div>`;
  const bk=Object.keys(o.by),nk=Object.keys(o.none);
  if(bk.length)h+=`<h4>Byproducts</h4><div class="card"><div class="muted">These come out too. Belt them on, recycle them or burn them in an Incinerator.</div>${bk.map(k=>plRate(k,o.by[k])).join('')}</div>`;
  if(nk.length)h+=`<h4>Bring in from elsewhere</h4><div class="card"><div class="muted">No ${PL.locked?'':'unlocked '}recipe makes these here.</div>${nk.map(k=>plRate(k,o.none[k],'plbad')).join('')}</div>`;

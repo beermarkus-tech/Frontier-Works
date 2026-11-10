@@ -147,7 +147,7 @@ function codexHtml(){
  h+=`<h4>Generators</h4>`+['burner','steam','turbine','reactor'].filter(ub).map(g=>`<div class="card"><b>${B[g].n}</b> — ${B[g].desc}</div>`).join('');
  return h;
 }
-function nodeHtml(n){const it=NODE_T[n.t][0];return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div><div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button>`:''}`;}
+function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div>${S.gen===2?`<div class="row"><span>Biome</span><span>${bm.n}</span></div>`:''}<div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button>`:''}`;}
 function menuHtml(){
  return`<h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button>
  <h4>View</h4><div class="chips"><button class="btn chip ${V3.on?'':'on'}" data-act="view" data-v="2d">2D map</button><button class="btn chip ${V3.on?'on':''}" data-act="view" data-v="3d">3D view</button></div>
@@ -200,8 +200,8 @@ const ACT={
  exportSave:()=>{$('saveTxt').value=serialize();},
  copySave:()=>{const t=$('saveTxt');if(!t.value)t.value=serialize();try{navigator.clipboard.writeText(t.value).then(()=>toast('Copied'),()=>{t.select();toast('Select & copy the text');});}catch(e){t.select();}},
  importSave:()=>{const t=$('saveTxt').value.trim();if(!t)return toast('Paste a save first');try{load(t);toast('Save loaded');closePanel();}catch(e){toast('That save could not be read');}},
- newGameAsk:()=>dialog(`<h2>Start a new map?</h2><p>Your current factory will be replaced.</p><button class="btn warn" data-act="newGameGo">Yes, new map</button> <button class="btn" data-act="closeDlg">Cancel</button>`),
- newGameGo:()=>{closeDlg();closePanel();newGame();buildCats();save();},
+ newGameAsk:()=>dialog(`<h2>Start a new map?</h2><p>Your current factory will be replaced. New maps are ${MAP_NEW}×${MAP_NEW} tiles with seven biomes.</p><button class="btn warn" data-act="newGameGo">Yes, new map</button> <button class="btn" data-act="closeDlg">Cancel</button>`),
+ newGameGo:()=>{closeDlg();closePanel();newGame();lastBio=null;buildCats();save();},
 };
 document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el||el.tagName==='INPUT')return;const f=ACT[el.dataset.act];if(f)f(el.dataset.v,el);});
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset.act==='clock'&&UI.panel){const e=ents.get(UI.panel.arg);if(e){e.clock=+el.value/100;const cv2=document.getElementById('clockv');if(cv2)cv2.textContent=el.value+'%';}}});

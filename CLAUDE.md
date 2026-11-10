@@ -26,7 +26,9 @@ and keep the game playable after every commit.
 - Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → plan → view3d → input → pwa → main (Three.js is injected by `view3d.js` on first 3D use). Top-level `const`/`let` are visible across files; don't redeclare names.
 - Sim runs at fixed 20 ticks/s (`tick(0.05)` in `js/sim.js`). Belts hold one item per tile; `beltOrder` processes downstream first. Buildings push output only into belts/pipes pointing away from them; input is any belt/pipe pointing into them.
 - Power: poles/generators link (max 5 nearest within range), consumers attach to nearest node in supply range. Demand > capacity trips the fuse (`trip` flag on nodes).
-- Rendering: terrain baked once to a 2048² canvas; building sprites cached per zoom bucket (`getSprite`), animated parts drawn live in `drawLive`; belts/pipes stroked as batched Path2D with curves (`e.cin`).
+- Map: `MW`/`MH` are variables (128 for old saves, `MAP_NEW`=384 for new). `genClassic` must never change (old saves rely on it); biome maps use `genBiome` + `BIOMES` in `data.js`.
+- Rendering: terrain painted on demand in 32×32-tile chunks (`getChunk`/`bakeChunk`, LRU cache, ~8 ms paint budget per frame) plus a small overview `terrO`
+  (minimap, far zoom, far 3D ground); all random terrain detail is hashed per tile so chunks match, and 3D uses the same chunks near the camera; building sprites cached per zoom bucket (`getSprite`), animated parts drawn live in `drawLive`; belts/pipes stroked as batched Path2D with curves (`e.cin`).
 - Planner (`js/plan.js`): pure functions `plFwd(f)` / `plRev(item,rate,pick)` over `RC`/`B`; UI state `PL` in localStorage `frontierworks_plan`.
 - 3D view (`js/view3d.js`): world = tile units, tile (x,y) → (x, h, y), north = −z. Models are part lists in `v3Models()` (static parts merged per type,
   animated parts as own InstancedMesh). `v3Layout()` rebuilds instances when `v3Sig()` changes; `v3Anim/v3Items/v3Smoke` run per frame.

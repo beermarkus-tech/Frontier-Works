@@ -13,9 +13,22 @@ const server=require('./serve.js');
   const n=fw.nodes(),iron=n.find(x=>x.t==='iron'&&x.p===2),coal=n.find(x=>x.t==='coal'&&x.p===1),P=(...a)=>fw.placeEnt(...a);
   const res=[P('drill1',iron.x,iron.y,0),P('belt1',iron.x+2,iron.y,0),P('belt1',iron.x+3,iron.y,0),P('smelter',iron.x+4,iron.y,0)];fw.entAt(iron.x+4,iron.y).r='r_iron_ingot';
   res.push(P('belt1',iron.x+6,iron.y+1,0),P('drill1',coal.x,coal.y,0),P('belt1',coal.x-1,coal.y,2),P('burner',coal.x-3,coal.y,0));fw.entAt(coal.x-3,coal.y).fuel.coal=10;
-  res.push(P('pole1',57,57,0),P('pole1',57,64,0));const before=S.inv.iron_ingot||0;for(let i=0;i<20*120;i++)fw.tick(0.05);return{res,ingots:(S.inv.iron_ingot||0)-before};});
+  res.push(P('pole1',MW/2-7,MH/2-7,0),P('pole1',MW/2-7,MH/2,0));const before=S.inv.iron_ingot||0;for(let i=0;i<20*120;i++)fw.tick(0.05);return{res,ingots:(S.inv.iron_ingot||0)-before};});
  check('placements',r.res.every(x=>x===''));check('ingots delivered ('+r.ingots+')',r.ingots>40);
  await p.click('#msBtn');await p.waitForTimeout(300);check('goals list renders',(await p.$$('#pbody .card')).length===10);
+ // big biome map + old saves
+ const bm=await p.evaluate(()=>{const bc=BIOMES.map(()=>0);for(let i=0;i<MW*MH;i++)bc[bio[i]]++;const types=new Set(nodes.map(n=>n.t));
+  const ur=nodes.filter(n=>n.t==='uranium'),urHot=ur.filter(n=>['frostmark','emberfield'].includes(biomeAt(n.x,n.y).id)).length;
+  const c=getChunk(5,5,true);return{MW,gen:S.gen,bc,types:types.size,ur:ur.length,urHot,chunk:c&&c.width,cpx:CH*TPX,startBio:biomeAt(MW/2,MH/2).id};});
+ check(`new map is ${bm.MW}×${bm.MW} with all 7 biomes (${bm.bc})`,bm.MW===384&&bm.gen===2&&bm.bc.every(v=>v>2000)&&bm.startBio==='greenvale');
+ check(`every resource exists; uranium mostly in Frostmark/Emberfield (${bm.urHot}/${bm.ur})`,bm.types===9&&bm.urHot/bm.ur>0.6);
+ check('terrain chunk paints ('+bm.chunk+'px)',bm.chunk===bm.cpx);
+ const sv=await p.evaluate(()=>{const s0=serialize(),n0=nodes.length,e0=ents.size;load(s0);const same=nodes.length===n0&&ents.size===e0&&MW===384;
+  // an old save: no gen/mw fields → must come back as the classic 128 map with the same layout as before
+  const o=JSON.parse(decodeURIComponent(escape(atob(s0))));delete o.S.gen;delete o.S.mw;o.S.seed=777;o.es=o.es.filter(e=>e.d==='core').map(e=>Object.assign(e,{x:62,y:62}));
+  load(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));const old={MW,n:nodes.length,core:[...ents.values()][0].x,iron:nodes[0].x+','+nodes[0].y,bios:new Set(bio).size};
+  load(s0);return{same,old,back:MW};});
+ check(`save/load keeps the big map; old saves load as 128 classic (${JSON.stringify(sv.old)})`,sv.same&&sv.old.MW===128&&sv.old.core===62&&sv.old.iron==='55,61'&&sv.old.bios===1&&sv.back===384);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
@@ -42,7 +55,7 @@ const server=require('./serve.js');
  const core=await p.evaluate(()=>{const e=[...window.__fw.ents().values()].find(e=>e.k==='core');return{x:e.x+e.w/2,y:e.y+e.h/2};});
  await look(core.x,core.y);await p.waitForTimeout(150);await p.mouse.click(W/2,H/2);await p.waitForTimeout(150);
  check('3D: tap opens the Base Core panel',await p.evaluate(()=>UI.panel&&UI.panel.kind==='ent'&&window.__fw.ents().get(UI.panel.arg).k==='core'));
- const spot=await p.evaluate(()=>{for(let r=6;r<30;r++)for(let a=0;a<64;a++){const x=Math.round(64+r*Math.cos(a/10)),y=Math.round(64+r*Math.sin(a/10));let ok=true;for(let i=0;i<7;i++)if(canPlace('belt1',x+i,y+3)||canPlace('smelter',x,y))ok=false;if(ok)return{x,y};}});
+ const spot=await p.evaluate(()=>{for(let r=6;r<30;r++)for(let a=0;a<64;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));let ok=true;for(let i=0;i<7;i++)if(canPlace('belt1',x+i,y+3)||canPlace('smelter',x,y))ok=false;if(ok)return{x,y};}});
  await p.evaluate(()=>{ACT.closePanel();ACT.tool('smelter');});await look(spot.x+0.5,spot.y+0.5);await p.waitForTimeout(150);await p.mouse.click(W/2,H/2);await p.waitForTimeout(150);
  check('3D: tap builds a smelter',await p.evaluate(s=>{const e=window.__fw.entAt(s.x,s.y);return e&&e.d==='smelter'&&e.x===s.x&&e.y===s.y;},spot));
  await p.evaluate(()=>ACT.tool('belt1'));await look(spot.x+3.5,spot.y+3.5);await p.waitForTimeout(150);
