@@ -97,11 +97,11 @@ D('belt4',{n:'Conveyor Mk4',k:'belt',spd:8,cat:'log',col:'#40b8ee',cost:{steel_p
 D('belt5',{n:'Conveyor Mk5',k:'belt',spd:13,cat:'log',col:'#c25cf0',cost:{alloy_panel:1,plastic:1},ow:1,desc:'780 items/min'});
 D('pipe1',{n:'Pipeline Mk1',k:'pipe',spd:5,cat:'log',col:'#6f93b8',cost:{copper_sheet:1},ow:1,desc:'300 m³/min of fluid. Drag to lay.'});
 D('pipe2',{n:'Pipeline Mk2',k:'pipe',spd:10,cat:'log',col:'#d6a640',cost:{copper_sheet:1,plastic:1},ow:1,desc:'600 m³/min of fluid.'});
-D('splitter',{n:'Splitter',k:'router',sub:'split',cat:'log',col:'#d08a2a',cost:{iron_plate:2,cable:2},ow:1,desc:'Input from the back, splits to front/left/right.'});
-D('merger',{n:'Merger',k:'router',sub:'merge',cat:'log',col:'#2a9ad0',cost:{iron_plate:2,cable:2},ow:1,desc:'Inputs from back/left/right, outputs to the front.'});
-D('sorter',{n:'Sorting Splitter',k:'router',sub:'sort',cat:'log',col:'#9a50d0',cost:{braced_plate:1,cable:5},ow:1,desc:'Filtered item goes front, everything else left/right. Tap it to set the filter.'});
+D('splitter',{n:'Splitter',k:'router',sub:'split',cat:'log',col:'#d08a2a',cost:{iron_plate:2,cable:2},ow:1,desc:'Input from the back, splits to front/left/right. Outputs go into belts or straight into a building touching that side.'});
+D('merger',{n:'Merger',k:'router',sub:'merge',cat:'log',col:'#2a9ad0',cost:{iron_plate:2,cable:2},ow:1,desc:'Inputs from back/left/right (belts, or a machine touching that side), outputs to the front (belt or building).'});
+D('sorter',{n:'Sorting Splitter',k:'router',sub:'sort',cat:'log',col:'#9a50d0',cost:{braced_plate:1,cable:5},ow:1,desc:'Filtered item goes front, everything else left/right (into belts or touching buildings). Tap it to set the filter.'});
 D('crossing',{n:'Crossing',k:'cross',cat:'log',col:'#6c6c6c',cost:{iron_plate:3,bolts:6},ow:1,desc:'Lets two belts/pipes cross each other.'});
-D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'log',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'Splits fluid to all other sides.'});
+D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'log',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'Splits fluid to all other sides (pipes or touching buildings).'});
 D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',cost:{iron_plate:10,iron_rod:10},desc:'Buffers 2000 items; passes them on to outgoing belts.'});
 D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'log',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
 D('incin',{n:'Incinerator',k:'incin',cat:'log',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});

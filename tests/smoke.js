@@ -45,6 +45,15 @@ const server=require('./serve.js');
  await p.click('#planBtn');await p.waitForTimeout(150);
  check('top-bar Planner button opens the planner',await p.evaluate(()=>UI.panel&&UI.panel.kind==='plan'));
  await p.evaluate(()=>ACT.closePanel());
+ // splitter feeds machines directly; machine pushes straight into a merger (no belts in between)
+ const sm=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=20;r<150&&X==null;r+=3)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a)),y=Math.round(MH/2+r*Math.sin(a));let ok=true;for(let j=-4;j<8&&ok;j++)for(let i=-2;i<14&&ok;i++)if(canPlace('belt1',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('storage',X,Y,0),P('belt1',X+2,Y,0),P('splitter',X+3,Y,0),P('smelter',X+4,Y,0),P('smelter',X+3,Y-2,0),P('merger',X+6,Y,0),P('belt1',X+7,Y,0),P('storage',X+8,Y,0),P('burner',X+3,Y+2,0)];
+  fw.entAt(X,Y).store={iron_ore:400};fw.entAt(X+4,Y).r='r_iron_ingot';fw.entAt(X+3,Y-2).r='r_iron_ingot';fw.entAt(X+3,Y+2).fuel.coal=50;
+  for(let i=0;i<20*60;i++)fw.tick(0.05);const out=fw.entAt(X+8,Y).store.iron_ingot||0,side=fw.entAt(X+3,Y-2).outb.iron_ingot||0;
+  for(const x of [X,X+2,X+3,X+4,X+6,X+7,X+8])removeEnt(fw.entAt(x,Y),false,true);removeEnt(fw.entAt(X+3,Y-2),false,true);removeEnt(fw.entAt(X+3,Y+2),false,true);
+  return{ok:r.every(x=>x===''),out,side};});
+ check(`splitter feeds touching smelters; smelter → touching merger → belt (${sm.out} ingots delivered, side smelter made ${sm.side})`,sm.ok&&sm.out>20&&sm.side>5);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

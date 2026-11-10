@@ -70,6 +70,9 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
 - One item per belt tile. Belt speeds: Mk1 60/min, Mk2 120, Mk3 270, Mk4 480, Mk5 780. Pipes: Mk1 300 m³/min, Mk2 600.
 - **A building outputs into any belt/pipe that points away from its edge, and accepts input from any belt/pipe pointing into it.**
   There are no fixed ports. Solids only go to belts and fluids only to pipes.
+  **Routers touch buildings directly** (confirmed with Markus, Session 10): a Splitter/Sorting Splitter output side (or Pipe Junction side)
+  touching a building feeds it without a belt, and a building pushes output straight into a touching Merger (from any side except
+  the merger's front) or into the back of a touching Splitter. A Merger's front can also feed a building directly.
 - Belts can feed another belt from the side (side-loading). Belt corners are drawn curved.
 - Splitter (back → front/left/right), Merger (back/left/right → front, fair alternation),
   Sorting Splitter (filter item → front, rest → sides), Crossing (two lines cross), Pipe Junction (fluid to all other sides).

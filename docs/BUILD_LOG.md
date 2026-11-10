@@ -428,3 +428,28 @@ A reload button next to the build number, to force the app onto the newest versi
 
 ### Next up
 - Markus: tap ↻ in ☰ Menu, check **Build 11**, then try the new calculator icon in the top bar and the codex generator list.
+
+---
+
+## Session 10 — 2026-11-10 (Claude Code, cloud session) · Build 12
+
+### What Markus asked for
+Let a Splitter feed a machine directly (no belt), and let a Merger take a machine's output directly.
+
+### Findings
+- **The simulation already allowed both.** Routers hand items to any touching building on their output sides (`updRouter` → `accept`),
+  and buildings push output into touching routers/crossings (`pushOut`). A test with a storage → belt → splitter → two touching smelters
+  → touching merger → belt → storage line delivered ingots, and both smelters were fed. Nothing in the game said so: the machine panel
+  and the splitter/merger descriptions only mentioned belts.
+
+### What was changed
+- Splitter, Merger, Sorting Splitter and Pipe Junction descriptions (shown when picking them) now say they work with touching buildings.
+- The machine panel hint explains it, including the orientation rule (a merger's front must not face the machine; a splitter feeds from its output sides).
+- DESIGN.md §5 records the rule (confirmed with Markus). A new smoke test locks it in.
+- Build number **12**.
+
+### Verified
+- `npm test` passes, including the new direct splitter → machine → merger check.
+
+### Next up
+- Markus: try placing a Splitter right next to a Smelter (an output side facing it) and a Merger against the Smelter's other side.
