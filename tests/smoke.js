@@ -78,6 +78,17 @@ const server=require('./serve.js');
  const ck=await p.evaluate(()=>{const fw=window.__fw,e=[...fw.ents().values()].find(x=>x.k==='mach');e.clock=1;openPanel('ent',e.id);const step=document.querySelector('#pbody input[data-act="clock"]').step;
   ACT.clockStep('-1');ACT.clockStep('-10');const a=Math.round(e.clock*100);ACT.clockStep('+10');ACT.clockStep('+1');const b=Math.round(e.clock*100);ACT.closePanel();return{step,a,b};});
  check(`clock steps of 1 % (slider step ${ck.step}; 100 −1 −10 = ${ck.a}; back to ${ck.b})`,ck.step==='1'&&ck.a===89&&ck.b===100);
+ // dead-end audit (same rule as tests/playthrough.js): every unlocked building must be buildable from makeable items, every goal makeable
+ const de=await p.evaluate(()=>{const HAND=['smelter','press','assembler'],ORES=Object.keys(NODE_T).filter(k=>k!=='oil').map(k=>NODE_T[k][0]),bad=[];
+  for(let t=0;t<MS.length;t++){const ub=new Set(START_B),ur=new Set(START_R);for(let i=0;i<t;i++){MS[i].b.forEach(x=>ub.add(x));MS[i].r.forEach(x=>ur.add(x));}
+   const built=new Set(['core']),boot=new Set(Object.keys(START_INV));let prod=new Set(),ch=true;
+   while(ch){ch=false;const p2=new Set(ORES);if(built.has('opump'))p2.add('crude');if(built.has('wpump'))p2.add('water');let g=true;
+    while(g){g=false;for(const id of ur){const r=RC[id],fl=[...Object.keys(r.i),...Object.keys(r.o)].some(k=>IT[k].f);if(!(built.has(r.m)||HAND.includes(r.m)&&!fl))continue;if(fl&&!built.has('pipe1'))continue;
+     if(Object.keys(r.i).every(k=>p2.has(k)))for(const k in r.o)if(!p2.has(k)){p2.add(k);g=true;}}}
+    prod=p2;for(const id of ub)if(!built.has(id)&&Object.keys(B[id].cost).every(k=>prod.has(k)||boot.has(k))){built.add(id);ch=true;}}
+   for(const id of ub)if(!built.has(id))bad.push(`tier ${t+1}: ${B[id].n}`);for(const k in MS[t].req)if(!prod.has(k))bad.push(`goal ${t+1}: ${IT[k].n}`);}
+  return bad;});
+ check('no progression dead ends in tiers 1–10'+(de.length?' ('+de.join('; ')+')':''),de.length===0);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

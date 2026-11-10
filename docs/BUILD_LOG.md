@@ -600,3 +600,29 @@ He couldn't hand-craft Braced Plates or Rotors ("gears"), but needs them to buil
 ### Build 21: clock in 1 % steps
 - The clock slider in machine/drill/pump panels now moves in 1 % steps, with −10 / −1 / +1 / +10 buttons under it (fiddly sliders
   on phones). The limits stay 10 % to 100 % (250 % after Steelworks). Test: 100 % −1 −10 → 89 %, and back.
+
+### Build 22: play-through of tiers 1–5
+- New dev tool `tests/playthrough.js` (`npm run playthrough`), report in **`docs/PLAYTEST.md`**. It is not a bot that lays out a whole
+  factory on the map. It checks what matters for "can you get through, and how long does it take":
+  1. **Dead-end audit, tiers 1–10:** per tier, every unlocked building must be buildable from items you can already make
+     (with built machines, hand crafting, or the start stock), and every goal item must be makeable. Result: **no dead ends.**
+     Self-test: with the old hand-crafting rule (Smelter/Press only), the audit flags the Assembler at tier 2, and from then on
+     nearly every later building. So it does catch the Build 20 bug. The same audit now runs in `npm test`.
+  2. **Every recipe unlocked by tier 5 (25) built and run in the real sim:** real belts/pipes from supply crates/tanks into the machine,
+     outputs into incinerators, coal burners for power, 40 s warm-up + 4 min measured. **All 25 make exactly their recipe rate.**
+     (The first run used Mk1 belts and a 60 s window. Rotor/Heavy Truss starved and slow batch recipes read low. Those were test artefacts, fixed in the tool.)
+     All 3 drills × 3 purities on real nodes deliver their stated rate.
+  3. **Belt limits:** every recipe's input and output fits on the best belt available when the recipe unlocks
+     (e.g. Rotor needs 100 bolts/min, and Conveyor Mk2 at 120/min unlocks with it).
+  4. **Pacing** (seed 20261110, start-area nodes): with all nearby nodes drilled a goal needs only 0.5–2.5 min of raw supply. A
+     one-machine-per-step factory takes 8 / 34 / 55 / 80 / 75 min for tiers 1–5, and a ~15-minute pace needs about 6 / 16 / 22 / 31 / 39 machines.
+     That's within the 10–20 min per tier target, with a steady growth curve. **No balance changes made.**
+- Build number **22**. CLAUDE.md and README mention the tool.
+
+### Known issues / not covered
+- The play-through doesn't simulate a whole player factory (layout, belt routing over distance, building costs, power growth). Building
+  costs aren't in the pacing numbers. Tiers 6–10 recipes aren't bench-tested yet (the dead-end audit does cover them).
+- Generators were only exercised as coal burners powering the benches. Steam/turbine/reactor benches are a follow-up.
+
+### Next up
+- Run the same bench for tiers 6–10 (refinery byproducts, blender, fabricator chains, reactor waste) when Markus gets there.

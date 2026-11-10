@@ -5,7 +5,8 @@
   "description": "2D factory-building browser game (PWA)",
   "scripts": {
     "start": "node tests/serve.js 8080",
-    "test": "node tests/smoke.js"
+    "test": "node tests/smoke.js",
+    "playthrough": "node tests/playthrough.js"
   },
   "devDependencies": {
     "playwright": "^1.50.0"

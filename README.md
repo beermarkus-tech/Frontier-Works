@@ -61,6 +61,7 @@ No build step. Serve the folder and open it:
 ```
 node tests/serve.js 8080      # http://localhost:8080
 npm install && npm test       # Playwright smoke test (sim, goals, service worker, offline)
+npm run playthrough           # tiers 1–5 play-through check → docs/PLAYTEST.md
 ```
 
 Fonts: Inter and Rajdhani, SIL Open Font License (see `fonts/`).

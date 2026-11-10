@@ -44,6 +44,10 @@ and keep the game playable after every commit.
 - Original content only: own names, art (procedural canvas drawing) and recipes — don't copy assets or names from commercial games.
 - Run `npm test` before committing, and **check it printed PASS lines with no FAIL or crash** before you commit (don't chain commit/push after the test with `;`). Each run uses a new random map, so test setups must search for dry land (`canPlace('incin',…)`), not just any free tile.
 
+## Balance checks
+- `npm run playthrough` (`tests/playthrough.js`) writes `docs/PLAYTEST.md`: dead-end audit for all tiers, every recipe up to tier 5 run in the real sim
+  (measured vs. expected output), drill rates, belt limits, and pacing per tier. Re-run it after changing recipes, costs or goals. `npm test` includes the dead-end audit.
+
 ## Known follow-ups
 - Late tiers (6–10) are untested for pacing/balance.
 - Faint seams can show between belt tiles at some zoom levels.
