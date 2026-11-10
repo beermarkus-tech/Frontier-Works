@@ -337,3 +337,42 @@ next to the ✕, so he can compare it with the number Claude reports.
 
 ### Open questions for Markus
 - Should New game keep the old factory as a second save slot instead of replacing it? (Ties to save slots, Session 1.)
+
+---
+
+## Session 7 — 2026-11-10 (Claude Code, cloud session) · Build 9
+
+### What Markus asked for
+"Can you include power generation into the planner please."
+
+### What was built
+- **New planner tab "⚡ Power"** (`plPow`, `plPowHtml` in `js/plan.js`). Input: MW needed, generator (Coal Burner,
+  Steam Generator, Fuel Turbine, Fission Reactor; unlocked only unless "Show locked"), fuel where there's a choice (coal/petroleum coke),
+  and whether to add the fuel chain's own power. Output:
+  - generators needed with load split ("2 at full load + 1 at 14% load, or all 3 at 71%")
+  - fuel, water and nuclear waste per minute, with the pipe/belt tier needed (waste is flagged red: it must be belted away)
+  - the fuel chain (via the reverse planner, e.g. Fuel → Refinery, Fuel Rods → Blender/Fabricator chain) with byproducts
+  - drills & pumps for the raw inputs, with "found mostly in …" biome hints
+  - the chain's own power (machines + drills/pumps) added to the demand and repeated until it settles (optional).
+- Maths matches the sim: fuel/min = MW × 60 ÷ item energy (coal 150, coke 180, fuel 750, fuel rod 750,000), water from the
+  generator's rate, reactor waste 10 per rod. Fuel burns in proportion to load, as in `burn()` in `sim.js`.
+- **"From a node" and "For a target"** now show a "Power plant" line (≈ N × generator and fuel/min) under their power total,
+  with **⚡ Plan the power for this**, which opens the Power tab pre-filled. "For a target" now also estimates drill & pump power
+  and shows a combined total.
+- Build number **9** (`BUILD` in `js/pwa.js`, `sw.js` VERSION `fw-build-9`). DESIGN.md §8 (planner) updated.
+
+### Verified
+- `npm test`: 28/28 pass. New checks: 60 MW → 2 Coal Burners, 24 coal/min; Steam 75 MW → 30 coal + 45 water/min;
+  Turbine 150 MW → 12 fuel/min from 0.3 Refinery and 18 crude/min; Reactor 2,500 MW → 0.2 rods, 2 waste, 240 water/min;
+  with own use on, the coal drill's power is added (61.2 MW total); the "Plan the power" button opens the Power tab.
+- Phone-size screenshots of the Power tab (300 MW of Fuel Turbines with the refinery chain).
+
+### Known issues
+- The reverse planner doesn't net byproducts (e.g. a coke chain shows plastic as a byproduct rather than offsetting it).
+- Generators are assumed to run at even load. Startup (hand-feeding coal) isn't modelled.
+
+### Next up
+- Markus: ☰ Menu → Production planner → ⚡ Power; or plan a line and tap "Plan the power for this". Check Menu shows **Build 9**.
+
+### Open questions for Markus
+- Should the planner also show power storage/backup once batteries exist (not in the game yet)?

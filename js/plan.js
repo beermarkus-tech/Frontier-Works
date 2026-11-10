@@ -11,9 +11,9 @@ const PL_RES=[...Object.keys(NODE_T),'water'];
 const plResItem=res=>res==='water'?'water':NODE_T[res][0];
 const PL_RAW=new Set(PL_RES.map(plResItem));
 const PL_EPS=1e-6;
-function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{item:'iron_plate',rate:60,pick:{}}};}
+function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{item:'iron_plate',rate:60,pick:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
 let PL=plDefault();
-try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:o.mode==='rev'?'rev':'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev)};}}catch(e){PL=plDefault();}
+try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow)};}}catch(e){PL=plDefault();}
 function plSave(){try{localStorage.setItem(PLAN_KEY,JSON.stringify(PL));}catch(e){}}
 
 /* ---------- visibility (unlocked only, unless "Show locked") ---------- */
@@ -27,6 +27,7 @@ function plFix(){
  f.n=Math.max(1,Math.min(99,Math.round(+f.n||1)));f.clock=Math.max(10,Math.min(250,Math.round(+f.clock||100)));
  f.steps=(f.steps||[]).filter(s=>s&&RC[s.r]);
  const r=PL.rev;r.rate=Math.max(0.1,Math.min(1e5,+r.rate||60));r.pick=r.pick||{};
+ const w=PL.pow;w.mw=Math.max(0.1,Math.min(1e6,+w.mw||100));const gens=plGens();if(!gens.includes(w.gen))w.gen=gens[0];if(!B[w.gen].fuels.includes(w.fuel))w.fuel=B[w.gen].fuels[0];w.self=w.self?1:0;
  const targets=plTargets();if(!targets.includes(r.item))r.item=targets.includes('iron_plate')?'iron_plate':targets[0];
 }
 
@@ -34,6 +35,25 @@ function plFix(){
 const plWhere=res=>BIOMES.map(b=>[b.res[res]||0,b.n]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]).join(' and ');
 
 /* ---------- maths ---------- */
+const PL_GENS=['burner','steam','turbine','reactor'];
+function plGens(){const v=PL_GENS.filter(plBOk);return v.length?v:['burner'];}
+/* Extractors for raw resources (best unlocked, on normal nodes / water), and the power they draw */
+function plExtract(raw){const list=[];let power=0;
+ for(const k in raw){const res=PL_RES.find(x=>plResItem(x)===k);if(!res)continue;const ex=plExtractors(res),best=ex.filter(id=>ub(id)).pop()||ex[0],n=raw[k]/(B[best].rate*60);
+  list.push({k,id:best,n,rate:raw[k]});power+=plPower(B[best].pw,n);}
+ return{list,power};}
+/* Power plant for a demand: generators, fuel/water/waste per minute, and the chain that makes the fuel.
+   Generators burn fuel in proportion to load: fuel/min = MW·60 / energy per item. With self=1 the fuel chain's own
+   power (machines + drills/pumps) is added to the demand, repeated until it settles. */
+function plPow(p){
+ const d=B[p.gen],en=IT[p.fuel].e;let own=0,o;
+ for(let i=0;i<12;i++){const tot=p.mw+(p.self?own:0),fuelMin=tot*60/en,water=d.water?tot*60*d.water:0;
+  const chain=PL_RAW.has(p.fuel)?{rows:[],raw:{[p.fuel]:fuelMin},by:{},none:{},power:0,mach:{}}:plRev(p.fuel,fuelMin,PL.rev.pick);
+  const raw=Object.assign({},chain.raw);if(water)raw.water=(raw.water||0)+water;const ex=plExtract(raw);
+  o={d,tot,fuelMin,water,waste:p.fuel==='fuel_rod'?fuelMin*10:0,n:tot/d.cap,chain,ex,own:chain.power+ex.power};
+  if(!p.self||Math.abs(o.own-own)<0.005)break;own=o.own;}
+ return o;
+}
 const plPerMin=(r,amt)=>amt*60/r.t;   // per machine at 100% clock
 function plPower(pw,n){const full=Math.floor(n+PL_EPS),fr=n-full;return pw*full+(fr>PL_EPS?pw*Math.pow(fr,1.6):0);}
 function plSourceRate(f){const d=B[f.ex],pur=f.res==='water'?1:PUR[f.p][0];return d.rate*pur*60*(f.clock/100)*f.n;}
@@ -103,8 +123,8 @@ function plRecOpts(list){
 const plMachList=m=>Object.keys(m).map(k=>`${m[k]} × ${B[k].n}`).join(', ');
 function planHtml(){
  plFix();
- let h=`<div class="chips" style="margin-bottom:8px"><button class="btn chip ${PL.mode==='fwd'?'on':''}" data-act="plMode" data-v="fwd">From a node →</button><button class="btn chip ${PL.mode==='rev'?'on':''}" data-act="plMode" data-v="rev">← For a target</button><button class="btn chip ${PL.locked?'on':''}" data-act="plLocked">${PL.locked?'🔓':'🔒'} Show locked</button></div>`;
- return h+(PL.mode==='fwd'?plFwdHtml():plRevHtml());
+ let h=`<div class="chips" style="margin-bottom:8px"><button class="btn chip ${PL.mode==='fwd'?'on':''}" data-act="plMode" data-v="fwd">From a node →</button><button class="btn chip ${PL.mode==='rev'?'on':''}" data-act="plMode" data-v="rev">← For a target</button><button class="btn chip ${PL.mode==='pow'?'on':''}" data-act="plMode" data-v="pow">⚡ Power</button><button class="btn chip ${PL.locked?'on':''}" data-act="plLocked">${PL.locked?'🔓':'🔒'} Show locked</button></div>`;
+ return h+(PL.mode==='fwd'?plFwdHtml():PL.mode==='rev'?plRevHtml():plPowHtml());
 }
 function plFwdHtml(){
  const f=PL.fwd,o=plFwd(f);
@@ -135,7 +155,7 @@ function plFwdHtml(){
  const used=Math.round(o.used*100);
  h+=`<h4>Summary</h4><div class="card">`;
  h+=`<div class="${used>=100?'plok':''}" style="margin-bottom:4px"><b>${used>=100?'✓ ':''}Node output used: ${used}%</b></div>`;
- h+=plRow('Buildings',plMachList(o.mach))+plRow('Total power',fmt(o.power)+' MW');
+ h+=plRow('Buildings',plMachList(o.mach))+plRow('Total power',fmt(o.power)+' MW')+plPlantLine(o.power);
  const lk=Object.keys(o.left);
  h+=`<div class="plsub">Output / left over</div>`+(lk.length?lk.map(k=>plRate(k,o.left[k])).join(''):'<div class="muted">nothing</div>');
  const sk=Object.keys(o.short);
@@ -160,7 +180,32 @@ function plRevHtml(){
  const bk=Object.keys(o.by),nk=Object.keys(o.none);
  if(bk.length)h+=`<h4>Byproducts</h4><div class="card"><div class="muted">These come out too. Belt them on, recycle them or burn them in an Incinerator.</div>${bk.map(k=>plRate(k,o.by[k])).join('')}</div>`;
  if(nk.length)h+=`<h4>Bring in from elsewhere</h4><div class="card"><div class="muted">No ${PL.locked?'':'unlocked '}recipe makes these here.</div>${nk.map(k=>plRate(k,o.none[k],'plbad')).join('')}</div>`;
- h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(o.mach)||'—')+plRow('Total power',fmt(o.power)+' MW')+`</div>`;
+ const ex=plExtract(o.raw),tp=o.power+ex.power;
+ h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(o.mach)||'—')+plRow('Machines power',fmt(o.power)+' MW')+plRow('Drills & pumps (estimate)',fmt(ex.power)+' MW')+plRow('<b>Total power</b>',`<b>${fmt(tp)} MW</b>`)+plPlantLine(tp)+`</div>`;
+ return h;
+}
+/* One line under a plan's power total: what plant covers it, plus a jump to the Power tab with that demand */
+function plPlantLine(mw){if(mw<=PL_EPS)return'';const p=Object.assign({},PL.pow,{mw}),o=plPow(p);
+ return`<div class="row"><span>Power plant</span><span>≈ ${Math.ceil(o.n-PL_EPS)} × ${B[p.gen].n} <small class="muted">(${fmt(o.fuelMin)} ${IT[p.fuel].n}/min)</small></span></div><button class="btn chip" data-act="plPowFrom" data-v="${Math.round(mw*10)/10}">⚡ Plan the power for this</button>`;}
+function plPowHtml(){
+ const p=PL.pow,o=plPow(p),d=o.d;
+ let h=`<div class="muted">How many generators a power demand needs, how much fuel and water they burn, and the chain that makes the fuel. Generators burn fuel in proportion to the power actually drawn.</div>`;
+ h+=`<h4>Demand</h4><div class="card">`+plRow('Power needed (MW)',plNum('w.mw',p.mw,0.1,1000000,'any'));
+ h+=`<div class="plsub">Generator</div>`+plSel('w.gen',plGens().map(id=>plOpt(id,`${B[id].n} (${B[id].cap} MW)${plLock(ub(id))}`)).join(''),p.gen,'wide');
+ if(d.fuels.length>1)h+=plRow('Fuel',plSel('w.fuel',d.fuels.map(f=>plOpt(f,IT[f].n)).join(''),p.fuel));
+ h+=plRow('Add the fuel chain’s own power',plSel('w.self',plOpt(1,'Yes')+plOpt(0,'No'),p.self))+`</div>`;
+ h+=`<h4>Power plant</h4><div class="card">`+plCount(o.n,p.gen).replace(' at 100%',' at full load').replace(/ at (\d+)%/g,' at $1% load');
+ h+=plRow('Total power to make',`${fmt(o.tot)} MW`)+(p.self?`<div class="muted">Includes ${fmt(o.own)} MW for the fuel chain below.</div>`:'');
+ h+=`<div class="plsub">Burns</div>`+plRate(p.fuel,o.fuelMin);
+ if(o.water)h+=plRate('water',o.water);
+ if(o.waste)h+=`<div class="plbad">Makes ${fmt(o.waste)}/min ${IT.waste.n}. Belt it away (storage or incinerator), or the reactor stops.</div>`;
+ h+=`</div>`;
+ const c=o.chain;
+ if(c.rows.length){h+=`<h4>Fuel chain</h4>`;for(const row of c.rows)h+=`<div class="card"><div class="row"><b>${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div><div class="muted">${row.r.n}</div>${plCount(row.n,row.r.m)}</div>`;
+  const bk=Object.keys(c.by);if(bk.length)h+=`<div class="card"><div class="plsub">Byproducts</div>${bk.map(k=>plRate(k,c.by[k])).join('')}</div>`;
+  const nk=Object.keys(c.none);if(nk.length)h+=`<div class="card"><div class="plsub">Bring in from elsewhere</div>${nk.map(k=>plRate(k,c.none[k],'plbad')).join('')}</div>`;}
+ h+=`<h4>Drills & pumps</h4><div class="card">`+(o.ex.list.length?o.ex.list.map(x=>plRate(x.k,x.rate)+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(x.n)} × ${B[x.id].n}${plLock(ub(x.id))} ${x.k==='water'?'on water':'on normal nodes'}${S.gen===2&&x.k!=='water'?` · found mostly in ${plWhere(PL_RES.find(r=>plResItem(r)===x.k))}`:''}</div>`).join(''):'<div class="muted">none</div>')+`</div>`;
+ h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(Object.assign({[p.gen]:Math.ceil(o.n-PL_EPS)},c.mach))||'—')+plRow('Power for others',`${fmt(p.mw)} MW`)+`</div>`;
  return h;
 }
 /* Default recipe for a new step: use the biggest leftover, preferring recipes whose inputs are all available, then standard ones. */
@@ -174,6 +219,7 @@ function plSet(key,v){
  const p=key.split('.');
  if(p[0]==='f'){PL.fwd[p[1]]=p[1]==='res'||p[1]==='ex'?v:+v;}
  else if(p[0]==='s'){const st=PL.fwd.steps[+p[1]];if(!st)return;if(p[2]==='share')st.share=Math.max(0,Math.min(100,+v||0));else st[p[2]]=v;}
+ else if(p[0]==='w'){PL.pow[p[1]]=p[1]==='gen'||p[1]==='fuel'?v:+v;}
  else if(p[0]==='r'){if(p[1]==='pick')PL.rev.pick[p[2]]=v;else PL.rev[p[1]]=p[1]==='rate'?+v:v;}
  plFix();
 }
@@ -183,6 +229,7 @@ Object.assign(ACT,{
  openPlan:()=>openPanel('plan'),
  plMode:v=>{PL.mode=v;plRefresh();},
  plLocked:()=>{PL.locked=!PL.locked;plFix();plRefresh();},
+ plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();$('pbody').scrollTop=0;},
  plAdd:()=>{if(!plAddStep())toast(Object.keys(plFwd(PL.fwd).left).length?'Nothing can use what is left over. Try “Show locked”.':'Nothing left over to use');plRefresh();},
  plDel:v=>{PL.fwd.steps.splice(+v,1);plRefresh();},
  plClear:()=>{PL.fwd.steps=[];plRefresh();},

@@ -43,6 +43,16 @@ const server=require('./serve.js');
  check('planner: iron node → 2 smelters, 2 presses, 40 plates ('+pm.a+')',pm.a.join()==='60,2,2,40,1');
  check('planner: copper node → 2/4/2 machines, 60 cable ('+pm.b+')',pm.b.join()==='2,4,2,60');
  check('planner: 10 motors/min → 2 motor, 5 rotor, 4 stator assemblers ('+pm.c+')',pm.c.join()==='2,5,4');
+ // planner power: generators, fuel, water, waste, fuel chain
+ const pw=await p.evaluate(()=>{PL.locked=true;const f=(gen,fuel,mw,self)=>plPow({gen,fuel,mw,self});
+  const a=f('burner','coal',60,0),b=f('steam','coal',75,0),c=f('turbine','fuel',150,0),d=f('reactor','fuel_rod',2500,0),e=f('burner','coal',60,1);
+  const ref=c.chain.rows.find(r=>r.item==='fuel');PL.locked=false;
+  return{a:[a.n,a.fuelMin],b:[b.n,b.fuelMin,b.water],c:[c.fuelMin,ref&&+ref.n.toFixed(2),ref&&ref.r.m,c.chain.raw.crude],d:[d.fuelMin,d.waste,d.water],e:[+e.tot.toFixed(2),e.own>0]};});
+ check('planner power: 60 MW = 2 coal burners, 24 coal/min ('+pw.a+')',pw.a.join()==='2,24');
+ check('planner power: steam 75 MW = 30 coal + 45 water/min ('+pw.b+')',pw.b.join()==='1,30,45');
+ check('planner power: turbine 150 MW = 12 fuel/min from 0.3 refinery, 18 crude ('+pw.c+')',pw.c.join()==='12,0.3,refinery,18');
+ check('planner power: reactor = 0.2 rods, 2 waste, 240 water/min ('+pw.d+')',pw.d.join()==='0.2,2,240');
+ check('planner power: own use of drills added ('+pw.e+')',pw.e[0]>60&&pw.e[0]<62&&pw.e[1]);
  // planner UI: open from Menu, add steps, switch modes
  await p.evaluate(()=>{localStorage.removeItem('frontierworks_plan');PL=plDefault();});
  await p.click('[data-act="openMenu"]');await p.waitForTimeout(200);await p.click('#pbody [data-act="openPlan"]');await p.waitForTimeout(200);
@@ -54,6 +64,8 @@ const server=require('./serve.js');
  await p.click('#pbody [data-act="plLocked"]');await p.click('#pbody [data-act="plMode"][data-v="rev"]');await p.waitForTimeout(100);
  await p.selectOption('#pbody select[data-pl="r.item"]','quantum_core');await p.waitForTimeout(100);
  check('planner reverse mode with locked recipes (quantum core chain)',await p.evaluate(()=>document.querySelectorAll('#pbody .plbig').length>10));
+ await p.click('#pbody [data-act="plMode"][data-v="fwd"]');await p.waitForTimeout(100);await p.click('#pbody [data-act="plPowFrom"]');await p.waitForTimeout(100);
+ check('planner: "Plan the power" opens the Power tab with that demand',await p.evaluate(()=>PL.mode==='pow'&&PL.pow.mw>0&&document.querySelector('#pbody .plbig').textContent.includes('×')));
  await p.evaluate(()=>{localStorage.removeItem('frontierworks_plan');PL=plDefault();ACT.closePanel();});
  // 3D view: toggle, tap to inspect, tap to build, drag a belt line, back to 2D
  await p.evaluate(()=>window.__fw.setView3D(true));await p.waitForFunction(()=>window.__fw.V3.on,null,{timeout:20000});await p.waitForTimeout(500);

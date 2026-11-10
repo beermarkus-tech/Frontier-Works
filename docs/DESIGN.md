@@ -117,6 +117,11 @@ Hand mining gives +5 ore from a node.
     rates, the belt/pipe tier each line needs, power, leftovers, missing inputs and "Node output used: N%".
   - *For a target:* pick an item and a rate per minute. It lists every machine for the whole chain (with a recipe picker
     where there are alternatives), raw resources (with an extractor estimate), byproducts and total power.
+  - *⚡ Power* (Session 9 request): enter the MW needed and pick a generator and fuel. It shows how many generators
+    (and their load), fuel, water and nuclear waste per minute, the chain that makes the fuel, the drills/pumps for it
+    (with biome hints), and optionally adds that chain's own power to the demand. Generators burn fuel in proportion to the
+    power drawn (fuel/min = MW × 60 ÷ fuel energy). The other two tabs show a "Power plant" line under their total power,
+    with a button that opens the Power tab with that demand. "For a target" also estimates drill & pump power.
   - Only unlocked recipes and buildings by default. "Show locked" lets you plan later tiers (marked 🔒).
   - Plans are stored separately from the game save (`frontierworks_plan`), so they never affect saves.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
