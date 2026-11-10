@@ -51,7 +51,7 @@ function renderPanel(full){
  const P=UI.panel;if(!P)return;const body=$('pbody'),pi=$('picon');
  if(P.kind==='ent'){const e=ents.get(P.arg);if(!e){closePanel();return;}
   if(full){$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
-  setHTML($('pdyn'),entDyn(e));return;}
+  setHTML($('pdyn'),entDyn(e));setHTML($('pbuild'),effChip(e));return;}
  pi.style.display='none';
  const map={inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml]};
  const [title,fn]=map[P.kind];
@@ -87,10 +87,15 @@ function entStatic(e){
 }
 function bufList(b){const ks=Object.keys(b).filter(k=>b[k]>0);return ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(b[k]))}</span></div>`).join(''):'<div class="muted">empty</div>';}
 /* Efficiency block for machines, drills and pumps (shown in their panel, refreshed live) */
+const effCol=pc=>pc>=90?'#4fe08a':pc>=60?'#ffd34a':pc>=30?'#ffa53a':'#ff5a46';
+/* Small live efficiency badge for the panel header (machines, drills, pumps) */
+function effChip(e){if(!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return'';
+ if(e._efT==null||e._efT<3)return`<span class="effchip" title="Efficiency (measuring)">…</span>`;
+ const pc=Math.round(e._ef*100);return`<span class="effchip" style="color:${effCol(pc)};border-color:${effCol(pc)}" title="Efficiency, last ${Math.round(e._efT)} s">${pc}%</span>`;}
 function effHtml(e){
  const d=B[e.d];if(e.k==='mach'&&!e.r)return'';
  if(e._efT==null||e._efT<3)return`<h4>Efficiency</h4><div class="muted">Measuring…</div>`;
- const pc=Math.round(e._ef*100),col=pc>=90?'#4fe08a':pc>=60?'#ffd34a':pc>=30?'#ffa53a':'#ff5a46';
+ const pc=Math.round(e._ef*100),col=effCol(pc);
  let item,max;if(e.k==='mach'){const r=RC[e.r];item=Object.keys(r.o)[0];max=r.o[item]*60/r.t*(e.clock||1);}
  else{item=e.item;max=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1);}
  let h=`<h4>Efficiency <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· last ${Math.round(e._efT)} s</span></h4>`;

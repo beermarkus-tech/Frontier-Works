@@ -476,3 +476,19 @@ An efficiency indicator for each machine, shown in its panel.
 
 ### Ideas (not built)
 - A small coloured efficiency ring on the buildings themselves (2D/3D), or an overlay toggle to spot bottlenecks across the factory.
+
+---
+
+## Session 12 — 2026-11-10 (Claude Code, cloud session) · Build 14
+
+### What Markus asked for
+Show the efficiency percentage in the machine panel's header too.
+
+### What was built
+- A live, coloured efficiency badge ("64%", same colours as the bar) in the panel header, left of ✕, for machines with a recipe,
+  drills and pumps (`effChip` in `js/ui.js`, refreshed with the panel). It shows "…" while measuring. The header slot is the one used for
+  "Build N" in the Menu.
+- Build number **14**.
+
+### Verified
+- `npm test` 33/33: the efficiency check now also confirms the header badge matches the measured value. Phone screenshot checked.
