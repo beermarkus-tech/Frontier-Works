@@ -106,7 +106,8 @@ Ten sequential tiers (Goals panel). Each requires parts from the item stock and 
 | 9 | Nuclear Age | Fission Reactor, Belt Mk5, Uranium Cell, Fuel Rod, Turbine Core, Quantum Core |
 | 10 | Orbital Beacon | Win screen (play can continue) |
 
-Start stock: 120 iron plate, 80 iron rod, 120 wire, 60 cable, 60 concrete, 200 bolts, 40 coal. Hand crafting covers smelter and press recipes only.
+Start stock: 120 iron plate, 80 iron rod, 120 wire, 60 cable, 60 concrete, 200 bolts, 40 coal. Hand crafting covers unlocked Smelter, Press and **Assembler** recipes (Assembler added in Session 17: the Assembler costs Braced Plates
+and Rotors, which only an Assembler makes, so the first one would otherwise be impossible).
 Hand mining gives +5 ore from a node.
 
 ## 8. Interface

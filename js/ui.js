@@ -138,8 +138,8 @@ function gridHtml(g){if(!g)return'<div class="muted">Not connected to a grid.</d
 function invHtml(){
  const ks=Object.keys(S.inv).filter(k=>S.inv[k]>0).sort((a,b)=>IT[a].n.localeCompare(IT[b].n));
  let h=`<h4>Item stock</h4>`+(ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(S.inv[k])}</span></div>`).join(''):'<div class="muted">empty</div>');
- h+=`<h4>Hand crafting</h4><div class="muted" style="margin-bottom:4px">Slow-but-free bootstrap: craft basic smelter/press recipes from your stock.</div>`;
- for(const r of RL){if(!ur(r.id)||(r.m!=='smelter'&&r.m!=='press'))continue;const ok=afford(r.i);
+ h+=`<h4>Hand crafting</h4><div class="muted" style="margin-bottom:4px">Bootstrap: craft unlocked Smelter, Press and Assembler recipes from your item stock (e.g. Braced Plates and Rotors for your first Assembler).</div>`;
+ for(const r of RL){if(!ur(r.id)||(r.m!=='smelter'&&r.m!=='press'&&r.m!=='assembler'))continue;const ok=afford(r.i);
   h+=`<div class="card"><div>${recLine(r)}</div><button class="btn" data-act="craft" data-v="${r.id}" data-n="1" ${ok?'':'disabled'}>×1</button> <button class="btn" data-act="craft" data-v="${r.id}" data-n="10" ${afford(r.i,10)?'':'disabled'}>×10</button></div>`;}
  return h;
 }

@@ -566,3 +566,26 @@ In the planner's "For a target" tab, show both inputs and outputs of the machine
 ### Verified
 - `npm test` 37/37, new check: a reverse-planner card lists In and Out with per-minute rates. Phone screenshot: 10 Motors/min →
   2 × Assembler, in 20 Rotors + 20 Stators, out 10 Motors.
+
+---
+
+## Session 17 — 2026-11-10 (Claude Code, cloud session) · Build 20
+
+### What Markus reported
+He couldn't hand-craft Braced Plates or Rotors ("gears"), but needs them to build Assemblers.
+
+### Cause
+- A real progression dead end: the Assembler costs 8 Braced Plates + 4 Rotors + 10 Cable, but both parts are Assembler recipes,
+  and hand crafting only offered Smelter and Press recipes. Nobody could build the first Assembler after Tier 1.
+  Checked the later machines: Foundry, Fabricator, Refinery, Blender, Steam Generator and Drill Mk2 are all buildable from parts
+  that existing machines can make, so this was the only such dead end.
+
+### Fix
+- Hand crafting (Items panel) now also lists unlocked **Assembler** recipes (Braced Plate, Rotor, Truss Frame, …). DESIGN.md §7 records the change.
+- Build number **20**.
+
+### Verified
+- `npm test` 38/38, new check: with the start stock and Tier 1 recipes, hand-crafting 8 Braced Plates and 4 Rotors works and the Assembler becomes affordable.
+
+### Next up
+- Playtesting tiers 1–5 end to end (Session 1's list) would catch more dead ends like this one.
