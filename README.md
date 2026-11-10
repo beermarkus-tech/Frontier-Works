@@ -17,6 +17,7 @@ Once installed it runs fullscreen and works offline. Saves live in the browser (
 - 56 items (6 fluids), 56 recipes incl. 10 alternates, 7 production machines
 - Conveyors Mk1–5, pipelines, splitters, mergers, sorting splitters, crossings, storage, tanks
 - Power grid with poles, fuses, and four generator types up to a fission reactor
+- Production planner (☰ Menu): plan a line from a node, or work backwards from a target rate
 - Overclocking, production stats, recipe codex, 1×/2×/4× speed, autosave
 
 ## Controls
@@ -39,6 +40,7 @@ js/data.js            items, recipes, buildings, milestones (game balance lives 
 js/sim.js             state, map generation, entities, item transfer, topology, simulation tick
 js/render.js          terrain bake, building/item sprites, belts & pipes, particles, main render
 js/ui.js              toolbar, panels, actions
+js/plan.js            production planner (maths only, own localStorage key)
 js/input.js           pointer/touch/keyboard input, camera, minimap
 js/pwa.js             service-worker registration, update prompt, install button
 js/main.js            save/load, main loop, boot

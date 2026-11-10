@@ -1,0 +1,186 @@
+'use strict';
+/* ================= PLANNER =================
+   Paper-planning tool (☰ Menu → Production planner). Pure maths on the recipe and building data:
+   it never reads or changes the factory. Two modes:
+   - fwd ("From a node"): extractor on a node → chain of steps → how many machines use it fully.
+   - rev ("For a target"): wanted item per minute → every machine and raw resource needed.
+   Plans are kept in their own localStorage key, separate from the game save. */
+const PLAN_KEY='frontierworks_plan';
+const PL_MACH=['smelter','press','assembler','foundry','refinery','fabricator','blender'];
+const PL_RES=[...Object.keys(NODE_T),'water'];
+const plResItem=res=>res==='water'?'water':NODE_T[res][0];
+const PL_RAW=new Set(PL_RES.map(plResItem));
+const PL_EPS=1e-6;
+function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{item:'iron_plate',rate:60,pick:{}}};}
+let PL=plDefault();
+try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:o.mode==='rev'?'rev':'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev)};}}catch(e){PL=plDefault();}
+function plSave(){try{localStorage.setItem(PLAN_KEY,JSON.stringify(PL));}catch(e){}}
+
+/* ---------- visibility (unlocked only, unless "Show locked") ---------- */
+const plRecOk=r=>PL.locked||ur(r.id);
+const plBOk=id=>PL.locked||ub(id);
+const plLock=ok=>ok?'':' 🔒';
+function plExtractors(res){const all=res==='water'?['wpump']:res==='oil'?['opump']:['drill1','drill2','drill3'];const vis=all.filter(plBOk);return vis.length?vis:all;}
+function plFix(){
+ const f=PL.fwd;if(!PL_RES.includes(f.res))f.res='iron';if(!PUR[f.p])f.p=1;
+ const ex=plExtractors(f.res);if(!ex.includes(f.ex))f.ex=ex[0];
+ f.n=Math.max(1,Math.min(99,Math.round(+f.n||1)));f.clock=Math.max(10,Math.min(250,Math.round(+f.clock||100)));
+ f.steps=(f.steps||[]).filter(s=>s&&RC[s.r]);
+ const r=PL.rev;r.rate=Math.max(0.1,Math.min(1e5,+r.rate||60));r.pick=r.pick||{};
+ const targets=plTargets();if(!targets.includes(r.item))r.item=targets.includes('iron_plate')?'iron_plate':targets[0];
+}
+
+/* ---------- maths ---------- */
+const plPerMin=(r,amt)=>amt*60/r.t;   // per machine at 100% clock
+function plPower(pw,n){const full=Math.floor(n+PL_EPS),fr=n-full;return pw*full+(fr>PL_EPS?pw*Math.pow(fr,1.6):0);}
+function plSourceRate(f){const d=B[f.ex],pur=f.res==='water'?1:PUR[f.p][0];return d.rate*pur*60*(f.clock/100)*f.n;}
+function plBelt(item,rate){
+ const ids=IT[item].f?['pipe1','pipe2']:['belt1','belt2','belt3','belt4','belt5'];
+ for(const id of ids)if(B[id].spd*60>=rate-PL_EPS)return{id,lines:1};
+ const top=ids[ids.length-1];return{id:top,lines:Math.ceil(rate/(B[top].spd*60)-PL_EPS)};
+}
+/* Forward: source → steps. Each step takes `share`% of what is left of its feed item; other inputs come from what is
+   left over, and anything missing is reported as "bring from elsewhere". Fractional machine counts are kept exact. */
+function plFwd(f){
+ const src=plResItem(f.res),srcRate=plSourceRate(f),pool={[src]:srcRate};
+ const out={src,srcRate,power:B[f.ex].pw*Math.pow(f.clock/100,1.6)*f.n,steps:[],mach:{[f.ex]:f.n},short:{}};
+ for(const st of f.steps){
+  const r=RC[st.r],row={st,r,ok:false,before:Object.assign({},pool)};out.steps.push(row);
+  const ins=Object.keys(r.i),feed=ins.includes(st.feed)&&pool[st.feed]>PL_EPS?st.feed:ins.find(k=>pool[k]>PL_EPS);
+  if(!feed){row.err='Nothing left to feed this. None of its inputs are left over from the steps above.';continue;}
+  const share=Math.max(0,Math.min(100,st.share==null?100:+st.share))/100,n=pool[feed]*share/plPerMin(r,r.i[feed]);
+  Object.assign(row,{ok:true,feed,n,ins:{},outs:{},need:{}});
+  for(const k of ins){const want=n*plPerMin(r,r.i[k]),have=Math.min(want,pool[k]||0);row.ins[k]=want;
+   if(pool[k]!==undefined){pool[k]-=have;if(pool[k]<PL_EPS)delete pool[k];}
+   if(want-have>PL_EPS){row.need[k]=want-have;out.short[k]=(out.short[k]||0)+want-have;}}
+  for(const k in r.o){const v=n*plPerMin(r,r.o[k]);row.outs[k]=v;pool[k]=(pool[k]||0)+v;}
+  row.power=plPower(B[r.m].pw,n);out.power+=row.power;out.mach[r.m]=(out.mach[r.m]||0)+Math.ceil(n-PL_EPS);
+ }
+ out.left=pool;out.used=srcRate>0?1-(pool[src]||0)/srcRate:0;return out;
+}
+/* Recipes that make `item` (main product first, then byproduct recipes; standard before alternates). */
+function plProducers(item){return RL.filter(r=>r.o[item]&&!r.i[item]&&plRecOk(r)).sort((a,b)=>((Object.keys(a.o)[0]!==item)-(Object.keys(b.o)[0]!==item))||(a.alt-b.alt));}
+function plPick(item,pick){const ps=plProducers(item);if(!ps.length)return null;return ps.find(r=>r.id===pick[item])||ps[0];}
+function plTargets(){const s=new Set();for(const r of RL)if(plRecOk(r))for(const k in r.o)if(!PL_RAW.has(k)&&!r.i[k])s.add(k);return[...s].sort((a,b)=>IT[a].n.localeCompare(IT[b].n));}
+/* Reverse: target per minute → machines per item (summed across the whole tree), raw resources, byproducts. */
+function plRev(item,rate,pick){
+ const order=[],state={},rec={};
+ const visit=it=>{if(state[it]||PL_RAW.has(it))return;state[it]=1;const r=plPick(it,pick);if(r){rec[it]=r;for(const k in r.i)visit(k);}order.push(it);};
+ visit(item);
+ const dem={[item]:rate},done=new Set(),out={rows:[],raw:{},by:{},none:{},power:0,mach:{}};
+ const add=(o,k,v)=>{o[k]=(o[k]||0)+v;};
+ for(let i=order.length-1;i>=0;i--){const it=order[i],need=dem[it]||0;done.add(it);if(need<=PL_EPS)continue;const r=rec[it];
+  if(!r){add(out.none,it,need);continue;}
+  const n=need/plPerMin(r,r.o[it]);out.rows.push({item:it,r,n,rate:need});out.power+=plPower(B[r.m].pw,n);add(out.mach,r.m,Math.ceil(n-PL_EPS));
+  for(const k in r.i){const v=n*plPerMin(r,r.i[k]);if(PL_RAW.has(k))add(out.raw,k,v);else if(done.has(k))add(out.none,k,v);else add(dem,k,v);}
+  for(const k in r.o)if(k!==it)add(out.by,k,n*plPerMin(r,r.o[k]));
+ }
+ return out;
+}
+
+/* ---------- UI ---------- */
+const plN=n=>(Math.round(n*100)/100).toString();
+const plSel=(key,opts,val,cls)=>`<select data-pl="${key}" ${cls?`class="${cls}"`:''}>${opts}</select>`.replace(`value="${val}"`,`value="${val}" selected`);
+const plOpt=(v,t)=>`<option value="${v}">${t}</option>`;
+const plNum=(key,val,min,max,step)=>`<input type="number" inputmode="decimal" data-pl="${key}" value="${val}" min="${min}" max="${max}" step="${step||1}">`;
+const plRow=(a,b)=>`<div class="row"><span>${a}</span><span>${b}</span></div>`;
+function plBeltTxt(item,rate){const b=plBelt(item,rate);return`${b.lines>1?b.lines+'× ':''}${B[b.id].n.replace('Conveyor ','Belt ').replace('Pipeline ','Pipe ')}${plLock(ub(b.id))}`;}
+const plRate=(k,v,cls)=>`<div class="row ${cls||''}"><span>${nm(k)}</span><span>${fmt(v)}/min <small class="muted">· ${plBeltTxt(k,v)}</small></span></div>`;
+function plCount(n,mid){
+ if(n<=PL_EPS)return`<div class="plbig">0 × ${B[mid].n}</div>`;
+ const c=Math.max(1,Math.ceil(n-PL_EPS)),full=Math.floor(n+PL_EPS),fr=n-full;
+ let split=fr<=PL_EPS?'all at 100%':full?`${full} at 100% + 1 at ${Math.round(fr*100)}%`:`1 at ${Math.round(fr*100)}%`;
+ if(fr>PL_EPS&&c>1)split+=` <small>(or all ${c} at ${Math.round(n/c*100)}%)</small>`;
+ return`<div class="plbig">${c} × ${B[mid].n}${plLock(ub(mid))}</div><div class="muted">${split} · exactly ${plN(n)}</div>`;
+}
+function plRecOpts(list){
+ let h='';for(const mt of PL_MACH){const rs=list.filter(r=>r.m===mt);if(rs.length)h+=`<optgroup label="${B[mt].n}">${rs.map(r=>plOpt(r.id,r.n+plLock(ur(r.id)))).join('')}</optgroup>`;}
+ return h;
+}
+const plMachList=m=>Object.keys(m).map(k=>`${m[k]} × ${B[k].n}`).join(', ');
+function planHtml(){
+ plFix();
+ let h=`<div class="chips" style="margin-bottom:8px"><button class="btn chip ${PL.mode==='fwd'?'on':''}" data-act="plMode" data-v="fwd">From a node →</button><button class="btn chip ${PL.mode==='rev'?'on':''}" data-act="plMode" data-v="rev">← For a target</button><button class="btn chip ${PL.locked?'on':''}" data-act="plLocked">${PL.locked?'🔓':'🔒'} Show locked</button></div>`;
+ return h+(PL.mode==='fwd'?plFwdHtml():plRevHtml());
+}
+function plFwdHtml(){
+ const f=PL.fwd,o=plFwd(f);
+ let h=`<div class="muted">Start with a drill on a node, then add machines step by step. The planner works out how many of each you need to use everything. It's maths only: nothing is built.</div>`;
+ h+=`<h4>Source</h4><div class="card">`;
+ h+=plRow('Resource',plSel('f.res',PL_RES.map(r=>plOpt(r,IT[plResItem(r)].n)).join(''),f.res));
+ if(f.res!=='water')h+=plRow('Purity',plSel('f.p',PUR.map((p,i)=>plOpt(i,`${p[1]} (×${p[0]})`)).join(''),f.p));
+ h+=plRow('Extractor',plSel('f.ex',plExtractors(f.res).map(id=>plOpt(id,B[id].n+plLock(ub(id)))).join(''),f.ex));
+ h+=plRow('How many',plNum('f.n',f.n,1,99));
+ h+=plRow('Clock speed %',plNum('f.clock',f.clock,10,250,5));
+ if(f.clock>100&&!S.oc)h+=`<div class="muted">Above 100% needs overclocking (unlocks with “Steelworks”).</div>`;
+ h+=plRate(o.src,o.srcRate)+`</div>`;
+ h+=`<h4>Steps</h4>`;
+ o.steps.forEach((row,i)=>{
+  const cands=RL.filter(r=>plRecOk(r)&&Object.keys(r.i).some(k=>row.before[k]>PL_EPS));if(!cands.includes(row.r))cands.push(row.r);
+  h+=`<div class="card"><div class="row"><b>Step ${i+1}</b><button class="btn chip" data-act="plDel" data-v="${i}" title="Remove step">✕</button></div>`;
+  h+=plSel(`s.${i}.r`,plRecOpts(cands),row.r.id,'wide');
+  if(!row.ok){h+=`<div class="plbad">${row.err}</div></div>`;return;}
+  const feeds=Object.keys(row.r.i).filter(k=>row.before[k]>PL_EPS);
+  h+=plRow(`Use % of the ${feeds.length>1?plSel(`s.${i}.feed`,feeds.map(k=>plOpt(k,IT[k].n)).join(''),row.feed):IT[row.feed].n} left`,plNum(`s.${i}.share`,row.st.share==null?100:row.st.share,0,100,5));
+  h+=plCount(row.n,row.r.m);
+  h+=`<div class="plsub">In</div>`+Object.keys(row.ins).map(k=>plRate(k,row.ins[k])).join('');
+  for(const k in row.need)h+=`<div class="plbad">Missing ${fmt(row.need[k])}/min ${IT[k].n}: bring it from another line.</div>`;
+  h+=`<div class="plsub">Out</div>`+Object.keys(row.outs).map(k=>plRate(k,row.outs[k])).join('');
+  h+=plRow('Power',fmt(row.power)+' MW')+`</div>`;
+ });
+ h+=`<button class="btn" data-act="plAdd">+ Add step</button>${f.steps.length?' <button class="btn" data-act="plClear">Clear steps</button>':''}`;
+ const used=Math.round(o.used*100);
+ h+=`<h4>Summary</h4><div class="card">`;
+ h+=`<div class="${used>=100?'plok':''}" style="margin-bottom:4px"><b>${used>=100?'✓ ':''}Node output used: ${used}%</b></div>`;
+ h+=plRow('Buildings',plMachList(o.mach))+plRow('Total power',fmt(o.power)+' MW');
+ const lk=Object.keys(o.left);
+ h+=`<div class="plsub">Output / left over</div>`+(lk.length?lk.map(k=>plRate(k,o.left[k])).join(''):'<div class="muted">nothing</div>');
+ const sk=Object.keys(o.short);
+ if(sk.length)h+=`<div class="plsub">Bring in from elsewhere</div>`+sk.map(k=>plRate(k,o.short[k],'plbad')).join('');
+ return h+`</div>`;
+}
+function plRevHtml(){
+ const r=PL.rev,o=plRev(r.item,r.rate,r.pick);
+ let h=`<div class="muted">Pick what you want to make and how much per minute. The planner lists every machine and raw resource the whole chain needs.</div>`;
+ h+=`<h4>Target</h4><div class="card">`+plSel('r.item',plTargets().map(k=>plOpt(k,IT[k].n)).join(''),r.item,'wide')+plRow('Per minute',plNum('r.rate',r.rate,0.1,100000,'any'))+`</div>`;
+ h+=`<h4>Machines</h4>`;
+ for(const row of o.rows){
+  const ps=plProducers(row.item);
+  h+=`<div class="card"><div class="row"><b>${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div>`;
+  if(ps.length>1)h+=plSel(`r.pick.${row.item}`,plRecOpts(ps),row.r.id,'wide');else h+=`<div class="muted">${row.r.n}</div>`;
+  h+=plCount(row.n,row.r.m)+`</div>`;
+ }
+ const rk=Object.keys(o.raw);
+ h+=`<h4>Raw resources</h4><div class="card">`+(rk.length?rk.map(k=>{
+  const res=PL_RES.find(x=>plResItem(x)===k),ex=plExtractors(res),best=ex.filter(id=>ub(id)).pop()||ex[0],per=B[best].rate*60;
+  return plRate(k,o.raw[k])+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(o.raw[k]/per)} × ${B[best].n} on ${k==='water'?'water':'normal nodes'}</div>`;}).join(''):'<div class="muted">none</div>')+`</div>`;
+ const bk=Object.keys(o.by),nk=Object.keys(o.none);
+ if(bk.length)h+=`<h4>Byproducts</h4><div class="card"><div class="muted">These come out too. Belt them on, recycle them or burn them in an Incinerator.</div>${bk.map(k=>plRate(k,o.by[k])).join('')}</div>`;
+ if(nk.length)h+=`<h4>Bring in from elsewhere</h4><div class="card"><div class="muted">No ${PL.locked?'':'unlocked '}recipe makes these here.</div>${nk.map(k=>plRate(k,o.none[k],'plbad')).join('')}</div>`;
+ h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(o.mach)||'—')+plRow('Total power',fmt(o.power)+' MW')+`</div>`;
+ return h;
+}
+/* Default recipe for a new step: use the biggest leftover, preferring recipes whose inputs are all available, then standard ones. */
+function plAddStep(){
+ const o=plFwd(PL.fwd),left=Object.keys(o.left).sort((a,b)=>o.left[b]-o.left[a]);
+ for(const k of left){const rs=RL.filter(r=>plRecOk(r)&&r.i[k]).sort((a,b)=>(Object.keys(b.i).every(x=>o.left[x])-Object.keys(a.i).every(x=>o.left[x]))||(a.alt-b.alt));
+  if(rs.length){PL.fwd.steps.push({r:rs[0].id,feed:k,share:100});return true;}}
+ return false;
+}
+function plSet(key,v){
+ const p=key.split('.');
+ if(p[0]==='f'){PL.fwd[p[1]]=p[1]==='res'||p[1]==='ex'?v:+v;}
+ else if(p[0]==='s'){const st=PL.fwd.steps[+p[1]];if(!st)return;if(p[2]==='share')st.share=Math.max(0,Math.min(100,+v||0));else st[p[2]]=v;}
+ else if(p[0]==='r'){if(p[1]==='pick')PL.rev.pick[p[2]]=v;else PL.rev[p[1]]=p[1]==='rate'?+v:v;}
+ plFix();
+}
+const plRefresh=()=>{plSave();if(UI.panel&&UI.panel.kind==='plan')renderPanel(true);};
+document.addEventListener('change',ev=>{const k=ev.target.dataset&&ev.target.dataset.pl;if(!k)return;plSet(k,ev.target.value);plRefresh();});
+Object.assign(ACT,{
+ openPlan:()=>openPanel('plan'),
+ plMode:v=>{PL.mode=v;plRefresh();},
+ plLocked:()=>{PL.locked=!PL.locked;plFix();plRefresh();},
+ plAdd:()=>{if(!plAddStep())toast(Object.keys(plFwd(PL.fwd).left).length?'Nothing can use what is left over. Try “Show locked”.':'Nothing left over to use');plRefresh();},
+ plDel:v=>{PL.fwd.steps.splice(+v,1);plRefresh();},
+ plClear:()=>{PL.fwd.steps=[];plRefresh();},
+});

@@ -126,3 +126,15 @@ input[type=range]{width:100%;accent-color:#ffb547;margin:4px 0}
  #fabs{right:calc(8px + var(--sar))}
  #fabs .btn{width:42px;height:42px}
 }
+/* production planner */
+#pbody select,#pbody input[type=number]{background:rgba(0,0,0,.35);color:var(--txt);border:1px solid var(--line2);border-radius:8px;padding:5px 7px;font:inherit;font-size:12px;max-width:62%;user-select:auto;-webkit-user-select:auto}
+#pbody .row>span:last-child>select{min-width:160px}
+#pbody input[type=number]{width:96px;text-align:right;flex-shrink:0}
+#pbody .row>span:last-child{flex-shrink:0}
+#pbody select.wide{display:block;width:100%;max-width:100%;margin:6px 0}
+#pbody option,#pbody optgroup{background:#141b22;color:var(--txt)}
+@media (pointer:coarse){#pbody select,#pbody input[type=number]{font-size:16px}}
+.plbig{font:700 18px/1.2 Rajdhani,sans-serif;color:var(--acc);margin-top:6px}
+.plsub{margin:8px 0 2px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut,#8a97a3)}
+.plbad,.row.plbad span{color:#ff8a6a}
+.plok{color:#7bd88f}

@@ -94,6 +94,14 @@ Hand mining gives +5 ore from a node.
 - Bottom dock: hint/cost line → category tabs (Logistics, Extraction, Production, Power) → building cards with drawn icons.
 - Right-side buttons: Inspect/pan, Rotate, Dismantle, Center on Core. Minimap on desktop.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
+- **Production Planner** (☰ Menu → Tools). A paper-planning tool that only does maths. It never changes the factory.
+  - *From a node:* pick resource, purity, extractor, count and clock, then add steps (recipes). Each step takes a chosen
+    share (%) of what's left of its input. It shows exact and rounded machine counts (e.g. "3 × Smelter: 2 at 100% + 1 at 67%"),
+    rates, the belt/pipe tier each line needs, power, leftovers, missing inputs and "Node output used: N%".
+  - *For a target:* pick an item and a rate per minute. It lists every machine for the whole chain (with a recipe picker
+    where there are alternatives), raw resources (with an extractor estimate), byproducts and total power.
+  - Only unlocked recipes and buildings by default. "Show locked" lets you plan later tiers (marked 🔒).
+  - Plans are stored separately from the game save (`frontierworks_plan`), so they never affect saves.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 

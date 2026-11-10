@@ -116,3 +116,54 @@ Unchanged from Session 1 — start with confirming the Pages deploy and installi
 ### Open questions for Markus
 - ~~Pull request or direct to main?~~ Answered: Markus wants all work committed and pushed straight to `main`, no side branches (noted in `CLAUDE.md`).
 - Session 1's open questions (session length per tier, vehicles/trains, save slots, sharing) are still open.
+
+---
+
+## Session 3 — 2026-11-10 (Claude Code, cloud session)
+
+### What Markus asked for
+A planning tool to work out in advance how many machines fully use a node's output, e.g. a drill on a node →
+N smelters → N presses, so a production line runs at 100%. It can live in a side menu.
+Choices he made: **inside ☰ Menu**, **a "Show locked" switch** to plan with undiscovered recipes, and **both directions at once**.
+
+### What was built
+- New `js/plan.js`, opened via ☰ Menu → Tools → 📐 Production planner (a Recipe codex button sits beside it).
+- **From a node:** resource, purity, extractor (Drill Mk1–3, Oil Pump, Water Pump), how many, clock %. Then
+  "+ Add step" picks a recipe for the biggest leftover; each step has a recipe dropdown (grouped by machine) and a
+  "Use % of the X left" box for splitting a stream (e.g. 50% of ingots to plates, the rest to rods).
+  Each step shows the machine count rounded up, plus the split ("2 at 100% + 1 at 67%, or all 3 at 89%") and the exact number,
+  in/out rates with the belt/pipe tier needed (🔒 if not unlocked yet), missing inputs in red, and power.
+  Summary: "Node output used: N%", building list, total power, leftovers, things to bring in from elsewhere.
+- **For a target:** item + rate/min → every machine across the whole tree (amounts summed when two parts share an
+  ingredient), a recipe picker per item where alternates exist, raw resources with "≈ N × best drill on normal nodes",
+  byproducts, and total power.
+- **Show locked** toggle, off by default.
+- Plans persist in their own localStorage key (`frontierworks_plan`). The game save format is unchanged.
+- Small fix: keyboard shortcuts (WASD etc.) no longer fire while a dropdown has focus.
+- `sw.js` VERSION → `fw-2026-11-10-3`, `js/plan.js` added to `ASSETS`. DESIGN.md §8, README and CLAUDE.md updated.
+
+### Decisions (and why)
+- Maths only, no link to the real factory. It can't break saves or the sim. Design agreed with Markus this session (recorded in DESIGN.md §8).
+- The forward mode is a list of steps, not a node graph. Easier to use on a phone. Branching works through the share % per step.
+- Reverse mode doesn't net byproducts back into inputs (e.g. water from Battery). It lists them separately. Simple and predictable.
+- Machine counts assume 100% clock per machine. Underclocking the last one is shown as a suggestion.
+
+### Verified
+- `npm test`: 12/12 pass, including new checks. Normal iron node + Mk1 → 2 smelters → 2 presses → 40 plates/min, node 100% used.
+  Copper → 2 smelters → 4 wire presses → 2 cable presses → 60 cable/min. 10 motors/min → 2 motor, 5 rotor, 4 stator assemblers.
+  The UI opens from Menu, adds steps, reacts to a purity change, and reverse mode with locked recipes works (Quantum Core chain).
+- Screenshots at phone size (390×844): dropdowns and number boxes readable after widening them.
+
+### Known issues
+- Reverse mode doesn't handle loops between recipes (none exist with the current data). If one appears, the looping item
+  is listed under "Bring in from elsewhere" rather than computed.
+- Planner text and options are plain names (dropdowns can't show item icons).
+- Everything from Session 1's known issues still stands.
+
+### Next up
+- Markus to try the planner on his phone and say what's missing (e.g. "send plan to build", node-picking from the map).
+- Then continue Session 1's list: playtest tiers 1–5, onboarding, undo.
+
+### Open questions for Markus
+- Should tapping a resource node on the map offer "Plan this node", opening the planner already filled in?
+- Session 1's open questions (session length per tier, vehicles/trains, save slots, sharing) are still open.

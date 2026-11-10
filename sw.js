@@ -1,8 +1,8 @@
 // Frontier Works service worker — bump VERSION on every release so players get the update.
-const VERSION = 'fw-2026-11-10-2';
+const VERSION = 'fw-2026-11-10-3';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
-  './js/data.js', './js/sim.js', './js/render.js', './js/ui.js', './js/input.js', './js/pwa.js', './js/main.js',
+  './js/data.js', './js/sim.js', './js/render.js', './js/ui.js', './js/plan.js', './js/input.js', './js/pwa.js', './js/main.js',
   './fonts/inter-latin-400-normal.woff2', './fonts/inter-latin-500-normal.woff2', './fonts/inter-latin-600-normal.woff2',
   './fonts/inter-latin-700-normal.woff2', './fonts/rajdhani-latin-600-normal.woff2', './fonts/rajdhani-latin-700-normal.woff2',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png', './icons/icon.svg'

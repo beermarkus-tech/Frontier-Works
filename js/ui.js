@@ -53,9 +53,9 @@ function renderPanel(full){
   if(full){$('ptitle').textContent=B[e.d].n;pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));return;}
  pi.style.display='none';
- const map={inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml]};
+ const map={inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml]};
  const [title,fn]=map[P.kind];
- if(!full&&(P.kind==='menu'||P.kind==='codex'))return;
+ if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'))return;
  $('ptitle').textContent=title;
  if(P.kind==='node'){pi.src=itemIcon(NODE_T[P.arg.t][0]);pi.style.display='';}
  const st=body.scrollTop;setHTML(body,fn(P.arg));body.scrollTop=st;
@@ -149,7 +149,8 @@ function codexHtml(){
 }
 function nodeHtml(n){const it=NODE_T[n.t][0];return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div><div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button>`:''}`;}
 function menuHtml(){
- return`<h4>How to play</h4><div class="muted">
+ return`<h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button>
+ <h4>How to play</h4><div class="muted">
  1. Drill the iron node, belt the ore into a Smelter, then into a Press. Belt products into the Base Core.<br>
  2. Power: drill coal → belt into a Coal Burner. Power Poles link generators to machines (yellow circles show range).<br>
  3. Hit the goals (🏁) to unlock new machines, recipes and alternates. 10 tiers end with launching the Orbital Beacon.<br>

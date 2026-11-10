@@ -23,10 +23,11 @@ and keep the game playable after every commit.
 3. Tell Markus in two or three plain sentences what changed and what to try on his phone.
 
 ## Architecture
-- Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → input → pwa → main. Top-level `const`/`let` are visible across files; don't redeclare names.
+- Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → plan → input → pwa → main. Top-level `const`/`let` are visible across files; don't redeclare names.
 - Sim runs at fixed 20 ticks/s (`tick(0.05)` in `js/sim.js`). Belts hold one item per tile; `beltOrder` processes downstream first. Buildings push output only into belts/pipes pointing away from them; input is any belt/pipe pointing into them.
 - Power: poles/generators link (max 5 nearest within range), consumers attach to nearest node in supply range. Demand > capacity trips the fuse (`trip` flag on nodes).
 - Rendering: terrain baked once to a 2048² canvas; building sprites cached per zoom bucket (`getSprite`), animated parts drawn live in `drawLive`; belts/pipes stroked as batched Path2D with curves (`e.cin`).
+- Planner (`js/plan.js`): pure functions `plFwd(f)` / `plRev(item,rate,pick)` over `RC`/`B`; UI state `PL` in localStorage `frontierworks_plan`.
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).
 
 ## Rules
