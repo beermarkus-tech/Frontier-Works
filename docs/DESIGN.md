@@ -150,6 +150,7 @@ Hand mining gives +5 ore from a node.
 ## 10. Technical decisions
 - Plain JavaScript, no framework, no build step. The only library is Three.js (MIT, vendored in `js/lib/`), loaded only when 3D is first used. Hosted on GitHub Pages and installable as a PWA (offline via `sw.js`).
 - Fixed-step simulation at 20 ticks/s, decoupled from rendering. Game speed can be 1×/2×/4×.
+- Updates: ☰ Menu shows the build number top right, with a ↻ button that saves, fetches the newest build and reloads (Session 8). The normal "Update ready" prompt still appears on its own.
 - Saves: localStorage autosave every 30 s plus Export/Import as text. Saves are tied to the site's address.
 - New features must keep old saves loading.
 

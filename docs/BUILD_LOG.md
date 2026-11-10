@@ -376,3 +376,29 @@ next to the ✕, so he can compare it with the number Claude reports.
 
 ### Open questions for Markus
 - Should the planner also show power storage/backup once batteries exist (not in the game yet)?
+
+---
+
+## Session 8 — 2026-11-10 (Claude Code, cloud session) · Build 10
+
+### What Markus asked for
+A reload button next to the build number, to force the app onto the newest version after a push.
+
+### What was built
+- **↻ button** in the Menu panel header, between "Build N" and ✕ (Menu only). It saves the game, asks the server for a newer
+  `sw.js`, and if there is one, installs it, activates it and reloads (the "Update ready" dialog is skipped). If nothing is newer,
+  it just reloads. Offline it reloads from the cache.
+- **Fix for late updates:** the service worker now installs files with `cache: 'reload'`. Before, it could copy stale files
+  from the browser's HTTP cache (GitHub Pages sends a ~10-minute cache time), so a new build could arrive partly old.
+- Build number **10**. DESIGN.md §10 notes the update button.
+
+### Verified
+- `npm test`: 29/29 pass, including "↻ reloads the game and the save is kept".
+- A separate simulation of a real push: the app ran Build 10 from a server sending 10-minute cache headers, the server was switched
+  to Build 11, and one tap on ↻ brought it to Build 11 (Menu label and cache both updated, old cache removed).
+
+### Known issues
+- GitHub Pages itself takes about 1–2 minutes after a push to publish. Tapping ↻ before that still shows the old build: wait a moment and tap again.
+
+### Next up
+- Markus: after each push, open ☰ Menu, tap ↻, and check the build number matches what Claude reported.

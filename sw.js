@@ -1,5 +1,5 @@
 // Frontier Works service worker — bump VERSION on every release so players get the update.
-const VERSION = 'fw-build-9';   // keep in step with BUILD in js/pwa.js
+const VERSION = 'fw-build-10';   // keep in step with BUILD in js/pwa.js
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './js/data.js', './js/sim.js', './js/render.js', './js/ui.js', './js/plan.js', './js/view3d.js', './js/lib/three.min.js', './js/input.js', './js/pwa.js', './js/main.js',
@@ -8,7 +8,7 @@ const ASSETS = [
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png', './icons/icon.svg'
 ];
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(ASSETS)));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' })))));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));

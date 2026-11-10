@@ -50,13 +50,13 @@ function closePanel(){UI.panel=null;UI.sel=null;$('panel').classList.add('hidden
 function renderPanel(full){
  const P=UI.panel;if(!P)return;const body=$('pbody'),pi=$('picon');
  if(P.kind==='ent'){const e=ents.get(P.arg);if(!e){closePanel();return;}
-  if(full){$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
+  if(full){$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));return;}
  pi.style.display='none';
  const map={inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml]};
  const [title,fn]=map[P.kind];
  if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'))return;
- $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';
+ $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';$('preload').style.display=P.kind==='menu'?'inline-flex':'none';
  if(P.kind==='node'){pi.src=itemIcon(NODE_T[P.arg.t][0]);pi.style.display='';}
  const st=body.scrollTop;setHTML(body,fn(P.arg));body.scrollTop=st;
 }

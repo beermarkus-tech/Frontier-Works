@@ -21,6 +21,9 @@ const server=require('./serve.js');
  const bn=await p.evaluate(()=>({b:BUILD,txt:document.getElementById('pbuild').textContent}));
  const swv=require('fs').readFileSync(require('path').join(__dirname,'..','sw.js'),'utf8').match(/VERSION = '([^']+)'/)[1];
  check(`build number ${bn.b} in Menu header and sw.js (${swv})`,bn.txt==='Build '+bn.b&&swv==='fw-build-'+bn.b);
+ const rl=await p.evaluate(()=>{const b=document.getElementById('preload');return !!b&&b.style.display!=='none'&&typeof ACT.forceReload==='function';});
+ await Promise.all([p.waitForEvent('load',{timeout:15000}),p.click('#preload')]);await p.waitForTimeout(1200);
+ check('↻ reload button in Menu reloads the game (save kept)',rl&&await p.evaluate(()=>!!window.__fw&&window.__fw.ents().size>5));
  await p.evaluate(()=>ACT.closePanel());
  // big biome map + old saves
  const bm=await p.evaluate(()=>{const bc=BIOMES.map(()=>0);for(let i=0;i<MW*MH;i++)bc[bio[i]]++;const types=new Set(nodes.map(n=>n.t));

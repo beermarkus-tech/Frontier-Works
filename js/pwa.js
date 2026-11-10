@@ -1,7 +1,7 @@
 'use strict';
 /* ---------- PWA: service worker, updates, install ---------- */
 // Build number: +1 on every push (= commit count on main). Must match VERSION 'fw-build-N' in sw.js (the test checks).
-const BUILD=9;
+const BUILD=10;
 const PWA={prompt:null,standalone:matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true,
  ios:/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),waiting:null};
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();PWA.prompt=e;if(UI.panel&&UI.panel.kind==='menu')renderPanel(true);});
@@ -14,8 +14,20 @@ function installHtml(){
  return'<div class="muted">Use your browser menu → <b>Install app</b> / <b>Add to Home screen</b>.</div>';
 }
 ACT.installApp=async()=>{if(!PWA.prompt)return;PWA.prompt.prompt();try{await PWA.prompt.userChoice;}catch(e){}PWA.prompt=null;renderPanel(true);};
+/* ↻ in the Menu header: save, look for a newer build on the server, install it and reload (or just reload if none) */
+ACT.forceReload=async()=>{
+ save();PWA.forcing=true;toast('Checking for a new build…');
+ const done=()=>location.reload();
+ try{const reg='serviceWorker' in navigator&&await navigator.serviceWorker.getRegistration();
+  if(reg){await reg.update();const w=reg.waiting||reg.installing;
+   if(w){toast('New build found, installing…');
+    await new Promise(res=>{if(w.state==='installed'||w.state==='activated')return res();const t=setTimeout(res,20000);w.addEventListener('statechange',()=>{if(w.state==='installed'||w.state==='activated'){clearTimeout(t);res();}});});
+    w.postMessage('skipWaiting');setTimeout(done,4000);return;}}   // controllerchange normally reloads first
+ }catch(e){}
+ done();
+};
 ACT.applyUpdate=()=>{save();if(PWA.waiting)PWA.waiting.postMessage('skipWaiting');};
-function showUpdate(w){PWA.waiting=w;dialog(`<h2>Update ready</h2><p>A new version of Frontier Works is available. Your game is saved before reloading.</p><button class="btn pri" data-act="applyUpdate">Update now</button> <button class="btn" data-act="closeDlg">Later</button>`);}
+function showUpdate(w){PWA.waiting=w;if(PWA.forcing)return;dialog(`<h2>Update ready</h2><p>A new version of Frontier Works is available. Your game is saved before reloading.</p><button class="btn pri" data-act="applyUpdate">Update now</button> <button class="btn" data-act="closeDlg">Later</button>`);}
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
  addEventListener('load',()=>{
   navigator.serviceWorker.register('./sw.js').then(reg=>{
