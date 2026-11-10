@@ -19,7 +19,7 @@ function tap(t){
  const tool=UI.tool;
  if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();}return;}
  if(tool&&B[tool]){const d=B[tool];
-  if(isLine(d.k)){buildPath(tool,[{x:t.x,y:t.y,d:UI.rot}]);return;}
+  if(isLine(d.k)){const o=entAt(t.x,t.y);buildPath(tool,[{x:t.x,y:t.y,d:o&&o.k===d.k?o.dir:UI.rot}]);return;}   // tapping an existing belt/pipe upgrades it in place, keeping its direction
   const fp=footprint(tool,t.x,t.y);const why=placeEnt(tool,fp.x,fp.y,UI.rot);if(why&&why!=='same')toast(why);refreshTools();updInfo();return;}
  const e=entAt(t.x,t.y);
  if(e){UI.sel=e.id;openPanel('ent',e.id);return;}

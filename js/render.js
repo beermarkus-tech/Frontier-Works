@@ -358,7 +358,7 @@ function render(){
   const n=fake.length,cost=B[linePrev.id].cost;const last=fake[n-1];const okA=afford(cost,n);ctx.font=`600 ${12*DPR}px Inter,system-ui,sans-serif`;const txt=`${n} × ${B[linePrev.id].n}`;const tw=ctx.measureText(txt).width;const lx=sx(last.x+0.5)-tw/2-8*DPR,ly=sy(last.y)-26*DPR;ctx.fillStyle=okA?'rgba(14,20,27,0.85)':'rgba(120,30,20,0.9)';rr(lx,ly,tw+16*DPR,20*DPR,8*DPR);ctx.fill();ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.fillText(txt,lx+8*DPR,ly+10*DPR);}
  else if(hover&&tool&&B[tool]){const d=B[tool],fp=footprint(tool,hover.x,hover.y),why=canPlace(tool,fp.x,fp.y),bad=why&&!(why==='Blocked'&&isLine(d.k)&&entAt(hover.x,hover.y)&&entAt(hover.x,hover.y).k===d.k);
   const X=sx(fp.x),Y=sy(fp.y),P=d.w*s;
-  if(isLine(d.k))drawLines([{x:fp.x,y:fp.y,dir:UI.rot,d:tool,k:d.k,spd:d.spd,cin:null}],sx,sy,s,0.75);
+  if(isLine(d.k)){const o=entAt(fp.x,fp.y);drawLines([{x:fp.x,y:fp.y,dir:o&&o.k===d.k?o.dir:UI.rot,d:tool,k:d.k,spd:d.spd,cin:null}],sx,sy,s,0.75);}
   else if(d.k==='router'||d.k==='cross'){ctx.globalAlpha=0.75;drawRouter(ctx,{d:tool,k:d.k,dir:UI.rot},X,Y,s);ctx.globalAlpha=1;}
   else if(d.k==='pole'){ctx.globalAlpha=0.8;drawPole(ctx,{d:tool},X,Y,s);ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,215,90,0.6)';ctx.setLineDash([5*DPR,5*DPR]);ctx.beginPath();ctx.arc(X+s/2,Y+s/2,d.link*s,0,7);ctx.stroke();ctx.setLineDash([]);}
   else blit(tool,X,Y,s,0.7);

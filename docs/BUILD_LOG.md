@@ -516,3 +516,20 @@ Two earlier offers he picked: (1) efficiency shown on the buildings themselves, 
 - `npm test` 35/35, new: "Plan this node" on a copper node opens the planner with copper, its purity and a Copper Ingot step (2 × Smelter
   on a normal node); the efficiency-ring option is on by default and toggles.
 - Phone screenshots of a test factory: 2D rings showing 96 (fed), 45 (output blocked) and 65 (starved) in the right colours; matching bars in 3D.
+
+---
+
+## Session 14 — 2026-11-10 (Claude Code, cloud session) · Build 16
+
+### What Markus reported
+Tapping a belt to upgrade it flips the belt's direction.
+
+### Cause and fix
+- A tap with a belt/pipe tool laid a one-tile line in the Rotate button's direction (`UI.rot`), replacing the old belt, so the upgrade
+  took the tool's direction instead of the belt's own. Now a tap on an existing belt/pipe of the same kind keeps its direction
+  (`tap()` in `js/input.js`, used by 2D and 3D). The hover preview shows the kept direction. Dragging still lays belts in the drag
+  direction; to turn a belt, use ↻ Rotate in its panel or R.
+- Build number **16**.
+
+### Verified
+- `npm test` passes, including a new check: a south-facing Mk1 belt tapped with Mk2 selected (Rotate set to east) becomes a south-facing Mk2.

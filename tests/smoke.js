@@ -64,6 +64,10 @@ const server=require('./serve.js');
   localStorage.removeItem('frontierworks_plan');PL=plDefault();ACT.closePanel();return r;});
  check(`"Plan this node" opens the planner for that node (${pn.res}, ${pn.steps}, ${pn.big})`,pn.btn&&pn.kind==='plan'&&pn.res==='copper'&&pn.p&&pn.steps==='r_copper_ingot'&&/Smelter/.test(pn.big||''));
  check('efficiency rings option is on by default and toggles',await p.evaluate(()=>{const a=OPT.eff;ACT.openMenu();ACT.optEff('0');const b=OPT.eff;ACT.optEff('1');ACT.closePanel();return a&&!b&&OPT.eff;}));
+ // tapping a belt with a better belt selected upgrades it without turning it around
+ const up=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=6;r<150&&X==null;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a)),y=Math.round(MH/2+r*Math.sin(a));if(!canPlace('belt1',x,y)){X=x;Y=y;break;}}
+  S.ub.push('belt2');S.inv.bolts=999;S.inv.iron_plate=999;fw.placeEnt('belt1',X,Y,1);UI.rot=0;setTool('belt2');tap({x:X,y:Y});setTool(null);const e=fw.entAt(X,Y);const r={d:e.d,dir:e.dir};removeEnt(e,false,true);return r;});
+ check(`tap-upgrade keeps belt direction (${up.d}, dir ${up.dir})`,up.d==='belt2'&&up.dir===1);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
