@@ -266,14 +266,22 @@ function updCross(e){
  if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(t&&accept(t,e.vs,e.vd,0))e.vs=null;}
 }
 function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}
+/* Efficiency: running average over the last EFF_T seconds of "working" vs. why not (e._ef 0..1, e._efw {reason: share}).
+   Not saved; it re-measures after loading. Reasons: 'in:<item>' waiting for input, 'out' output full, 'power', 'recipe', 'none'. */
+const EFF_T=30;
+function effTrack(e,dt,st){const T=e._efT=Math.min(EFF_T,(e._efT||0)+dt),a=dt/T;e._ef=(e._ef||0)*(1-a)+(st==='work'?a:0);
+ const w=e._efw||(e._efw={});for(const k in w){w[k]*=1-a;if(w[k]<0.002)delete w[k];}if(st!=='work')w[st]=(w[st]||0)+a;}
+function machState(e,r){if(!r)return'recipe';if(e.run)return e.pw>0?'work':'power';
+ for(const k in r.i)if((e.inb[k]||0)<r.i[k])return'in:'+k;return'out';}
 function updBuilding(e,dt){
  switch(e.k){
   case 'mach':{
-   const r=e.r&&RC[e.r];e.want=false;if(!r)return;
+   const r=e.r&&RC[e.r];e.want=false;if(!r){effTrack(e,dt,'recipe');return;}
    if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];}e.run=true;e.prog=0;}
    if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t;if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];}e.run=false;e.prog=0;
      if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];}e.run=true;}}}}
    for(const k in e.outb)if(e.outb[k]>0){for(let a=0;a<2&&e.outb[k]>0;a++){if(pushOut(e,k))e.outb[k]--;else break;}}
+   effTrack(e,dt,machState(e,r));
    break;}
   case 'drill':case 'pump':{
    const d=B[e.d];let item=null,rate=0;
@@ -281,6 +289,7 @@ function updBuilding(e,dt){
    e.item=item;e.want=!!item&&e.buf<10;
    if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;}}
    if(item)for(let a=0;a<2&&e.buf>0;a++){if(pushOut(e,item))e.buf--;else break;}
+   effTrack(e,dt,!item?'none':e.want&&e.pw>0?'work':e.buf>=10?'out':'power');
    break;}
   case 'gen':if(e.outb.waste>0)for(let a=0;a<2&&e.outb.waste>0;a++){if(pushOut(e,'waste'))e.outb.waste--;else break;}break;
   case 'storage':{const ks=Object.keys(e.store);if(!ks.length)break;

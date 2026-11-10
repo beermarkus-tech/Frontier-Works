@@ -86,16 +86,34 @@ function entStatic(e){
  return h;
 }
 function bufList(b){const ks=Object.keys(b).filter(k=>b[k]>0);return ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(b[k]))}</span></div>`).join(''):'<div class="muted">empty</div>';}
+/* Efficiency block for machines, drills and pumps (shown in their panel, refreshed live) */
+function effHtml(e){
+ const d=B[e.d];if(e.k==='mach'&&!e.r)return'';
+ if(e._efT==null||e._efT<3)return`<h4>Efficiency</h4><div class="muted">Measuring…</div>`;
+ const pc=Math.round(e._ef*100),col=pc>=90?'#4fe08a':pc>=60?'#ffd34a':pc>=30?'#ffa53a':'#ff5a46';
+ let item,max;if(e.k==='mach'){const r=RC[e.r];item=Object.keys(r.o)[0];max=r.o[item]*60/r.t*(e.clock||1);}
+ else{item=e.item;max=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1);}
+ let h=`<h4>Efficiency <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· last ${Math.round(e._efT)} s</span></h4>`;
+ h+=`<div class="row"><span>Working</span><span><b style="color:${col}">${pc}%</b></span></div><div class="bar"><i style="width:${pc}%;background:${col}"></i></div>`;
+ if(item)h+=`<div class="row"><span>Output</span><span>${fmt(e._ef*max)} of ${fmt(max)} ${IT[item].n}/min</span></div>`;
+ const W=e._efw||{},ks=Object.keys(W).filter(k=>W[k]>=0.01).sort((a,b)=>W[b]-W[a]);
+ const lbl=k=>k==='out'?'Output full':k==='power'?'No power':k==='none'?'Nothing to extract':k==='recipe'?'No recipe':'Waiting for '+IT[k.slice(3)].n;
+ for(const k of ks)h+=`<div class="row"><span class="muted">${lbl(k)}</span><span class="muted">${Math.round(W[k]*100)}%</span></div>`;
+ if(ks.length&&pc<95){const k=ks[0];h+=`<div class="muted" style="margin-top:4px">💡 ${k==='out'?'Output is backing up: add or speed up an output belt, or use what it makes.':k==='power'?'Not enough power: add generators or reconnect this to a pole.':k.startsWith('in:')?`Not enough ${IT[k.slice(3)].n} arriving: add supply, a faster belt, or lower the clock speed.`:'Check the setup.'}</div>`;}
+ return h;
+}
 function entDyn(e){
  const d=B[e.d];let h='';const st=bStatus(e);
  if(st)h+=`<div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>`;
  if(d.pw){h+=`<div class="row"><span>Power</span><span>${fmt(d.pw*Math.pow(e.clock||1,1.6))} MW ${e.grid?'':'<span style="color:#e04030">(not connected)</span>'}</span></div>`;}
+ if(e.k==='mach')h+=effHtml(e);
  if(e.k==='mach'){
   if(e.r){h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer</h4>${bufList(e.inb)}<h4>Output buffer</h4>${bufList(e.outb)}`;}
   h+=`<div class="muted" style="margin-top:8px">Belts/pipes pointing <b>into</b> the machine feed it; belts/pipes pointing <b>away</b> from it receive output. A Splitter or Merger touching the machine also works without a belt: a splitter side facing it feeds it, and a merger takes its output (the merger's front must not face the machine).</div>`;}
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
   if(e.item){const rate=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}
+  h+=effHtml(e);
   h+=`<div class="muted" style="margin-top:6px">Connect a belt/pipe pointing away from the drill.</div>`;}
  if(e.k==='gen'){
   h+=`<div class="row"><span>Capacity</span><span>${d.cap} MW</span></div><div class="row"><span>Load</span><span>${(e.load*100).toFixed(0)}%</span></div><div class="bar"><i style="width:${e.load*100}%"></i></div>`;

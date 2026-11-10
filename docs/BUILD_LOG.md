@@ -453,3 +453,26 @@ Let a Splitter feed a machine directly (no belt), and let a Merger take a machin
 
 ### Next up
 - Markus: try placing a Splitter right next to a Smelter (an output side facing it) and a Merger against the Smelter's other side.
+
+---
+
+## Session 11 — 2026-11-10 (Claude Code, cloud session) · Build 13
+
+### What Markus asked for
+An efficiency indicator for each machine, shown in its panel.
+
+### What was built
+- **Sim** (`effTrack`, `machState` in `js/sim.js`): every machine, drill and pump keeps a running average over the last
+  30 s (`e._ef` = share of time working) plus the share of each loss reason (`e._efw`: `in:<item>` waiting for that input, `out`
+  output full, `power`, `recipe`, `none`). It's transient (not saved) and re-measures after loading. Cost: a few multiplications per building per tick.
+- **Panel** (`effHtml` in `js/ui.js`), right under Status/Power: "Working NN%" with a coloured bar (green ≥ 90, yellow ≥ 60,
+  orange ≥ 30, red below), "Output 19.5 of 30 Iron Ingot/min" (actual vs. max at the current clock), the loss breakdown
+  ("Waiting for Iron Ore 35%", "Output full …", "No power …"), and a 💡 tip for the biggest loss. Shows "Measuring…" for the first 3 s.
+- DESIGN.md §8 records it. Build number **13**.
+
+### Verified
+- `npm test` 33/33: a well-fed smelter reads 98%; one with no output belt reads 24% with "Output full" as the main reason, and its panel shows both.
+- Phone screenshot of a smelter that runs short of ore: 65% working, 19.5/30 per min, 35% waiting for Iron Ore, tip shown.
+
+### Ideas (not built)
+- A small coloured efficiency ring on the buildings themselves (2D/3D), or an overlay toggle to spot bottlenecks across the factory.
