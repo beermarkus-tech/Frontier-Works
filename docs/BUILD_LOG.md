@@ -533,3 +533,17 @@ Tapping a belt to upgrade it flips the belt's direction.
 
 ### Verified
 - `npm test` passes, including a new check: a south-facing Mk1 belt tapped with Mk2 selected (Rotate set to east) becomes a south-facing Mk2.
+
+---
+
+## Session 15 — 2026-11-10 (Claude Code, cloud session) · Build 17
+
+### What Markus asked for
+Remove the efficiency bars above machines in 3D ("they look weird, 2D is enough").
+
+### What was changed
+- The 3D efficiency bars (added in Build 15) are removed. The 2D rings, the panel badge and the panel's Efficiency section stay.
+  The Menu toggle now only affects the 2D rings. DESIGN.md §8 updated. Build number **17**.
+
+### Verified
+- `npm test` passes (3D checks included).
