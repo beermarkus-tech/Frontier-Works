@@ -114,5 +114,5 @@ if something changed, say so in a new entry. Design truth lives in `DESIGN.md`.
 Unchanged from Session 1 — start with confirming the Pages deploy and installing on the phone.
 
 ### Open questions for Markus
-- After each session, should Claude open a pull request for you to merge, or is there a different flow you prefer?
+- ~~Pull request or direct to main?~~ Answered: Markus wants all work committed and pushed straight to `main`, no side branches (noted in `CLAUDE.md`).
 - Session 1's open questions (session length per tier, vehicles/trains, save slots, sharing) are still open.

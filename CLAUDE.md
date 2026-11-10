@@ -3,6 +3,7 @@
 2D factory-builder PWA, plain JS, no build step, hosted on GitHub Pages from `main` (root).
 Owner is Markus, a non-developer who builds by prompting and checking results: explain changes in plain language,
 and keep the game playable after every commit.
+**Git: commit and push straight to `main`. No side branches or pull requests (Markus decided this in Session 2).**
 
 ## How to work in this repo (every session)
 **Start of session**
