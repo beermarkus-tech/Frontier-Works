@@ -1,0 +1,114 @@
+# Frontier Works — Design
+
+**What this file is:** the living description of what the game *is* — vision, rules, systems and agreed decisions.
+Update it only when Markus and Claude agree a design change. It is **not** a progress log (that's `BUILD_LOG.md`).
+Exact numbers (recipes, costs, rates) live in `js/data.js`; this file explains the *why* and the structure.
+
+---
+
+## 1. Vision
+A 2D, top-down factory-building game in the browser, in the spirit of the big 3D factory games, but
+playable on a phone. The player lands on an untouched planet, taps resources, builds production chains and
+a power grid, and climbs 10 tech tiers until launching the **Orbital Beacon**.
+
+**Pillars (in priority order)**
+1. **Deep production chains:** many intermediate parts, byproducts, alternate recipes, fluids and power.
+   Complexity comes from logistics and ratios, not from fiddly controls.
+2. **Beautiful and alive:** painted terrain, detailed buildings that animate while working, smoke, flowing belts.
+3. **Smooth on touch:** every action works with one finger; pinch to zoom; no hover-only features.
+4. **Original:** own name, item names, recipes and art (drawn in code). Never copy assets or names from commercial games.
+
+## 2. Core loop
+Find a node → drill it → belt ore into machines → belt products into the **Base Core** (they go into the item stock) →
+spend the stock on new buildings → submit parts in **Goals** to unlock the next tier → scale up and add power.
+
+## 3. World
+- 128×128 tile map, procedurally generated from a seed (`genMap` in `js/sim.js`), with lakes, sand, rock and grass.
+- The start area around the Core is always dry and has guaranteed iron, copper, limestone and coal nodes, plus a pond.
+- **Resources (10):** iron ore, copper ore, limestone, coal, sulfur, raw quartz, bauxite, uranium ore, crude oil (wells), water (any lake).
+  Rarer resources sit further from the start.
+- **Node purity:** impure ×0.5, normal ×1, pure ×2 extraction rate.
+- **Building rules:** buildings can't sit on water; belts, pipes, poles, splitters and crossings can (bridges).
+  The water pump must sit fully on water. Drills need an ore node and oil pumps an oil well inside their footprint.
+
+## 4. Items and production
+- 56 items (6 of them fluids) and 56 recipes, 10 of them alternates (marked "(alt)").
+- **Seven machines.** Each has its own recipe set, and the player picks the recipe per machine:
+
+| Machine | Size | Role |
+|---|---|---|
+| Smelter | 2×2 | ore → ingot (1 input) |
+| Press | 2×2 | 1 input → 1 part (plates, rods, bolts, wire, cable, concrete, beams, pipes, quartz parts) |
+| Assembler | 3×3 | 2 inputs → 1 part |
+| Foundry | 3×3 | 2-ingredient smelting (steel, aluminum) |
+| Refinery | 3×3 | fluid processing; can output 1 solid + 1 fluid (byproducts!) |
+| Fabricator | 4×4 | up to 4 inputs → complex parts |
+| Blender | 3×3 | mixes solids and fluids |
+
+- **Byproducts are real:** if a byproduct's output buffer is full, the machine stops. Players must route or burn it
+  (incinerator) or recycle it (e.g. heavy residue → fuel / petroleum coke, polymer resin → plastic / rubber).
+- **Clock speed:** 10–100%, and up to 250% after Tier 4. Power use scales with clock^1.6.
+
+## 5. Logistics rules (important, intentionally simple)
+- One item per belt tile. Belt speeds: Mk1 60/min, Mk2 120, Mk3 270, Mk4 480, Mk5 780. Pipes: Mk1 300 m³/min, Mk2 600.
+- **A building outputs into any belt/pipe that points away from its edge, and accepts input from any belt/pipe pointing into it.**
+  There are no fixed ports. Solids only go to belts and fluids only to pipes.
+- Belts can feed another belt from the side (side-loading). Belt corners are drawn curved.
+- Splitter (back → front/left/right), Merger (back/left/right → front, fair alternation),
+  Sorting Splitter (filter item → front, rest → sides), Crossing (two lines cross), Pipe Junction (fluid to all other sides).
+- Storage Crate (2000 items) and Fluid Tank (400 m³) buffer and pass items on. The Incinerator destroys anything.
+- The Base Core accepts any solid on any side and adds it to the item stock.
+
+## 6. Power
+- Generators: Coal Burner 30 MW, Steam Generator 75 MW (+water), Fuel Turbine 150 MW (liquid fuel),
+  Fission Reactor 2500 MW (fuel rods + water; outputs nuclear waste that must be belted away).
+- Generators also act as small power poles. Power Pole links 10 tiles and powers buildings within 6; Power Tower links 24 and powers within 9.
+- Grids form automatically. Each pole links to at most 5 nearest nodes, and each consumer attaches to the nearest node in range.
+- **Fuse:** if demand exceeds capacity on a grid that has running generators, the grid trips and the player must press *Reset fuse*.
+  A grid with zero capacity (out of fuel) just blacks out without tripping, so the start can't deadlock.
+- Machines draw power only while working. Fuel burns in proportion to load.
+- Bootstrap: generators can be hand-fed from stock, and the start stock includes coal.
+
+## 7. Progression
+Ten sequential tiers (Goals panel). Each requires parts from the item stock and unlocks buildings and recipes:
+
+| Tier | Name | Key unlocks |
+|---|---|---|
+| start | — | Drill Mk1, Smelter, Press, Belt Mk1, Splitter/Merger/Crossing, Storage, Coal Burner, Pole |
+| 1 | Field Assembly | Assembler, Belt Mk2, Incinerator, Braced Plate, Rotor, Copper Sheet |
+| 2 | Structural Works | Pipes, Junction, Water Pump, Tank, Sorting Splitter, Truss Frame |
+| 3 | Steam Power | Steam Generator, Power Tower, Drill Mk2 |
+| 4 | Steelworks | Foundry, Belt Mk3, steel chain, Cased Girder, Stator, Motor, overclocking |
+| 5 | Heavy Industry | Fabricator, Heavy Truss |
+| 6 | Petrochemistry | Oil Pump, Refinery, Fuel Turbine, Pipe Mk2, Belt Mk4, plastic/rubber/fuel, Circuit Board |
+| 7 | Electronics | Compute Module, Data Bus, quartz parts, Resonator |
+| 8 | Lightweight Alloys | Blender, Drill Mk3, aluminum chain, Heat Sink, acid, Battery, Coolant, Control Chip |
+| 9 | Nuclear Age | Fission Reactor, Belt Mk5, Uranium Cell, Fuel Rod, Turbine Core, Quantum Core |
+| 10 | Orbital Beacon | Win screen (play can continue) |
+
+Start stock: 120 iron plate, 80 iron rod, 120 wire, 60 cable, 60 concrete, 200 bolts, 40 coal. Hand crafting covers smelter and press recipes only.
+Hand mining gives +5 ore from a node.
+
+## 8. Interface
+- Mobile-first, frosted-glass panels. Top bar: logo, power meter, Goals (shows tier, glows when it can be submitted), Items, Stats, Menu.
+- Bottom dock: hint/cost line → category tabs (Logistics, Extraction, Production, Power) → building cards with drawn icons.
+- Right-side buttons: Inspect/pan, Rotate, Dismantle, Center on Core. Minimap on desktop.
+- Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
+- Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
+- Camera: eased zoom, swipe momentum, clamped to the map.
+
+## 9. Art direction
+- Top-down, soft lighting from the top-left, drop shadows, dark metal bases with a coloured machine body per type.
+- Everything is drawn in code (Canvas 2D). There are no image assets except the app icons.
+- Status LED per building (green working, yellow waiting, orange blocked, red no power) and an output-item badge.
+- Accent colour `#ffb547` (amber). Fonts: Inter (UI) and Rajdhani (headings), self-hosted.
+
+## 10. Technical decisions
+- Plain JavaScript, no framework, no build step. Hosted on GitHub Pages and installable as a PWA (offline via `sw.js`).
+- Fixed-step simulation at 20 ticks/s, decoupled from rendering. Game speed can be 1×/2×/4×.
+- Saves: localStorage autosave every 30 s plus Export/Import as text. Saves are tied to the site's address.
+- New features must keep old saves loading.
+
+## 11. Explicitly out of scope (for now)
+Vehicles/trains, combat/creatures, multiplayer, accounts or cloud saves, sound.
+These can be reconsidered; record the decision here if that happens.

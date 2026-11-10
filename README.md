@@ -14,7 +14,7 @@ Once installed it runs fullscreen and works offline. Saves live in the browser (
 
 ## Features
 - 10 raw resources on a procedurally generated 128×128 map (impure / normal / pure nodes)
-- ~60 items, ~70 recipes incl. alternates, 7 production machines
+- 56 items (6 fluids), 56 recipes incl. 10 alternates, 7 production machines
 - Conveyors Mk1–5, pipelines, splitters, mergers, sorting splitters, crossings, storage, tanks
 - Power grid with poles, fuses, and four generator types up to a fission reactor
 - Overclocking, production stats, recipe codex, 1×/2×/4× speed, autosave
@@ -45,6 +45,8 @@ js/main.js            save/load, main loop, boot
 sw.js                 offline cache (bump VERSION on every release)
 manifest.webmanifest  PWA manifest; icons/ has the app icons
 tests/                local server + Playwright smoke test
+docs/DESIGN.md        what the game is (living design, agreed decisions only)
+docs/BUILD_LOG.md     append-only log of sessions: built, decided, next up
 ```
 
 ## Develop

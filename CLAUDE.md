@@ -1,7 +1,25 @@
-# Frontier Works — notes for Claude
+# Frontier Works — notes for Claude (read first)
 
 2D factory-builder PWA, plain JS, no build step, hosted on GitHub Pages from `main` (root).
-Owner is a non-developer who builds by prompting and checking results: explain changes in plain language, keep the game playable after every commit.
+Owner is Markus, a non-developer who builds by prompting and checking results: explain changes in plain language,
+and keep the game playable after every commit.
+
+## How to work in this repo (every session)
+**Start of session**
+1. Read `docs/BUILD_LOG.md`, at least the latest session's "Known issues", "Next up" and "Open questions".
+2. Skim `docs/DESIGN.md` for the rules of the game before changing mechanics.
+3. Run `npm test` to confirm the baseline is green.
+
+**During the session**
+- `docs/DESIGN.md` = what the game *is*. Change it only when Markus agrees a design decision, and say so in the log.
+- `js/data.js` = the exact numbers. DESIGN.md explains structure and intent, not every value.
+- Ask Markus before big design changes (new systems, removing features, breaking saves). Small fixes and polish: just do them.
+
+**End of session**
+1. Append a new `## Session N — date` entry to `docs/BUILD_LOG.md`: what was asked, what was built, decisions and why,
+   what was verified, known issues, next up, open questions. Never edit old entries.
+2. Bump `VERSION` in `sw.js` if any shipped file changed. Run `npm test`. Commit and push.
+3. Tell Markus in two or three plain sentences what changed and what to try on his phone.
 
 ## Architecture
 - Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → input → pwa → main. Top-level `const`/`let` are visible across files; don't redeclare names.
