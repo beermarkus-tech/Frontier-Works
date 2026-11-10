@@ -97,6 +97,7 @@ const server=require('./serve.js');
  await p.click('#pbody [data-act="plLocked"]');await p.click('#pbody [data-act="plMode"][data-v="rev"]');await p.waitForTimeout(100);
  await p.selectOption('#pbody select[data-pl="r.item"]','quantum_core');await p.waitForTimeout(100);
  check('planner reverse mode with locked recipes (quantum core chain)',await p.evaluate(()=>document.querySelectorAll('#pbody .plbig').length>10));
+ check('planner reverse cards list In and Out per machine',await p.evaluate(()=>{const c=[...document.querySelectorAll('#pbody .card')].find(x=>x.querySelector('.plbig'));return !!c&&/In[\s\S]*\/min[\s\S]*Out[\s\S]*\/min/i.test(c.innerText);}));
  await p.click('#pbody [data-act="plMode"][data-v="fwd"]');await p.waitForTimeout(100);await p.click('#pbody [data-act="plPowFrom"]');await p.waitForTimeout(100);
  check('planner: "Plan the power" opens the Power tab with that demand',await p.evaluate(()=>PL.mode==='pow'&&PL.pow.mw>0&&document.querySelector('#pbody .plbig').textContent.includes('×')));
  await p.evaluate(()=>{localStorage.removeItem('frontierworks_plan');PL=plDefault();ACT.closePanel();});

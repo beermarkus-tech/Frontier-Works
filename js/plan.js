@@ -120,6 +120,8 @@ function plRecOpts(list){
  let h='';for(const mt of PL_MACH){const rs=list.filter(r=>r.m===mt);if(rs.length)h+=`<optgroup label="${B[mt].n}">${rs.map(r=>plOpt(r.id,r.n+plLock(ur(r.id)))).join('')}</optgroup>`;}
  return h;
 }
+/* In/Out lists for n machines running recipe r (per minute, with the belt/pipe each line needs) */
+const plIO=(r,n)=>`<div class="plsub">In</div>`+Object.keys(r.i).map(k=>plRate(k,n*plPerMin(r,r.i[k]))).join('')+`<div class="plsub">Out</div>`+Object.keys(r.o).map(k=>plRate(k,n*plPerMin(r,r.o[k]))).join('');
 const plMachList=m=>Object.keys(m).map(k=>`${m[k]} × ${B[k].n}`).join(', ');
 function planHtml(){
  plFix();
@@ -171,7 +173,7 @@ function plRevHtml(){
   const ps=plProducers(row.item);
   h+=`<div class="card"><div class="row"><b>${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div>`;
   if(ps.length>1)h+=plSel(`r.pick.${row.item}`,plRecOpts(ps),row.r.id,'wide');else h+=`<div class="muted">${row.r.n}</div>`;
-  h+=plCount(row.n,row.r.m)+`</div>`;
+  h+=plCount(row.n,row.r.m)+plIO(row.r,row.n)+`</div>`;
  }
  const rk=Object.keys(o.raw);
  h+=`<h4>Raw resources</h4><div class="card">`+(rk.length?rk.map(k=>{
@@ -201,7 +203,7 @@ function plPowHtml(){
  if(o.waste)h+=`<div class="plbad">Makes ${fmt(o.waste)}/min ${IT.waste.n}. Belt it away (storage or incinerator), or the reactor stops.</div>`;
  h+=`</div>`;
  const c=o.chain;
- if(c.rows.length){h+=`<h4>Fuel chain</h4>`;for(const row of c.rows)h+=`<div class="card"><div class="row"><b>${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div><div class="muted">${row.r.n}</div>${plCount(row.n,row.r.m)}</div>`;
+ if(c.rows.length){h+=`<h4>Fuel chain</h4>`;for(const row of c.rows)h+=`<div class="card"><div class="row"><b>${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div><div class="muted">${row.r.n}</div>${plCount(row.n,row.r.m)}${plIO(row.r,row.n)}</div>`;
   const bk=Object.keys(c.by);if(bk.length)h+=`<div class="card"><div class="plsub">Byproducts</div>${bk.map(k=>plRate(k,c.by[k])).join('')}</div>`;
   const nk=Object.keys(c.none);if(nk.length)h+=`<div class="card"><div class="plsub">Bring in from elsewhere</div>${nk.map(k=>plRate(k,c.none[k],'plbad')).join('')}</div>`;}
  h+=`<h4>Drills & pumps</h4><div class="card">`+(o.ex.list.length?o.ex.list.map(x=>plRate(x.k,x.rate)+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(x.n)} × ${B[x.id].n}${plLock(ub(x.id))} ${x.k==='water'?'on water':'on normal nodes'}${S.gen===2&&x.k!=='water'?` · found mostly in ${plWhere(PL_RES.find(r=>plResItem(r)===x.k))}`:''}</div>`).join(''):'<div class="muted">none</div>')+`</div>`;

@@ -550,3 +550,19 @@ Remove the efficiency bars above machines in 3D ("they look weird, 2D is enough"
 - **Follow-up (Build 18):** the Build 17 push went out while the test run had crashed. It wasn't the 3D change: the splitter/merger test
   looked for free space with a check that allows water, and on that run's random map its coal burner landed in a lake.
   The test now looks for dry land. Three full runs on three random maps: 36/36 each. Lesson recorded: run the tests and read the result before committing.
+
+---
+
+## Session 16 — 2026-11-10 (Claude Code, cloud session) · Build 19
+
+### What Markus asked for
+In the planner's "For a target" tab, show both inputs and outputs of the machines.
+
+### What was built
+- Every machine card in "For a target" (and in the Power tab's fuel chain) now has **In** and **Out** lists: each item's rate per minute
+  for all machines of that card together, plus the belt/pipe tier the line needs. Byproducts appear under Out (e.g. a Refinery's Polymer Resin).
+  Helper `plIO` in `js/plan.js`. Build number **19**.
+
+### Verified
+- `npm test` 37/37, new check: a reverse-planner card lists In and Out with per-minute rates. Phone screenshot: 10 Motors/min →
+  2 × Assembler, in 20 Rotors + 20 Stators, out 10 Motors.
