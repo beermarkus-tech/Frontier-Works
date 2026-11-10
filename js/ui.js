@@ -72,7 +72,7 @@ function entStatic(e){
  }
  if((e.k==='drill'&&e.node)||e.k==='pump')h+=`<div style="margin:4px 0 8px"><button class="btn" data-act="planDrill">📐 Plan this ${e.k==='drill'?'drill':'pump'}</button></div>`;
  if(e.k==='mach'||e.k==='drill'||e.k==='pump'){
-  const mx=S.oc?250:100;h+=`<h4>Clock speed</h4><div class="clockv" id="clockv">${Math.round(e.clock*100)}%</div><input type="range" min="10" max="${mx}" step="5" value="${Math.round(e.clock*100)}" data-act="clock">${S.oc?'':'<div class="muted">Overclocking above 100% unlocks with “Steelworks”.</div>'}<div class="muted">Power use scales with clock^1.6.</div>`;
+  const mx=S.oc?250:100;h+=`<h4>Clock speed</h4><div class="clockv" id="clockv">${Math.round(e.clock*100)}%</div><input type="range" min="10" max="${mx}" step="1" value="${Math.round(e.clock*100)}" data-act="clock"><div class="chips clockbtns">${[-10,-1,1,10].map(v=>`<button class="btn chip" data-act="clockStep" data-v="${v}">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div>${S.oc?'':'<div class="muted">Overclocking above 100% unlocks with “Steelworks”.</div>'}<div class="muted">Power use scales with clock^1.6.</div>`;
  }
  if(e.k==='router'&&d.sub==='sort'){
   const items=Object.keys(IT).filter(k=>!IT[k].f);
@@ -232,6 +232,7 @@ const ACT={
   else{const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>Tier ${S.ms}: ${m.n}</h2><p>Unlocked: ${un.join(', ')||'—'}${m.oc?', overclocking':''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);}
   save();},
  closeDlg,
+ clockStep:v=>{const e=UI.panel&&ents.get(UI.panel.arg);if(!e)return;const mx=S.oc?250:100,c=Math.max(10,Math.min(mx,Math.round(e.clock*100)+(+v)));e.clock=c/100;const st=$('pbody').scrollTop;renderPanel(true);$('pbody').scrollTop=st;},
  optEff:v=>{OPT.eff=v==='1';saveOpt();renderPanel(true);},
  planNode:()=>{const n=UI.panel.arg;planFrom(n.t,n.p,null,1);},
  planDrill:()=>{const e=ents.get(UI.panel.arg);if(!e)return;planFrom(d3res(e),e.node?e.node.p:1,e.d,e.clock||1);},

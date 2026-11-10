@@ -589,3 +589,14 @@ He couldn't hand-craft Braced Plates or Rotors ("gears"), but needs them to buil
 
 ### Next up
 - Playtesting tiers 1–5 end to end (Session 1's list) would catch more dead ends like this one.
+
+---
+
+## Session 18 — 2026-11-10 (Claude Code, cloud session) · Builds 21–22
+
+### What Markus asked for
+1. Clock speed in 1 % steps instead of 5 %. 2. Then a play-through of tiers 1–5.
+
+### Build 21: clock in 1 % steps
+- The clock slider in machine/drill/pump panels now moves in 1 % steps, with −10 / −1 / +1 / +10 buttons under it (fiddly sliders
+  on phones). The limits stay 10 % to 100 % (250 % after Steelworks). Test: 100 % −1 −10 → 89 %, and back.

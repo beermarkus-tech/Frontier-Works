@@ -74,6 +74,10 @@ const server=require('./serve.js');
   for(let i=0;i<8;i++)ACT.craft('r_braced_plate',{dataset:{n:1}});for(let i=0;i<4;i++)ACT.craft('r_rotor',{dataset:{n:1}});
   const r={shown,bp:S.inv.braced_plate,ro:S.inv.rotor,can:afford(B.assembler.cost)};ACT.closePanel();S=JSON.parse(keep);return r;});
  check(`hand-craft 8 braced plates + 4 rotors from start stock → can afford an Assembler (${hc.bp}/${hc.ro})`,hc.shown&&hc.bp===8&&hc.ro===4&&hc.can);
+ // clock: slider in 1 % steps plus −10/−1/+1/+10 buttons
+ const ck=await p.evaluate(()=>{const fw=window.__fw,e=[...fw.ents().values()].find(x=>x.k==='mach');e.clock=1;openPanel('ent',e.id);const step=document.querySelector('#pbody input[data-act="clock"]').step;
+  ACT.clockStep('-1');ACT.clockStep('-10');const a=Math.round(e.clock*100);ACT.clockStep('+10');ACT.clockStep('+1');const b=Math.round(e.clock*100);ACT.closePanel();return{step,a,b};});
+ check(`clock steps of 1 % (slider step ${ck.step}; 100 −1 −10 = ${ck.a}; back to ${ck.b})`,ck.step==='1'&&ck.a===89&&ck.b===100);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
