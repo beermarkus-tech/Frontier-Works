@@ -1,14 +1,50 @@
 'use strict';
 /* ---------- save/load ---------- */
 const SKEYS=['d','x','y','dir','item','prog','r','inb','outb','run','clock','buf','fuel','energy','water','wacc','trip','store','ft','amt','filter','hs','vs','hd','vd'];
-function serialize(){const es=[];for(const e of ents.values()){const o={};for(const k of SKEYS)if(e[k]!==undefined&&e[k]!==null&&e[k]!==false)o[k]=e[k];if(e.k==='gen')o.outb=e.outb;es.push(o);}
- return btoa(unescape(encodeURIComponent(JSON.stringify({v:1,S,es}))));}
-function load(str){const data=JSON.parse(decodeURIComponent(escape(atob(str))));
+/* Save format v2: compact JSON (entities as [d,x,y,dir,{only non-default fields}]), gzip-compressed where the browser supports it,
+   stored in IndexedDB (lots of room) with localStorage as fallback. Old v1 saves (base64 JSON, entity objects) still load.
+   Exported text: "FW2:" + base64(gzip). If saving fails, the player sees a warning (it used to fail silently). */
+const SAVE_KEY='frontierworks_save',SAVE={busy:null,last:0,bytes:0,where:'',err:'',warned:0};
+function serialize(){const es=[];
+ for(const e of ents.values()){const x={};
+  for(const k of SKEYS){if(k==='d'||k==='x'||k==='y'||k==='dir')continue;let v=e[k];if(v===undefined||v===null||v===false||v===0)continue;
+   if(k==='clock'&&v===1)continue;if(typeof v==='number'&&!Number.isInteger(v))v=Math.round(v*1000)/1000;if(typeof v==='object'&&!Object.keys(v).length)continue;x[k]=v;}
+  if(e.k==='gen'&&e.outb&&Object.keys(e.outb).length)x.outb=e.outb;
+  const a=[e.d,e.x,e.y,e.dir||0];if(Object.keys(x).length)a.push(x);es.push(a);}
+ return JSON.stringify({v:2,S,es});}
+function parseSave(str){str=String(str).trim();return JSON.parse(str[0]==='{'?str:decodeURIComponent(escape(atob(str))));}
+function load(str){const data=typeof str==='string'?parseSave(str):str;
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;genMap(S.seed);ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
- for(const o of data.es){const d=B[o.d];if(!d)continue;const e=Object.assign({},o,{id:nextId++,k:d.k,w:d.w,h:d.w});initEnt(e,d);ents.set(e.id,e);for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
+ for(const o0 of data.es){const o=Array.isArray(o0)?Object.assign({d:o0[0],x:o0[1],y:o0[2],dir:o0[3]},o0[4]||{}):o0;const d=B[o.d];if(!d)continue;
+  const e=Object.assign({},o,{id:nextId++,k:d.k,w:d.w,h:d.w});initEnt(e,d);ents.set(e.id,e);for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
  S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
 }
-function save(){try{S.cam=cam;localStorage.setItem('frontierworks_save',serialize());}catch(e){}}
+async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}
+async function gunz(u8){return await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}
+const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);};
+const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+let idbP=null;
+function idb(){return idbP||(idbP=new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error('no browser database'));const r=indexedDB.open('frontierworks',1);
+ r.onupgradeneeded=()=>r.result.createObjectStore('saves');r.onsuccess=()=>res(r.result);r.onerror=()=>{idbP=null;rej(r.error||new Error('database unavailable'));};}));}
+async function idbPut(k,v){const db=await idb();return new Promise((res,rej)=>{const t=db.transaction('saves','readwrite');t.objectStore('saves').put(v,k);t.oncomplete=()=>res();t.onerror=t.onabort=()=>rej(t.error||new Error('write failed'));});}
+async function idbGet(k){const db=await idb();return new Promise((res,rej)=>{const q=db.transaction('saves').objectStore('saves').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
+function save(){
+ if(!S)return Promise.resolve(false);if(SAVE.busy)return SAVE.busy;
+ S.cam={x:cam.x,y:cam.y,z:cam.z};const json=serialize();
+ return SAVE.busy=(async()=>{let err='';const z=await gz(json).catch(()=>null);
+  try{await idbPut('main',{v:2,z:!!z,data:z||json,t:Date.now()});SAVE.where='browser database';SAVE.bytes=z?z.length:json.length;try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
+  catch(e){try{const txt=z?'FW2:'+b64(z):json;localStorage.setItem(SAVE_KEY,txt);SAVE.where='browser storage';SAVE.bytes=txt.length;}catch(e2){err=(e2&&e2.name==='QuotaExceededError')?'the browser storage is full':((e2&&e2.message)||'unknown error');}}
+  SAVE.err=err;SAVE.busy=null;
+  if(err){if(Date.now()-SAVE.warned>60000){SAVE.warned=Date.now();toast(`⚠ Saving failed (${err}). Use ☰ Menu → Export to keep a copy.`);}}else SAVE.last=Date.now();
+  return !err;})();
+}
+/* Boot: browser database first, then the old localStorage slot (v1 base64 or FW2 text). A save that can't be read is kept aside, not overwritten. */
+async function loadStored(){
+ try{const r=await idbGet('main');if(r){const json=r.z?await gunz(r.data):r.data;try{load(json);return true;}catch(e){await idbPut('broken-'+Date.now(),r).catch(()=>{});}}}catch(e){}
+ try{const s=localStorage.getItem(SAVE_KEY);if(s){try{load(s.startsWith('FW2:')?await gunz(unb64(s.slice(4))):s);return true;}catch(e){localStorage.setItem(SAVE_KEY+'_broken',s);}}}catch(e){}
+ return false;}
+async function exportText(){const json=serialize(),z=await gz(json).catch(()=>null);return z?'FW2:'+b64(z):btoa(unescape(encodeURIComponent(json)));}
+async function importText(t){t=t.trim();load(t.startsWith('FW2:')?await gunz(unb64(t.slice(4))):t);return save();}
 setInterval(save,30000);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
 
 /* ---------- loop ---------- */
@@ -39,10 +75,12 @@ function updTop(){let d=0,c=0,tr=false;for(const g of grids){d+=g.dem;c+=g.cap;i
 }
 /* ---------- boot ---------- */
 UI.rotA=0;resize();
-let loaded=false;try{const s=localStorage.getItem('frontierworks_save');if(s){load(s);loaded=true;}}catch(e){loaded=false;}
-if(!loaded){newGame();}
-buildCats();layoutVars();
-requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
-if(V3.want)setView3D(true);
-setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),500);if(!loaded)openPanel('menu');},250);
-window.__fw={get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam,V3,C3,setView3D,v3Pick:(x,y)=>V3.ready&&(v3Cam(),v3Pick(x,y))};
+(async()=>{
+ const loaded=await loadStored();
+ if(!loaded){newGame();}
+ buildCats();layoutVars();
+ requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
+ if(V3.want)setView3D(true);
+ setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),500);if(!loaded)openPanel('menu');},250);
+})();
+window.__fw={save,SAVE,get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam,V3,C3,setView3D,v3Pick:(x,y)=>V3.ready&&(v3Cam(),v3Pick(x,y))};

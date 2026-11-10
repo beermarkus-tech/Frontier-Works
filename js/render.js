@@ -211,6 +211,17 @@ function effRing(e,X,Y,s){
  ctx.lineCap='butt';
  if(s>=46){ctx.fillStyle='#fff';ctx.font=`700 ${Math.round(r*0.78)}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(f*100),cx,cy+0.5);ctx.textAlign='left';}
 }
+/* Level of detail for huge factories / far zoom: one filled path per colour (a handful of draw calls for thousands of objects).
+   Belts/pipes become thin strips in their tier colour, buildings coloured blocks with a dark rim, machines keep a status dot. */
+function drawLOD(vis,sx,sy,s){
+ const G=new Map(),add=(c,x,y,w,h)=>{let p=G.get(c);if(!p){p=new Path2D();G.set(c,p);}p.rect(x,y,w,h);},rim=new Path2D(),dots=new Map();
+ for(const e of vis){const d=B[e.d],X=sx(e.x),Y=sy(e.y);
+  if(isLine(e.k)){const c=e.k==='pipe'?'#6f93b8':d.col,h=e.dir===0||e.dir===2;if(h)add(c,X,Y+s*0.32,s+0.6,s*0.36);else add(c,X+s*0.32,Y,s*0.36,s+0.6);continue;}
+  if(e.k==='pole'){add(d.col,X+s*0.3,Y+s*0.3,s*0.4,s*0.4);continue;}
+  const W=e.w*s;rim.rect(X+0.5,Y+0.5,W-1,W-1);add(e.k==='router'||e.k==='cross'?d.col:shade(d.col,-10),X+s*0.12,Y+s*0.12,W-s*0.24,W-s*0.24);
+  const st=(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')&&bStatus(e);if(st&&W>=5){let p=dots.get(st[0]);if(!p){p=new Path2D();dots.set(st[0],p);}const r=Math.max(1.2,W*0.12);p.rect(X+W/2-r,Y+W/2-r,r*2,r*2);}}
+ ctx.fillStyle='#20262c';ctx.fill(rim);for(const [c,p] of G){ctx.fillStyle=c;ctx.fill(p);}for(const [c,p] of dots){ctx.fillStyle=c;ctx.fill(p);}
+}
 function drawBuilding(e,X,Y,s){
  const P=e.w*s;let sc=1;
  if(e.born!==undefined){const t=(animT-e.born)/0.3;if(t<1)sc=0.7+0.3*easeBack(Math.max(0,t));else e.born=undefined;}
@@ -329,7 +340,9 @@ function render(){
   else{for(let k=0;k<4;k++){const ox2=(hash2(n.x*7+k,n.y)-0.5)*s*0.5,oy2=(hash2(n.x,n.y*7+k)-0.5)*s*0.45,r=s*(0.22+hash2(k,n.x+n.y)*0.12);ctx.fillStyle='rgba(0,0,0,0.35)';ctx.beginPath();ctx.ellipse(cx+ox2+s*0.04,cy+oy2+s*0.06,r*1.05,r*0.85,0,0,7);ctx.fill();const gr=ctx.createRadialGradient(cx+ox2-r*0.4,cy+oy2-r*0.4,0,cx+ox2,cy+oy2,r*1.1);gr.addColorStop(0,shade(col,55));gr.addColorStop(0.6,col);gr.addColorStop(1,shade(col,-45));ctx.fillStyle=gr;ctx.beginPath();ctx.ellipse(cx+ox2,cy+oy2,r,r*0.82,0,0,7);ctx.fill();}}
   if(s>12){ctx.fillStyle='rgba(10,14,18,0.75)';rr(X+s*0.18,Y+s*0.82,s*0.64,s*0.18,s*0.09);ctx.fill();ctx.fillStyle=['#e08a5a','#e8e8e8','#7fe08a'][n.p];for(let k=0;k<=n.p;k++){ctx.beginPath();ctx.arc(X+s*(0.5+(k-n.p/2)*0.17),Y+s*0.91,s*0.05,0,7);ctx.fill();}}}
  const vis=[];for(const e of ents.values()){if(e.x+e.w<x0||e.x>x1||e.y+e.h<y0||e.y>y1)continue;vis.push(e);}
- drawLines(vis.filter(e=>isLine(e.k)),sx,sy,s);
+ const lod=TS*cam.z<12||vis.length>6000;   // far out or very busy: simple blocks instead of detailed sprites
+ if(lod)drawLOD(vis,sx,sy,s);
+ if(!lod){drawLines(vis.filter(e=>isLine(e.k)),sx,sy,s);
  for(const e of vis)if(e.k==='router'||e.k==='cross')drawRouter(ctx,e,sx(e.x),sy(e.y),s);
  // items
  const isz=s*0.5;
@@ -339,6 +352,7 @@ function render(){
   else if(e.k==='cross'){if(e.hs&&!IT[e.hs].f)drawItem(e.hs,sx(e.x+0.5),sy(e.y+0.5),isz*0.8);if(e.vs&&!IT[e.vs].f)drawItem(e.vs,sx(e.x+0.5),sy(e.y+0.5),isz*0.8);}
  }
  for(const e of vis)if(!isLine(e.k)&&e.k!=='router'&&e.k!=='cross'&&e.k!=='pole')drawBuilding(e,sx(e.x),sy(e.y),s);
+ }
  // particles
  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.t+=fdt;if(p.t>p.m){parts.splice(k,1);continue;}p.x+=p.vx*fdt;p.y+=p.vy*fdt;}
  for(const p of parts){if(p.x<x0-2||p.x>x1+2||p.y<y0-2||p.y>y1+2)continue;const f=p.t/p.m,al=(1-f)*(f<0.15?f/0.15:1);ctx.globalAlpha=al*(p.k?0.55:0.45);ctx.fillStyle=p.k?'#eef2f5':'#3a3a3c';ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),s*p.r*(1+f*1.8),0,7);ctx.fill();}
@@ -347,10 +361,10 @@ function render(){
  const showPw=tool&&B[tool]&&(B[tool].k==='pole'||B[tool].k==='gen'||B[tool].pw);
  if(showPw){for(const p of pnodes){const c=cen(p);ctx.fillStyle='rgba(255,215,90,0.06)';ctx.strokeStyle='rgba(255,215,90,0.4)';ctx.lineWidth=1.5*DPR;ctx.setLineDash([6*DPR,5*DPR]);ctx.beginPath();ctx.arc(sx(c.x),sy(c.y),B[p.d].sup*s,0,7);ctx.fill();ctx.stroke();ctx.setLineDash([]);}}
  // wires
- for(const [a,b] of pwLinks){const A=cen(a),Bc=cen(b),tr=a.grid&&a.grid.trip;const mx=(A.x+Bc.x)/2,my=(A.y+Bc.y)/2+0.5;
+ if(!lod)for(const [a,b] of pwLinks){const A=cen(a),Bc=cen(b),tr=a.grid&&a.grid.trip;const mx=(A.x+Bc.x)/2,my=(A.y+Bc.y)/2+0.5;
   ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=Math.max(1,s*0.05);ctx.beginPath();ctx.moveTo(sx(A.x+0.3),sy(A.y+0.4));ctx.quadraticCurveTo(sx(mx+0.3),sy(my+0.6),sx(Bc.x+0.3),sy(Bc.y+0.4));ctx.stroke();
   ctx.strokeStyle=tr?'rgba(255,80,60,0.9)':'rgba(24,22,20,0.85)';ctx.lineWidth=Math.max(1,s*0.045);ctx.beginPath();ctx.moveTo(sx(A.x),sy(A.y));ctx.quadraticCurveTo(sx(mx),sy(my),sx(Bc.x),sy(Bc.y));ctx.stroke();}
- for(const e of vis)if(e.k==='pole')drawPole(ctx,e,sx(e.x),sy(e.y),s);
+ if(!lod)for(const e of vis)if(e.k==='pole')drawPole(ctx,e,sx(e.x),sy(e.y),s);
  // previews
  if(linePrev){const fake=linePrev.path.map((p,k,arr)=>{const prev=arr[k-1];const o={x:p.x,y:p.y,dir:p.d,d:linePrev.id,k:B[linePrev.id].k,spd:B[linePrev.id].spd,cin:null};if(prev&&prev.d!==p.d)o.cin=prev.d;return o;});
   const bad=fake.filter(f=>{const why=canPlace(linePrev.id,f.x,f.y);return why&&!(why==='Blocked'&&entAt(f.x,f.y)&&entAt(f.x,f.y).k===B[linePrev.id].k);});

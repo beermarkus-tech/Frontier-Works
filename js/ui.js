@@ -156,10 +156,15 @@ function msHtml(){
   h+=`</div>`;});
  return h;
 }
+const fmtKB=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+function saveInfo(){if(SAVE.err)return`<span style="color:#ff8a6a">⚠ Last save failed: ${SAVE.err}. Export a copy below.</span>`;
+ if(!SAVE.last)return'Not saved yet this session.';const t=new Date(SAVE.last);return`Last saved ${t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · ${fmtKB(SAVE.bytes)} in the ${SAVE.where}.`;}
+function factoryHtml(){let b=0,l=0,po=0,it=0,m=0;for(const e of ents.values()){if(isLine(e.k)){l++;if(e.item)it++;}else if(e.k==='pole')po++;else{b++;if(e.k==='mach')m++;}}
+ return`<h4>Factory size</h4><div class="row"><span>Objects</span><span><b>${ents.size.toLocaleString()}</b></span></div><div class="row"><span>Buildings (machines)</span><span>${b.toLocaleString()} (${m.toLocaleString()})</span></div><div class="row"><span>Belts & pipes</span><span>${l.toLocaleString()}</span></div><div class="row"><span>Power poles</span><span>${po.toLocaleString()}</span></div><div class="row"><span>Items moving on belts & pipes</span><span>${it.toLocaleString()}</span></div><div class="row"><span>Save size</span><span>${SAVE.bytes?fmtKB(SAVE.bytes):'—'}</span></div><div class="muted">Phones stay smooth to about 10,000 objects; far zoom switches to simple blocks for big factories.</div>`;}
 function statsHtml(){
  const {p,c}=rates();const ks=[...new Set([...Object.keys(p),...Object.keys(c)])].sort((a,b)=>(p[b]||0)-(p[a]||0));
  let tot=0,cap=0;for(const g of grids){tot+=g.dem;cap+=g.cap;}
- let h=`<h4>Power</h4><div class="row"><span>Grids</span><span>${grids.length}</span></div><div class="row"><span>Consumption / capacity</span><span>${fmt(tot)} / ${fmt(cap)} MW</span></div>`;
+ let h=factoryHtml()+`<h4>Power</h4><div class="row"><span>Grids</span><span>${grids.length}</span></div><div class="row"><span>Consumption / capacity</span><span>${fmt(tot)} / ${fmt(cap)} MW</span></div>`;
  h+=`<h4>Items per minute (last ${stat.hist.length}s)</h4><table><tr><th>Item</th><th>Made</th><th>Used</th></tr>${ks.map(k=>`<tr><td>${nm(k)}</td><td>${fmt(p[k]||0)}</td><td>${fmt(c[k]||0)}</td></tr>`).join('')}</table>`;
  if(!ks.length)h+='<div class="muted">No production yet.</div>';
  h+=`<div style="margin-top:10px"><button class="btn" data-act="openCodex">📖 Recipe codex</button></div>`;
@@ -198,7 +203,8 @@ function menuHtml(){
  Keys: R rotate · X dismantle · Esc inspect · WASD/arrows pan · wheel zoom · right-drag pan.</div>
  <h4>Install app</h4>${installHtml()}
  <h4>Simulation speed</h4><div class="chips">${[1,2,4].map(v=>`<button class="btn chip ${S.spd===v?'on':''}" data-act="spd" data-v="${v}">${v}×</button>`).join('')}</div>
- <h4>Save</h4><button class="btn" data-act="saveNow">💾 Save now</button> <span class="muted">(auto-saves every 30s in this browser)</span>
+ <h4>Save</h4><button class="btn" data-act="saveNow">💾 Save now</button> <span class="muted">(auto-saves every 30 s)</span>
+ <div class="muted" style="margin-top:4px">${saveInfo()}</div>
  <h4>Transfer</h4><button class="btn" data-act="exportSave">Export</button> <button class="btn" data-act="copySave">Copy</button> <button class="btn" data-act="importSave">Import pasted</button>
  <textarea id="saveTxt" placeholder="Export puts your save here; paste a save here to import."></textarea>
  <h4>New game</h4><button class="btn" data-act="newGameAsk">Start a new map…</button>`;
@@ -237,10 +243,10 @@ const ACT={
  planNode:()=>{const n=UI.panel.arg;planFrom(n.t,n.p,null,1);},
  planDrill:()=>{const e=ents.get(UI.panel.arg);if(!e)return;planFrom(d3res(e),e.node?e.node.p:1,e.d,e.clock||1);},
  spd:v=>{S.spd=+v;renderPanel(true);},
- saveNow:()=>{save();toast('Saved');},
- exportSave:()=>{$('saveTxt').value=serialize();},
- copySave:()=>{const t=$('saveTxt');if(!t.value)t.value=serialize();try{navigator.clipboard.writeText(t.value).then(()=>toast('Copied'),()=>{t.select();toast('Select & copy the text');});}catch(e){t.select();}},
- importSave:()=>{const t=$('saveTxt').value.trim();if(!t)return toast('Paste a save first');try{load(t);toast('Save loaded');closePanel();}catch(e){toast('That save could not be read');}},
+ saveNow:async()=>{if(await save())toast(`Saved (${fmtKB(SAVE.bytes)})`);renderPanel(true);},
+ exportSave:async()=>{$('saveTxt').value=await exportText();toast('Save exported as text below');},
+ copySave:async()=>{const t=$('saveTxt');if(!t.value)t.value=await exportText();try{navigator.clipboard.writeText(t.value).then(()=>toast('Copied'),()=>{t.select();toast('Select & copy the text');});}catch(e){t.select();}},
+ importSave:async()=>{const t=$('saveTxt').value.trim();if(!t)return toast('Paste a save first');try{await importText(t);toast('Save loaded');closePanel();}catch(e){toast('That save could not be read');}},
  newGameAsk:()=>dialog(`<h2>Start a new map?</h2><p>Your current factory will be replaced. New maps are ${MAP_NEW}×${MAP_NEW} tiles with seven biomes.</p><button class="btn warn" data-act="newGameGo">Yes, new map</button> <button class="btn" data-act="closeDlg">Cancel</button>`),
  newGameGo:()=>{closeDlg();closePanel();newGame();lastBio=null;buildCats();save();},
 };

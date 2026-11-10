@@ -135,6 +135,8 @@ Hand mining gives +5 ore from a node.
   no power), with a short tip for the biggest loss. Measured live, not saved. The panel header shows it as a coloured badge, and
   buildings show it on the map (Session 13): a small ring in the top-left corner in 2D (number shown when zoomed in). Not shown in 3D
   (removed at Markus's request in Session 15). ☰ Menu → View → "Efficiency rings on buildings" turns them off (per device).
+- **Factory size** (Session 19): Stats shows objects, buildings, belts, poles, items on belts and save size. When zoomed far out or with
+  more than ~6,000 objects on screen, the map switches to simple coloured blocks (belts as strips, status dots on machines) to stay smooth.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
@@ -162,7 +164,9 @@ Hand mining gives +5 ore from a node.
 - Plain JavaScript, no framework, no build step. The only library is Three.js (MIT, vendored in `js/lib/`), loaded only when 3D is first used. Hosted on GitHub Pages and installable as a PWA (offline via `sw.js`).
 - Fixed-step simulation at 20 ticks/s, decoupled from rendering. Game speed can be 1×/2×/4×.
 - Updates: ☰ Menu shows the build number top right, with a ↻ button that saves, fetches the newest build and reloads (Session 8). The normal "Update ready" prompt still appears on its own.
-- Saves: localStorage autosave every 30 s plus Export/Import as text. Saves are tied to the site's address.
+- Saves: autosave every 30 s (and when the app is hidden) plus Export/Import as text. Since Session 19: compact format, gzip-compressed,
+  stored in the browser's database (IndexedDB) with localStorage as fallback; a failed save shows a warning; old saves and old export text still load.
+  Exports start with `FW2:`. Saves are tied to the site's address.
 - New features must keep old saves loading.
 
 ## 11. Explicitly out of scope (for now)

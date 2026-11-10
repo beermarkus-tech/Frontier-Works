@@ -34,7 +34,7 @@ const server=require('./serve.js');
  check('terrain chunk paints ('+bm.chunk+'px)',bm.chunk===bm.cpx);
  const sv=await p.evaluate(()=>{const s0=serialize(),n0=nodes.length,e0=ents.size;load(s0);const same=nodes.length===n0&&ents.size===e0&&MW===384;
   // an old save: no gen/mw fields → must come back as the classic 128 map with the same layout as before
-  const o=JSON.parse(decodeURIComponent(escape(atob(s0))));delete o.S.gen;delete o.S.mw;o.S.seed=777;o.es=o.es.filter(e=>e.d==='core').map(e=>Object.assign(e,{x:62,y:62}));
+  const o=JSON.parse(s0);delete o.S.gen;delete o.S.mw;o.S.seed=777;o.v=1;o.es=[{d:'core',x:62,y:62,dir:0}];   // v1 format: base64 JSON, entity objects
   load(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));const old={MW,n:nodes.length,core:[...ents.values()][0].x,iron:nodes[0].x+','+nodes[0].y,bios:new Set(bio).size};
   load(s0);return{same,old,back:MW};});
  check(`save/load keeps the big map; old saves load as 128 classic (${JSON.stringify(sv.old)})`,sv.same&&sv.old.MW===128&&sv.old.core===62&&sv.old.iron==='55,61'&&sv.old.bios===1&&sv.back===384);
@@ -140,8 +140,19 @@ const server=require('./serve.js');
  await p.evaluate(()=>{ACT.toolNone();window.__fw.setView3D(false);});await p.waitForTimeout(200);
  check('3D: back to 2D keeps the place',await p.evaluate(s=>{const c=window.__fw.cam();return !window.__fw.V3.on&&Math.abs(c.x-(s.x+3.5))<2&&document.getElementById('cv').style.visibility==='';},spot));
  const sw=await p.evaluate(async()=>{const reg=await navigator.serviceWorker.ready;return !!reg.active;});check('service worker active',sw);
- await p.waitForTimeout(500);await ctx.setOffline(true);await p.reload();await p.waitForTimeout(1500);
+ // saves: compact + compressed in the browser database; export/import round trip; old v1 text still imports
+ const sv2=await p.evaluate(async()=>{const fw=window.__fw,ok=await fw.save(),n=ents.size,per=fw.SAVE.bytes/n;
+  const t=await exportText();await importText(t);const back=ents.size;
+  const v1=btoa(unescape(encodeURIComponent(JSON.stringify({v:1,S:Object.assign({},S),es:[...ents.values()].map(e=>({d:e.d,x:e.x,y:e.y,dir:e.dir}))}))));await importText(v1);const v1n=ents.size;
+  await importText(t);await fw.save();return{ok,where:fw.SAVE.where,n,per:+per.toFixed(1),fw2:t.startsWith('FW2:'),back,v1n};});
+ check(`save goes to the ${sv2.where}, ${sv2.per} bytes per object; FW2 export/import and old text import keep all ${sv2.n} objects`,sv2.ok&&sv2.where==='browser database'&&sv2.fw2&&sv2.back===sv2.n&&sv2.v1n===sv2.n&&sv2.per<40);
+ const before=await p.evaluate(()=>ents.size);
+ await p.waitForTimeout(500);await ctx.setOffline(true);await p.reload();await p.waitForTimeout(2000);
  check('works offline',await p.evaluate(()=>!!window.__fw&&document.getElementById('cv').width>0));
+ check('reload restores the saved factory from the browser database',await p.evaluate(n=>ents.size===n,before));
+ // factory size in Stats; far zoom uses simple blocks
+ check('Stats shows factory size',await p.evaluate(()=>{ACT.openStats();const t=document.getElementById('pbody').innerText;ACT.closePanel();return /Factory size[\s\S]*Objects\s*[\d,]+/i.test(t);}));
+ check('far zoom draws without errors (simple blocks)',await p.evaluate(()=>{cam.z=camT.z=0.3;render();cam.z=camT.z=1.2;return true;}));
  await ctx.setOffline(false);
  check('no page errors',errs.length===0);
  for(const [n,v] of ok)console.log((v?'PASS ':'FAIL ')+n);if(errs.length)console.log(errs);

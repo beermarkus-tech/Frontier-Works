@@ -40,7 +40,8 @@ and keep the game playable after every commit.
 - **Build number on every push:** set `BUILD` in `js/pwa.js` to the commit count on `main` after your commit (`git rev-list --count HEAD` + 1 before committing; one push = one commit is simplest), and `VERSION` in `sw.js` to `'fw-build-<BUILD>'` (the test checks they match). Tell Markus the build number; he compares it with ☰ Menu (top right of the panel).
 - **Bump `VERSION` in `sw.js` on every change** to shipped files, and add any new file to `ASSETS`, or installed players won't get it / it won't work offline.
 - Balance data lives in `js/data.js` (`R(...)` recipes, `D(...)` buildings, `MS` milestones). Every milestone needs `b` and `r` arrays (normalized at load, but keep them explicit).
-- Save format: `serialize()`/`load()` in `js/main.js`; keep old saves loading (add fields with defaults in `initEnt`).
+- Save format: `serialize()`/`load()` in `js/main.js` (v2: entities as `[d,x,y,dir,{non-default fields}]`; `load` also reads v1). `save()` is async
+  (gzip → IndexedDB, localStorage fallback, warning on failure); `await save()` before any reload. Keep old saves loading (add fields with defaults in `initEnt`).
 - Original content only: own names, art (procedural canvas drawing) and recipes — don't copy assets or names from commercial games.
 - Run `npm test` before committing, and **check it printed PASS lines with no FAIL or crash** before you commit (don't chain commit/push after the test with `;`). Each run uses a new random map, so test setups must search for dry land (`canPlace('incin',…)`), not just any free tile.
 

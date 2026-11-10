@@ -626,3 +626,42 @@ He couldn't hand-craft Braced Plates or Rotors ("gears"), but needs them to buil
 
 ### Next up
 - Run the same bench for tiers 6–10 (refinery byproducts, blender, fabricator chains, reactor waste) when Markus gets there.
+
+---
+
+## Session 19 — 2026-11-10 (Claude Code, cloud session) · Build 23
+
+### What Markus asked
+How large can a factory get? (Answer measured: the sim costs ~1 ms per tick at 20,000 objects, which is not the limit. Far-zoom drawing and the
+save size were the limits: ~95 bytes per object in a ~5 MB browser slot meant a ceiling around 50,000 objects, and a save that got too big **failed silently**.)
+Then: "do all three improvements".
+
+### What was built
+1. **Saves** (`js/main.js`): format v2, entities as `[type,x,y,dir,{only non-default fields}]`, gzip-compressed (`CompressionStream`), stored
+   in **IndexedDB** (database `frontierworks`, store `saves`, key `main`), falling back to localStorage (as `FW2:` text). If both fail, a warning toast
+   appears (at most once a minute) and the Menu shows it. The old localStorage save migrates automatically on the first save. A save that can't be
+   read at startup is kept aside (`broken-…`) instead of being overwritten. Export text is `FW2:` + base64 gzip. Import accepts that, v1 base64 and plain JSON.
+   `save()` is now async; the ↻ reload and "Update now" wait for it before reloading.
+2. **Far-zoom / huge-factory drawing** (`drawLOD` in `js/render.js`): below 12 px per tile, or with more than 6,000 objects on screen,
+   belts and pipes become thin strips in their tier colour and buildings coloured blocks with a dark rim and a status dot, drawn as a handful of
+   batched paths. Wires and detailed sprites are skipped.
+3. **Factory size** in Stats: objects, buildings (machines), belts & pipes, poles, items moving, save size. The Menu's Save section shows the last
+   save time, size and where it's stored.
+- DESIGN.md §8/§10 and CLAUDE.md updated. Build number **23**.
+
+### Measured (desktop, headless; phones ~3–5× slower)
+| Objects | Sim per tick | Far-zoom draw before → after | Save before → after |
+|---|---|---|---|
+| 2,000 | 0.1 ms | 18 → 14 ms | 179 KB → 8 KB |
+| 10,000 | 0.5 ms | 28 → 18 ms | 937 KB → 37 KB |
+| 20,000 | 0.9 ms | 51 → 20 ms | 1,890 KB → 73 KB |
+At far zoom most of the remaining time is the terrain itself. The save limit is effectively gone (IndexedDB allows hundreds of MB; 20k objects ≈ 73 KB).
+
+### Verified
+- `npm test` 44/44, new checks: save lands in the browser database (~27 bytes/object even for a tiny test factory); FW2 export → import and an old v1
+  export both restore every object; reloading the page restores the factory from the database (offline); Stats shows factory size; far zoom draws.
+- Screenshot of a 2,100-object test factory at far zoom in the simplified view.
+
+### Known issues
+- Very old browsers without `CompressionStream` store the save uncompressed (still in IndexedDB, so still fine).
+- The far-zoom ground on desktop still costs ~14 ms (many terrain chunks scaled down). On phones the minimum zoom shows fewer chunks.

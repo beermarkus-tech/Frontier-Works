@@ -1,7 +1,7 @@
 'use strict';
 /* ---------- PWA: service worker, updates, install ---------- */
 // Build number: +1 on every push (= commit count on main). Must match VERSION 'fw-build-N' in sw.js (the test checks).
-const BUILD=22;
+const BUILD=23;
 const PWA={prompt:null,standalone:matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true,
  ios:/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),waiting:null};
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();PWA.prompt=e;if(UI.panel&&UI.panel.kind==='menu')renderPanel(true);});
@@ -16,7 +16,7 @@ function installHtml(){
 ACT.installApp=async()=>{if(!PWA.prompt)return;PWA.prompt.prompt();try{await PWA.prompt.userChoice;}catch(e){}PWA.prompt=null;renderPanel(true);};
 /* ↻ in the Menu header: save, look for a newer build on the server, install it and reload (or just reload if none) */
 ACT.forceReload=async()=>{
- save();PWA.forcing=true;toast('Checking for a new build…');
+ await save();PWA.forcing=true;toast('Checking for a new build…');
  const done=()=>location.reload();
  try{const reg='serviceWorker' in navigator&&await navigator.serviceWorker.getRegistration();
   if(reg){await reg.update();const w=reg.waiting||reg.installing;
@@ -26,7 +26,7 @@ ACT.forceReload=async()=>{
  }catch(e){}
  done();
 };
-ACT.applyUpdate=()=>{save();if(PWA.waiting)PWA.waiting.postMessage('skipWaiting');};
+ACT.applyUpdate=async()=>{await save();if(PWA.waiting)PWA.waiting.postMessage('skipWaiting');};
 function showUpdate(w){PWA.waiting=w;if(PWA.forcing)return;dialog(`<h2>Update ready</h2><p>A new version of Frontier Works is available. Your game is saved before reloading.</p><button class="btn pri" data-act="applyUpdate">Update now</button> <button class="btn" data-act="closeDlg">Later</button>`);}
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
  addEventListener('load',()=>{
