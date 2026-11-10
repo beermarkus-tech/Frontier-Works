@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Frontier Works</title>
+<meta name="description" content="A 2D factory-building game: mine, smelt, assemble, power your grid and launch the Orbital Beacon.">
+<meta name="theme-color" content="#0a0f14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Frontier">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/rajdhani-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="loading">FRONTIER WORKS</div>
+<div id="top">
+ <div id="brand" class="glass"><svg width="22" height="22" viewBox="0 0 24 24"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc56a"/><stop offset="1" stop-color="#ff8a33"/></linearGradient></defs><path d="M12 1.5l9.1 5.25v10.5L12 22.5l-9.1-5.25V6.75z" fill="url(#lg)"/><path d="M8 8h8M8 12h5M8 8v8" stroke="#1d1305" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg><span>FRONTIER<b>WORKS</b></span></div>
+ <div id="pwr" class="glass" data-act="openStats"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="currentColor" stroke="none"/></svg><div><div class="pv"><b id="pwv">0</b> / <span id="pwc">0</span> MW</div><div class="meter"><i id="pwm"></i></div></div></div>
+ <button class="btn warn" id="fuse" data-act="resetFuse" style="display:none">⚠ Reset fuse</button>
+ <span class="sp"></span>
+ <div id="menuGroup" class="glass">
+  <button class="btn" data-act="openMs" id="msBtn"><svg class="i" viewBox="0 0 24 24"><path d="M5 22V3M5 4h11l-2 4 2 4H5"/></svg><span id="msTxt">Goals</span></button>
+  <button class="btn" data-act="openInv"><svg class="i" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8"/></svg><span>Items</span></button>
+  <button class="btn" data-act="openStats"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg><span>Stats</span></button>
+  <button class="btn" data-act="openMenu"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+ </div>
+</div>
+<canvas id="mini" class="glass"></canvas>
+<div id="fabs" class="glass">
+ <button class="btn" id="fInspect" data-act="toolNone" title="Inspect / pan (Esc)"><svg class="i" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 0 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></svg></button>
+ <button class="btn" id="fRot" data-act="rotate" title="Rotate (R)"><svg class="i" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+ <button class="btn del" id="fDel" data-act="toolDel" title="Dismantle (X)"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+ <button class="btn" data-act="home" title="Center on Base Core (H)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+</div>
+<div id="dock" class="glass">
+ <div id="info"></div>
+ <div id="cats"></div>
+ <div id="tools"></div>
+</div>
+<div id="panel" class="glass hidden"><div id="phead"><img id="picon" alt="" style="display:none"><span id="ptitle"></span><button class="btn" data-act="closePanel"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div id="pbody"></div></div>
+<div id="dlg" class="hidden"><div id="dlgc" class="glass"></div></div>
+<div id="toast" class="glass"></div>
+<script src="js/data.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/input.js"></script>
+<script src="js/pwa.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
