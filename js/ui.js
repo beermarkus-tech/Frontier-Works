@@ -70,6 +70,7 @@ function entStatic(e){
   const rs=RL.filter(r=>r.m===d.mt&&ur(r.id));
   h+=rs.map(r=>`<button class="btn rec ${e.r===r.id?'on':''}" data-act="setRec" data-v="${r.id}"><b>${r.n}</b><br>${recLine(r,e.clock)}</button>`).join('')||'<div class="muted">No recipes unlocked for this machine yet.</div>';
  }
+ if((e.k==='drill'&&e.node)||e.k==='pump')h+=`<div style="margin:4px 0 8px"><button class="btn" data-act="planDrill">📐 Plan this ${e.k==='drill'?'drill':'pump'}</button></div>`;
  if(e.k==='mach'||e.k==='drill'||e.k==='pump'){
   const mx=S.oc?250:100;h+=`<h4>Clock speed</h4><div class="clockv" id="clockv">${Math.round(e.clock*100)}%</div><input type="range" min="10" max="${mx}" step="5" value="${Math.round(e.clock*100)}" data-act="clock">${S.oc?'':'<div class="muted">Overclocking above 100% unlocks with “Steelworks”.</div>'}<div class="muted">Power use scales with clock^1.6.</div>`;
  }
@@ -180,12 +181,13 @@ function codexHtml(){
   return`<div class="card"><b>${d.n}</b>${ub(id)?'':' 🔒'} <span class="muted">· ${d.pw} MW</span><div class="row"><span>${d.water?'On water':'Impure / normal / pure node'}</span><span>${d.water?fmt(r):`${fmt(r*0.5)} / ${fmt(r)} / ${fmt(r*2)}`} per min</span></div></div>`;}).join('');
  return h;
 }
-function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div>${S.gen===2?`<div class="row"><span>Biome</span><span>${bm.n}</span></div>`:''}<div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button>`:''}`;}
+function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div>${S.gen===2?`<div class="row"><span>Biome</span><span>${bm.n}</span></div>`:''}<div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button> `:''}<button class="btn" data-act="planNode">📐 Plan this node</button>`;}
 function menuHtml(){
  const big=S.gen===2;
  return`<h4>This map</h4><div class="muted">${big?`${MW}×${MH} tiles with seven biomes.`:`${MW}×${MH} tiles, made before biomes existed. Your factory stays on it. For the big ${MAP_NEW}×${MAP_NEW} biome island, start a new map (bottom of this menu).`}</div>
  <h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button>
  <h4>View</h4><div class="chips"><button class="btn chip ${V3.on?'':'on'}" data-act="view" data-v="2d">2D map</button><button class="btn chip ${V3.on?'on':''}" data-act="view" data-v="3d">3D view</button></div>
+ <div class="row"><span>Efficiency rings on buildings</span><span class="chips"><button class="btn chip ${OPT.eff?'on':''}" data-act="optEff" data-v="1">On</button><button class="btn chip ${OPT.eff?'':'on'}" data-act="optEff" data-v="0">Off</button></span></div>
  <div class="row"><span>3D quality</span><span class="chips"><button class="btn chip ${V3.q==='high'?'on':''}" data-act="q3" data-v="high">High</button><button class="btn chip ${V3.q==='low'?'on':''}" data-act="q3" data-v="low">Low (faster)</button></span></div>
  <div class="muted">3D: drag to move · pinch to zoom · twist two fingers to rotate · slide two fingers up/down to tilt. Mouse: right-drag rotates &amp; tilts, wheel zooms, Ctrl+wheel tilts. Keys: V switch view, E/Z rotate.</div>
  <h4>How to play</h4><div class="muted">
@@ -230,6 +232,9 @@ const ACT={
   else{const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>Tier ${S.ms}: ${m.n}</h2><p>Unlocked: ${un.join(', ')||'—'}${m.oc?', overclocking':''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);}
   save();},
  closeDlg,
+ optEff:v=>{OPT.eff=v==='1';saveOpt();renderPanel(true);},
+ planNode:()=>{const n=UI.panel.arg;planFrom(n.t,n.p,null,1);},
+ planDrill:()=>{const e=ents.get(UI.panel.arg);if(!e)return;planFrom(d3res(e),e.node?e.node.p:1,e.d,e.clock||1);},
  spd:v=>{S.spd=+v;renderPanel(true);},
  saveNow:()=>{save();toast('Saved');},
  exportSave:()=>{$('saveTxt').value=serialize();},

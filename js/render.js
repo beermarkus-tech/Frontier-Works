@@ -197,9 +197,19 @@ function drawLive(e,X,Y,s){
  // badge + status
  let icon=null;if(e.k==='mach'&&e.r)icon=Object.keys(RC[e.r].o)[0];else if((e.k==='drill'||e.k==='pump')&&e.item)icon=e.item;else if(e.k==='storage'){for(const k in e.store){icon=k;break;}}
  if(icon&&s>9){const r=Math.min(s*0.32,P*0.16),bx=X+s*0.42,by=Y+P-s*0.42;ctx.fillStyle='rgba(10,14,18,0.85)';ctx.beginPath();ctx.arc(bx,by,r*1.25,0,7);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();drawItem(icon,bx,by,r*2.1);}
- const st=bStatus(e);if(st&&s>7){const lx=X+P-s*0.36,ly=Y+s*0.36,lr=Math.max(1.6,s*0.09);glow(lx,ly,lr*3,st[0],0.45);ctx.fillStyle=st[0];ctx.beginPath();ctx.arc(lx,ly,lr,0,7);ctx.fill();}
+ effRing(e,X,Y,s);const st=bStatus(e);if(st&&s>7){const lx=X+P-s*0.36,ly=Y+s*0.36,lr=Math.max(1.6,s*0.09);glow(lx,ly,lr*3,st[0],0.45);ctx.fillStyle=st[0];ctx.beginPath();ctx.arc(lx,ly,lr,0,7);ctx.fill();}
  let pg=null;if(e.k==='mach'&&e.run)pg=e.prog;else if(e.k==='storage'){let t=0;for(const k in e.store)t+=e.store[k];pg=t/B[e.d].cap;}
  if(pg!==null&&s>9){const bw=P-s*0.9,bx=X+s*0.62,by=Y+P-s*0.2;ctx.fillStyle='rgba(0,0,0,0.6)';rr(bx,by,bw,s*0.08,s*0.04);ctx.fill();ctx.fillStyle='#ffb547';rr(bx,by,bw*Math.min(1,pg),s*0.08,s*0.04);ctx.fill();}
+}
+/* Efficiency ring in the building's top-left corner (fills clockwise, coloured like the panel badge) */
+function effRing(e,X,Y,s){
+ if(!OPT.eff||s<9||e._efT==null||e._efT<3||!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return;
+ const r=Math.max(3,s*0.17),cx=X+s*0.36,cy=Y+s*0.36,f=e._ef,col=effCol(Math.round(f*100));
+ ctx.fillStyle='rgba(10,14,18,0.78)';ctx.beginPath();ctx.arc(cx,cy,r*1.35,0,7);ctx.fill();
+ ctx.lineWidth=Math.max(1.5,r*0.42);ctx.lineCap='round';ctx.strokeStyle='rgba(255,255,255,0.13)';ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.stroke();
+ if(f>0.005){ctx.strokeStyle=col;ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,f));ctx.stroke();}
+ ctx.lineCap='butt';
+ if(s>=46){ctx.fillStyle='#fff';ctx.font=`700 ${Math.round(r*0.78)}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(f*100),cx,cy+0.5);ctx.textAlign='left';}
 }
 function drawBuilding(e,X,Y,s){
  const P=e.w*s;let sc=1;

@@ -492,3 +492,27 @@ Show the efficiency percentage in the machine panel's header too.
 
 ### Verified
 - `npm test` 33/33: the efficiency check now also confirms the header badge matches the measured value. Phone screenshot checked.
+
+---
+
+## Session 13 — 2026-11-10 (Claude Code, cloud session) · Build 15
+
+### What Markus asked for
+Two earlier offers he picked: (1) efficiency shown on the buildings themselves, (3) "Plan this node" from the map.
+
+### What was built
+- **Efficiency on buildings:**
+  - 2D (`effRing` in `js/render.js`): a small ring in the top-left corner of every machine (with a recipe), drill and pump. It fills
+    clockwise with the working share and uses the same colours as the panel (green/yellow/orange/red). The number appears inside when zoomed in.
+    The status light stays top-right.
+  - 3D: a small bar above each of those buildings (dark track + coloured fill), hidden when zoomed far out.
+  - ☰ Menu → View → "Efficiency rings on buildings: On/Off" (per device, `OPT` in `js/data.js`, localStorage `frontierworks_opts`). Default on.
+- **Plan this node:** a resource node's panel has "📐 Plan this node". A drill's or pump's panel has "📐 Plan this drill/pump"
+  (the node is hidden under the drill once built). It opens the planner's "From a node" with that resource and purity, the given
+  extractor (or the best unlocked one) and its clock, and adds the first step (e.g. Smelter) automatically (`planFrom` in `js/plan.js`).
+- DESIGN.md §8 updated. Build number **15**.
+
+### Verified
+- `npm test` 35/35, new: "Plan this node" on a copper node opens the planner with copper, its purity and a Copper Ingot step (2 × Smelter
+  on a normal node); the efficiency-ring option is on by default and toggles.
+- Phone screenshots of a test factory: 2D rings showing 96 (fed), 45 (output blocked) and 65 (starved) in the right colours; matching bars in 3D.

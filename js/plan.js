@@ -208,6 +208,11 @@ function plPowHtml(){
  h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(Object.assign({[p.gen]:Math.ceil(o.n-PL_EPS)},c.mach))||'—')+plRow('Power for others',`${fmt(p.mw)} MW`)+`</div>`;
  return h;
 }
+/* Open the planner set to a node / existing drill: resource, purity, extractor (given or best unlocked), clock, one first step */
+const d3res=e=>B[e.d].water?'water':e.node?e.node.t:'iron';
+function planFrom(res,p,ex,clock){const f=PL.fwd,list=plExtractors(res);
+ f.res=res;f.p=p==null?1:p;f.ex=ex&&list.includes(ex)?ex:(list.filter(id=>ub(id)).pop()||list[0]);f.n=1;f.clock=Math.round((clock||1)*100);f.steps=[];
+ PL.mode='fwd';plFix();plAddStep();plSave();openPanel('plan');$('pbody').scrollTop=0;}
 /* Default recipe for a new step: use the biggest leftover, preferring recipes whose inputs are all available, then standard ones. */
 function plAddStep(){
  const o=plFwd(PL.fwd),left=Object.keys(o.left).sort((a,b)=>o.left[b]-o.left[a]);

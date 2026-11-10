@@ -58,6 +58,12 @@ const server=require('./serve.js');
  const ef=await p.evaluate(()=>window.__eff);
  check(`efficiency: fed smelter ${Math.round(ef.a*100)}%, blocked one ${Math.round(ef.b*100)}% (${ef.bw}); shown in its panel`,ef.a>0.8&&ef.b<0.4&&ef.bw==='out'&&ef.txt);
  check(`splitter feeds touching smelters; smelter → touching merger → belt (${sm.out} ingots delivered, side smelter made ${sm.side})`,sm.ok&&sm.out>20&&sm.side>5);
+ // "Plan this node": node panel → planner set to that node with a first step
+ const pn=await p.evaluate(()=>{const n=nodes.find(x=>x.t==='copper'&&!grid[x.y*MW+x.x]);openPanel('node',n);const btn=!!document.querySelector('#pbody [data-act="planNode"]');ACT.planNode();
+  const r={btn,kind:UI.panel.kind,res:PL.fwd.res,p:PL.fwd.p===n.p,steps:PL.fwd.steps.map(s=>s.r).join(),big:(document.querySelector('#pbody .plbig')||{}).textContent};
+  localStorage.removeItem('frontierworks_plan');PL=plDefault();ACT.closePanel();return r;});
+ check(`"Plan this node" opens the planner for that node (${pn.res}, ${pn.steps}, ${pn.big})`,pn.btn&&pn.kind==='plan'&&pn.res==='copper'&&pn.p&&pn.steps==='r_copper_ingot'&&/Smelter/.test(pn.big||''));
+ check('efficiency rings option is on by default and toggles',await p.evaluate(()=>{const a=OPT.eff;ACT.openMenu();ACT.optEff('0');const b=OPT.eff;ACT.optEff('1');ACT.closePanel();return a&&!b&&OPT.eff;}));
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

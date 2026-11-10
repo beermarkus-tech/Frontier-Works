@@ -236,6 +236,7 @@ function v3Models(){
    const glow=!!(o.glow||o.cf);const mat=glow?V3.glowMat:V3.mat;
    return{pos,o,glow,col:v3col(c),pool:v3Pool(geo,mat,{cast:!glow,recv:!glow,color:glow})};});}
  V3.led=v3Pool(G.sph,V3.glowMat,{color:1});
+ V3.effBg=v3Pool(G.box,new T3.MeshBasicMaterial({color:0x10151b}),{});V3.effFg=v3Pool(G.box,V3.glowMat,{color:1});
 }
 
 /* ---------- belts & pipes (procedural ribbons) ---------- */
@@ -385,6 +386,11 @@ function v3Anim(dt,t){
     T.m.premultiply(m.base[i]);ms.setMatrixAt(i,T.m);
     if(p.glow){if(p.o.cf)T.c.set(p.o.cf(e,e._a3,t));else T.c.copy(p.col).multiplyScalar(id==='core'?1:0.16+0.84*e._a3*(0.85+0.15*Math.sin(t*9+e.id)));ms.setColorAt(i,T.c);}}
    ms.instanceMatrix.needsUpdate=true;if(ms.instanceColor)ms.instanceColor.needsUpdate=true;}}
+ // efficiency bars floating above machines, drills and pumps (OPT.eff)
+ {const list=OPT.eff&&C3.dist<90?L.led.filter(e=>e.k!=='gen'&&(e.k!=='mach'||e.r)&&e._efT>=3):[];const bg=v3PoolN(V3.effBg,list.length),fg=v3PoolN(V3.effFg,list.length);
+  list.forEach((e,i)=>{const m=V3.M[e.d],y=(m&&m.h||1.5)+0.8,W=Math.min(1.6,e.w*0.6),f=Math.min(1,e._ef),cx=e.x+e.w/2,cz=e.y+e.w/2;
+   bg.setMatrixAt(i,T.m.compose(T.v.set(cx,y,cz),T.q.identity(),T.s.set(W+0.1,0.14,0.2)));
+   fg.setMatrixAt(i,T.m.compose(T.v.set(cx-W/2+W*f/2,y+0.01,cz+0.01),T.q.identity(),T.s.set(Math.max(0.001,W*f),0.12,0.21)));fg.setColorAt(i,T.c.set(effCol(Math.round(f*100))));});}
  // status lights
  const led=V3.led.mesh;if(led){L.led.forEach((e,i)=>{const st=bStatus(e),w=e.w;led.setMatrixAt(i,T.m.compose(T.v.set(e.x+w-0.2,0.3,e.y+w-0.2),T.q.identity(),T.s.set(0.13,0.13,0.13)));T.c.set(st?st[0]:'#8a96a0');led.setColorAt(i,T.c);});led.instanceMatrix.needsUpdate=true;led.instanceColor.needsUpdate=true;}
  // pipe flanges show the fluid inside

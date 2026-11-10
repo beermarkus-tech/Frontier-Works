@@ -125,11 +125,15 @@ Hand mining gives +5 ore from a node.
     (with biome hints), and optionally adds that chain's own power to the demand. Generators burn fuel in proportion to the
     power drawn (fuel/min = MW × 60 ÷ fuel energy). The other two tabs show a "Power plant" line under their total power,
     with a button that opens the Power tab with that demand. "For a target" also estimates drill & pump power.
+  - *Plan this node* (Session 13): a resource node's panel (and a drill's or pump's panel) has "📐 Plan this node/drill", which opens
+    "From a node" set to that resource, purity, extractor and clock, with a first step already added.
   - Only unlocked recipes and buildings by default. "Show locked" lets you plan later tiers (marked 🔒).
   - Plans are stored separately from the game save (`frontierworks_plan`), so they never affect saves.
 - **Efficiency** (Session 11): every machine, drill and pump panel shows the share of the last 30 s it was working, the output per minute
   this gives vs. its maximum at the current clock, and how the rest of the time was lost (waiting for a named input, output full,
-  no power), with a short tip for the biggest loss. Measured live, not saved.
+  no power), with a short tip for the biggest loss. Measured live, not saved. The panel header shows it as a coloured badge, and
+  buildings show it on the map (Session 13): a small ring in the top-left corner in 2D (number shown when zoomed in), a bar above the
+  building in 3D. ☰ Menu → View → "Efficiency rings on buildings" turns them off (per device).
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 

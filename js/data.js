@@ -145,6 +145,9 @@ const START_INV={coal:40,iron_plate:120,iron_rod:80,wire:120,cable:60,concrete:6
    t: [water below, sand band width, rock if noise above, rock detail above]  ·  pal: ground colours for the painter
    res: resource weights · pure: purity bias (+ = more pure nodes) · dens: node density
    d2: 2D painted detail · d3: 3D decoration chances per tile */
+/* Per-device display options (not part of the save) */
+const OPT={eff:true};try{Object.assign(OPT,JSON.parse(localStorage.getItem('frontierworks_opts')||'{}'));}catch(e){}
+function saveOpt(){try{localStorage.setItem('frontierworks_opts',JSON.stringify(OPT));}catch(e){}}
 const BIOMES=[
  {id:'greenvale',n:'Greenvale',desc:'Gentle meadows around the landing site.',t:[0.30,0.04,0.70,0.45],
   pal:{ga:[40,74,42],gb:[62,102,50],gc:[98,134,60],sa:[212,192,140],ra:[122,118,110],rb:[108,105,99],sh:[66,160,204],dp:[18,62,118]},
