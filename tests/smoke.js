@@ -38,6 +38,13 @@ const server=require('./serve.js');
   load(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));const old={MW,n:nodes.length,core:[...ents.values()][0].x,iron:nodes[0].x+','+nodes[0].y,bios:new Set(bio).size};
   load(s0);return{same,old,back:MW};});
  check(`save/load keeps the big map; old saves load as 128 classic (${JSON.stringify(sv.old)})`,sv.same&&sv.old.MW===128&&sv.old.core===62&&sv.old.iron==='55,61'&&sv.old.bios===1&&sv.back===384);
+ // recipe codex: generator fuel use; top-bar planner button
+ await p.evaluate(()=>ACT.openCodex());await p.waitForTimeout(150);
+ const cx=await p.evaluate(()=>document.getElementById('pbody').innerText);
+ check('codex shows generator fuel use (burner 12 coal/min, steam 45 water/min, reactor 0.2 rods/min)',/Coal Burner[\s\S]*?Coal\s*12\/min/.test(cx)&&/Steam Generator[\s\S]*?Water\s*45\/min/.test(cx)&&/Fission Reactor[\s\S]*?Fuel Rod\s*0\.2\/min/.test(cx));
+ await p.click('#planBtn');await p.waitForTimeout(150);
+ check('top-bar Planner button opens the planner',await p.evaluate(()=>UI.panel&&UI.panel.kind==='plan'));
+ await p.evaluate(()=>ACT.closePanel());
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

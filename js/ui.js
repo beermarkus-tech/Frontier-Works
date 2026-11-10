@@ -141,10 +141,20 @@ function statsHtml(){
  h+=`<div style="margin-top:10px"><button class="btn" data-act="openCodex">📖 Recipe codex</button></div>`;
  return h;
 }
+const fmtSec=s=>s>=120?Math.round(s/60)+' min':(s<10?s.toFixed(1).replace('.0',''):Math.round(s))+' s';
+/* Generator card: fuel per minute at full load (and how long one item lasts), water, waste */
+function genInfo(g){const d=B[g];let h=`<div class="card"><b>${d.n}</b>${ub(g)?'':' 🔒'} <span class="muted">· ${d.cap} MW</span>`;
+ for(const f of d.fuels){const pm=d.cap*60/IT[f].e;h+=`<div class="row"><span>${nm(f)}</span><span>${fmt(pm)}/min <small class="muted">· one lasts ${fmtSec(IT[f].e/d.cap)}</small></span></div>`;}
+ if(d.water)h+=`<div class="row"><span>${nm('water')}</span><span>${fmt(d.cap*60*d.water)}/min</span></div>`;
+ if(g==='reactor')h+=`<div class="row"><span>${nm('waste')} (output)</span><span>${fmt(d.cap*60/IT.fuel_rod.e*10)}/min</span></div>`;
+ h+=`<div class="muted">Fuel use follows the power actually drawn: at half load it burns half as much.${d.fuels.length>1?` It can burn ${d.fuels.map(f=>IT[f].n).join(' or ')} (uses the first it has, in this order).`:''}</div></div>`;
+ return h;}
 function codexHtml(){
  const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender'];let h='';
- for(const mt of mts){const rs=RL.filter(r=>r.m===mt&&ur(r.id));if(!rs.length)continue;h+=`<h4>${B[mt].n}</h4>`+rs.map(r=>`<div class="card"><b>${r.n}</b><br>${recLine(r)}</div>`).join('');}
- h+=`<h4>Generators</h4>`+['burner','steam','turbine','reactor'].filter(ub).map(g=>`<div class="card"><b>${B[g].n}</b> — ${B[g].desc}</div>`).join('');
+ for(const mt of mts){const rs=RL.filter(r=>r.m===mt&&ur(r.id));if(!rs.length)continue;h+=`<h4>${B[mt].n} · ${B[mt].pw} MW</h4>`+rs.map(r=>`<div class="card"><b>${r.n}</b><br>${recLine(r)}</div>`).join('');}
+ h+=`<h4>Generators (fuel at full load)</h4>`+['burner','steam','turbine','reactor'].map(genInfo).join('');
+ h+=`<h4>Extraction</h4>`+['drill1','drill2','drill3','opump','wpump'].map(id=>{const d=B[id],r=d.rate*60;
+  return`<div class="card"><b>${d.n}</b>${ub(id)?'':' 🔒'} <span class="muted">· ${d.pw} MW</span><div class="row"><span>${d.water?'On water':'Impure / normal / pure node'}</span><span>${d.water?fmt(r):`${fmt(r*0.5)} / ${fmt(r)} / ${fmt(r*2)}`} per min</span></div></div>`;}).join('');
  return h;
 }
 function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div>${S.gen===2?`<div class="row"><span>Biome</span><span>${bm.n}</span></div>`:''}<div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button>`:''}`;}

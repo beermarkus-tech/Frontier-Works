@@ -402,3 +402,29 @@ A reload button next to the build number, to force the app onto the newest versi
 
 ### Next up
 - Markus: after each push, open ☰ Menu, tap ↻, and check the build number matches what Claude reported.
+
+---
+
+## Session 9 — 2026-11-10 (Claude Code, cloud session) · Build 11
+
+### What Markus asked for
+1. Put the Production Planner button in the top bar with Goals, Items, Stats.
+2. In the Recipe Codex, show how much coal a Coal Burner uses, and the same for the other generators.
+(Also: he confirmed the in-app "Install app" button works for installing the PWA.)
+
+### What was built
+- **Top bar:** new "Planner" button (calculator icon) between Stats and ☰. On phones it's icon-only like the others.
+  The Menu → Tools button stays too.
+- **Recipe Codex → "Generators (fuel at full load)":** every generator (locked ones marked 🔒) with fuel per minute and
+  how long one item lasts, water per minute, and reactor waste:
+  Coal Burner 12 coal or 10 coke/min; Steam Generator 30 coal or 25 coke + 45 water/min; Fuel Turbine 12 fuel/min;
+  Fission Reactor 0.2 rods + 240 water/min, 2 waste/min out. It also says fuel use follows the load, and which fuel is used first.
+- **Codex extras:** each machine heading shows its power ("Smelter · 4 MW"). A new "Extraction" section lists drills and pumps
+  with power and output per minute on impure / normal / pure nodes.
+- Build number **11**.
+
+### Verified
+- `npm test`: 31/31 pass, including codex fuel numbers and the top-bar Planner button. Phone screenshot of the codex checked.
+
+### Next up
+- Markus: tap ↻ in ☰ Menu, check **Build 11**, then try the new calculator icon in the top bar and the codex generator list.
