@@ -16,6 +16,12 @@ const server=require('./serve.js');
   res.push(P('pole1',MW/2-7,MH/2-7,0),P('pole1',MW/2-7,MH/2,0));const before=S.inv.iron_ingot||0;for(let i=0;i<20*120;i++)fw.tick(0.05);return{res,ingots:(S.inv.iron_ingot||0)-before};});
  check('placements',r.res.every(x=>x===''));check('ingots delivered ('+r.ingots+')',r.ingots>40);
  await p.click('#msBtn');await p.waitForTimeout(300);check('goals list renders',(await p.$$('#pbody .card')).length===10);
+ // build number: shown in the Menu header and matching the service-worker version
+ await p.evaluate(()=>ACT.openMenu());await p.waitForTimeout(150);
+ const bn=await p.evaluate(()=>({b:BUILD,txt:document.getElementById('pbuild').textContent}));
+ const swv=require('fs').readFileSync(require('path').join(__dirname,'..','sw.js'),'utf8').match(/VERSION = '([^']+)'/)[1];
+ check(`build number ${bn.b} in Menu header and sw.js (${swv})`,bn.txt==='Build '+bn.b&&swv==='fw-build-'+bn.b);
+ await p.evaluate(()=>ACT.closePanel());
  // big biome map + old saves
  const bm=await p.evaluate(()=>{const bc=BIOMES.map(()=>0);for(let i=0;i<MW*MH;i++)bc[bio[i]]++;const types=new Set(nodes.map(n=>n.t));
   const ur=nodes.filter(n=>n.t==='uranium'),urHot=ur.filter(n=>['frostmark','emberfield'].includes(biomeAt(n.x,n.y).id)).length;

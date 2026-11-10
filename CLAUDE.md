@@ -37,6 +37,7 @@ and keep the game playable after every commit.
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).
 
 ## Rules
+- **Build number on every push:** set `BUILD` in `js/pwa.js` to the commit count on `main` after your commit (`git rev-list --count HEAD` + 1 before committing; one push = one commit is simplest), and `VERSION` in `sw.js` to `'fw-build-<BUILD>'` (the test checks they match). Tell Markus the build number; he compares it with ☰ Menu (top right of the panel).
 - **Bump `VERSION` in `sw.js` on every change** to shipped files, and add any new file to `ASSETS`, or installed players won't get it / it won't work offline.
 - Balance data lives in `js/data.js` (`R(...)` recipes, `D(...)` buildings, `MS` milestones). Every milestone needs `b` and `r` arrays (normalized at load, but keep them explicit).
 - Save format: `serialize()`/`load()` in `js/main.js`; keep old saves loading (add fields with defaults in `initEnt`).

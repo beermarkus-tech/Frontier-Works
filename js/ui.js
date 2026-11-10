@@ -50,13 +50,13 @@ function closePanel(){UI.panel=null;UI.sel=null;$('panel').classList.add('hidden
 function renderPanel(full){
  const P=UI.panel;if(!P)return;const body=$('pbody'),pi=$('picon');
  if(P.kind==='ent'){const e=ents.get(P.arg);if(!e){closePanel();return;}
-  if(full){$('ptitle').textContent=B[e.d].n;pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
+  if(full){$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));return;}
  pi.style.display='none';
  const map={inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml]};
  const [title,fn]=map[P.kind];
  if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'))return;
- $('ptitle').textContent=title;
+ $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';
  if(P.kind==='node'){pi.src=itemIcon(NODE_T[P.arg.t][0]);pi.style.display='';}
  const st=body.scrollTop;setHTML(body,fn(P.arg));body.scrollTop=st;
 }
@@ -149,7 +149,9 @@ function codexHtml(){
 }
 function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div>${S.gen===2?`<div class="row"><span>Biome</span><span>${bm.n}</span></div>`:''}<div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button>`:''}`;}
 function menuHtml(){
- return`<h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button>
+ const big=S.gen===2;
+ return`<h4>This map</h4><div class="muted">${big?`${MW}×${MH} tiles with seven biomes.`:`${MW}×${MH} tiles, made before biomes existed. Your factory stays on it. For the big ${MAP_NEW}×${MAP_NEW} biome island, start a new map (bottom of this menu).`}</div>
+ <h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button>
  <h4>View</h4><div class="chips"><button class="btn chip ${V3.on?'':'on'}" data-act="view" data-v="2d">2D map</button><button class="btn chip ${V3.on?'on':''}" data-act="view" data-v="3d">3D view</button></div>
  <div class="row"><span>3D quality</span><span class="chips"><button class="btn chip ${V3.q==='high'?'on':''}" data-act="q3" data-v="high">High</button><button class="btn chip ${V3.q==='low'?'on':''}" data-act="q3" data-v="low">Low (faster)</button></span></div>
  <div class="muted">3D: drag to move · pinch to zoom · twist two fingers to rotate · slide two fingers up/down to tilt. Mouse: right-drag rotates &amp; tilts, wheel zooms, Ctrl+wheel tilts. Keys: V switch view, E/Z rotate.</div>

@@ -304,3 +304,36 @@ He went with my recommendations: **384×384** (9× the area), **seven biomes aff
 - Is 384×384 the right size once you've explored a bit, or bigger/smaller?
 - Should starting a new map ask before replacing the current one with an option to keep both (save slots)? This ties in with Session 1's save-slots question.
 - With this much distance, do you want faster transport (trains/vehicles) on the roadmap?
+
+---
+
+## Session 6 — 2026-11-10 (Claude Code, cloud session)
+
+### What Markus asked for
+"Not seeing the larger map." And: a build number that counts up with every push, shown in the Menu panel's top right
+next to the ✕, so he can compare it with the number Claude reports.
+
+### Findings
+- The live site was already serving the Session 5 release (`sw.js` VERSION `fw-2026-11-10-5`), so the update was there.
+  The most likely reason: **his saved game keeps its 128×128 map by design**, and the 384×384 biome island only comes with ☰ Menu → New game.
+  (A phone that hadn't accepted "Update ready" yet would also still show the old version.)
+
+### What was built
+- **Build number:** `BUILD` in `js/pwa.js` (= commit count on `main`; this release is **Build 8**), shown as "Build 8" in the Menu
+  panel header, left of ✕. `sw.js` VERSION is now `fw-build-8`, so the cache version and the visible number always match.
+  A new test checks both. CLAUDE.md now has the rule: bump both on every push and tell Markus the number.
+- **Menu → "This map"** at the top says what you're playing: either "384×384 tiles with seven biomes", or "128×128, made before
+  biomes … start a new map for the big biome island".
+
+### Verified
+- `npm test` passes, including the new build-number check.
+
+### Known issues
+- Unchanged from Session 5.
+
+### Next up
+- Markus: open ☰ Menu and check that it says **Build 8** (if not, reopen the app or accept "Update ready"). Then read "This map";
+  for the big island use New game at the bottom of the Menu (it replaces the current factory).
+
+### Open questions for Markus
+- Should New game keep the old factory as a second save slot instead of replacing it? (Ties to save slots, Session 1.)
