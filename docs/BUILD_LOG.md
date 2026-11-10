@@ -547,3 +547,6 @@ Remove the efficiency bars above machines in 3D ("they look weird, 2D is enough"
 
 ### Verified
 - `npm test` passes (3D checks included).
+- **Follow-up (Build 18):** the Build 17 push went out while the test run had crashed. It wasn't the 3D change: the splitter/merger test
+  looked for free space with a check that allows water, and on that run's random map its coal burner landed in a lake.
+  The test now looks for dry land. Three full runs on three random maps: 36/36 each. Lesson recorded: run the tests and read the result before committing.

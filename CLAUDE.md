@@ -42,7 +42,7 @@ and keep the game playable after every commit.
 - Balance data lives in `js/data.js` (`R(...)` recipes, `D(...)` buildings, `MS` milestones). Every milestone needs `b` and `r` arrays (normalized at load, but keep them explicit).
 - Save format: `serialize()`/`load()` in `js/main.js`; keep old saves loading (add fields with defaults in `initEnt`).
 - Original content only: own names, art (procedural canvas drawing) and recipes — don't copy assets or names from commercial games.
-- Run `npm test` before committing.
+- Run `npm test` before committing, and **check it printed PASS lines with no FAIL or crash** before you commit (don't chain commit/push after the test with `;`). Each run uses a new random map, so test setups must search for dry land (`canPlace('incin',…)`), not just any free tile.
 
 ## Known follow-ups
 - Late tiers (6–10) are untested for pacing/balance.
