@@ -1059,3 +1059,18 @@ Move a building with a long press and drag, if that works on a tablet; otherwise
 ### Next up / open questions
 - Overflow splitter (proposed earlier, not yet confirmed).
 - Maybe: moving a whole selection of buildings at once.
+
+---
+
+## Session 35b — 2026-11-11 (Claude Code, cloud session) · Build 41
+
+### What Markus asked
+Put the Drone Pads into their own transport menu.
+
+### What was built
+- New build-menu tab **Transport** (`CATS` gets `['trans','Transport']`, drone icon), between Power and Signs. The Drone Pad moved there from Logistics.
+  It's the home for future vehicles too. Before Tier 5 the tab shows "Nothing unlocked here yet".
+- Build number **41**.
+
+### Verified
+- `npm test` 64/64; the unlock/tabs check now also confirms the Drone Pad is listed under Transport. Tablet screenshot of the dock (six tabs fit in one row).

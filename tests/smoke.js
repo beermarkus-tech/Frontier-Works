@@ -204,8 +204,9 @@ const server=require('./serve.js');
  // older saves get buildings added later (signs, Drone Pad) on load; signs have their own tab
  const ul=await p.evaluate(()=>{const keep=serialize();const o=JSON.parse(keep);o.S.ub=o.S.ub.filter(x=>!x.startsWith('sign')&&x!=='dpad');o.S.ms=5;load(JSON.stringify(o));
   const r={signs:['sign1','sign2','sign3','sign4'].every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===4&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
-  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===4;UI.cat='log';buildCats();load(keep);return r;});
- check(`older saves get signs and the Drone Pad on load; Signs have their own tab (${Object.values(ul).join(',')})`,Object.values(ul).every(Boolean));
+  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===4;
+  r.trans=B.dpad.cat==='trans'&&CATS.some(c=>c[0]==='trans');UI.cat='trans';buildCats();r.transShown=!!document.querySelector('#tools [data-v="dpad"]');UI.cat='log';buildCats();load(keep);return r;});
+ check(`older saves get signs and the Drone Pad on load; Signs and Transport (Drone Pad) have their own tabs (${Object.values(ul).join(',')})`,Object.values(ul).every(Boolean));
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
