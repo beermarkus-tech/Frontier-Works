@@ -188,6 +188,11 @@ const server=require('./serve.js');
   cam.x=camT.x=X+1.5;cam.y=camT.y=Y+1.5;cam.z=camT.z=2;const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;
   const sv=serialize();load(sv);const e2=fw.entAt(X,Y);const r={sizes,opened,txt:e.tx,col:e.tc,drawn:seen.join(' ').includes('Iron')&&seen.join(' ').includes('Works'),kept:e2&&e2.tx==='Iron Works'&&e2.tc===3};removeEnt(e2,false,true);return r;});
  check(`signs: sizes ${sg.sizes}, placing opens the text box, "${sg.txt}" in colour ${sg.col} is drawn and survives save/load`,sg.sizes==='1,2,3,4'&&sg.opened&&sg.txt==='Iron Works'&&sg.col===3&&sg.drawn&&sg.kept);
+ // older saves get buildings added later (signs, Drone Pad) on load; signs have their own tab
+ const ul=await p.evaluate(()=>{const keep=serialize();const o=JSON.parse(keep);o.S.ub=o.S.ub.filter(x=>!x.startsWith('sign')&&x!=='dpad');o.S.ms=5;load(JSON.stringify(o));
+  const r={signs:['sign1','sign2','sign3','sign4'].every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===4&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
+  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===4;UI.cat='log';buildCats();load(keep);return r;});
+ check(`older saves get signs and the Drone Pad on load; Signs have their own tab (${Object.values(ul).join(',')})`,Object.values(ul).every(Boolean));
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

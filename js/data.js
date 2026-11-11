@@ -106,10 +106,10 @@ D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',
 D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'log',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
 D('dpad',{n:'Drone Pad',k:'dpad',w:3,pw:25,cap:400,cat:'log',col:'#2fa7a0',cost:{motor:4,stator:4,cased_girder:6,cable:30},desc:'Holds 400 items. Link it to another pad and its drone flies them there (40 per trip). An unlinked pad receives drones and passes items to outgoing belts.'});
 const DRONE={cap:40,spd:10,load:1.5,unload:1.5,wait:8};   // items per trip, tiles per second, seconds to load / unload, max seconds to wait for a full load
-D('sign1',{n:'Sign S',k:'sign',w:1,cat:'log',col:'#e9e2cf',ow:1,cost:{iron_plate:1},desc:'A 1×1 label. Tap it to write text and pick a colour.'});
-D('sign2',{n:'Sign M',k:'sign',w:2,cat:'log',col:'#e9e2cf',ow:1,cost:{iron_plate:2},desc:'A 2×2 label for a factory or line. Tap it to write text and pick a colour.'});
-D('sign3',{n:'Sign L',k:'sign',w:3,cat:'log',col:'#e9e2cf',ow:1,cost:{iron_plate:4},desc:'A 3×3 label, readable from further out.'});
-D('sign4',{n:'Sign XL',k:'sign',w:4,cat:'log',col:'#e9e2cf',ow:1,cost:{iron_plate:6},desc:'A 4×4 label for whole areas, the most readable from far out.'});
+D('sign1',{n:'Sign S',k:'sign',w:1,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:1},desc:'A 1×1 label. Tap it to write text and pick a colour.'});
+D('sign2',{n:'Sign M',k:'sign',w:2,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:2},desc:'A 2×2 label for a factory or line. Tap it to write text and pick a colour.'});
+D('sign3',{n:'Sign L',k:'sign',w:3,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:4},desc:'A 3×3 label, readable from further out.'});
+D('sign4',{n:'Sign XL',k:'sign',w:4,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:6},desc:'A 4×4 label for whole areas, the most readable from far out.'});
 const SIGN_COL=['#e9e2cf','#ffd34a','#4fc3a1','#6fa8ff','#ff7a6a','#b48cff'];   // board colours to pick from
 D('incin',{n:'Incinerator',k:'incin',cat:'log',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('drill1',{n:'Drill Mk1',k:'drill',w:2,rate:1,pw:5,cat:'ext',col:'#6b7f3a',cost:{iron_plate:10,concrete:10},desc:'Place over an ore node. 60/min on a normal node.'});
@@ -131,7 +131,7 @@ D('reactor',{n:'Fission Reactor',k:'gen',w:4,cap:2500,fuels:['fuel_rod'],water:2
 D('pole1',{n:'Power Pole',k:'pole',link:10,sup:6,cat:'pow',col:'#c8a040',cost:{wire:3,concrete:1},ow:1,desc:'Links to poles within 10 tiles, powers buildings within 6.'});
 D('pole2',{n:'Power Tower',k:'pole',link:24,sup:9,cat:'pow',col:'#e0c060',cost:{cable:10,braced_plate:2,concrete:5},ow:1,desc:'Links within 24 tiles, powers within 9.'});
 
-const CATS=[['log','Logistics'],['ext','Extraction'],['prod','Production'],['pow','Power']];
+const CATS=[['log','Logistics'],['ext','Extraction'],['prod','Production'],['pow','Power'],['sign','Signs']];
 const MS=[
 {n:'Field Assembly',req:{iron_plate:100,iron_rod:100,wire:100},b:['assembler','belt2','incin'],r:['r_braced_plate','r_rotor','r_copper_sheet']},
 {n:'Structural Works',req:{braced_plate:50,rotor:30,concrete:200,cable:100},b:['pipe1','junction','wpump','tank','sorter'],r:['r_truss_frame','r_stitched_plate','r_cast_bolts']},

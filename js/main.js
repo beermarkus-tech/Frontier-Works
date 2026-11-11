@@ -13,10 +13,14 @@ function serialize(){syncPipes();const es=[];
   const a=[e.d,e.x,e.y,e.dir||0];if(Object.keys(x).length)a.push(x);es.push(a);}
  return JSON.stringify({v:2,S,es});}
 function parseSave(str){str=String(str).trim();return JSON.parse(str[0]==='{'?str:decodeURIComponent(escape(atob(str))));}
+/* Older saves store the unlock lists from when they were made; new buildings/recipes (signs, Drone Pad, …) are added on load */
+function grantUnlocks(){S.ub=S.ub||[];S.ur=S.ur||[];const b=[...START_B],r=[...START_R];for(let i=0;i<Math.min(S.ms||0,MS.length);i++){b.push(...MS[i].b);r.push(...MS[i].r);}
+ for(const x of b)if(!S.ub.includes(x))S.ub.push(x);for(const x of r)if(!S.ur.includes(x))S.ur.push(x);if((S.ms||0)>=4)S.oc=true;}
 function load(str){const data=typeof str==='string'?parseSave(str):str;
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;genMap(S.seed);ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  for(const o0 of data.es){const o=Array.isArray(o0)?Object.assign({d:o0[0],x:o0[1],y:o0[2],dir:o0[3]},o0[4]||{}):o0;const d=B[o.d];if(!d)continue;
   const e=Object.assign({},o,{id:nextId++,k:d.k,w:d.w,h:d.w});initEnt(e,d);ents.set(e.id,e);for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
+ grantUnlocks();
  S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
 }
 async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}

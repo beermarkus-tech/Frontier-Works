@@ -1011,3 +1011,22 @@ Desktop far zoom 43.8 → **2.2 ms**. `npm test` 56/56. Screenshots before/after
 - `npm test` 62/62, twice. The pipe test now uses junctions as entry points (300 m³/min). New check: plain pipes running past an incinerator stay unconnected.
   The save/load check for network contents passes again.
 - Icon comparison: Concrete / Cased Girder / Steel Beam clearly different at icon and belt size.
+
+---
+
+## Session 34 — 2026-11-11 (Claude Code, cloud session) · Build 39
+
+### What Markus reported
+Signs don't appear in the Logistics menu. And they shouldn't be there anyway (it's already large); give them their own menu.
+
+### Cause and fix
+- Saves store the unlock lists from when the game started. Signs were added to the start set in Build 37, so existing games never got them.
+  The same gap would hit any building added to an already completed tier (e.g. the Drone Pad for games past Tier 5).
+- `grantUnlocks()` in `js/main.js` runs on every load: adds the start buildings/recipes plus everything from completed tiers that's missing
+  (and overclocking after Steelworks).
+- New build-menu tab **Signs** (`CATS` gets `['sign','Signs']`, its own icon). The four signs moved out of Logistics.
+- Build number **39**.
+
+### Verified
+- `npm test` 63/63. New check: a save with signs and Drone Pad removed from its unlock list (and 5 tiers done) gets both back on load, and the Signs tab lists exactly the four signs.
+- Tablet screenshot of the dock with the Signs tab.
