@@ -687,3 +687,23 @@ At far zoom most of the remaining time is the terrain itself. The save limit is 
 
 ### Open questions for Markus
 - Go ahead with the overflow splitter as proposed? Any building names he'd like changed to other names of our own?
+
+---
+
+## Session 21 — 2026-11-11 (Claude Code, cloud session) · Build 25
+
+### What Markus reported
+A belt doesn't curve directly out of a crossing the way it seems to with splitters/mergers. It should.
+
+### Findings and fix
+- Belt/pipe curves (`e.cin`, set in `rebuildTopo`) were only made when the side neighbour was another belt/pipe pointing in. In fact
+  **no** router or crossing made a belt curve (screenshots: splitter, merger and crossing cases all drew straight pieces). Splitters and mergers just
+  looked more connected thanks to their arrow markings.
+- New `feedsInto(sd,e,o)` in `js/sim.js`: a side neighbour feeds a line if it is a belt/pipe pointing in (as before), a splitter/sorting splitter
+  with an output side facing it, a merger whose front faces it, a pipe junction (pipes), or a crossing fed from its far side in the same direction.
+  If nothing feeds the line from behind and exactly one side feeds it, it curves. Items follow the curve (`itemPos`), 2D and 3D alike.
+- Build number **25**.
+
+### Verified
+- `npm test` 46/46, new check: a belt after a splitter side, after two crossings (east and south) and after a merger turn all curve; a plain
+  straight belt doesn't; an ore item passes through the crossing and round the curve. Before/after screenshots.

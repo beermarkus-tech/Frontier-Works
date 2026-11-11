@@ -93,6 +93,17 @@ const server=require('./serve.js');
  const cs=await p.evaluate(()=>{const d=cloudC.getContext('2d').getImageData(0,0,128,128).data,a=(x,y)=>d[(y*128+x)*4+3];let ex=0,ey=0,inn=0;
   for(let i=0;i<128;i++){ex+=Math.abs(a(127,i)-a(0,i));ey+=Math.abs(a(i,127)-a(i,0));inn+=Math.abs(a(63,i)-a(64,i));}return{ex:ex/128,ey:ey/128,inn:inn/128};});
  check(`cloud shadows wrap without a seam (edge jumps ${cs.ex.toFixed(1)}/${cs.ey.toFixed(1)} vs normal ${cs.inn.toFixed(1)})`,cs.ex<=cs.inn*2+1&&cs.ey<=cs.inn*2+1);
+ // belts curve out of splitters, mergers and crossings (not only out of other belts), and items follow the curve
+ const cv=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-2;j<12&&ok;j++)for(let i=-2;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const placed=[P('belt1',X,Y,0),P('splitter',X+1,Y,0),P('belt1',X+1,Y+1,0),P('belt1',X,Y+4,0),P('crossing',X+1,Y+4,0),P('belt1',X+2,Y+4,1),P('belt1',X+2,Y+5,1),
+   P('belt1',X+6,Y+3,1),P('crossing',X+6,Y+4,0),P('belt1',X+6,Y+5,0),P('belt1',X+5,Y+8,0),P('merger',X+6,Y+8,0),P('belt1',X+7,Y+8,1),P('belt1',X+5,Y+11,0),P('belt1',X+6,Y+11,0)];
+  tick(0.05);const c=(x,y)=>fw.entAt(x,y).cin;
+  const r={ok:placed.every(x=>x===''),split:c(X+1,Y+1),cross:c(X+2,Y+4),cross2:c(X+6,Y+5),merge:c(X+7,Y+8),straight:c(X+6,Y+11)};
+  // item through the crossing then round the curve and on
+  fw.entAt(X,Y+4).item='iron_ore';for(let i=0;i<60;i++)tick(0.05);r.flowed=!!fw.entAt(X+2,Y+5).item||[...[0,1,2,3]].some(()=>false);
+  for(let j=-1;j<13;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return r;});
+ check(`belts curve out of splitter/crossing/merger (${cv.split},${cv.cross},${cv.cross2},${cv.merge}; plain belt ${cv.straight})`,cv.ok&&cv.split===1&&cv.cross===0&&cv.cross2===1&&cv.merge===0&&cv.straight===null&&cv.flowed);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

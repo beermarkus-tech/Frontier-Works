@@ -200,6 +200,15 @@ function pushOut(e,item){
 /* ================= TOPOLOGY ================= */
 function cen(e){return{x:e.x+e.w/2,y:e.y+e.h/2};}
 function rectDist(px,py,e){const dx=Math.max(e.x-px,0,px-(e.x+e.w)),dy=Math.max(e.y-py,0,py-(e.y+e.h));return Math.hypot(dx,dy);}
+/* Does side neighbour sd (lying in direction o from line e) push items into e? Used for belt/pipe curves:
+   another line pointing in, a splitter/sorter/merger with an output side facing e, a pipe junction (pipes),
+   or a crossing whose far side is fed in the same direction (items pass straight through it). */
+function feedsInto(sd,e,o){const into=(o+2)&3;
+ if(isLine(sd.k))return sd.k===e.k&&sd.dir===into;
+ if(sd.k==='router'){const d=B[sd.d];if(!!d.fl!==(e.k==='pipe'))return false;const D=sd.dir;
+  if(d.sub==='merge')return into===D;if(d.sub==='junc')return true;return into===D||into===((D+1)&3)||into===((D+3)&3);}
+ if(sd.k==='cross'){const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&isLine(far.k)&&far.k===e.k&&far.dir===into;}
+ return false;}
 function rebuildTopo(){
  topoDirty=false;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];
  const lines=[];
@@ -209,7 +218,7 @@ function rebuildTopo(){
   if(e.k==='pole'||e.k==='gen')pnodes.push(e);
   e.grid=null;if(B[e.d].pw)e.pw=0;
  }
- for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):true))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&sd.k===e.k&&sd.dir===((o+2)&3)){f=sd.dir;c++;}}if(c===1)e.cin=f;}
+ for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):true))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
  const vis=new Set();
  for(const b of lines){if(vis.has(b))continue;const ch=[];let c=b;while(c&&isLine(c.k)&&!vis.has(c)){vis.add(c);ch.push(c);c=entAt(c.x+DX[c.dir],c.y+DY[c.dir]);}for(let i=ch.length-1;i>=0;i--)beltOrder.push(ch[i]);}
  // power
