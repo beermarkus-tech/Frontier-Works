@@ -802,3 +802,21 @@ How do machines decide where output goes, and how is a crossing attached directl
 ### Verified
 - `npm test` 54/54: pinned planner stays open on a map tap and when picking a building; pinned Stats too; unpinned, a map tap closes the panel;
   a 73 % smelter draws its clock badge at close zoom. Phone screenshot of the pinned planner in its normal place.
+
+---
+
+## Session 26 — 2026-11-11 (Claude Code, cloud session) · Build 31
+
+### What Markus reported
+Steel Beam and Steel Pipe look too much alike.
+
+### What changed
+- Both used the same "rod" item shape with close greys. Now each has its own shape (`SHAPE` / `paintItem` in `js/render.js`):
+  - **Steel Beam** (`beam`): a chunky dark graphite bar with a recessed groove and a bold "I" profile at its end. Colour `#5a6270`.
+  - **Steel Pipe** (`pipe`): a round, light blue-steel tube with a hollow open end. Colour `#8eb0cf`.
+  - Iron Rod keeps the thin grey rod.
+- 3D belt items match: a flanged I-beam (3 boxes) and an open tube with a rim ring (`v3ItemsInit`).
+- Build number **31**.
+
+### Verified
+- Side-by-side render of Iron Rod / Steel Beam / Steel Pipe at icon and belt size: clearly different. `npm test` 54/54 (3D view starts with the new shapes).

@@ -244,7 +244,7 @@ function drawBuilding(e,X,Y,s){
 const SHAPE={};const setS=(sh,ids)=>ids.split(' ').forEach(i=>SHAPE[i]=sh);
 setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium');setS('crystal','quartz quartz_crystal resonator');
 setS('ingot','iron_ingot copper_ingot steel_ingot alu_ingot alu_casing');setS('plate','iron_plate copper_sheet alloy_panel braced_plate plastic heat_sink');
-setS('rod','iron_rod steel_pipe steel_beam');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete cased_girder rubber coolant_block');
+setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete cased_girder rubber coolant_block');
 setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell fuel_rod battery');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
 setS('gear','rotor motor stator turbine_core');setS('chip','circuit_board compute_module control_chip data_bus');setS('orb','quantum_core');
 const ISPR=new Map();
@@ -265,6 +265,18 @@ function paintItem(g,id,R){
   case 'plate':rrg(g,-R*0.38,-R*0.38,R*0.76,R*0.76,R*0.08);g.fillStyle=lin(R*0.38);g.fill();fin();g.strokeStyle='rgba(255,255,255,0.3)';g.lineWidth=lw*0.7;rrg(g,-R*0.3,-R*0.3,R*0.6,R*0.6,R*0.05);g.stroke();
    if(id==='braced_plate'){g.strokeStyle='rgba(0,0,0,0.4)';g.lineWidth=lw*1.3;g.beginPath();g.moveTo(-R*0.28,-R*0.28);g.lineTo(R*0.28,R*0.28);g.moveTo(R*0.28,-R*0.28);g.lineTo(-R*0.28,R*0.28);g.stroke();}
    if(id==='heat_sink'){g.strokeStyle='rgba(0,0,0,0.4)';g.lineWidth=lw;for(let k=-2;k<=2;k++){g.beginPath();g.moveTo(k*R*0.12,-R*0.28);g.lineTo(k*R*0.12,R*0.28);g.stroke();}}break;
+  case 'beam':{g.save();g.rotate(-0.7);const L=R*0.92,H=R*0.34;   // I-beam seen from the side: solid bar, recessed web groove, bold "I" profile at the end
+   rrg(g,-L/2,-H/2,L,H,R*0.03);g.fillStyle=lin(H/2);g.fill();fin();
+   g.fillStyle=shade(col,-50);g.fillRect(-L/2+R*0.05,-H*0.18,L-R*0.13,H*0.36);
+   g.fillStyle='rgba(255,255,255,0.28)';g.fillRect(-L/2+R*0.03,-H/2+R*0.025,L-R*0.08,Math.max(0.8,R*0.03));
+   const ex=L/2-R*0.06,c2=shade(col,75);g.fillStyle=c2;g.fillRect(ex-R*0.07,-H/2+R*0.03,R*0.14,R*0.06);g.fillRect(ex-R*0.07,H/2-R*0.09,R*0.14,R*0.06);g.fillRect(ex-R*0.022,-H/2+R*0.06,R*0.044,H-R*0.12);
+   g.restore();break;}
+  case 'pipe':{g.save();g.rotate(-0.7);   // round tube with a big open, hollow end
+   rrg(g,-R*0.44,-R*0.15,R*0.86,R*0.3,R*0.14);g.fillStyle=lin(R*0.15);g.fill();fin();
+   g.strokeStyle='rgba(255,255,255,0.35)';g.lineWidth=Math.max(0.8,R*0.04);g.beginPath();g.moveTo(-R*0.36,-R*0.08);g.lineTo(R*0.34,-R*0.08);g.stroke();
+   g.fillStyle=shade(col,45);g.beginPath();g.ellipse(R*0.42,0,R*0.09,R*0.15,0,0,7);g.fill();g.lineWidth=lw;g.strokeStyle=out;g.stroke();
+   g.fillStyle='#0d1116';g.beginPath();g.ellipse(R*0.43,0,R*0.05,R*0.095,0,0,7);g.fill();
+   g.restore();break;}
   case 'rod':g.save();g.rotate(-0.7);rrg(g,-R*0.46,-R*0.11,R*0.92,R*0.22,R*0.08);g.fillStyle=lin(R*0.11);g.fill();fin();if(id==='steel_pipe'){g.fillStyle='#111';g.beginPath();g.ellipse(R*0.42,0,R*0.04,R*0.08,0,0,7);g.fill();}g.restore();break;
   case 'bolts':for(const [x,y] of [[-0.18,-0.12],[0.18,-0.1],[0,0.18]]){g.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3;g[k?'lineTo':'moveTo'](R*x+Math.cos(a)*R*0.17,R*y+Math.sin(a)*R*0.17);}g.closePath();g.fillStyle=rad(R*0.2);g.fill();fin();g.fillStyle='rgba(0,0,0,0.5)';g.beginPath();g.arc(R*x,R*y,R*0.06,0,7);g.fill();}break;
   case 'coil':g.lineWidth=R*0.16;g.strokeStyle=out;g.beginPath();g.arc(0,0,R*0.3,0,7);g.stroke();g.lineWidth=R*0.12;g.strokeStyle=col;g.stroke();g.lineWidth=R*0.04;g.strokeStyle='rgba(255,255,255,0.4)';g.beginPath();g.arc(0,0,R*0.3,3.6,5.6);g.stroke();g.fillStyle='#222';g.beginPath();g.arc(0,0,R*0.15,0,7);g.fill();break;

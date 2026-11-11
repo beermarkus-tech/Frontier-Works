@@ -281,7 +281,8 @@ function v3Lines(){
 /* ---------- items ---------- */
 function v3ItemsInit(){
  const G=V3.G,mk=(g,s,rot)=>{const m=new T3.Matrix4().compose(new T3.Vector3(0,s[1]/2,0),new T3.Quaternion().setFromEuler(new T3.Euler(...(rot||[0,0,0]))),new T3.Vector3(...s));return v3Merge([{g:G[g],m,c:v3col('#ffffff')}]);};
- const geo={ore:mk('dod',[0.3,0.26,0.3]),crystal:mk('oct',[0.22,0.34,0.22]),ingot:mk('box',[0.34,0.13,0.2]),plate:mk('box',[0.34,0.06,0.34]),rod:mk('cyl',[0.1,0.4,0.1],[0,0,Math.PI/2]),
+ const geo={ore:mk('dod',[0.3,0.26,0.3]),crystal:mk('oct',[0.22,0.34,0.22]),ingot:mk('box',[0.34,0.13,0.2]),plate:mk('box',[0.34,0.06,0.34]),rod:mk('cyl',[0.1,0.4,0.1],[0,0,Math.PI/2]),beam:v3Merge([[0,0.015,0.2],[0,0.115,0.2],[0,0.065,0.035]].map(([x,y,w])=>({g:G.box,m:new T3.Matrix4().compose(new T3.Vector3(0,y,0),new T3.Quaternion(),new T3.Vector3(0.42,y===0.065?0.1:0.03,w)),c:v3col('#ffffff')}))),
+  pipe:v3Merge([{g:new T3.CylinderGeometry(0.09,0.09,0.4,12,1,true),m:new T3.Matrix4().compose(new T3.Vector3(0,0.09,0),new T3.Quaternion().setFromEuler(new T3.Euler(0,0,Math.PI/2)),new T3.Vector3(1,1,1)),c:v3col('#ffffff')},{g:new T3.TorusGeometry(0.075,0.022,6,14),m:new T3.Matrix4().compose(new T3.Vector3(0.2,0.09,0),new T3.Quaternion().setFromEuler(new T3.Euler(0,Math.PI/2,0)),new T3.Vector3(1,1,1)),c:v3col('#ffffff')}]),
   bolts:mk('cyl',[0.2,0.1,0.2]),coil:mk('tor',[0.36,0.36,0.6],[Math.PI/2,0,0]),block:mk('box',[0.26,0.26,0.26]),pile:mk('cone',[0.32,0.22,0.32]),cell:mk('cyl',[0.18,0.32,0.18]),
   barrel:mk('cyl',[0.24,0.3,0.24]),frame:mk('box',[0.4,0.1,0.22]),gear:mk('cyl6',[0.32,0.12,0.32]),chip:mk('box',[0.3,0.05,0.24]),orb:mk('sph',[0.28,0.28,0.28])};
  const mat=new T3.MeshStandardMaterial({roughness:0.45,metalness:0.3});V3.items={};
