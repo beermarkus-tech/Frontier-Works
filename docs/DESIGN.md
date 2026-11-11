@@ -154,6 +154,9 @@ Hand mining gives +5 ore from a node.
   (removed at Markus's request in Session 15). ☰ Menu → View → "Efficiency rings on buildings" turns them off (per device).
 - **Factory size** (Session 19): Stats shows objects, buildings, belts, poles, items on belts and save size. When zoomed far out or with
   more than ~6,000 objects on screen, the map switches to simple coloured blocks (belts as strips, status dots on machines) to stay smooth.
+- **Find resources** (Session 30): 🔍 in the dock's tool row opens a panel to highlight resource types (counts shown; free nodes only or all).
+  Highlighted nodes get a pulsing ring (visible even fully zoomed out), an edge arrow with distance when none is on screen, blinking minimap dots
+  and light beams in 3D. A resource node's panel offers "🔦 Highlight all X nodes". Temporary (not saved): a chip above the dock shows it, ✕ clears.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 

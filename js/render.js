@@ -4,7 +4,12 @@ const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 let DPR=1,cam={x:MW/2,y:MH/2,z:1.2},camT={x:MW/2,y:MH/2,z:1.2},vel={x:0,y:0},zAnchor=null,hover=null,linePrev=null,animT=0,fdt=0.016,cloudC=null;
 const parts=[];
 function setCam(c){cam=c;camT={x:c.x,y:c.y,z:c.z};vel={x:0,y:0};zAnchor=null;}
-function resize(){DPR=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(innerWidth*DPR);cv.height=Math.round(innerHeight*DPR);if(typeof layoutVars==='function')layoutVars();}
+/* Canvas resolution: full device sharpness (max 2×) normally; 1× when zoomed far out, where detail is too small to see.
+   That's a quarter of the pixels on 2× screens, which matters most on tablets (big screens, ~35 ground chunks visible). Hysteresis avoids flapping. */
+let lowRes=false;
+const fullDPR=()=>Math.min(2,window.devicePixelRatio||1);
+function wantLow(){const z=TS*cam.z;return fullDPR()>1&&(lowRes?z<13:z<11);}
+function resize(){lowRes=wantLow();DPR=lowRes?1:fullDPR();cv.width=Math.round(innerWidth*DPR);cv.height=Math.round(innerHeight*DPR);if(typeof LODC!=='undefined')LODC.c=null;if(typeof layoutVars==='function')layoutVars();}
 addEventListener('resize',resize);
 function rrg(g,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 function rr(x,y,w,h,r){rrg(ctx,x,y,w,h,r);}
@@ -276,6 +281,21 @@ function syncClouds(ox,oy){const el=document.getElementById('clouds');if(!el||!c
  if(el._src!==cloudC){el._src=cloudC;el.style.backgroundImage=`url(${cloudC.toDataURL()})`;}
  const sc=TS*cam.z,T=128*2.2*sc,bx=((animT*0.5*sc)%T),X=ox/DPR-bx+MW*sc/2-64*2.2*sc,Y=oy/DPR-bx*0.4+MH*sc/2-64*2.2*sc;
  const st=`${(X%T).toFixed(1)}px ${(Y%T).toFixed(1)}px`,sz=`${T.toFixed(1)}px`;if(el._p!==st){el._p=st;el.style.backgroundPosition=st;}if(el._s!==sz){el._s=sz;el.style.backgroundSize=sz;}}
+/* Highlighted resource nodes: pulsing ring (minimum size so it shows at far zoom) and, if none of a type is on screen, an edge arrow to the nearest */
+function drawHighlights(sx,sy,s,W,H){
+ const list=hlNodes();if(!list.length)return;const pulse=0.5+0.5*Math.sin(animT*5),rr0=Math.max(12*DPR,s*0.95),lw=Math.max(3.2*DPR,s*0.09),onScreen=new Set();
+ ctx.save();ctx.lineWidth=lw;
+ for(const n of list){const X=sx(n.x+0.5),Y=sy(n.y+0.5);if(X<-40||Y<-40||X>W+40||Y>H+40)continue;onScreen.add(n.t);
+  ctx.globalAlpha=0.25+0.2*pulse;ctx.fillStyle='#ffd34a';ctx.beginPath();ctx.arc(X,Y,rr0*(0.9+0.25*pulse),0,7);ctx.fill();
+  ctx.globalAlpha=1;ctx.strokeStyle='#ffd34a';ctx.beginPath();ctx.arc(X,Y,rr0*(1+0.25*pulse),0,7);ctx.stroke();ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=Math.max(1,DPR);ctx.beginPath();ctx.arc(X,Y,rr0*(1+0.25*pulse)+lw*0.9,0,7);ctx.stroke();ctx.lineWidth=lw;}
+ const cx=W/2,cy=H/2,m=34*DPR,bottom=H-(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dockH'))||150)*DPR-30*DPR;
+ for(const t of UI.hl.types){if(onScreen.has(t))continue;const nr=hlNearest(list.filter(n=>n.t===t));if(!nr)continue;
+  const X=sx(nr.n.x+0.5),Y=sy(nr.n.y+0.5),dx=X-cx,dy=Y-cy,k=Math.min((cx-m)/Math.max(1e-6,Math.abs(dx)),((dy>0?bottom-cy:cy-m-60*DPR))/Math.max(1e-6,Math.abs(dy))),ax=cx+dx*k,ay=cy+dy*k,ang=Math.atan2(dy,dx),R=15*DPR;
+  ctx.globalAlpha=1;ctx.fillStyle='rgba(14,20,27,0.88)';ctx.strokeStyle='#ffd34a';ctx.lineWidth=2*DPR;ctx.beginPath();ctx.arc(ax,ay,R,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ffd34a';ctx.beginPath();ctx.moveTo(ax+Math.cos(ang)*(R+9*DPR),ay+Math.sin(ang)*(R+9*DPR));ctx.lineTo(ax+Math.cos(ang+0.5)*R,ay+Math.sin(ang+0.5)*R);ctx.lineTo(ax+Math.cos(ang-0.5)*R,ay+Math.sin(ang-0.5)*R);ctx.fill();
+  ctx.fillStyle=NODE_T[t][1];ctx.beginPath();ctx.arc(ax,ay-R*0.28,R*0.32,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font=`700 ${9*DPR}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(nr.d),ax,ay+R*0.42);ctx.textAlign='left';}
+ ctx.restore();
+}
 function drawBuilding(e,X,Y,s){
  const P=e.w*s;let sc=1;
  if(e.born!==undefined){const t=(animT-e.born)/0.3;if(t<1)sc=0.7+0.3*easeBack(Math.max(0,t));else e.born=undefined;}
@@ -388,6 +408,7 @@ function drawPole(g,e,X,Y,s){const tall=e.d==='pole2',tr=e.grid&&e.grid.trip;
 
 /* ---------- main render ---------- */
 function render(){
+ if(wantLow()!==lowRes)resize();
  const W=cv.width,H=cv.height;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);
  const s=TS*cam.z*DPR,ox=W/2-cam.x*s,oy=H/2-cam.y*s;
  const sx=x=>ox+x*s,sy=y=>oy+y*s;
@@ -420,7 +441,7 @@ function render(){
  for(const e of vis)if(!isLine(e.k)&&e.k!=='router'&&e.k!=='cross'&&e.k!=='pole')drawBuilding(e,sx(e.x),sy(e.y),s);
  }
  // drones (above buildings) and the selected pad's route
- drawDrones(sx,sy,s,lod);
+ drawDrones(sx,sy,s,lod);drawHighlights(sx,sy,s,W,H);
  // particles
  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.t+=fdt;if(p.t>p.m){parts.splice(k,1);continue;}p.x+=p.vx*fdt;p.y+=p.vy*fdt;}
  for(const p of parts){if(p.x<x0-2||p.x>x1+2||p.y<y0-2||p.y>y1+2)continue;const f=p.t/p.m,al=(1-f)*(f<0.15?f/0.15:1);ctx.globalAlpha=al*(p.k?0.55:0.45);ctx.fillStyle=p.k?'#eef2f5':'#3a3a3c';ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),s*p.r*(1+f*1.8),0,7);ctx.fill();}

@@ -1,6 +1,6 @@
 'use strict';
 /* ================= UI ================= */
-const UI={tool:null,rot:0,cat:'log',sel:null,panel:null};
+const UI={tool:null,rot:0,cat:'log',sel:null,panel:null,hl:{types:[],free:true}};   // hl: temporary node highlights (not saved)
 const $=id=>document.getElementById(id);
 let toastT=0;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
 const IICON={};
@@ -56,7 +56,7 @@ function renderPanel(full){
   if(full){$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));setHTML($('pbuild'),effChip(e));return;}
  pi.style.display='none';
- const map={inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml]};
+ const map={find:['Find resources',findHtml],inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml]};
  const [title,fn]=map[P.kind];
  if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'))return;
  $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display=P.kind==='menu'?'inline-flex':'none';
@@ -207,7 +207,19 @@ function codexHtml(){
   return`<div class="card"><b>${d.n}</b>${ub(id)?'':' 🔒'} <span class="muted">· ${d.pw} MW</span><div class="row"><span>${d.water?'On water':'Impure / normal / pure node'}</span><span>${d.water?fmt(r):`${fmt(r*0.5)} / ${fmt(r)} / ${fmt(r*2)}`} per min</span></div></div>`;}).join('');
  return h;
 }
-function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div>${S.gen===2?`<div class="row"><span>Biome</span><span>${bm.n}</span></div>`:''}<div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button> `:''}<button class="btn" data-act="planNode">📐 Plan this node</button>`;}
+/* ---------- Find / highlight resource nodes ---------- */
+function hlNodes(){const H=UI.hl;if(!H.types.length)return[];return nodes.filter(n=>H.types.includes(n.t)&&(!H.free||!grid[n.y*MW+n.x]));}
+function hlNearest(list){const cx=V3.on?C3.x:cam.x,cy=V3.on?C3.y:cam.y;let best=null,bd=1e9;for(const n of list){const d=Math.hypot(n.x+0.5-cx,n.y+0.5-cy);if(d<bd){bd=d;best=n;}}return best&&{n:best,d:bd};}
+function hlChip(){const el=$('hlchip');if(!el)return;const H=UI.hl;if(!H.types.length){el.style.display='none';return;}
+ const n=hlNodes().length;el.innerHTML=`🔦 ${H.types.map(t=>IT[NODE_T[t][0]].n).join(', ')} · ${n}<button class="btn chip" data-act="hlClear" title="Clear highlights">✕</button>`;el.style.display='flex';}
+function findHtml(){const H=UI.hl;let h=`<div class="muted">Tap resources to highlight their nodes on the map (rings, edge arrows, minimap${V3.ready?', light beams in 3D':''}). Temporary: clear it with ✕.</div><h4>Resources</h4><div class="chips">`;
+ for(const t of Object.keys(NODE_T)){const it=NODE_T[t][0],all=nodes.filter(n=>n.t===t),free=all.filter(n=>!grid[n.y*MW+n.x]).length;
+  h+=`<button class="btn chip ${H.types.includes(t)?'on':''}" data-act="hlToggle" data-v="${t}">${nm(it)} <small>${H.free?free:all.length}</small></button>`;}
+ h+=`</div><h4>Show</h4><div class="chips"><button class="btn chip ${H.free?'on':''}" data-act="hlFree" data-v="1">Free nodes only</button><button class="btn chip ${H.free?'':'on'}" data-act="hlFree" data-v="0">All nodes</button></div>`;
+ const list=hlNodes(),nr=hlNearest(list);
+ if(H.types.length)h+=`<h4>Nearest</h4><div class="card">${nr?`<div class="row"><span>${nm(NODE_T[nr.n.t][0])} · ${PUR[nr.n.p][1]}</span><span>${Math.round(nr.d)} tiles away</span></div><button class="btn" data-act="hlFly">✈ Fly to nearest</button>`:'<div class="muted">None found.</div>'} <button class="btn" data-act="hlClear">✕ Clear highlights</button></div>`;
+ return h;}
+function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div class="row"><span>Resource</span><span>${nm(it)}</span></div><div class="row"><span>Purity</span><span>${PUR[n.p][1]} (×${PUR[n.p][0]})</span></div>${S.gen===2?`<div class="row"><span>Biome</span><span>${bm.n}</span></div>`:''}<div class="muted" style="margin:6px 0">${n.t==='oil'?'Place an Oil Pump here.':'Place a Drill over this node.'}</div>${n.t!=='oil'?`<button class="btn" data-act="handMine">⛏ Mine by hand (+5)</button> `:''}<button class="btn" data-act="planNode">📐 Plan this node</button> <button class="btn" data-act="hlNode">🔦 Highlight all ${IT[it].n} nodes</button>`;}
 function menuHtml(){
  const big=S.gen===2;
  return`<h4>This map</h4><div class="muted">${big?`${MW}×${MH} tiles with seven biomes.`:`${MW}×${MH} tiles, made before biomes existed. Your factory stays on it. For the big ${MAP_NEW}×${MAP_NEW} biome island, start a new map (bottom of this menu).`}</div>
@@ -263,6 +275,12 @@ const ACT={
   else{const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>Tier ${S.ms}: ${m.n}</h2><p>Unlocked: ${un.join(', ')||'—'}${m.oc?', overclocking':''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);}
   save();},
  closeDlg,
+ openFind:()=>openPanel('find'),
+ hlToggle:v=>{const T=UI.hl.types,i=T.indexOf(v);if(i>=0)T.splice(i,1);else T.push(v);hlChip();renderPanel(true);},
+ hlFree:v=>{UI.hl.free=v==='1';hlChip();renderPanel(true);},
+ hlClear:()=>{UI.hl.types=[];hlChip();if(UI.panel&&UI.panel.kind==='find')renderPanel(true);},
+ hlNode:()=>{const n=UI.panel.arg;UI.hl.types=[n.t];hlChip();toast(`Highlighting ${hlNodes().length} ${IT[NODE_T[n.t][0]].n} nodes`);},
+ hlFly:()=>{const nr=hlNearest(hlNodes());if(!nr)return;const x=nr.n.x+0.5,y=nr.n.y+0.5;if(V3.on)v3Go({x,y,dist:Math.min(C3.dist,40)});else{camT.x=x;camT.y=y;camT.z=Math.max(camT.z,1);vel.x=vel.y=0;zAnchor=null;}},
  clockStep:v=>{const e=UI.panel&&ents.get(UI.panel.arg);if(!e)return;const mx=S.oc?250:100,c=Math.max(10,Math.min(mx,Math.round(e.clock*100)+(+v)));e.clock=c/100;const st=$('pbody').scrollTop;renderPanel(true);$('pbody').scrollTop=st;},
  optEff:v=>{OPT.eff=v==='1';saveOpt();renderPanel(true);},
  planNode:()=>{const n=UI.panel.arg;planFrom(n.t,n.p,null,1);},

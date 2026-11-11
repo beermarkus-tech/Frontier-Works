@@ -322,6 +322,7 @@ function v3Overlays(){
  const ring=new T3.RingGeometry(0.985,1,72);ring.rotateX(-Math.PI/2);
  V3.range=v3Pool(ring,new T3.MeshBasicMaterial({color:0xffd75a,transparent:true,opacity:0.55,depthWrite:false}),{order:6});
  const disc=new T3.CircleGeometry(1,48);disc.rotateX(-Math.PI/2);
+ {const bg=new T3.CylinderGeometry(0.08,0.3,1,10,1,true);bg.translate(0,0.5,0);V3.hlBeam=v3Pool(bg,new T3.MeshBasicMaterial({color:0xffd34a,transparent:true,opacity:0.38,depthWrite:false,side:T3.DoubleSide}),{order:8});}
  V3.rangeFill=v3Pool(disc,new T3.MeshBasicMaterial({color:0xffd75a,transparent:true,opacity:0.07,depthWrite:false}),{order:5});
  const dg=V3.G;
  V3.decP={rock:v3Pool(v3Merge([{g:dg.ico,m:new T3.Matrix4().makeScale(0.55,0.36,0.5),c:v3col('#ffffff')}]),new T3.MeshStandardMaterial({roughness:0.95,flatShading:true}),{color:1,cast:1,recv:1}),
@@ -445,6 +446,8 @@ function v3Overlay(t){
   gh.push([fp.x,fp.y,d.w,isLine(d.k)?0.12:Math.min(2.2,(V3.M[tool]&&V3.M[tool].h)||1),bad]);}
  const gm=v3PoolN(V3.ghost,gh.length);gh.forEach(([x,y,w,h,bad],i)=>{gm.setMatrixAt(i,T.m.compose(T.v.set(x+w/2,h/2+0.01,y+w/2),T.q.identity(),T.s.set(w*0.96,h,w*0.96)));gm.setColorAt(i,T.c.set(bad?'#ff5a46':'#6ef08a'));});
  if(tagAt){const v=T.v.set(...tagAt).project(V3.camera);V3.tag.style.display='block';V3.tag.textContent=tag;V3.tag.style.left=((v.x+1)/2*innerWidth)+'px';V3.tag.style.top=((1-v.y)/2*innerHeight-34)+'px';}else V3.tag.style.display='none';
+ // highlighted resource nodes: light beams
+ {const hl=hlNodes(),bm=v3PoolN(V3.hlBeam,hl.length),h=6+C3.dist*0.09,w=Math.max(1,C3.dist/90),pu=1+0.15*Math.sin(t*5);hl.forEach((n,i)=>bm.setMatrixAt(i,T.m.compose(T.v.set(n.x+0.5,0,n.y+0.5),T.q.identity(),T.s.set(pu*w,h,pu*w))));}
  // power ranges while placing power things
  const showPw=tool&&B[tool]&&(B[tool].k==='pole'||B[tool].k==='gen'||B[tool].pw),pn=showPw?V3.L.pn:[];
  const rm=v3PoolN(V3.range,pn.length),rf=v3PoolN(V3.rangeFill,pn.length);pn.forEach((p,i)=>{const s=B[p.d].sup;T.m.compose(T.v.set(p.x+p.w/2,0.04,p.y+p.h/2),T.q.identity(),T.s.set(s,1,s));rm.setMatrixAt(i,T.m);rf.setMatrixAt(i,T.m);});

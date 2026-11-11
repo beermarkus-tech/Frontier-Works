@@ -161,3 +161,5 @@ body.v3 #fNorth{display:inline-flex}
 #clouds{opacity:.8;background-repeat:repeat}
 #vig{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(0,0,0,.45) 100%)}
 body.v3 #clouds,body.v3 #vig{display:none}
+#hlchip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--dockH) + 18px + var(--sab));display:none;align-items:center;gap:8px;padding:5px 6px 5px 12px;border-radius:999px;font-weight:600;font-size:12px;z-index:4;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+#hlchip .chip{padding:2px 8px}

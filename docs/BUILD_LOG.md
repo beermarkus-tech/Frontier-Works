@@ -902,3 +902,31 @@ Desktop far zoom 43.8 → **2.2 ms**. `npm test` 56/56. Screenshots before/after
 ### Known issues
 - The first time an area comes into view its ground is still painted (about 20 ms per 32×32 chunk, one per frame), so a fast fling over
   new ground can still hitch briefly. Already painted areas are smooth.
+
+---
+
+## Session 30 — 2026-11-11 (Claude Code, cloud session) · Build 35
+
+### What Markus asked for
+1. Check performance on a **tablet** (that's where he'll play).
+2. A way to highlight certain ore nodes visually and temporarily, to find them more easily.
+
+### Tablet check and fix
+- Measured at iPad 1024×1366 / 1366×1024 and Android 800×1280, all at 2× pixels: medium/close zoom 1–5 ms, but **fully zoomed out 26–47 ms**
+  (about 35 ground chunks at full sharpness on a 5.6-megapixel canvas).
+- Fix: **lower canvas resolution when zoomed far out** (`wantLow`/`resize` in `js/render.js`): 1× instead of 2× below ~11–13 px per tile (with hysteresis),
+  back to full sharpness when zooming in. Far zoom on tablets is now **2.0–2.6 ms** (panning 2.4–9.7 ms). Tablet layout (panel right, dock centred, minimap) checked in screenshots.
+
+### Find / highlight resource nodes
+- 🔍 button in the dock's tool row → **Find resources** panel (`findHtml`): a chip per resource with node counts, "Free nodes only" / "All nodes",
+  nearest highlighted node with distance, **✈ Fly to nearest**, **✕ Clear**.
+- A resource node's panel: **"🔦 Highlight all X nodes"**.
+- On the map: a pulsing amber ring per highlighted node (minimum size, so it shows at far zoom); if none of a type is on screen, an **edge arrow**
+  pointing to the nearest one with its distance; blinking dots on the minimap; slim light beams in 3D.
+- Temporary: state `UI.hl` is not saved. A chip above the dock ("🔦 Raw Quartz, Sulfur · 251 ✕") shows what's highlighted and clears it.
+- DESIGN.md §8 updated. Build number **35**.
+
+### Verified
+- `npm test` 57/57, new check: highlight uranium (113 nodes), chip shown, edge arrow with distance drawn, fly-to-nearest moves the camera, node-panel
+  button highlights iron, clear removes everything.
+- Tablet screenshots: Find panel with two resources highlighted at far zoom; 3D beams (made slimmer and more transparent after the first look).

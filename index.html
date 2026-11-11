@@ -42,6 +42,7 @@
  <button class="btn del" id="fDel" data-act="toolDel" title="Dismantle (X)"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
  <button class="btn" id="f3d" data-act="toggle3d" title="2D / 3D view (V)"><b>3D</b></button>
  <button class="btn" id="fNorth" data-act="north3d" title="Face north, default tilt"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l4 9h-8z" fill="#ff6a4a" stroke="none"/><path d="M12 21l-4-9h8z" fill="currentColor" stroke="none" opacity=".55"/></svg></button>
+ <button class="btn" id="fFind" data-act="openFind" title="Find resources: highlight ore nodes"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg></button>
  <button class="btn" data-act="home" title="Center on Base Core (H)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
 </div>
  <div id="info"></div>
@@ -51,6 +52,7 @@
 <div id="panel" class="glass hidden"><div id="phead"><img id="picon" alt="" style="display:none"><span id="ptitle"></span><span id="pbuild"></span><button class="btn" id="ppinBtn" data-act="pinPanel" title="Pin: keep this panel open while you tap the map or build">📌</button><button class="btn" id="preload" data-act="forceReload" title="Get the latest build and reload"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button><button class="btn" data-act="closePanel"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div id="pbody"></div></div>
 <div id="dlg" class="hidden"><div id="dlgc" class="glass"></div></div>
 <div id="toast" class="glass"></div>
+<div id="hlchip" class="glass"></div>
 <script src="js/data.js"></script>
 <script src="js/sim.js"></script>
 <script src="js/render.js"></script>

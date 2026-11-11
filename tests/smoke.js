@@ -161,6 +161,15 @@ const server=require('./serve.js');
   const sv=serialize();load(sv);const s2=fw.entAt(A.x+2,A.y-1),keep=!!s2&&padTarget(s2)&&padTarget(s2).x===Bq.x&&s2.del===del;
   ACT.closePanel();return{unlocked,ok:r.every(v=>v===''),linked,del,exp,dist:Math.round(dist),passed,keep};});
  check(`drones: Tier 5 unlock, tap-to-link, ${dr.del} items flown ${dr.dist} tiles (expected ≈${dr.exp}), receiver passes them on, route survives save/load`,dr.unlocked&&dr.ok&&dr.linked&&dr.del>=dr.exp*0.9&&dr.del<=dr.exp+40&&dr.passed&&dr.keep);
+ // find & highlight resource nodes: panel toggle, rings drawn, edge arrow for off-screen, fly to nearest, clear
+ const hl=await p.evaluate(()=>{ACT.openFind();ACT.hlToggle('uranium');const n=hlNodes().length,chip=document.getElementById('hlchip').style.display==='flex';
+  const nr=hlNearest(hlNodes());cam.x=camT.x=MW/2;cam.y=camT.y=MH/2;cam.z=camT.z=1.2;
+  const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;const arrow=seen.includes(String(Math.round(nr.d)));
+  ACT.hlFly();const flew=Math.hypot(camT.x-(nr.n.x+0.5),camT.y-(nr.n.y+0.5))<0.01;
+  const core=[...ents.values()].find(e=>e.k==='core');const node=nodes.find(x=>x.t==='iron');openPanel('node',node);const btn=!!document.querySelector('#pbody [data-act="hlNode"]');ACT.hlNode();const iron=UI.hl.types.join();
+  ACT.hlClear();const cleared=!UI.hl.types.length&&document.getElementById('hlchip').style.display==='none';ACT.closePanel();cam.x=camT.x=core.x+2;cam.y=camT.y=core.y+2;
+  return{n,chip,arrow,flew,btn,iron,cleared};});
+ check(`highlight nodes: ${hl.n} uranium nodes, chip, edge arrow with distance, fly to nearest, node-panel button, clear (${Object.values(hl).join(',')})`,hl.n>0&&hl.chip&&hl.arrow&&hl.flew&&hl.btn&&hl.iron==='iron'&&hl.cleared);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
