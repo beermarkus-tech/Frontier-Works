@@ -123,11 +123,11 @@ const server=require('./serve.js');
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
   for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<8&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
   S.ub.push('junction','pipe1','tank');
-  const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,2),P('pipe1',X+4,Y,2),P('junction',X+5,Y,0),P('pipe1',X+6,Y,1),P('pipe1',X+6,Y+1,3),P('junction',X+6,Y+2,0),P('incin',X+7,Y+2,0),P('tank',X+2,Y+1,0),P('pipe1',X+8,Y+3,0),P('pipe1',X+9,Y+3,0),P('incin',X+8,Y+4,0)];
+  const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,2),P('pipe1',X+4,Y,2),P('junction',X+5,Y,0),P('pipe1',X+6,Y,1),P('pipe1',X+6,Y+1,3),P('junction',X+6,Y+2,0),P('incin',X+7,Y+2,0),P('tank',X+2,Y+1,0),P('pipe1',X+9,Y+3,0),P('pipe1',X+10,Y+3,0),P('incin',X+8,Y+4,0)];
   const tk=fw.entAt(X,Y),t2=fw.entAt(X+2,Y+1);tick(0.05);const one=new Set([X+2,X+3,X+4,X+5].map(x=>fw.entAt(x,Y).net).concat([fw.entAt(X+6,Y+2).net])).size===1;
   for(let s=0;s<5;s++){tk.ft='water';tk.amt=400;for(let k=0;k<20;k++)tick(0.05);}
   stat.hist=[];t2.ft='crude';t2.amt=100;for(let s=0;s<70;s++){tk.ft='water';tk.amt=400;t2.ft='crude';t2.amt=100;for(let k=0;k<20;k++)tick(0.05);}
-  const lone=fw.entAt(X+8,Y+3).net,past=lone.att.length===0;   // plain pipes next to an incinerator: no connection
+  const lone=fw.entAt(X+9,Y+3).net,past=lone.att.length===0;   // plain pipes next to an incinerator: no connection
   const n=fw.entAt(X+3,Y).net,rate=Math.round(rates().c.water||0),mix=!!n.conflict&&n.conflict.fluid==='crude'&&n.fluid==='water'&&t2.ft==='crude'&&t2.amt===100;
   const amt=n.amt,sv=serialize();load(sv);tick(0.05);const n2=fw.entAt(X+3,Y).net,kept=n2&&n2.fluid==='water'&&Math.abs(n2.amt-amt)<=1;
   P('storage',X,Y+5,0);P('storage',X+3,Y+5,0);fw.entAt(X,Y+5).store={iron_plate:7};fw.entAt(X+3,Y+5).store={wire:5,bolts:3};const before=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);
@@ -194,6 +194,18 @@ const server=require('./serve.js');
   openPanel('ent',a.id);const btn=!!document.querySelector('#pbody [data-act="moveSel"]');ACT.moveSel();tap({x:m.X,y:m.Y});const back=fw.entAt(m.X,m.Y)===a&&!UI.moveId;
   const b=fw.entAt(m.X+3,m.Y);removeEnt(a,false,true);removeEnt(b,false,true);ACT.closePanel&&ACT.closePanel();return{dragged,btn,back};},mv);
  check(`move buildings: keeps recipe/buffer/clock, blocked spot refused, long-press drag moves it, ✥ Move button + tap (${[mv.blocked,mv.kept,prevOk,mv2.dragged,mv2.btn,mv2.back].join(',')})`,mv.blocked&&mv.kept&&prevOk&&mv2.dragged&&mv2.btn&&mv2.back);
+ // menus: Fluids tab (pipes, junction, tank), Incinerator 2×2 at the end of Production; old saves' 1×1 incinerators grow or go back to stock
+ const inc=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);const ids=c=>Object.values(B).filter(d=>d.cat===c).map(d=>d.id);
+  const fl=ids('fluid').join(),prod=ids('prod'),log=ids('log');let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-2;j<4&&ok;j++)for(let i=-2;i<14&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  const ring=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];for(const [i,j] of ring)P('belt1',X+1+i,Y+j,0);P('belt1',X+9,Y,0);
+  const keep=serialize(),o=JSON.parse(keep);o.es.push(['incin',X+1,Y,0],['incin',X+10,Y,0]);const conc=S.inv.concrete||0;load(JSON.stringify(o));
+  const boxed=!fw.entAt(X+1,Y)||fw.entAt(X+1,Y).k!=='incin',back=(S.inv.concrete||0)===conc+B.incin.cost.concrete,g=fw.entAt(X+10,Y),grew=!!g&&g.k==='incin'&&g.x===X+10&&g.w===2&&fw.entAt(X+11,Y+1)===g;
+  const belts=ring.every(([i,j])=>{const b=fw.entAt(X+1+i,Y+j);return b&&b.k==='belt';});
+  const again=JSON.parse(serialize());load(JSON.stringify(again));const g2=fw.entAt(X+10,Y),stable=!!g2&&g2.x===X+10&&g2.y===Y;load(keep);
+  for(let j=-2;j<4;j++)for(let i=-2;i<14;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{fl:fl==='pipe1,pipe2,junction,tank',last:prod[prod.length-1]==='incin'&&B.incin.w===2,log:!log.some(id=>B[id].k==='pipe'||id==='tank'||id==='junction'||id==='incin'),boxed,back,grew,belts,stable};});
+ check(`menus: Fluids tab, 2×2 Incinerator last in Production; old 1×1 incinerators grow or are refunded (${Object.values(inc).join(',')})`,Object.values(inc).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

@@ -95,15 +95,15 @@ D('belt2',{n:'Conveyor Mk2',k:'belt',spd:2,cat:'log',col:'#e0c040',cost:{iron_pl
 D('belt3',{n:'Conveyor Mk3',k:'belt',spd:4.5,cat:'log',col:'#ee7a30',cost:{steel_beam:1},ow:1,desc:'270 items/min'});
 D('belt4',{n:'Conveyor Mk4',k:'belt',spd:8,cat:'log',col:'#40b8ee',cost:{steel_pipe:1,plastic:1},ow:1,desc:'480 items/min'});
 D('belt5',{n:'Conveyor Mk5',k:'belt',spd:13,cat:'log',col:'#c25cf0',cost:{alloy_panel:1,plastic:1},ow:1,desc:'780 items/min'});
-D('pipe1',{n:'Pipeline Mk1',k:'pipe',spd:5,cat:'log',col:'#6f93b8',cost:{copper_sheet:1},ow:1,desc:'300 m³/min of fluid. No direction: connects to touching pipes and junctions. Buildings connect only through a Pipe Junction.'});
-D('pipe2',{n:'Pipeline Mk2',k:'pipe',spd:10,cat:'log',col:'#d6a640',cost:{copper_sheet:1,plastic:1},ow:1,desc:'600 m³/min of fluid. No direction: connects to touching pipes and junctions. Buildings connect only through a Pipe Junction.'});
+D('pipe1',{n:'Pipeline Mk1',k:'pipe',spd:5,cat:'fluid',col:'#6f93b8',cost:{copper_sheet:1},ow:1,desc:'300 m³/min of fluid. No direction: connects to touching pipes and junctions. Buildings connect only through a Pipe Junction.'});
+D('pipe2',{n:'Pipeline Mk2',k:'pipe',spd:10,cat:'fluid',col:'#d6a640',cost:{copper_sheet:1,plastic:1},ow:1,desc:'600 m³/min of fluid. No direction: connects to touching pipes and junctions. Buildings connect only through a Pipe Junction.'});
 D('splitter',{n:'Splitter',k:'router',sub:'split',cat:'log',col:'#d08a2a',cost:{iron_plate:2,cable:2},ow:1,desc:'Input from the back, splits to front/left/right. Outputs go into belts or straight into a building touching that side.'});
 D('merger',{n:'Merger',k:'router',sub:'merge',cat:'log',col:'#2a9ad0',cost:{iron_plate:2,cable:2},ow:1,desc:'Inputs from back/left/right (belts, or a machine touching that side), outputs to the front (belt or building).'});
 D('sorter',{n:'Sorting Splitter',k:'router',sub:'sort',cat:'log',col:'#9a50d0',cost:{braced_plate:1,cable:5},ow:1,desc:'Filtered item goes front, everything else left/right (into belts or touching buildings). Tap it to set the filter.'});
 D('crossing',{n:'Crossing',k:'cross',cat:'log',col:'#6c6c6c',cost:{iron_plate:3,bolts:6},ow:1,desc:'Lets two belts/pipes cross each other.'});
-D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'log',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'The entry point between pipes and a building: connects all four sides, to pipes and to every building it touches.'});
+D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'fluid',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'The entry point between pipes and a building: connects all four sides, to pipes and to every building it touches.'});
 D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',cost:{iron_plate:10,iron_rod:10},desc:'Buffers 2000 items; passes them on to outgoing belts.'});
-D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'log',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
+D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'fluid',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
 D('dpad',{n:'Drone Pad',k:'dpad',w:3,pw:25,cap:400,cat:'trans',col:'#2fa7a0',cost:{motor:4,stator:4,cased_girder:6,cable:30},desc:'Holds 400 items. Link it to another pad and its drone flies them there (40 per trip). An unlinked pad receives drones and passes items to outgoing belts.'});
 const DRONE={cap:40,spd:10,load:1.5,unload:1.5,wait:8};   // items per trip, tiles per second, seconds to load / unload, max seconds to wait for a full load
 D('sign1',{n:'Sign S',k:'sign',w:1,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:1},desc:'A 1×1 label. Tap it to write text and pick a colour.'});
@@ -113,7 +113,6 @@ D('sign4',{n:'Sign XL',k:'sign',w:4,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_pla
 D('sign5',{n:'Sign XXL',k:'sign',w:6,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:9},desc:'A 6×6 label for a whole district, readable even at the farthest zoom.'});
 const SIGNS=['sign1','sign2','sign3','sign4','sign5'];
 const SIGN_COL=['#e9e2cf','#ffd34a','#4fc3a1','#6fa8ff','#ff7a6a','#b48cff'];   // board colours to pick from
-D('incin',{n:'Incinerator',k:'incin',cat:'log',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('drill1',{n:'Drill Mk1',k:'drill',w:2,rate:1,pw:5,cat:'ext',col:'#6b7f3a',cost:{iron_plate:10,concrete:10},desc:'Place over an ore node. 60/min on a normal node.'});
 D('drill2',{n:'Drill Mk2',k:'drill',w:2,rate:2,pw:12,cat:'ext',col:'#8a9a2a',cost:{braced_plate:8,truss_frame:2,concrete:20},desc:'120/min on a normal node.'});
 D('drill3',{n:'Drill Mk3',k:'drill',w:2,rate:4,pw:30,cat:'ext',col:'#b0b020',cost:{steel_pipe:20,motor:5,circuit_board:5},desc:'240/min on a normal node.'});
@@ -126,6 +125,7 @@ D('foundry',{n:'Foundry',k:'mach',mt:'foundry',w:3,pw:16,cat:'prod',col:'#8a3a2a
 D('refinery',{n:'Refinery',k:'mach',mt:'refinery',w:3,pw:30,cat:'prod',col:'#5a4a7a',cost:{motor:10,cased_girder:10,steel_pipe:30,copper_sheet:20},desc:'Processes fluids. Solid outputs go to belts, fluids to pipes.'});
 D('fabricator',{n:'Fabricator',k:'mach',mt:'fabricator',w:4,pw:55,cat:'prod',col:'#2a5a8a',cost:{motor:5,truss_frame:10,cable:50,cased_girder:10},desc:'Combines up to 4 inputs into complex parts.'});
 D('blender',{n:'Blender',k:'mach',mt:'blender',w:3,pw:75,cat:'prod',col:'#2a8a7a',cost:{motor:20,heavy_truss:5,compute_module:5,concrete:50},desc:'Mixes solids and fluids.'});
+D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('burner',{n:'Coal Burner',k:'gen',w:2,cap:30,fuels:['coal','petro_coke'],link:8,sup:5,cat:'pow',col:'#7a4a2a',cost:{iron_plate:15,iron_rod:15,wire:20},desc:'30 MW. Burns coal or petroleum coke. Also acts as a power pole.'});
 D('steam',{n:'Steam Generator',k:'gen',w:3,cap:75,fuels:['coal','petro_coke'],water:45/(75*60),link:8,sup:5,cat:'pow',col:'#6a5a4a',cost:{rotor:10,braced_plate:10,cable:30,concrete:20},desc:'75 MW. Needs coal/coke plus 45 m³/min water.'});
 D('turbine',{n:'Fuel Turbine',k:'gen',w:3,cap:150,fuels:['fuel'],link:8,sup:5,cat:'pow',col:'#9a6a1a',cost:{motor:15,cased_girder:15,rubber:50,steel_pipe:30},desc:'150 MW. Burns liquid fuel (12 m³/min).'});
@@ -133,7 +133,7 @@ D('reactor',{n:'Fission Reactor',k:'gen',w:4,cap:2500,fuels:['fuel_rod'],water:2
 D('pole1',{n:'Power Pole',k:'pole',link:10,sup:6,cat:'pow',col:'#c8a040',cost:{wire:3,concrete:1},ow:1,desc:'Links to poles within 10 tiles, powers buildings within 6.'});
 D('pole2',{n:'Power Tower',k:'pole',link:24,sup:9,cat:'pow',col:'#e0c060',cost:{cable:10,braced_plate:2,concrete:5},ow:1,desc:'Links within 24 tiles, powers within 9.'});
 
-const CATS=[['log','Logistics'],['ext','Extraction'],['prod','Production'],['pow','Power'],['trans','Transport'],['sign','Signs']];
+const CATS=[['log','Logistics'],['fluid','Fluids'],['ext','Extraction'],['prod','Production'],['pow','Power'],['trans','Transport'],['sign','Signs']];
 const MS=[
 {n:'Field Assembly',req:{iron_plate:100,iron_rod:100,wire:100},b:['assembler','belt2','incin'],r:['r_braced_plate','r_rotor','r_copper_sheet']},
 {n:'Structural Works',req:{braced_plate:50,rotor:30,concrete:200,cable:100},b:['pipe1','junction','wpump','tank','sorter'],r:['r_truss_frame','r_stitched_plate','r_cast_bolts']},

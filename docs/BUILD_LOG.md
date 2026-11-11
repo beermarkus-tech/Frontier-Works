@@ -1106,3 +1106,24 @@ An XXL sign as well.
 
 ### Verified
 - `npm test` 64/64 (sign sizes 1,2,3,4,6; five size buttons; five signs in the tab; older saves get all five).
+
+---
+
+## Session 35e — 2026-11-11 (Claude Code, cloud session) · Build 44
+
+### What Markus asked
+Logistics is too big: split it into fluids and non-fluids. Incinerator to the end of Production, and make it 2×2 like a Press.
+
+### What was built
+- New tab **Fluids** (droplet icon) right after Logistics: Pipeline Mk1/Mk2, Pipe Junction, Fluid Tank. Logistics keeps belts, splitters, sorter, crossing, crate.
+- **Incinerator** is now **2×2** and the last card in Production. New 2D icon (grate, chimney) and a bigger 3D model.
+- **Old saves:** `growIncin()` in `js/main.js` runs on load. It rebuilds the grid, then each incinerator takes a free 2×2 that contains its old tile
+  (own corner first, then the three other ways). Belts that fed it still touch it. If it's boxed in, it goes back to stock (cost refunded) and a toast
+  says how many. It's harmless for 2×2 ones (they keep their corner).
+- Tests/play-through layouts moved where the bigger incinerator overlapped neighbours.
+- Build number **44**.
+
+### Verified
+- `npm test` 65/65. New check: Fluids tab contents, incinerator 2×2 and last in Production, nothing fluid left in Logistics; an old-style save with a
+  boxed-in 1×1 incinerator (refunded, belts intact) and a free one (grows from its corner, stays put on a second load).
+- `npm run playthrough`: all recipes and drill rates as expected. Tablet screenshot: seven tabs fit in one row.

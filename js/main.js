@@ -16,11 +16,21 @@ function parseSave(str){str=String(str).trim();return JSON.parse(str[0]==='{'?st
 /* Older saves store the unlock lists from when they were made; new buildings/recipes (signs, Drone Pad, …) are added on load */
 function grantUnlocks(){S.ub=S.ub||[];S.ur=S.ur||[];const b=[...START_B],r=[...START_R];for(let i=0;i<Math.min(S.ms||0,MS.length);i++){b.push(...MS[i].b);r.push(...MS[i].r);}
  for(const x of b)if(!S.ub.includes(x))S.ub.push(x);for(const x of r)if(!S.ur.includes(x))S.ur.push(x);if((S.ms||0)>=4)S.oc=true;}
+/* Build 44: the Incinerator became 2×2. Older saves hold 1×1 ones. Rebuild the grid: everything else first, then each incinerator takes a free
+   2×2 that includes its old tile (own corner first), or goes back to stock if boxed in. Idempotent: a real 2×2 one keeps its corner. */
+function growIncin(){const inc=[...ents.values()].filter(e=>e.k==='incin');if(!inc.length)return;let back=0;grid.fill(0);
+ for(const o of ents.values())if(o.k!=='incin')for(let j=0;j<o.w;j++)for(let i=0;i<o.w;i++)grid[(o.y+j)*MW+o.x+i]=o.id;
+ for(const e of inc)grid[e.y*MW+e.x]=e.id;   // reserve every incinerator's own tile so a neighbour can't grow over it
+ for(const e of inc){const ox=e.x,oy=e.y;grid[oy*MW+ox]=0;let at=null;
+  for(const [x,y] of [[ox,oy],[ox-1,oy],[ox,oy-1],[ox-1,oy-1]])if(x>=0&&y>=0&&!canPlace('incin',x,y)){at=[x,y];break;}
+  if(!at){ents.delete(e.id);refund(B.incin.cost);back++;continue;}
+  e.x=at[0];e.y=at[1];e.w=e.h=2;for(let j=0;j<2;j++)for(let i=0;i<2;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
+ if(back)setTimeout(()=>toast(`Incinerators are 2×2 now: ${back} had no room and went back to stock`),1500);}
 function load(str){const data=typeof str==='string'?parseSave(str):str;
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;genMap(S.seed);ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  for(const o0 of data.es){const o=Array.isArray(o0)?Object.assign({d:o0[0],x:o0[1],y:o0[2],dir:o0[3]},o0[4]||{}):o0;const d=B[o.d];if(!d)continue;
   const e=Object.assign({},o,{id:nextId++,k:d.k,w:d.w,h:d.w});initEnt(e,d);ents.set(e.id,e);for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
- grantUnlocks();
+ growIncin();grantUnlocks();
  S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
 }
 async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}

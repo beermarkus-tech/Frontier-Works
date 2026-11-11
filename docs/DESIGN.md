@@ -86,7 +86,7 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   junction feeds a belt from the side (Session 21).
 - Splitter (back → front/left/right), Merger (back/left/right → front, fair alternation),
   Sorting Splitter (filter item → front, rest → sides), Crossing (two lines cross), Pipe Junction (fluid to all other sides).
-- Storage Crate (2000 items) and Fluid Tank (400 m³) buffer and pass items on. The Incinerator destroys anything.
+- Storage Crate (2000 items) and Fluid Tank (400 m³) buffer and pass items on. The Incinerator (2×2 since Session 35e, like a Press) destroys anything.
 - **Cargo Drones** (agreed with Markus, Session 28; Tier 5): a **Drone Pad** (3×3, holds 400 solid items, fed by belts like a crate). In its panel,
   "Send to…" then tap another pad sets a route (stored by position, so it survives saves). A linked pad is a sender: its drone waits for a full
   load (40 items, at most 8 s), flies straight there at 10 tiles/s (over anything), unloads what fits and flies back. Leftovers return to the pad.
@@ -127,7 +127,8 @@ Hand mining gives +5 ore from a node.
 
 ## 8. Interface
 - Mobile-first, frosted-glass panels. Top bar: logo, power meter, Goals (shows tier, glows when it can be submitted), Items, Stats, Menu.
-- Bottom dock: hint/cost line → category tabs (Logistics, Extraction, Production, Power) → building cards with drawn icons.
+- Bottom dock: hint/cost line → category tabs (Logistics = belts/splitters/crossing/crate, Fluids = pipes/junction/tank, Extraction, Production
+  (Incinerator last), Power, Transport = Drone Pad, Signs) → building cards with drawn icons.
 - Tool buttons (Inspect/pan, Rotate, Dismantle, 2D/3D, compass, Center on Core) sit in a row at the top of the bottom dock (moved from the right edge in
   Session 24 so panels never cover them). Minimap on desktop.
 - **Pin** (📌 in every panel's header, Session 25): while pinned, the panel (always in its normal place on the right / bottom) stays open when you
@@ -168,7 +169,7 @@ Hand mining gives +5 ore from a node.
 - **Find resources** (Session 30): 🔍 in the dock's tool row opens a panel to highlight resource types (counts shown; free nodes only or all).
   Highlighted nodes get a pulsing ring (visible even fully zoomed out), an edge arrow with distance when none is on screen, blinking minimap dots
   and light beams in 3D. A resource node's panel offers "🔦 Highlight all X nodes". Temporary (not saved): a chip above the dock shows it, ✕ clears.
-- **Signs** (Session 32): Sign S/M/L/XL (1×1 to 4×4, 1–6 Iron Plates, start unlocked, Logistics, also on water). Placing one opens its panel with a text
+- **Signs** (Session 32): Sign S/M/L/XL (1×1 to 4×4, 1–6 Iron Plates, start unlocked, own Signs tab since Session 34, XXL 6×6 since 35d, also on water). Placing one opens its panel with a text
   box (60 characters) and 6 board colours. Text wraps (max 3 lines) and is sized to fill the board; signs stay visible in the far view. In 3D a sign
   stands on two posts with its label floating above, facing the camera.
 - **3D fly-in** (Session 32): switching to 3D starts straight above the spot in the middle of the screen, eases to an airplane angle (~35°) a bit closer,

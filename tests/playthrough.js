@@ -59,8 +59,8 @@ const SEED = +process.argv[2] || 20261110;
    ins.forEach((k, i) => { const [side, o] = slots[i], fl = IT[k].f, line = fl ? 'pipe2' : 'belt5', src = fl ? 'tank' : 'storage';
     if (side === 'w') { res.push(P(src, X - 4, Y + o, 0), P(line, X - 2, Y + o, 0), P(line, X - 1, Y + o, 0)); feeders.push([fw.entAt(X - 4, Y + o), k]); }
     else { res.push(P(src, X + o, Y - 4, 0), P(line, X + o, Y - 2, 1), P(line, X + o, Y - 1, 1)); feeders.push([fw.entAt(X + o, Y - 4), k]); } });
-   // outputs: east side, one row per output, into an incinerator
-   outs.forEach((k, j) => { const line = IT[k].f ? 'pipe2' : 'belt5'; res.push(P(line, X + w, Y + j, 0), P('incin', X + w + 1, Y + j, 0)); });
+   // outputs: east side, one row per output, into incinerators (2×2, one per two rows)
+   outs.forEach((k, j) => { const line = IT[k].f ? 'pipe2' : 'belt5'; res.push(P(line, X + w, Y + j, 0)); if (j % 2 === 0) res.push(P('incin', X + w + 1, Y + j, 0)); });   // a 2×2 incinerator takes two rows
    // power: burners south of the machine (also act as poles)
    const nb = Math.ceil(m.pw * 1.2 / 30), gens = [];
    for (let g = 0; g < nb; g++) { res.push(P('burner', X - 2 + g * 2, Y + w + 1, 0)); gens.push(fw.entAt(X - 2 + g * 2, Y + w + 1)); }
@@ -84,8 +84,8 @@ const SEED = +process.argv[2] || 20261110;
   for (const d of ['drill1', 'drill2', 'drill3']) for (const pu of [0, 1, 2]) {
    const n = nodes.find(n => n.t === 'iron' && n.p === pu && !grid[n.y * MW + n.x] && [0, 1].every(j => [0, 1, 2, 3, 4, 5].every(i => !canPlace('incin', n.x + i, n.y + j) || (i < 2 && j < 2))));
    if (!n) { drills.push({ d, pu, skip: 'no free node' }); continue; }
-   clear(); const res = [P(d, n.x, n.y, 0), P('belt5', n.x + 2, n.y, 0), P('incin', n.x + 3, n.y, 0), P('burner', n.x + 4, n.y, 0)];
-   const g = fw.entAt(n.x + 4, n.y); if (res.some(x => x)) { drills.push({ d, pu, skip: res.join(',') }); continue; }
+   clear(); const res = [P(d, n.x, n.y, 0), P('belt5', n.x + 2, n.y, 0), P('incin', n.x + 3, n.y, 0), P('burner', n.x + 5, n.y, 0)];
+   const g = fw.entAt(n.x + 5, n.y); if (res.some(x => x)) { drills.push({ d, pu, skip: res.join(',') }); continue; }
    stat.hist = []; stat.p = {}; stat.c = {}; for (let s = 0; s < 70; s++) { g.fuel.coal = 50; for (let k = 0; k < 20; k++) tick(0.05); }
    drills.push({ d, pu, have: Math.round((rates().p.iron_ore || 0) * 10) / 10, exp: B[d].rate * PUR[pu][0] * 60 });
   }

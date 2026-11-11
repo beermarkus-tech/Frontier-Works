@@ -19,7 +19,7 @@ A building counts as buildable if its cost items can be made with already-builda
 | 9 | Nuclear Age | ✓ none | ✓ none |
 | 10 | Orbital Beacon | ✓ none | ✓ none |
 
-Self-test: with the old rule (hand crafting only Smelter/Press) the audit reports: tier 2: Assembler; tier 3: Assembler, Water Pump, Fluid Tank, Sorting Splitter; tier 4: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2; tier 5: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3; tier 6: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator; tier 7: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4; tier 8: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4; tier 9: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4, Blender, Drill Mk3; tier 10: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4, Blender, Drill Mk3, Fission Reactor, Conveyor Mk5. That's the dead end fixed in Build 20, so the audit does catch this kind of problem.
+Self-test: with the old rule (hand crafting only Smelter/Press) the audit reports: tier 2: Assembler; tier 3: Assembler, Water Pump, Fluid Tank, Sorting Splitter; tier 4: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2; tier 5: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3; tier 6: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Drone Pad; tier 7: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Drone Pad, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4; tier 8: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Drone Pad, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4; tier 9: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Drone Pad, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4, Blender, Drill Mk3; tier 10: Assembler, Water Pump, Fluid Tank, Sorting Splitter, Steam Generator, Power Tower, Drill Mk2, Foundry, Conveyor Mk3, Fabricator, Drone Pad, Oil Pump, Refinery, Fuel Turbine, Pipeline Mk2, Conveyor Mk4, Blender, Drill Mk3, Fission Reactor, Conveyor Mk5. That's the dead end fixed in Build 20, so the audit does catch this kind of problem.
 
 ## 2. Every recipe up to tier 5 in the real simulation
 
@@ -30,7 +30,7 @@ Each recipe was built with real belts/pipes (Mk5 belts / Mk2 pipes, so supply is
 | Iron Ingot | Smelter | 30 / 30 | 100% | ✓ |
 | Copper Ingot | Smelter | 30 / 30 | 100% | ✓ |
 | Iron Plate | Press | 20 / 20 | 100% | ✓ |
-| Iron Rod | Press | 14.8 / 15 | 100% | ✓ |
+| Iron Rod | Press | 15 / 15 | 100% | ✓ |
 | Bolts | Press | 40 / 40 | 100% | ✓ |
 | Wire | Press | 29.5 / 30 | 100% | ✓ |
 | Cable | Press | 30 / 30 | 100% | ✓ |
@@ -41,7 +41,7 @@ Each recipe was built with real belts/pipes (Mk5 belts / Mk2 pipes, so supply is
 | Truss Frame | Assembler | 2 / 2 | 100% | ✓ |
 | Stitched Plate (alt) | Assembler | 5.3 / 5.6 | 100% | ✓ |
 | Cast Bolts (alt) | Press | 50 / 50 | 100% | ✓ |
-| Steel Ingot | Foundry | 44.3 / 45 | 100% | ✓ |
+| Steel Ingot | Foundry | 45 / 45 | 100% | ✓ |
 | Steel Beam | Press | 14.8 / 15 | 100% | ✓ |
 | Steel Pipe | Press | 20 / 20 | 100% | ✓ |
 | Cased Girder | Assembler | 6 / 6 | 100% | ✓ |
