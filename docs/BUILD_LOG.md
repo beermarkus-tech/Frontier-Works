@@ -1186,3 +1186,26 @@ do part 2, more model detail and rounded edges.
 - `npm test` 66/66. Build number **47**.
 - Next for 3D, as discussed: canvas-drawn surface textures (metal panels, concrete, rust/wear, painted stripes) on the models,
   then per-model detail (vents, rivet rows, lit windows), moving water shimmer, warmer horizon.
+
+---
+
+## Session 35i — 2026-11-11 (Claude Code, cloud session) · Build 48
+
+### What Markus asked
+Go ahead with step 1 of the next 3D plan: surface textures.
+
+### What was built
+- `v3Merge` now writes UVs by box projection (one texture repeat per tile, from the dominant normal axis), so any shared texture tiles evenly over every part.
+- `v3Detail()`: one 256 px canvas texture drawn in code (light grey, so it only shades the vertex colours): speckle, faint panel tones, one seam
+  per tile with a row of rivets, fine scratches, grime spots. Used as `V3.mat.map` in Enhanced; Classic switches it off at once.
+  Same draw calls, one small texture.
+- First version had seams every half tile and looked like floor tiles, so it was toned down to one subtle seam per tile.
+- Build number **48**.
+
+### Verified
+- `npm test` 66/66 (3D renders, 52 draw calls). The look check now also confirms the texture is on in Enhanced and off in Classic, and that models have UVs.
+- Close-up screenshots: press, burner, core show worn panels and rivets, and colours stay as before.
+
+### Next up
+- Step 2: per-model detail on the most-seen buildings (smelter, press, assembler, drills): vents, lit windows, pipes, fans.
+- Then water shimmer, warmer horizon, optional time of day.

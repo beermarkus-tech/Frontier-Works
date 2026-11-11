@@ -55,10 +55,13 @@ function v3RBox(sx,sy,sz){const k=sx.toFixed(3)+'|'+sy.toFixed(3)+'|'+sz.toFixed
  g.translate(0,0,-(sy-2*r)/2);g.rotateX(-Math.PI/2);g.deleteAttribute('uv');g.computeVertexNormals();RBOX.set(k,g);return g;}
 function v3Merge(parts){
  let n=0;const gs=parts.map(p=>{const g=(p.g.index?p.g.toNonIndexed():p.g.clone());g.applyMatrix4(p.m);n+=g.attributes.position.count;return g;});
- const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3);let o=0;
+ const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),uv=new Float32Array(n*2);let o=0;
  gs.forEach((g,i)=>{const c=parts[i].c,P=g.attributes.position.array,N=g.attributes.normal.array;pos.set(P,o*3);nor.set(N,o*3);
-  for(let k=0;k<g.attributes.position.count;k++){col[(o+k)*3]=c.r;col[(o+k)*3+1]=c.g;col[(o+k)*3+2]=c.b;}o+=g.attributes.position.count;g.dispose();});
- const out=new T3.BufferGeometry();out.setAttribute('position',new T3.BufferAttribute(pos,3));out.setAttribute('normal',new T3.BufferAttribute(nor,3));out.setAttribute('color',new T3.BufferAttribute(col,3));
+  for(let k=0;k<g.attributes.position.count;k++){col[(o+k)*3]=c.r;col[(o+k)*3+1]=c.g;col[(o+k)*3+2]=c.b;
+   const x=P[k*3],y=P[k*3+1],z=P[k*3+2],ax=Math.abs(N[k*3]),ay=Math.abs(N[k*3+1]),az=Math.abs(N[k*3+2]),j=(o+k)*2;
+   if(ay>=ax&&ay>=az){uv[j]=x;uv[j+1]=z;}else if(ax>=az){uv[j]=z;uv[j+1]=y;}else{uv[j]=x;uv[j+1]=y;}}
+  o+=g.attributes.position.count;g.dispose();});
+ const out=new T3.BufferGeometry();out.setAttribute('position',new T3.BufferAttribute(pos,3));out.setAttribute('normal',new T3.BufferAttribute(nor,3));out.setAttribute('color',new T3.BufferAttribute(col,3));out.setAttribute('uv',new T3.BufferAttribute(uv,2));
  out.computeBoundingSphere();return out;
 }
 /* InstancedMesh that grows when needed */
@@ -117,9 +120,20 @@ function v3Env(){if(V3.env)return V3.env;const es=new T3.Scene(),g=new T3.Sphere
  g.setAttribute('color',new T3.Float32BufferAttribute(cols,3));es.add(new T3.Mesh(g,new T3.MeshBasicMaterial({vertexColors:true,side:T3.BackSide})));
  const sunD=new T3.Mesh(new T3.SphereGeometry(4,12,8),new T3.MeshBasicMaterial({color:new T3.Color(6,5.6,4.8)}));sunD.position.set(-28,32,-22);es.add(sunD);
  const pm=new T3.PMREMGenerator(V3.r);V3.env=pm.fromScene(es,0.02).texture;pm.dispose();return V3.env;}
+function v3Detail(){if(V3.detail)return V3.detail;const S=256,cv=document.createElement('canvas');cv.width=cv.height=S;const g=cv.getContext('2d');
+ let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+ g.fillStyle='#e6e6e6';g.fillRect(0,0,S,S);
+ for(let i=0;i<5200;i++){const v=200+rnd()*55|0;g.fillStyle=`rgba(${v},${v},${v},0.5)`;g.fillRect(rnd()*S,rnd()*S,1+rnd()*2,1+rnd()*2);}      // speckle
+ for(let i=0;i<4;i++){const x=i*64,y=(i%2)*64;const gr=g.createLinearGradient(0,0,0,S);g.globalAlpha=0.06;g.fillStyle=i%2?'#fff':'#777';g.fillRect(x,0,64,S);g.globalAlpha=1;}   // panel tone
+ g.strokeStyle='rgba(60,60,60,0.38)';g.lineWidth=2;for(const p of [0]){g.beginPath();g.moveTo(p+1,0);g.lineTo(p+1,S);g.moveTo(0,p+1);g.lineTo(S,p+1);g.stroke();}   // seams
+ g.strokeStyle='rgba(255,255,255,0.25)';g.lineWidth=1;for(const p of [0]){g.beginPath();g.moveTo(p+3,0);g.lineTo(p+3,S);g.moveTo(0,p+3);g.lineTo(S,p+3);g.stroke();}
+ for(const p of [0])for(let t=16;t<S;t+=32)for(const [x,y] of [[p+9,t],[t,p+9]]){g.fillStyle='rgba(70,70,70,0.45)';g.beginPath();g.arc(x,y,2.1,0,7);g.fill();g.fillStyle='rgba(255,255,255,0.55)';g.beginPath();g.arc(x-0.7,y-0.7,1.1,0,7);g.fill();}   // rivets
+ g.strokeStyle='rgba(120,120,120,0.35)';g.lineWidth=0.8;for(let i=0;i<70;i++){const x=rnd()*S,y=rnd()*S,a=rnd()*0.6-0.3,l=6+rnd()*22;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);g.stroke();}   // scratches
+ for(let i=0;i<14;i++){const x=rnd()*S,y=rnd()*S,r=8+rnd()*22,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(110,90,70,0.16)');gr.addColorStop(1,'rgba(110,90,70,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}   // grime
+ const t=new T3.CanvasTexture(cv);t.wrapS=t.wrapT=T3.RepeatWrapping;t.anisotropy=Math.min(4,V3.r.capabilities.getMaxAnisotropy());return V3.detail=t;}
 function v3Look(){if(!V3.r)return;const nice=V3.look==='nice',r=V3.r;
  r.toneMapping=nice?T3.ACESFilmicToneMapping:T3.NoToneMapping;r.toneMappingExposure=nice?0.9:1;
- V3.scene.environment=nice?v3Env():null;V3.hemi.intensity=nice?0.3:0.56;V3.sun.intensity=nice?0.95:0.62;
+ V3.scene.environment=nice?v3Env():null;if(V3.mat){V3.mat.map=nice?v3Detail():null;V3.mat.needsUpdate=true;}V3.hemi.intensity=nice?0.3:0.56;V3.sun.intensity=nice?0.95:0.62;
  if(V3.aoP&&V3.aoP.mesh)V3.aoP.mesh.visible=nice&&V3.aoP.mesh.count>0;V3.sig=null;V3.lookAt=null;}
 
 /* ---------- terrain, water, decoration ---------- */
