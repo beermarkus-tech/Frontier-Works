@@ -731,3 +731,4 @@ How do machines decide where output goes, and how is a crossing attached directl
 ### Verified
 - Same scenario after the fix: the ore runs out, is refilled, and the smelter is back to 30 ingots/min (96 % working). Output through a crossing onto an outgoing
   belt still works (100 %). New smoke check covers both. `npm test` 47/47.
+- Follow-up (Build 27): the DESIGN.md §5 note for this rule (and the Session 21 curve rule) didn't apply in Build 26 because of a wording mismatch; added in Build 27. No code change.

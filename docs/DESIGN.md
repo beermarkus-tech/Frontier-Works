@@ -73,7 +73,11 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   **Routers touch buildings directly** (confirmed with Markus, Session 10): a Splitter/Sorting Splitter output side (or Pipe Junction side)
   touching a building feeds it without a belt, and a building pushes output straight into a touching Merger (from any side except
   the merger's front) or into the back of a touching Splitter. A Merger's front can also feed a building directly.
-- Belts can feed another belt from the side (side-loading). Belt corners are drawn curved.
+  **Crossings touching a building are see-through** (Session 22): the building only pushes output into a crossing if whatever is on the
+  crossing's far side would accept it from that direction (a belt pointing away, a router facing the right way, storage, a machine needing it…).
+  So a crossing can carry input in or output out, and it never fills up with output aimed at an incoming belt.
+- Belts can feed another belt from the side (side-loading). Belt corners are drawn curved, also when a splitter, merger, crossing or pipe
+  junction feeds a belt from the side (Session 21).
 - Splitter (back → front/left/right), Merger (back/left/right → front, fair alternation),
   Sorting Splitter (filter item → front, rest → sides), Crossing (two lines cross), Pipe Junction (fluid to all other sides).
 - Storage Crate (2000 items) and Fluid Tank (400 m³) buffer and pass items on. The Incinerator destroys anything.

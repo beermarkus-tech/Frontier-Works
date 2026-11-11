@@ -1,7 +1,7 @@
 'use strict';
 /* ---------- PWA: service worker, updates, install ---------- */
 // Build number: +1 on every push (= commit count on main). Must match VERSION 'fw-build-N' in sw.js (the test checks).
-const BUILD=26;
+const BUILD=27;
 const PWA={prompt:null,standalone:matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true,
  ios:/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),waiting:null};
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();PWA.prompt=e;if(UI.panel&&UI.panel.kind==='menu')renderPanel(true);});
