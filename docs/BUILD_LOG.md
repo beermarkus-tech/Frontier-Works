@@ -707,3 +707,27 @@ A belt doesn't curve directly out of a crossing the way it seems to with splitte
 ### Verified
 - `npm test` 46/46, new check: a belt after a splitter side, after two crossings (east and south) and after a merger turn all curve; a plain
   straight belt doesn't; an ore item passes through the crossing and round the curve. Before/after screenshots.
+
+---
+
+## Session 22 — 2026-11-11 (Claude Code, cloud session) · Build 26
+
+### What Markus asked
+How do machines decide where output goes, and how is a crossing attached directly to a machine handled, since a crossing has no direction?
+
+### Answer and bug found
+- Machines never pull input. Belts/routers/crossings push items in, and a machine accepts what its recipe needs. For output, the machine
+  goes round its edge tiles in turn: belts/pipes only if they point away, splitters only from their back, mergers from back/sides, and
+  **crossings whenever the lane was free, with no look at what lies behind**.
+- Reproduced a permanent jam: ore crate → belt → crossing → smelter. While the ore ran out, the smelter pushed an ingot into the crossing toward the
+  incoming belt (which points the other way). The ingot never moved, the lane stayed blocked, and after refilling the ore the smelter stayed at **0 / min**.
+
+### Fix
+- `passOK(t,item,d)` + `pushOut` in `js/sim.js`: a building treats a touching crossing as see-through and only pushes into it if the
+  entity on the far side would accept that item from that direction.
+- `updCross`: an item heading into a belt/pipe that points back at the crossing (can never move, e.g. jams in existing saves) is returned to the item stock.
+- DESIGN.md §5 records the rule. Build number **26**.
+
+### Verified
+- Same scenario after the fix: the ore runs out, is refilled, and the smelter is back to 30 ingots/min (96 % working). Output through a crossing onto an outgoing
+  belt still works (100 %). New smoke check covers both. `npm test` 47/47.

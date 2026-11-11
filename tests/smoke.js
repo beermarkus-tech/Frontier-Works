@@ -104,6 +104,17 @@ const server=require('./serve.js');
   fw.entAt(X,Y+4).item='iron_ore';for(let i=0;i<60;i++)tick(0.05);r.flowed=!!fw.entAt(X+2,Y+5).item||[...[0,1,2,3]].some(()=>false);
   for(let j=-1;j<13;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return r;});
  check(`belts curve out of splitter/crossing/merger (${cv.split},${cv.cross},${cv.cross2},${cv.merge}; plain belt ${cv.straight})`,cv.ok&&cv.split===1&&cv.cross===0&&cv.cross2===1&&cv.merge===0&&cv.straight===null&&cv.flowed);
+ // a machine never pushes output into a crossing whose far side can't take it (used to jam an input crossing for good once the input paused)
+ const xj=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-3;j<10&&ok;j++)for(let i=-6;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('storage',X-4,Y,0),P('belt1',X-2,Y,0),P('crossing',X-1,Y,0),P('smelter',X,Y,0),P('belt1',X+2,Y+1,0),P('incin',X+3,Y+1,0),P('burner',X,Y+2,0),
+   // second line: output THROUGH a crossing onto an outgoing belt must still work
+   P('storage',X-4,Y+5,0),P('belt1',X-2,Y+5,0),P('smelter',X-1,Y+5,0),P('crossing',X+1,Y+5,0),P('belt1',X+2,Y+5,0),P('incin',X+3,Y+5,0)];
+  const g=fw.entAt(X,Y+2),run=s=>{for(let i=0;i<s;i++){g.fuel.coal=50;for(let k=0;k<20;k++)tick(0.05);}};
+  fw.entAt(X-4,Y).store={iron_ore:20};fw.entAt(X-4,Y+5).store={iron_ore:999};fw.entAt(X,Y).r='r_iron_ingot';fw.entAt(X-1,Y+5).r='r_iron_ingot';
+  run(90);fw.entAt(X-4,Y).store={iron_ore:999};stat.hist=[];run(90);const a=fw.entAt(X,Y)._ef,b=fw.entAt(X-1,Y+5)._ef;
+  for(let j=-1;j<8;j++)for(let i=-5;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{ok:r.every(v=>v===''),a,b};});
+ check(`crossing in front of a machine: input survives a pause (${Math.round(xj.a*100)}%), output through a crossing works (${Math.round(xj.b*100)}%)`,xj.ok&&xj.a>0.8&&xj.b>0.8);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

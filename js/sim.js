@@ -189,10 +189,20 @@ function accept(e,item,dir,carry){
 function perim(e){const p=[];
  for(let i=0;i<e.w;i++){p.push({x:e.x+i,y:e.y-1,d:3});p.push({x:e.x+e.w,y:e.y+i,d:0});p.push({x:e.x+e.w-1-i,y:e.y+e.h,d:1});p.push({x:e.x-1,y:e.y+e.h-1-i,d:2});}
  return p;}
+/* Would t take item arriving in direction d (without changing anything)? Used to see through a crossing. */
+function passOK(t,item,d){const fl=IT[item].f;
+ if(isLine(t.k))return t.dir===d&&fl===(t.k==='pipe');
+ if(t.k==='router'){const b=B[t.d];if(fl!==!!b.fl)return false;if(b.sub==='merge')return d!==((t.dir+2)&3);if(b.sub==='junc')return true;return d===t.dir;}
+ if(t.k==='cross')return true;
+ if(t.k==='mach')return !!(t.r&&RC[t.r].i[item]);
+ if(t.k==='gen')return has(B[t.d].fuels,item)||(item==='water'&&!!B[t.d].water);
+ if(t.k==='tank')return fl;
+ return t.k==='storage'||t.k==='core'?!fl:t.k==='incin';}
 function pushOut(e,item){
  const n=e.ports.length;
  for(let k=0;k<n;k++){const idx=(e.rr+k)%n,p=e.ports[idx];const t=entAt(p.x,p.y);if(!t)continue;
-  if(isLine(t.k)){if(t.dir!==p.d)continue;}else if(t.k!=='router'&&t.k!=='cross')continue;
+  if(isLine(t.k)){if(t.dir!==p.d)continue;}else if(t.k==='cross'){const far=entAt(t.x+DX[p.d],t.y+DY[p.d]);if(!far||!passOK(far,item,p.d))continue;}
+  else if(t.k!=='router')continue;
   if(accept(t,item,p.d,0)){e.rr=(idx+1)%n;return true;}}
  return false;
 }
@@ -271,8 +281,10 @@ function updRouter(e){
   if(t&&accept(t,e.item,o,0)){e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
 }
 function updCross(e){
- if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(t&&accept(t,e.hs,e.hd,0))e.hs=null;}
- if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(t&&accept(t,e.vs,e.vd,0))e.vs=null;}
+ // an item heading into a belt/pipe that points back at the crossing can never move (old saves could jam like this): return it to the stock
+ const stuck=(t,d)=>t&&isLine(t.k)&&t.dir===((d+2)&3);
+ if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(t&&accept(t,e.hs,e.hd,0))e.hs=null;else if(stuck(t,e.hd)){give(e.hs,1);e.hs=null;}}
+ if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(t&&accept(t,e.vs,e.vd,0))e.vs=null;else if(stuck(t,e.vd)){give(e.vs,1);e.vs=null;}}
 }
 function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}
 /* Efficiency: running average over the last EFF_T seconds of "working" vs. why not (e._ef 0..1, e._efw {reason: share}).
