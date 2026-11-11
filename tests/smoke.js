@@ -89,6 +89,10 @@ const server=require('./serve.js');
    for(const id of ub)if(!built.has(id))bad.push(`tier ${t+1}: ${B[id].n}`);for(const k in MS[t].req)if(!prod.has(k))bad.push(`goal ${t+1}: ${IT[k].n}`);}
   return bad;});
  check('no progression dead ends in tiers 1–10'+(de.length?' ('+de.join('; ')+')':''),de.length===0);
+ // cloud shadow picture must wrap seamlessly (a seam shows up as a straight line sliding across the map)
+ const cs=await p.evaluate(()=>{const d=cloudC.getContext('2d').getImageData(0,0,128,128).data,a=(x,y)=>d[(y*128+x)*4+3];let ex=0,ey=0,inn=0;
+  for(let i=0;i<128;i++){ex+=Math.abs(a(127,i)-a(0,i));ey+=Math.abs(a(i,127)-a(i,0));inn+=Math.abs(a(63,i)-a(64,i));}return{ex:ex/128,ey:ey/128,inn:inn/128};});
+ check(`cloud shadows wrap without a seam (edge jumps ${cs.ex.toFixed(1)}/${cs.ey.toFixed(1)} vs normal ${cs.inn.toFixed(1)})`,cs.ex<=cs.inn*2+1&&cs.ey<=cs.inn*2+1);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

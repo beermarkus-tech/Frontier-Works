@@ -36,7 +36,9 @@ function prepTerrain(seed){
  TF={seed,nW,Wf,Sf,Rf,Df,Gf,PAL,U};
  const op=MW>200?3:4;terrO=paintTerrain(0,0,MW,MH,op);terrO.ppt=op;terrC=terrO;
  // cloud shadows
- const cn=mkNoise(rng(seed+99),14),cn2=mkNoise(rng(seed+7),5);cloudC=document.createElement('canvas');cloudC.width=cloudC.height=128;const cg=cloudC.getContext('2d'),ci=cg.createImageData(128,128);
+ // cloud shadows: tileable noise (wraps at 128 px), so the repeated picture has no seam that slides across the map
+ const tn=(r,g)=>{const v=[];for(let i=0;i<g*g;i++)v.push(r());const sm=t=>t*t*(3-2*t);return(x,y)=>{const fx=x/128*g,fy=y/128*g,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy),x0=ix%g,x1=(ix+1)%g,y0=iy%g,y1=(iy+1)%g,a=v[y0*g+x0],b=v[y0*g+x1],c=v[y1*g+x0],d=v[y1*g+x1];return a+(b-a)*tx+(c-a)*ty+(a-b-c+d)*tx*ty;};};
+ const cn=tn(rng(seed+99),9),cn2=tn(rng(seed+7),24);cloudC=document.createElement('canvas');cloudC.width=cloudC.height=128;const cg=cloudC.getContext('2d'),ci=cg.createImageData(128,128);
  for(let i=0;i<128*128;i++){const x=i%128,y=(i/128)|0;const v=cn(x,y)*0.75+cn2(x,y)*0.25;ci.data[i*4+3]=sstep(0.55,0.78,v)*60;}
  cg.putImageData(ci,0,0);
 }

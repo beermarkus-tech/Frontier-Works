@@ -665,3 +665,25 @@ At far zoom most of the remaining time is the terrain itself. The save limit is 
 ### Known issues
 - Very old browsers without `CompressionStream` store the save uncompressed (still in IndexedDB, so still fine).
 - The far-zoom ground on desktop still costs ~14 ms (many terrain chunks scaled down). On phones the minimum zoom shows fewer chunks.
+
+---
+
+## Session 20 — 2026-11-11 (Claude Code, cloud session) · Build 24
+
+### What Markus asked
+1. Is an overflow splitter planned? → Not yet; proposed it (front first, overflow to the sides; Tier 2 with the Sorting Splitter). Waiting for his go-ahead.
+2. Rename all buildings to another commercial game's names. → Declined: that would turn this into a copy of that specific game. Offered our own clearer names instead. The original-content rule stays.
+3. "There's a moving vertical line or shadow, is this day and night?"
+
+### Cause and fix (3)
+- No day/night exists. The line was the **drifting cloud-shadow layer** in 2D: one 128 px cloud picture drawn as repeated tiles, but generated from
+  non-repeating noise, so its edges didn't match. Where copies meet, the shade jumped 7–14× more than between normal neighbours, a straight
+  seam sliding across the map with the clouds. The cloud picture is now made from wrap-around noise (`tn` in `prepTerrain`, `js/render.js`), so the edges match.
+- Build number **24**.
+
+### Verified
+- Edge mismatch before: 16.7 / 33 (left-right / top-bottom) vs. 2.4 between normal neighbours; after: 0.1 / 0.4 vs. 1.1.
+  New smoke check guards it. `npm test` 45/45.
+
+### Open questions for Markus
+- Go ahead with the overflow splitter as proposed? Any building names he'd like changed to other names of our own?
