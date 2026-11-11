@@ -1209,3 +1209,23 @@ Go ahead with step 1 of the next 3D plan: surface textures.
 ### Next up
 - Step 2: per-model detail on the most-seen buildings (smelter, press, assembler, drills): vents, lit windows, pipes, fans.
 - Then water shimmer, warmer horizon, optional time of day.
+
+---
+
+## Session 35j — 2026-11-11 (Claude Code, cloud session) · Build 49
+
+### What Markus said
+He likes the textures, but the changed lighting makes the whole landscape look pale.
+
+### What changed
+- Enhanced now uses exactly the Classic light (no filmic grading, same sun/sky strengths). The grading and the sky reflections on the ground
+  were what made the landscape pale.
+- Kept in Enhanced: rounded edges, plinth bolts, panel texture, contact shadows, and sky reflections only on metal parts (rails, pipes; strength 0.5).
+  Every non-metal surface, including the ground, gets no sky reflection.
+- Build number **49**.
+
+### Decision
+- No colour grading for now. Markus prefers the original colours; detail comes from shapes and textures, not light.
+
+### Verified
+- `npm test` 66/66. Screenshot: landscape colours as in Classic, buildings textured and rounded.

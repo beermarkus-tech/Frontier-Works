@@ -132,8 +132,8 @@ function v3Detail(){if(V3.detail)return V3.detail;const S=256,cv=document.create
  for(let i=0;i<14;i++){const x=rnd()*S,y=rnd()*S,r=8+rnd()*22,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(110,90,70,0.16)');gr.addColorStop(1,'rgba(110,90,70,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}   // grime
  const t=new T3.CanvasTexture(cv);t.wrapS=t.wrapT=T3.RepeatWrapping;t.anisotropy=Math.min(4,V3.r.capabilities.getMaxAnisotropy());return V3.detail=t;}
 function v3Look(){if(!V3.r)return;const nice=V3.look==='nice',r=V3.r;
- r.toneMapping=nice?T3.ACESFilmicToneMapping:T3.NoToneMapping;r.toneMappingExposure=nice?0.9:1;
- V3.scene.environment=nice?v3Env():null;if(V3.mat){V3.mat.map=nice?v3Detail():null;V3.mat.needsUpdate=true;}V3.hemi.intensity=nice?0.3:0.56;V3.sun.intensity=nice?0.95:0.62;
+ r.toneMapping=T3.NoToneMapping;r.toneMappingExposure=1;   // same light as Classic (Markus: grading made the landscape pale)
+ V3.scene.environment=nice?v3Env():null;if(V3.mat){V3.mat.map=nice?v3Detail():null;V3.mat.needsUpdate=true;}V3.hemi.intensity=0.56;V3.sun.intensity=0.62;
  if(V3.aoP&&V3.aoP.mesh)V3.aoP.mesh.visible=nice&&V3.aoP.mesh.count>0;V3.sig=null;V3.lookAt=null;}
 
 /* ---------- terrain, water, decoration ---------- */
@@ -189,7 +189,7 @@ function v3Chunks(){
   const g=new T3.PlaneGeometry(CH,CH,CH*2,CH*2);g.rotateX(-Math.PI/2);g.translate(cx*CH+CH/2,0,cy*CH+CH/2);const P=g.attributes.position;
   for(let i=0;i<P.count;i++)P.setY(i,v3H(P.getX(i),P.getZ(i)));g.computeVertexNormals();
   const tex=new T3.CanvasTexture(c);tex.anisotropy=Math.min(8,V3.r.capabilities.getMaxAnisotropy());
-  const m=new T3.Mesh(g,new T3.MeshStandardMaterial({map:tex,roughness:1,metalness:0,envMapIntensity:V3.look==='nice'?0.12:1}));m.receiveShadow=true;m.userData.ci=cy*NX+cx;V3.scene.add(m);V3.chunks.set(k,m);V3.coarse[m.userData.ci].visible=false;}
+  const m=new T3.Mesh(g,new T3.MeshStandardMaterial({map:tex,roughness:1,metalness:0,envMapIntensity:V3.look==='nice'?0:1}));m.receiveShadow=true;m.userData.ci=cy*NX+cx;V3.scene.add(m);V3.chunks.set(k,m);V3.coarse[m.userData.ci].visible=false;}
 }
 function v3Decor(){
  const R=v3cl(30+C3.dist*0.9,40,120),A=V3.decAt,keep=C3.dist<70?1:70/C3.dist;
@@ -383,7 +383,7 @@ function v3Sig(){let h=ents.size|0;for(const e of ents.values())h=(Math.imul(h,3
 const _m=()=>new T3.Matrix4(),_v=()=>new T3.Vector3(),_q=()=>new T3.Quaternion();
 let V3T;   // scratch objects
 function v3Layout(){
- if(V3.lookAt!==V3.look){V3.lookAt=V3.look;const nice=V3.look==='nice';V3.scene.traverse(o=>{const m=o.material;if(m&&m.isMeshStandardMaterial)m.envMapIntensity=nice?(m.metalness>0.25?0.85:m.roughness>0.9?0.12:0.3):1;});}
+ if(V3.lookAt!==V3.look){V3.lookAt=V3.look;const nice=V3.look==='nice';V3.scene.traverse(o=>{const m=o.material;if(m&&m.isMeshStandardMaterial)m.envMapIntensity=nice?(m.metalness>0.25?0.5:0):1;});}
  if(!V3T)V3T={m:_m(),m2:_m(),v:_v(),s:_v(),q:_q(),e:new T3.Euler(),c:new T3.Color(),up:new T3.Vector3(0,1,0)};
  const L={type:{},belts:{belt1:[[],[],[]],belt2:[[],[],[]],belt3:[[],[],[]],belt4:[[],[],[]],belt5:[[],[],[]]},pipes:[],lines:[],led:[],emit:[],carry:[]};V3.L=L;
  for(const e of ents.values()){
