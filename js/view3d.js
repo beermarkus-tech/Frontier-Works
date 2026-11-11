@@ -587,7 +587,7 @@ function render3D(el){
 Object.assign(ACT,{
  toggle3d:()=>setView3D(!V3.on),
  view:v=>setView3D(v==='3d'),
- look3:v=>{V3.look=v==='classic'?'classic':'nice';v3Look();v3Save();renderPanel(true);toast((V3.look==='nice'?'3D look: Enhanced':'3D look: Classic (faster)')+'. Model shapes change after ↻ reload');},
+ look3:v=>{V3.look=v==='classic'?'classic':'nice';v3Look();v3Save();renderPanel(true);toast((V3.look==='nice'?'3D look: Enhanced':'3D look: Classic (faster)'));},
  q3:v=>{V3.q=v==='low'?'low':'high';V3.warned=false;v3Quality();v3Save();renderPanel(true);},
  north3d:()=>{if(V3.on)v3Stop(),v3Go({yaw:Math.round(C3.yaw/(2*Math.PI))*2*Math.PI,pitch:0.95});},
 });

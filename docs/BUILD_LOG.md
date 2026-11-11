@@ -1177,3 +1177,12 @@ do part 2, more model detail and rounded edges.
 
 ### Next up
 - More per-model detail (vents, rivets rows, lit windows, pipes on machines), moving water shimmer, warmer horizon. Check tablet speed of Enhanced.
+
+---
+
+## Session 35h — 2026-11-11 (Claude Code, cloud session) · Build 47
+
+- Markus likes the rounder 3D look. Removed the "Model shapes change after ↻ reload" part of the 3D-look toast (he kept seeing it).
+- `npm test` 66/66. Build number **47**.
+- Next for 3D, as discussed: canvas-drawn surface textures (metal panels, concrete, rust/wear, painted stripes) on the models,
+  then per-model detail (vents, rivet rows, lit windows), moving water shimmer, warmer horizon.
