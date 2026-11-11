@@ -220,7 +220,7 @@ function v3Models(){
  // core, storage, tank, incinerator
  {const c=B.core.col;def('core',[['box','#272c32',[0,0.15,0],[3.85,0.3,3.85]],['box',c,[0,0.52,0],[3.2,0.45,3.2]],['box',shade(c,-30),[0,0.78,0],[2.6,0.08,2.6]],['cyl6','#4a525b',[0,1.9,0],[1.9,2.3,1.9]],['cyl6','#ffcf7a',[0,1.9,0],[1.95,0.06,1.95]],['cyl6',c,[0,1.5,0],[2.0,0.18,2.0]],['cyl6',c,[0,2.6,0],[2.0,0.18,2.0]],['cyl','#545b63',[0,3.25,0],[0.25,0.9,0.25]]],
   [['oct','#ffc56a',[0,3.85,0],[0.6,0.8,0.6],{glow:1,an:(e,ph,act,t)=>({ry:t*0.8,dy:Math.sin(t*1.6)*0.08})}],['torThin','#ffb547',[0,2.2,0],[2.5,2.5,2.5],{rot:[Math.PI/2,0,0],glow:1,an:(e,ph,act,t)=>({ry:t*0.5,rx:Math.sin(t*0.7)*0.15})}]],{h:3.6});}
- for(const id of ['sign1','sign2','sign3','sign4']){const w=B[id].w,h=0.9+w*0.45;def(id,[['box','#3a4048',[0,0.05,0],[w*0.9,0.1,w*0.3]],['cyl','#59616a',[-w*0.32,h/2,0],[0.1,h,0.1]],['cyl','#59616a',[w*0.32,h/2,0],[0.1,h,0.1]]],[],{h,label:h});}
+ for(const id of SIGNS){const w=B[id].w,h=0.9+w*0.45;def(id,[['box','#3a4048',[0,0.05,0],[w*0.9,0.1,w*0.3]],['cyl','#59616a',[-w*0.32,h/2,0],[0.1,h,0.1]],['cyl','#59616a',[w*0.32,h/2,0],[0.1,h,0.1]]],[],{h,label:h});}
  {const c=B.dpad.col;def('dpad',[...base(3),['cyl','#30373f',[0,0.32,0],[2.6,0.18,2.6]],['tor',c,[0,0.43,0],[2.0,2.0,2.0],{rot:[Math.PI/2,0,0]}],['box',shade(c,-25),[0,0.42,0],[1.1,0.02,0.1]],['box',shade(c,-25),[0,0.42,0],[0.1,0.02,1.1]]],
   [['sph','#ffd36a',[-1.2,0.36,-1.2],[0.16,0.16,0.16],{glow:1}],['sph','#ffd36a',[1.2,0.36,-1.2],[0.16,0.16,0.16],{glow:1}],['sph','#ffd36a',[1.2,0.36,1.2],[0.16,0.16,0.16],{glow:1}],['sph','#ffd36a',[-1.2,0.36,1.2],[0.16,0.16,0.16],{glow:1}]],{h:0.5});}
  {const c=B.storage.col;def('storage',[...base(2,c),['box',c,[0,0.8,0],[1.6,1.1,1.6]],['box',shade(c,-30),[0,0.55,0],[1.64,0.12,1.64]],['box',shade(c,-30),[0,0.95,0],[1.64,0.12,1.64]],['box',shade(c,20),[0,1.37,0],[1.68,0.08,1.68]],['box',shade(c,-45),[0,0.8,0],[0.12,1.12,1.65]],['box',shade(c,-45),[0,0.8,0],[1.65,1.12,0.12]]],[],{h:1.4});}
@@ -417,7 +417,7 @@ function v3Drones(){const T=V3T,list=pads.filter(e=>e.dr.st||padTarget(e)),dm=v3
  cm.count=nc;cm.visible=nc>0;dm.instanceMatrix.needsUpdate=sm.instanceMatrix.needsUpdate=cm.instanceMatrix.needsUpdate=true;if(cm.instanceColor)cm.instanceColor.needsUpdate=true;}
 /* Sign labels in 3D: one sprite per sign (texture redrawn when text/colour/size change), standing above its posts and always facing the camera */
 function v3Signs(){const T=V3T,seen=new Set();V3.signs=V3.signs||new Map();
- for(const id of ['sign1','sign2','sign3','sign4']){const list=(V3.M[id]&&V3.M[id].list)||[];for(const e of list){seen.add(e.id);let o=V3.signs.get(e.id);const key=(e.tx||'')+'|'+(e.tc||0)+'|'+e.w;
+ for(const id of SIGNS){const list=(V3.M[id]&&V3.M[id].list)||[];for(const e of list){seen.add(e.id);let o=V3.signs.get(e.id);const key=(e.tx||'')+'|'+(e.tc||0)+'|'+e.w;
   if(!o){const c=document.createElement('canvas');c.width=256;c.height=160;const tex=new T3.CanvasTexture(c);const sp=new T3.Sprite(new T3.SpriteMaterial({map:tex,depthWrite:false}));V3.scene.add(sp);o={c,tex,sp,key:null};V3.signs.set(e.id,o);}
   if(o.key!==key){o.key=key;const g=o.c.getContext('2d');g.clearRect(0,0,256,160);drawSign(g,e,0,-48,256);o.tex.needsUpdate=true;}
   const w=e.w,top=V3.M[e.d].label;o.sp.position.set(e.x+w/2,top+w*0.25,e.y+w/2);o.sp.scale.set(w*0.92,w*0.92*160/256,1);o.sp.visible=!!e.tx;}}

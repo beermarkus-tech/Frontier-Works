@@ -1090,3 +1090,19 @@ Change the size of a sign after it is placed.
 
 ### Verified
 - `npm test` 64/64. The signs check now also shrinks L→S (3 plates back, text kept) and grows S→L again (covers 3×3, plates paid). Tablet screenshot of the panel.
+
+---
+
+## Session 35d — 2026-11-11 (Claude Code, cloud session) · Build 43
+
+### What Markus asked
+An XXL sign as well.
+
+### What was built
+- **Sign XXL** (`sign5`): 6×6, 9 iron plates, in the Signs tab and as a fifth Size button in every sign's panel; 2D, 3D and toolbar icon.
+- New list `SIGNS` in `js/data.js`; the start set, size buttons, 3D models and tests use it, so another size later is a one-line change.
+  Existing games get it on load (`grantUnlocks`).
+- Build number **43**.
+
+### Verified
+- `npm test` 64/64 (sign sizes 1,2,3,4,6; five size buttons; five signs in the tab; older saves get all five).

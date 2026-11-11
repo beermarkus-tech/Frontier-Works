@@ -161,7 +161,7 @@ function paintB(g,id,P,u){
   case 'turbine':box(i,i,W,W,u*0.18,col);{const gr=g.createLinearGradient(0,P*0.34,0,P*0.66);gr.addColorStop(0,'#d8dde2');gr.addColorStop(0.5,'#8a9198');gr.addColorStop(1,'#4a5056');g.fillStyle=gr;R(P*0.16,P*0.34,P*0.7,P*0.32,P*0.16);g.fill();g.strokeStyle='rgba(0,0,0,0.5)';g.lineWidth=lw;g.stroke();}hole(P*0.3,P*0.5,P*0.13);g.fillStyle='#2a2a2a';R(P*0.78,P*0.4,P*0.08,P*0.2,u*0.04);g.fill();break;
   case 'reactor':box(i,i,W,W,u*0.2,col);box(P*0.68,P*0.2,P*0.18,P*0.6,u*0.08,'#5a6a5a');circ(P*0.4,P*0.46,P*0.31,'#cfcabc',25);hole(P*0.4,P*0.46,P*0.21);
    g.fillStyle='#f2c230';g.beginPath();g.arc(P*0.77,P*0.72,u*0.13,0,7);g.fill();break;
-  case 'sign1':case 'sign2':case 'sign3':case 'sign4':{box(i,i,W,W,u*0.1,col);g.fillStyle='#3a3226';const lh=W*0.12;for(let k=0;k<3;k++)g.fillRect(i+W*0.18,i+W*(0.28+k*0.2),W*(k===2?0.4:0.64),lh);break;}   // toolbar icon only; placed signs are drawn live
+  case 'sign1':case 'sign2':case 'sign3':case 'sign4':case 'sign5':{box(i,i,W,W,u*0.1,col);g.fillStyle='#3a3226';const lh=W*0.12;for(let k=0;k<3;k++)g.fillRect(i+W*0.18,i+W*(0.28+k*0.2),W*(k===2?0.4:0.64),lh);break;}   // toolbar icon only; placed signs are drawn live
   case 'dpad':{box(i,i,W,W,u*0.16,'#2c333b');g.strokeStyle=col;g.lineWidth=Math.max(1.5,u*0.12);g.beginPath();g.arc(P/2,P/2,W*0.34,0,7);g.stroke();
    g.strokeStyle=shade(col,-25);g.lineWidth=Math.max(1,u*0.06);g.beginPath();g.moveTo(P/2-W*0.18,P/2);g.lineTo(P/2+W*0.18,P/2);g.moveTo(P/2,P/2-W*0.18);g.lineTo(P/2,P/2+W*0.18);g.stroke();
    dots([[i+u*0.3,i+u*0.3],[P-i-u*0.3,i+u*0.3],[i+u*0.3,P-i-u*0.3],[P-i-u*0.3,P-i-u*0.3]],u*0.1,'#ffd36a');break;}

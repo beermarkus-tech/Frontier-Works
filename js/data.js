@@ -109,7 +109,9 @@ const DRONE={cap:40,spd:10,load:1.5,unload:1.5,wait:8};   // items per trip, til
 D('sign1',{n:'Sign S',k:'sign',w:1,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:1},desc:'A 1×1 label. Tap it to write text and pick a colour.'});
 D('sign2',{n:'Sign M',k:'sign',w:2,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:2},desc:'A 2×2 label for a factory or line. Tap it to write text and pick a colour.'});
 D('sign3',{n:'Sign L',k:'sign',w:3,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:4},desc:'A 3×3 label, readable from further out.'});
-D('sign4',{n:'Sign XL',k:'sign',w:4,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:6},desc:'A 4×4 label for whole areas, the most readable from far out.'});
+D('sign4',{n:'Sign XL',k:'sign',w:4,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:6},desc:'A 4×4 label for whole areas, readable from far out.'});
+D('sign5',{n:'Sign XXL',k:'sign',w:6,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:9},desc:'A 6×6 label for a whole district, readable even at the farthest zoom.'});
+const SIGNS=['sign1','sign2','sign3','sign4','sign5'];
 const SIGN_COL=['#e9e2cf','#ffd34a','#4fc3a1','#6fa8ff','#ff7a6a','#b48cff'];   // board colours to pick from
 D('incin',{n:'Incinerator',k:'incin',cat:'log',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('drill1',{n:'Drill Mk1',k:'drill',w:2,rate:1,pw:5,cat:'ext',col:'#6b7f3a',cost:{iron_plate:10,concrete:10},desc:'Place over an ore node. 60/min on a normal node.'});
@@ -145,7 +147,7 @@ const MS=[
 {n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:[],win:1},
 ];
 MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
-const START_B=['sign1','sign2','sign3','sign4','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
+const START_B=[...SIGNS,'belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
 const START_R=['r_iron_ingot','r_copper_ingot','r_iron_plate','r_iron_rod','r_bolts','r_wire','r_cable','r_concrete'];
 const START_INV={coal:40,iron_plate:120,iron_rod:80,wire:120,cable:60,concrete:60,bolts:200};
 /* Biomes (new maps only; old 128×128 maps are all Greenvale). Index = value in bio[].
