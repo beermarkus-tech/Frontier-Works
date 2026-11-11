@@ -155,3 +155,9 @@ body.v3 #fNorth{display:inline-flex}
 #ppinBtn.on{opacity:1;background:linear-gradient(180deg,#ffc56a,#ff9433);border-color:transparent}
 .pltarget{padding-bottom:6px;margin-bottom:6px;border-bottom:1px dashed var(--line)}
 .plgoal{font-size:10px;font-weight:600;color:var(--acc);margin-left:4px}
+/* cloud shadows and vignette as composited layers above the 2D canvas (cheaper than drawing them every frame) */
+#cv{background:#123a5e}
+#clouds,#vig{position:fixed;inset:0;pointer-events:none;z-index:1}
+#clouds{opacity:.8;background-repeat:repeat}
+#vig{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(0,0,0,.45) 100%)}
+body.v3 #clouds,body.v3 #vig{display:none}

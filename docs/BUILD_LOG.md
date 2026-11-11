@@ -872,3 +872,33 @@ powered at the pad, solid items only.
 ### Known issues / next
 - One drone per pad (build more pads for more throughput). No fluids yet.
 - Possible next steps: planner support for drone routes, fluid tank drones, freight rail for bulk.
+
+---
+
+## Session 29 — 2026-11-11 (Claude Code, cloud session) · Build 34
+
+### What Markus reported
+The app gets slightly slow when zoomed far out, despite the simplified graphics.
+
+### Measured first (phone-sized screen at 2× pixels, fully zoomed out, ~2,000 objects)
+Frame cost 19.2 ms. Switching parts off one at a time: drifting cloud shadows ≈ 10 ms (one 128 px picture stretched to thousands of pixels and
+redrawn every frame), water sparkle ≈ 4.5 ms, background fill + vignette ≈ 4 ms, simplified buildings/belts ≈ 4 ms, ground ≈ 2 ms.
+Desktop at minimum zoom: 43.8 ms, mostly ground chunks being shrunk every frame.
+
+### What changed
+1. **Cloud shadows and vignette** are now CSS layers above the 2D canvas (`#clouds`, `#vig`). The browser composites them, and `syncClouds` only
+   updates the cloud layer's position/size to follow the camera (same drift as before). The canvas background is CSS + `clearRect` instead of a full-screen fill.
+2. **Water sparkle** is only drawn from 22 px per tile (it's invisible further out).
+3. **Cached simplified view** (`drawLODCached`): at far zoom the block layer is drawn once into a canvas covering the screen plus 25 % margin
+   and just shifted while panning. It's redrawn when the zoom changes (during pinch it draws directly), when something is built or removed (`topoVer`,
+   bumped in `rebuildTopo`), or once a second for the status dots.
+4. **Pre-shrunk ground** (`chunkMip`): when a chunk is drawn at under 60 % / 30 % of its size, a half / quarter-size copy is used (made once).
+- Build number **34**.
+
+### Measured after
+Phone far zoom standing still 19.2 → **0.8 ms**; panning **6.3 ms** (including newly visible ground being painted); normal zoom 0.7 ms.
+Desktop far zoom 43.8 → **2.2 ms**. `npm test` 56/56. Screenshots before/after panning at far zoom: blocks stay aligned with the ground; clouds and vignette still show.
+
+### Known issues
+- The first time an area comes into view its ground is still painted (about 20 ms per 32×32 chunk, one per frame), so a fast fling over
+  new ground can still hitch briefly. Already painted areas are smooth.

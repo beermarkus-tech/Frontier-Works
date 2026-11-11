@@ -89,6 +89,8 @@ function bakeChunk(cx,cy){
 function getChunk(cx,cy,bake){const key=cy*1024+cx;let c=chunkC.get(key);
  if(c){chunkC.delete(key);chunkC.set(key,c);return c;}
  if(!bake)return null;c=bakeChunk(cx,cy);chunkC.set(key,c);while(chunkC.size>CHMAX)chunkC.delete(chunkC.keys().next().value);return c;}
+/* Smaller copies of a chunk for far zoom, so the browser doesn't shrink 512 px every frame */
+function chunkMip(c,px){if(px>c.width*0.6)return c;const lvl=px>c.width*0.3?1:2,k='_m'+lvl;if(!c[k]){const m=document.createElement('canvas');m.width=m.height=c.width>>lvl;const g=m.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(c,0,0,m.width,m.height);c[k]=m;}return c[k];}
 let bakeT0=0;const bakeBudget=()=>performance.now()-bakeT0<8;   // ms of chunk painting allowed per frame
 function drawTerrain(ox,oy,s,W,H){
  const op=terrO.ppt;bakeT0=performance.now();
@@ -97,7 +99,7 @@ function drawTerrain(ox,oy,s,W,H){
  // nearest chunks first, so the view sharpens from the middle out
  const list=[];for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++)list.push([cx,cy,Math.hypot(ox+(cx+0.5)*CH*s-W/2,oy+(cy+0.5)*CH*s-H/2)]);list.sort((a,b)=>a[2]-b[2]);
  for(const [cx,cy] of list){const c=getChunk(cx,cy,bakeBudget()),X0=Math.floor(ox+cx*CH*s),X1=Math.floor(ox+(cx+1)*CH*s),Y0=Math.floor(oy+cy*CH*s),Y1=Math.floor(oy+(cy+1)*CH*s);
-  if(c)ctx.drawImage(c,X0,Y0,X1-X0,Y1-Y0);else ctx.drawImage(terrO,cx*CH*op,cy*CH*op,CH*op,CH*op,X0,Y0,X1-X0,Y1-Y0);}
+  if(c)ctx.drawImage(chunkMip(c,X1-X0),X0,Y0,X1-X0,Y1-Y0);else ctx.drawImage(terrO,cx*CH*op,cy*CH*op,CH*op,CH*op,X0,Y0,X1-X0,Y1-Y0);}
 }
 const SPR=new Map();
 function bkt(s){return Math.max(6,Math.min(180,Math.pow(2,Math.round(Math.log2(s)*3)/3)));}
@@ -227,14 +229,14 @@ function effRing(e,X,Y,s){
 }
 /* Level of detail for huge factories / far zoom: one filled path per colour (a handful of draw calls for thousands of objects).
    Belts/pipes become thin strips in their tier colour, buildings coloured blocks with a dark rim, machines keep a status dot. */
-function drawLOD(vis,sx,sy,s){
+function drawLOD(vis,sx,sy,s,g){g=g||ctx;
  const G=new Map(),add=(c,x,y,w,h)=>{let p=G.get(c);if(!p){p=new Path2D();G.set(c,p);}p.rect(x,y,w,h);},rim=new Path2D(),dots=new Map();
  for(const e of vis){const d=B[e.d],X=sx(e.x),Y=sy(e.y);
   if(isLine(e.k)){const c=e.k==='pipe'?'#6f93b8':d.col,h=e.dir===0||e.dir===2;if(h)add(c,X,Y+s*0.32,s+0.6,s*0.36);else add(c,X+s*0.32,Y,s*0.36,s+0.6);continue;}
   if(e.k==='pole'){add(d.col,X+s*0.3,Y+s*0.3,s*0.4,s*0.4);continue;}
   const W=e.w*s;rim.rect(X+0.5,Y+0.5,W-1,W-1);add(e.k==='router'||e.k==='cross'?d.col:shade(d.col,-10),X+s*0.12,Y+s*0.12,W-s*0.24,W-s*0.24);
   const st=(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')&&bStatus(e);if(st&&W>=5){let p=dots.get(st[0]);if(!p){p=new Path2D();dots.set(st[0],p);}const r=Math.max(1.2,W*0.12);p.rect(X+W/2-r,Y+W/2-r,r*2,r*2);}}
- ctx.fillStyle='#20262c';ctx.fill(rim);for(const [c,p] of G){ctx.fillStyle=c;ctx.fill(p);}for(const [c,p] of dots){ctx.fillStyle=c;ctx.fill(p);}
+ g.fillStyle='#20262c';g.fill(rim);for(const [c,p] of G){g.fillStyle=c;g.fill(p);}for(const [c,p] of dots){g.fillStyle=c;g.fill(p);}
 }
 /* Drone position for a pad: lerp between pad centres along its route, with a take-off / landing height */
 function dronePos(e){const D=e.dr,c=e.w/2;if(!D||!D.st)return{x:e.x+c,y:e.y+c,h:D&&D.w>0?0.15:0};const k=D.t;
@@ -257,6 +259,23 @@ function drawDrones(sx,sy,s,lod){
   ctx.fillStyle='#e9eef2';rr(-r*0.3,-r*0.24,r*0.6,r*0.48,r*0.14);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle=B.dpad.col;ctx.fillRect(-r*0.3,-r*0.05,r*0.6,r*0.1);
   ctx.restore();}
 }
+/* While panning at far zoom the simplified layer is drawn once into a canvas covering the screen plus a margin, then just shifted.
+   Redrawn when the zoom changes (zooming draws directly), when something is built/removed (topoVer), or once a second (status dots). */
+const LODC={c:null,s:0,ver:-1,t:-9,x0:0,y0:0,w:0,h:0,lastS:0};
+function drawLODCached(ox,oy,s,W,H,vis,sx,sy){const C=LODC,zooming=Math.abs(s-C.lastS)>1e-6;C.lastS=s;
+ if(zooming){drawLOD(vis,sx,sy,s);return;}
+ const ok=C.c&&C.s===s&&C.ver===topoVer&&animT-C.t<1&&-ox>=C.x0&&-oy>=C.y0&&W-ox<=C.x0+C.w&&H-oy<=C.y0+C.h;
+ if(!ok){const mx=Math.round(W*0.25),my=Math.round(H*0.25);C.x0=Math.floor(-ox-mx);C.y0=Math.floor(-oy-my);C.w=W+2*mx;C.h=H+2*my;
+  if(!C.c)C.c=document.createElement('canvas');if(C.c.width!==C.w||C.c.height!==C.h){C.c.width=C.w;C.c.height=C.h;}
+  const g=C.c.getContext('2d');g.clearRect(0,0,C.w,C.h);const tx0=C.x0/s-3,ty0=C.y0/s-3,tx1=(C.x0+C.w)/s+1,ty1=(C.y0+C.h)/s+1,list=[];
+  for(const e of ents.values())if(e.x+e.w>=tx0&&e.x<=tx1&&e.y+e.h>=ty0&&e.y<=ty1)list.push(e);
+  drawLOD(list,x=>x*s-C.x0,y=>y*s-C.y0,s,g);C.s=s;C.ver=topoVer;C.t=animT;}
+ ctx.drawImage(C.c,Math.round(C.x0+ox),Math.round(C.y0+oy));
+}
+function syncClouds(ox,oy){const el=document.getElementById('clouds');if(!el||!cloudC)return;
+ if(el._src!==cloudC){el._src=cloudC;el.style.backgroundImage=`url(${cloudC.toDataURL()})`;}
+ const sc=TS*cam.z,T=128*2.2*sc,bx=((animT*0.5*sc)%T),X=ox/DPR-bx+MW*sc/2-64*2.2*sc,Y=oy/DPR-bx*0.4+MH*sc/2-64*2.2*sc;
+ const st=`${(X%T).toFixed(1)}px ${(Y%T).toFixed(1)}px`,sz=`${T.toFixed(1)}px`;if(el._p!==st){el._p=st;el.style.backgroundPosition=st;}if(el._s!==sz){el._s=sz;el.style.backgroundSize=sz;}}
 function drawBuilding(e,X,Y,s){
  const P=e.w*s;let sc=1;
  if(e.born!==undefined){const t=(animT-e.born)/0.3;if(t<1)sc=0.7+0.3*easeBack(Math.max(0,t));else e.born=undefined;}
@@ -369,13 +388,13 @@ function drawPole(g,e,X,Y,s){const tall=e.d==='pole2',tr=e.grid&&e.grid.trip;
 
 /* ---------- main render ---------- */
 function render(){
- const W=cv.width,H=cv.height;ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#123a5e';ctx.fillRect(0,0,W,H);
+ const W=cv.width,H=cv.height;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);
  const s=TS*cam.z*DPR,ox=W/2-cam.x*s,oy=H/2-cam.y*s;
  const sx=x=>ox+x*s,sy=y=>oy+y*s;
  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=s<TPX?'high':'low';drawTerrain(ox,oy,s,W,H);
  const x0=Math.max(0,Math.floor(-ox/s)-1),y0=Math.max(0,Math.floor(-oy/s)-1),x1=Math.min(MW,Math.ceil((W-ox)/s)+1),y1=Math.min(MH,Math.ceil((H-oy)/s)+1);
- // water shimmer
- if(s>=12){ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1,s*0.04);ctx.lineCap='round';
+ // water shimmer (only when zoomed in enough to see it)
+ if(s>=22){ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1,s*0.04);ctx.lineCap='round';
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){if(terr[y*MW+x]!==1)continue;const h=hash2(x,y),a=Math.sin(animT*1.3+h*40);if(a<0.6)continue;ctx.globalAlpha=(a-0.6)*0.5;const px=sx(x+0.2+h*0.6),py=sy(y+0.3+hash2(y,x)*0.5);ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(px+s*0.12,py-s*0.06,px+s*0.25,py);ctx.stroke();}
   ctx.globalAlpha=1;ctx.lineCap='butt';}
  // grid when building
@@ -388,7 +407,7 @@ function render(){
   if(s>12){ctx.fillStyle='rgba(10,14,18,0.75)';rr(X+s*0.18,Y+s*0.82,s*0.64,s*0.18,s*0.09);ctx.fill();ctx.fillStyle=['#e08a5a','#e8e8e8','#7fe08a'][n.p];for(let k=0;k<=n.p;k++){ctx.beginPath();ctx.arc(X+s*(0.5+(k-n.p/2)*0.17),Y+s*0.91,s*0.05,0,7);ctx.fill();}}}
  const vis=[];for(const e of ents.values()){if(e.x+e.w<x0||e.x>x1||e.y+e.h<y0||e.y>y1)continue;vis.push(e);}
  const lod=TS*cam.z<12||vis.length>6000;   // far out or very busy: simple blocks instead of detailed sprites
- if(lod)drawLOD(vis,sx,sy,s);
+ if(lod)drawLODCached(ox,oy,s,W,H,vis,sx,sy);
  if(!lod){drawLines(vis.filter(e=>isLine(e.k)),sx,sy,s);
  for(const e of vis)if(e.k==='router'||e.k==='cross')drawRouter(ctx,e,sx(e.x),sy(e.y),s);
  // items
@@ -429,8 +448,6 @@ function render(){
  else if(hover&&tool==='del'){const e=entAt(hover.x,hover.y);ctx.strokeStyle='#ff5a46';ctx.lineWidth=2*DPR;if(e&&e.k!=='core'){ctx.fillStyle='rgba(255,70,50,0.2)';rr(sx(e.x),sy(e.y),e.w*s,e.h*s,s*0.15);ctx.fill();ctx.stroke();}else{rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();}}
  else if(hover&&!tool&&!G){const e=entAt(hover.x,hover.y);if(e&&e.id!==UI.sel){ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5*DPR;rr(sx(e.x)+1,sy(e.y)+1,e.w*s-2,e.h*s-2,s*0.18);ctx.stroke();}}
  if(UI.sel&&ents.has(UI.sel)){const e=ents.get(UI.sel),X=sx(e.x)-3*DPR,Y=sy(e.y)-3*DPR,P=e.w*s+6*DPR;ctx.strokeStyle='rgba(255,181,71,0.25)';ctx.lineWidth=7*DPR;rr(X,Y,P,P,s*0.2);ctx.stroke();ctx.strokeStyle='#ffb547';ctx.lineWidth=2*DPR;ctx.setLineDash([7*DPR,5*DPR]);ctx.lineDashOffset=-animT*24*DPR;ctx.stroke();ctx.setLineDash([]);}
- // clouds
- if(cloudC){const cs=2.2*s,off=animT*0.5;const bx=((off*s)%(128*cs));ctx.globalAlpha=0.8;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const X=ox-bx+i*128*cs+MW*s/2-64*cs,Y=oy-bx*0.4+j*128*cs+MH*s/2-64*cs;if(X>W||Y>H||X+128*cs<0||Y+128*cs<0)continue;ctx.drawImage(cloudC,X,Y,128*cs,128*cs);}ctx.globalAlpha=1;}
- // vignette
- const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.45)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+ // clouds and vignette are CSS layers above the canvas (cheap on phones): just keep the cloud layer in step with the camera
+ syncClouds(ox,oy);
 }

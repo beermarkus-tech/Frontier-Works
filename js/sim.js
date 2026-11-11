@@ -2,7 +2,7 @@
 /* ================= STATE ================= */
 let S, ents=new Map(), grid=new Int32Array(MW*MH), nextId=1;
 let terr, nodeAt, nodes=[], terrC, bio;
-let topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[];
+let topoVer=0, topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[];
 let tickNo=0;
 const stat={p:{},c:{},hist:[],acc:0};
 
@@ -222,7 +222,7 @@ function feedsInto(sd,e,o){const into=(o+2)&3;
  if(sd.k==='cross'){const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&isLine(far.k)&&far.k===e.k&&far.dir===into;}
  return false;}
 function rebuildTopo(){
- topoDirty=false;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];
+ topoDirty=false;topoVer++;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];
  const lines=[];
  for(const e of ents.values()){
   if(isLine(e.k))lines.push(e);else if(e.k==='router')routers.push(e);else if(e.k==='cross')crosses.push(e);
