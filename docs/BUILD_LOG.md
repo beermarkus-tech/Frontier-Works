@@ -963,3 +963,25 @@ Desktop far zoom 43.8 → **2.2 ms**. `npm test` 56/56. Screenshots before/after
 ### Known issues
 - "First fluid wins": an empty network takes whatever fluid arrives first. If the wrong one got in, use "Empty this network".
 - Fluid recipes above tier 5 (refinery chains, blender) aren't bench-tested with the new pipes yet. Worth running when Markus reaches Petrochemistry.
+
+---
+
+## Session 32 — 2026-11-11 (Claude Code, cloud session) · Build 37
+
+### What Markus asked for
+1. Signs of different sizes to label factories (suggest how; footprint like a building, several sizes). Built with the suggested defaults (his standing preference).
+2. Switching to 3D should start from a standard airplane angle and slowly circle the spot that was in the middle of the screen, like an online globe view.
+
+### What was built
+- **Signs:** `sign1`–`sign4` (`k:'sign'`, 1×1 to 4×4, cost 1/2/4/6 Iron Plate, start unlocked, Logistics tab, can stand on water). Placing one opens its
+  panel with the text field focused; 6 colours (`SIGN_COL`). Text `tx` and colour `tc` are saved. 2D: board in its colour, text wrapped to ≤ 3 lines and
+  sized to fill (`signLayout`/`drawSign`), dark or white text by board brightness, also drawn in the far-zoom view. 3D: base and two posts, plus a
+  camera-facing label sprite (canvas texture, redrawn when text/colour change).
+- **3D fly-in** (`v3Intro`/`v3Stop` in `js/view3d.js`): on entering 3D, pitch eases from straight down (1.5) to 0.62 rad (~35°) over 2.4 s, distance
+  to 80 %, and the camera then orbits the centre spot at one turn per 90 s. Any touch/drag/pinch, the wheel, keys or the compass button stop it.
+- DESIGN.md §8 updated. Build number **37**.
+
+### Verified
+- `npm test` 61/61. New checks: four sign sizes; placing opens the text box; typed text "Iron Works" + colour is drawn and survives save/load. Fly-in starts top-down,
+  ends at 0.62, keeps circling, and a click stops it (the test waits for the fly-in to finish because the headless 3D runs only a few frames per second).
+- Tablet screenshots: signs in six sizes and colours close up and fully zoomed out; 3D labels on posts (made slightly smaller after the first look).

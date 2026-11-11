@@ -179,6 +179,13 @@ const server=require('./serve.js');
   ACT.hlClear();const cleared=!UI.hl.types.length&&document.getElementById('hlchip').style.display==='none';ACT.closePanel();cam.x=camT.x=core.x+2;cam.y=camT.y=core.y+2;
   return{n,chip,arrow,flew,btn,iron,cleared};});
  check(`highlight nodes: ${hl.n} uranium nodes, chip, edge arrow with distance, fly to nearest, node-panel button, clear (${Object.values(hl).join(',')})`,hl.n>0&&hl.chip&&hl.arrow&&hl.flew&&hl.btn&&hl.iron==='iron'&&hl.cleared);
+ // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
+ const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
+  const sizes=['sign1','sign2','sign3','sign4'].map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
+  const inp=document.getElementById('signTxt');inp.value='Iron Works';inp.dispatchEvent(new Event('input',{bubbles:true}));ACT.signColor('3');ACT.closePanel();
+  cam.x=camT.x=X+1.5;cam.y=camT.y=Y+1.5;cam.z=camT.z=2;const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;
+  const sv=serialize();load(sv);const e2=fw.entAt(X,Y);const r={sizes,opened,txt:e.tx,col:e.tc,drawn:seen.join(' ').includes('Iron')&&seen.join(' ').includes('Works'),kept:e2&&e2.tx==='Iron Works'&&e2.tc===3};removeEnt(e2,false,true);return r;});
+ check(`signs: sizes ${sg.sizes}, placing opens the text box, "${sg.txt}" in colour ${sg.col} is drawn and survives save/load`,sg.sizes==='1,2,3,4'&&sg.opened&&sg.txt==='Iron Works'&&sg.col===3&&sg.drawn&&sg.kept);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
@@ -213,8 +220,12 @@ const server=require('./serve.js');
  check('planner: "Plan the power" opens the Power tab with that demand',await p.evaluate(()=>PL.mode==='pow'&&PL.pow.mw>0&&document.querySelector('#pbody .plbig').textContent.includes('×')));
  await p.evaluate(()=>{localStorage.removeItem('frontierworks_plan');PL=plDefault();ACT.closePanel();});
  // 3D view: toggle, tap to inspect, tap to build, drag a belt line, back to 2D
- await p.evaluate(()=>window.__fw.setView3D(true));await p.waitForFunction(()=>window.__fw.V3.on,null,{timeout:20000});await p.waitForTimeout(500);
- const W=1280,H=800,look=(x,y)=>p.evaluate(([x,y])=>{const C=window.__fw.C3;Object.assign(C,{x,y,dist:22,pitch:1.0,yaw:0.5,go:null,vx:0,vy:0});},[x,y]);
+ await p.evaluate(()=>{cam.z=camT.z=1.0;window.__fw.setView3D(true);});await p.waitForFunction(()=>window.__fw.V3.on,null,{timeout:20000});
+ const intro0=await p.evaluate(()=>({pitch:C3.pitch,yaw:C3.yaw,orbit:V3.orbit}));await p.waitForFunction(()=>!V3.intro,null,{timeout:60000});await p.waitForTimeout(800);
+ const intro1=await p.evaluate(()=>({pitch:C3.pitch,yaw:C3.yaw,intro:!!V3.intro}));
+ await p.mouse.move(640,300);await p.mouse.down();await p.mouse.up();const stopped=await p.evaluate(()=>V3.orbit===0);
+ check(`3D fly-in: starts top-down (${intro0.pitch.toFixed(2)}), tilts to ${intro1.pitch.toFixed(2)}, circles (yaw +${(intro1.yaw-intro0.yaw).toFixed(2)}), a touch stops it`,intro0.pitch>1.4&&intro0.orbit>0&&Math.abs(intro1.pitch-0.62)<0.03&&!intro1.intro&&intro1.yaw-intro0.yaw>0.05&&stopped);
+ const W=1280,H=800,look=(x,y)=>p.evaluate(([x,y])=>{v3Stop();const C=window.__fw.C3;Object.assign(C,{x,y,dist:22,pitch:1.0,yaw:0.5,go:null,vx:0,vy:0});},[x,y]);
  const core=await p.evaluate(()=>{const e=[...window.__fw.ents().values()].find(e=>e.k==='core');return{x:e.x+e.w/2,y:e.y+e.h/2};});
  await look(core.x,core.y);await p.waitForTimeout(150);await p.mouse.click(W/2,H/2);await p.waitForTimeout(150);
  check('3D: tap opens the Base Core panel',await p.evaluate(()=>UI.panel&&UI.panel.kind==='ent'&&window.__fw.ents().get(UI.panel.arg).k==='core'));

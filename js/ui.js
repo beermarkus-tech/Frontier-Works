@@ -83,6 +83,7 @@ function entStatic(e){
  }
  if(e.k==='gen')h+=`<h4>Hand-feed</h4><div class="chips">${d.fuels.filter(f=>!IT[f].f).map(f=>`<button class="btn chip" data-act="feed" data-v="${f}">+10 ${nm(f)} from stock</button>`).join('')}</div>`;
  if(e.k==='dpad'){const tg=padTarget(e);h+=`<h4>Drone route</h4><div class="muted" style="margin-bottom:6px">${tg?`Sends its items by drone to the Drone Pad at ${tg.x}, ${tg.y} (${Math.round(padRoute(e,tg))} tiles away).`:'Not linked: this pad receives drones and passes their items on to outgoing belts.'}</div><button class="btn" data-act="padLink">📍 ${tg?'Change destination':'Send to…'}</button>${tg?' <button class="btn" data-act="padUnlink">✕ Unlink</button>':''} <button class="btn" data-act="takeAll">Move all into item stock</button>`;}
+ if(e.k==='sign')h+=`<h4>Text</h4><input type="text" id="signTxt" class="signtxt" data-act="signText" maxlength="60" placeholder="e.g. Iron Works" value="${(e.tx||'').replace(/"/g,'&quot;')}"><h4>Colour</h4><div class="chips">${SIGN_COL.map((c,i)=>`<button class="btn chip signcol ${(e.tc||0)===i?'on':''}" data-act="signColor" data-v="${i}" style="background:${c}" title="Colour ${i+1}">&nbsp;</button>`).join('')}</div>`;
  if(e.k==='storage')h+=`<h4>Actions</h4><button class="btn" data-act="takeAll">Move all into item stock</button>`;
  if(e.k==='tank')h+=`<h4>Actions</h4><button class="btn" data-act="flushTank">Flush tank</button>`;
  if(e.k==='core')h+=`<h4>Base Core</h4><p class="muted">Belt items into any side of the Core to add them to your item stock. Buildings are paid for from that stock.</p><button class="btn" data-act="openMs" style="margin-top:6px">🏁 Open goals</button> <button class="btn" data-act="openInv">📦 Items</button>`;
@@ -263,6 +264,7 @@ const ACT={
  padLink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.linkFrom=e.id;setTool(null);toast('Tap the Drone Pad the drone should fly to');updInfo();},
  padUnlink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;delete e.lx;delete e.ly;renderPanel(true);toast('Route removed: this pad now receives drones');},
  netFlush:()=>{const e=ents.get(UI.panel.arg);if(e&&e.net){e.net.amt=0;e.net.fluid=null;e.net.conflict=null;toast('Network emptied');}},
+ signColor:v=>{const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tc=+v;topoVer++;renderPanel(true);}},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},
@@ -296,5 +298,5 @@ const ACT={
  newGameGo:()=>{closeDlg();closePanel();newGame();lastBio=null;buildCats();save();},
 };
 document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el||el.tagName==='INPUT')return;const f=ACT[el.dataset.act];if(f)f(el.dataset.v,el);});
-document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset.act==='clock'&&UI.panel){const e=ents.get(UI.panel.arg);if(e){e.clock=+el.value/100;const cv2=document.getElementById('clockv');if(cv2)cv2.textContent=el.value+'%';}}});
+document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset.act==='signText'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tx=el.value.slice(0,60);e._tk=null;topoVer++;}return;}if(el.dataset.act==='clock'&&UI.panel){const e=ents.get(UI.panel.arg);if(e){e.clock=+el.value/100;const cv2=document.getElementById('clockv');if(cv2)cv2.textContent=el.value+'%';}}});
 document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.act==='clock')renderPanel(true);});

@@ -161,6 +161,7 @@ function paintB(g,id,P,u){
   case 'turbine':box(i,i,W,W,u*0.18,col);{const gr=g.createLinearGradient(0,P*0.34,0,P*0.66);gr.addColorStop(0,'#d8dde2');gr.addColorStop(0.5,'#8a9198');gr.addColorStop(1,'#4a5056');g.fillStyle=gr;R(P*0.16,P*0.34,P*0.7,P*0.32,P*0.16);g.fill();g.strokeStyle='rgba(0,0,0,0.5)';g.lineWidth=lw;g.stroke();}hole(P*0.3,P*0.5,P*0.13);g.fillStyle='#2a2a2a';R(P*0.78,P*0.4,P*0.08,P*0.2,u*0.04);g.fill();break;
   case 'reactor':box(i,i,W,W,u*0.2,col);box(P*0.68,P*0.2,P*0.18,P*0.6,u*0.08,'#5a6a5a');circ(P*0.4,P*0.46,P*0.31,'#cfcabc',25);hole(P*0.4,P*0.46,P*0.21);
    g.fillStyle='#f2c230';g.beginPath();g.arc(P*0.77,P*0.72,u*0.13,0,7);g.fill();break;
+  case 'sign1':case 'sign2':case 'sign3':case 'sign4':{box(i,i,W,W,u*0.1,col);g.fillStyle='#3a3226';const lh=W*0.12;for(let k=0;k<3;k++)g.fillRect(i+W*0.18,i+W*(0.28+k*0.2),W*(k===2?0.4:0.64),lh);break;}   // toolbar icon only; placed signs are drawn live
   case 'dpad':{box(i,i,W,W,u*0.16,'#2c333b');g.strokeStyle=col;g.lineWidth=Math.max(1.5,u*0.12);g.beginPath();g.arc(P/2,P/2,W*0.34,0,7);g.stroke();
    g.strokeStyle=shade(col,-25);g.lineWidth=Math.max(1,u*0.06);g.beginPath();g.moveTo(P/2-W*0.18,P/2);g.lineTo(P/2+W*0.18,P/2);g.moveTo(P/2,P/2-W*0.18);g.lineTo(P/2,P/2+W*0.18);g.stroke();
    dots([[i+u*0.3,i+u*0.3],[P-i-u*0.3,i+u*0.3],[i+u*0.3,P-i-u*0.3],[P-i-u*0.3,P-i-u*0.3]],u*0.1,'#ffd36a');break;}
@@ -235,14 +236,16 @@ function effRing(e,X,Y,s){
 /* Level of detail for huge factories / far zoom: one filled path per colour (a handful of draw calls for thousands of objects).
    Belts/pipes become thin strips in their tier colour, buildings coloured blocks with a dark rim, machines keep a status dot. */
 function drawLOD(vis,sx,sy,s,g){g=g||ctx;
- const G=new Map(),add=(c,x,y,w,h)=>{let p=G.get(c);if(!p){p=new Path2D();G.set(c,p);}p.rect(x,y,w,h);},rim=new Path2D(),dots=new Map();
+ const signs=[],G=new Map(),add=(c,x,y,w,h)=>{let p=G.get(c);if(!p){p=new Path2D();G.set(c,p);}p.rect(x,y,w,h);},rim=new Path2D(),dots=new Map();
  for(const e of vis){const d=B[e.d],X=sx(e.x),Y=sy(e.y);
   if(e.k==='pipe'){const c='#6f93b8';let m=e.pc||((1<<e.dir)|(1<<((e.dir+2)&3)));add(c,X+s*0.32,Y+s*0.32,s*0.36,s*0.36);if(m&1)add(c,X+s*0.5,Y+s*0.32,s*0.5+0.6,s*0.36);if(m&4)add(c,X,Y+s*0.32,s*0.5,s*0.36);if(m&2)add(c,X+s*0.32,Y+s*0.5,s*0.36,s*0.5+0.6);if(m&8)add(c,X+s*0.32,Y,s*0.36,s*0.5);continue;}
   if(isLine(e.k)){const c=d.col,h=e.dir===0||e.dir===2;if(h)add(c,X,Y+s*0.32,s+0.6,s*0.36);else add(c,X+s*0.32,Y,s*0.36,s+0.6);continue;}
   if(e.k==='pole'){add(d.col,X+s*0.3,Y+s*0.3,s*0.4,s*0.4);continue;}
+  if(e.k==='sign'){signs.push([e,X,Y]);continue;}
   const W=e.w*s;rim.rect(X+0.5,Y+0.5,W-1,W-1);add(e.k==='router'||e.k==='cross'?d.col:shade(d.col,-10),X+s*0.12,Y+s*0.12,W-s*0.24,W-s*0.24);
   const st=(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')&&bStatus(e);if(st&&W>=5){let p=dots.get(st[0]);if(!p){p=new Path2D();dots.set(st[0],p);}const r=Math.max(1.2,W*0.12);p.rect(X+W/2-r,Y+W/2-r,r*2,r*2);}}
  g.fillStyle='#20262c';g.fill(rim);for(const [c,p] of G){g.fillStyle=c;g.fill(p);}for(const [c,p] of dots){g.fillStyle=c;g.fill(p);}
+ for(const [e,X,Y] of signs)drawSign(g,e,X,Y,e.w*s);   // signs stay readable at far zoom
 }
 /* Drone position for a pad: lerp between pad centres along its route, with a take-off / landing height */
 function dronePos(e){const D=e.dr,c=e.w/2;if(!D||!D.st)return{x:e.x+c,y:e.y+c,h:D&&D.w>0?0.15:0};const k=D.t;
@@ -297,7 +300,20 @@ function drawHighlights(sx,sy,s,W,H){
   ctx.fillStyle=NODE_T[t][1];ctx.beginPath();ctx.arc(ax,ay-R*0.28,R*0.32,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font=`700 ${9*DPR}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(nr.d),ax,ay+R*0.42);ctx.textAlign='left';}
  ctx.restore();
 }
+/* Signs: coloured board with the text wrapped (max 3 lines) and sized to fill it; used by the normal view, the far view and 3D labels */
+function signLayout(g,text,W,H){const words=(text||'').trim().split(/\s+/).filter(Boolean);if(!words.length)return null;let best=null;
+ for(let n=1;n<=Math.min(3,words.length);n++){const per=Math.ceil(words.length/n),lines=[];for(let i=0;i<words.length;i+=per)lines.push(words.slice(i,i+per).join(' '));
+  g.font=`700 100px Rajdhani,Inter,sans-serif`;const wmax=Math.max(...lines.map(l=>g.measureText(l).width));const fs=Math.min(W*0.86/wmax*100,H*0.78/(n*1.08));if(!best||fs>best.fs)best={lines,fs};}
+ return best;}
+function signColors(e){const bg=SIGN_COL[e.tc||0]||SIGN_COL[0],c=parseInt(bg.slice(1),16),lum=((c>>16)*0.3+((c>>8)&255)*0.59+(c&255)*0.11);return{bg,fg:lum>150?'#1d232a':'#ffffff'};}
+function drawSign(g,e,X,Y,P){const {bg,fg}=signColors(e),i=Math.max(1,P*0.06);
+ g.fillStyle='rgba(0,0,0,0.35)';rrg(g,X+i+P*0.03,Y+i+P*0.05,P-2*i,P-2*i,P*0.08);g.fill();
+ g.fillStyle=bg;rrg(g,X+i,Y+i,P-2*i,P-2*i,P*0.08);g.fill();g.lineWidth=Math.max(1,P*0.035);g.strokeStyle=shade(bg,-55);g.stroke();
+ if(!e.tx)return;const key=e.tx+'|'+Math.round(P);if(e._tk!==key){e._tk=key;e._tl=signLayout(g,e.tx,P-4*i,P-4*i);}const L=e._tl;if(!L||L.fs<4)return;
+ g.fillStyle=fg;g.font=`700 ${L.fs}px Rajdhani,Inter,sans-serif`;g.textAlign='center';g.textBaseline='middle';const lh=L.fs*1.02,y0=Y+P/2-(L.lines.length-1)*lh/2;
+ L.lines.forEach((l,k)=>g.fillText(l,X+P/2,y0+k*lh+L.fs*0.05));g.textAlign='left';}
 function drawBuilding(e,X,Y,s){
+ if(e.k==='sign'){drawSign(ctx,e,X,Y,e.w*s);return;}
  const P=e.w*s;let sc=1;
  if(e.born!==undefined){const t=(animT-e.born)/0.3;if(t<1)sc=0.7+0.3*easeBack(Math.max(0,t));else e.born=undefined;}
  if(sc!==1){ctx.save();ctx.translate(X+P/2,Y+P/2);ctx.scale(sc,sc);ctx.translate(-X-P/2,-Y-P/2);}

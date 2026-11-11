@@ -134,6 +134,7 @@ function initEnt(e,d){
   case 'gen':e.fuel=e.fuel||{};e.energy=e.energy||0;e.water=e.water||0;e.wacc=e.wacc||0;e.outb=e.outb||{};e.trip=!!e.trip;e.load=0;e.rr=0;break;
   case 'pole':e.trip=!!e.trip;break;
   case 'storage':e.store=e.store||{};e.rr=0;break;
+  case 'sign':e.tx=e.tx||'';e.tc=e.tc||0;break;
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
  }

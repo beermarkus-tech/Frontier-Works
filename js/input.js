@@ -22,7 +22,9 @@ function tap(t){
  if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();}return;}
  if(tool&&B[tool]){const d=B[tool];
   if(isLine(d.k)){const o=entAt(t.x,t.y);buildPath(tool,[{x:t.x,y:t.y,d:o&&o.k===d.k?o.dir:UI.rot}]);return;}   // tapping an existing belt/pipe upgrades it in place, keeping its direction
-  const fp=footprint(tool,t.x,t.y);const why=placeEnt(tool,fp.x,fp.y,UI.rot);if(why&&why!=='same')toast(why);refreshTools();updInfo();return;}
+  const fp=footprint(tool,t.x,t.y);const why=placeEnt(tool,fp.x,fp.y,UI.rot);if(why&&why!=='same')toast(why);refreshTools();updInfo();
+  if(!why&&d.k==='sign'){const e=entAt(fp.x,fp.y);setTool(null);UI.sel=e.id;openPanel('ent',e.id);setTimeout(()=>{const i=document.getElementById('signTxt');if(i)i.focus();},60);}   // straight to typing the label
+  return;}
  const e=entAt(t.x,t.y);
  if(e){UI.sel=e.id;openPanel('ent',e.id);return;}
  const n=t.x>=0&&t.y>=0&&t.x<MW&&t.y<MH?nodeAt[t.y*MW+t.x]:null;if(n){UI.sel=null;openPanel('node',n);return;}

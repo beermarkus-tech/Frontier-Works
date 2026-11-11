@@ -162,6 +162,11 @@ Hand mining gives +5 ore from a node.
 - **Find resources** (Session 30): 🔍 in the dock's tool row opens a panel to highlight resource types (counts shown; free nodes only or all).
   Highlighted nodes get a pulsing ring (visible even fully zoomed out), an edge arrow with distance when none is on screen, blinking minimap dots
   and light beams in 3D. A resource node's panel offers "🔦 Highlight all X nodes". Temporary (not saved): a chip above the dock shows it, ✕ clears.
+- **Signs** (Session 32): Sign S/M/L/XL (1×1 to 4×4, 1–6 Iron Plates, start unlocked, Logistics, also on water). Placing one opens its panel with a text
+  box (60 characters) and 6 board colours. Text wraps (max 3 lines) and is sized to fill the board; signs stay visible in the far view. In 3D a sign
+  stands on two posts with its label floating above, facing the camera.
+- **3D fly-in** (Session 32): switching to 3D starts straight above the spot in the middle of the screen, eases to an airplane angle (~35°) a bit closer,
+  then circles slowly (one turn ≈ 90 s) until the player touches the screen, scrolls or uses the keys.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
