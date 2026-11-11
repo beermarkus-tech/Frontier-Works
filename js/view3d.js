@@ -6,9 +6,9 @@
    World units: 1 tile = 1 unit; tile (x,y) → world (x, height, y). North (y=0) is −z.
    Everything repeated is an InstancedMesh (one draw call per building type / belt shape / item shape),
    so large factories stay cheap on phones. */
-const V3={on:false,ready:false,loading:false,q:'high',want:false,fps:60,slowT:0,warned:false};
-try{const s=JSON.parse(localStorage.getItem('frontierworks_view')||'{}');V3.want=!!s.on;if(s.q==='low')V3.q='low';}catch(e){}
-function v3Save(){try{localStorage.setItem('frontierworks_view',JSON.stringify({on:V3.on,q:V3.q}));}catch(e){}}
+const V3={on:false,ready:false,loading:false,q:'high',look:'nice',want:false,fps:60,slowT:0,warned:false};
+try{const s=JSON.parse(localStorage.getItem('frontierworks_view')||'{}');V3.want=!!s.on;if(s.q==='low')V3.q='low';if(s.look==='classic')V3.look='classic';}catch(e){}
+function v3Save(){try{localStorage.setItem('frontierworks_view',JSON.stringify({on:V3.on,q:V3.q,look:V3.look}));}catch(e){}}
 const C3={x:MW/2,y:MH/2,dist:30,yaw:0,pitch:0.95,vx:0,vy:0,go:null};
 const C3L={dmin:4,dmax:170,pmin:0.3,pmax:1.52};
 const v3cl=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -88,6 +88,9 @@ function v3Init(){
   frust:new T3.CylinderGeometry(0.22,0.5,1,4),lowcone:new T3.ConeGeometry(0.5,1,7,1,true),lowcyl:new T3.CylinderGeometry(0.5,0.5,1,6,1,true),lowsph:new T3.SphereGeometry(0.5,7,5),ico:new T3.IcosahedronGeometry(0.5,0),tower:new T3.LatheGeometry([...Array(9)].map((_,i)=>{const t=i/8;return new T3.Vector2(0.5-0.2*Math.sin(t*Math.PI*0.85)+0.02*t,t-0.5);}),20)};
  G.frust.rotateY(Math.PI/4);V3.G=G;
  V3.mat=v3Mat();V3.glowMat=new T3.MeshBasicMaterial({color:0xffffff});
+ {const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,6,32,32,32);gr.addColorStop(0,'rgba(0,0,0,0.6)');gr.addColorStop(0.55,'rgba(0,0,0,0.34)');gr.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=gr;g.fillRect(0,0,64,64);const t=new T3.CanvasTexture(cv);
+  V3.aoP=v3Pool(new T3.PlaneGeometry(1,1).rotateX(-Math.PI/2),new T3.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),{order:1});}
  v3Models();v3Lines();v3ItemsInit();v3SmokeInit();v3Overlays();
  v3Terrain();
  v3Input();addEventListener('resize',v3Resize);v3Resize();v3Quality();
@@ -97,8 +100,19 @@ function v3Resize(){if(!V3.r)return;V3.r.setSize(innerWidth,innerHeight,false);V
 function v3Quality(){
  if(!V3.r)return;const hi=V3.q==='high';
  V3.r.setPixelRatio(Math.min(devicePixelRatio||1,hi?2:1));V3.r.shadowMap.enabled=hi;V3.sun.castShadow=hi;
- V3.scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});v3Resize();
+ v3Look();V3.scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});v3Resize();
 }
+/* 3D look (Session 35f): 'nice' = filmic colour grading, sky reflections on metal, soft contact shadows under buildings; 'classic' = the look up to
+   Build 44, kept as the faster fallback. Both work with either quality setting. */
+function v3Env(){if(V3.env)return V3.env;const es=new T3.Scene(),g=new T3.SphereGeometry(50,24,12),c0=new T3.Color('#5b8fd4'),c1=new T3.Color('#e8eef2'),c2=new T3.Color('#4a5340'),cols=[];
+ for(let i=0;i<g.attributes.position.count;i++){const y=g.attributes.position.getY(i)/50,c=y>=0?c1.clone().lerp(c0,Math.pow(y,0.6)):c1.clone().lerp(c2,Math.min(1,-y*3));cols.push(c.r,c.g,c.b);}
+ g.setAttribute('color',new T3.Float32BufferAttribute(cols,3));es.add(new T3.Mesh(g,new T3.MeshBasicMaterial({vertexColors:true,side:T3.BackSide})));
+ const sunD=new T3.Mesh(new T3.SphereGeometry(4,12,8),new T3.MeshBasicMaterial({color:new T3.Color(6,5.6,4.8)}));sunD.position.set(-28,32,-22);es.add(sunD);
+ const pm=new T3.PMREMGenerator(V3.r);V3.env=pm.fromScene(es,0.02).texture;pm.dispose();return V3.env;}
+function v3Look(){if(!V3.r)return;const nice=V3.look==='nice',r=V3.r;
+ r.toneMapping=nice?T3.ACESFilmicToneMapping:T3.NoToneMapping;r.toneMappingExposure=nice?1.0:1;
+ V3.scene.environment=nice?v3Env():null;V3.hemi.intensity=nice?0.3:0.56;V3.sun.intensity=nice?1.15:0.62;
+ if(V3.aoP&&V3.aoP.mesh)V3.aoP.mesh.visible=nice&&V3.aoP.mesh.count>0;V3.sig=null;V3.lookAt=null;}
 
 /* ---------- terrain, water, decoration ---------- */
 function v3H(x,z){   // ground height at a mesh vertex: lakes sink, the map edge drops into the sea
@@ -153,7 +167,7 @@ function v3Chunks(){
   const g=new T3.PlaneGeometry(CH,CH,CH*2,CH*2);g.rotateX(-Math.PI/2);g.translate(cx*CH+CH/2,0,cy*CH+CH/2);const P=g.attributes.position;
   for(let i=0;i<P.count;i++)P.setY(i,v3H(P.getX(i),P.getZ(i)));g.computeVertexNormals();
   const tex=new T3.CanvasTexture(c);tex.anisotropy=Math.min(8,V3.r.capabilities.getMaxAnisotropy());
-  const m=new T3.Mesh(g,new T3.MeshStandardMaterial({map:tex,roughness:1,metalness:0}));m.receiveShadow=true;m.userData.ci=cy*NX+cx;V3.scene.add(m);V3.chunks.set(k,m);V3.coarse[m.userData.ci].visible=false;}
+  const m=new T3.Mesh(g,new T3.MeshStandardMaterial({map:tex,roughness:1,metalness:0,envMapIntensity:V3.look==='nice'?0.12:1}));m.receiveShadow=true;m.userData.ci=cy*NX+cx;V3.scene.add(m);V3.chunks.set(k,m);V3.coarse[m.userData.ci].visible=false;}
 }
 function v3Decor(){
  const R=v3cl(30+C3.dist*0.9,40,120),A=V3.decAt,keep=C3.dist<70?1:70/C3.dist;
@@ -346,6 +360,7 @@ function v3Sig(){let h=ents.size|0;for(const e of ents.values())h=(Math.imul(h,3
 const _m=()=>new T3.Matrix4(),_v=()=>new T3.Vector3(),_q=()=>new T3.Quaternion();
 let V3T;   // scratch objects
 function v3Layout(){
+ if(V3.lookAt!==V3.look){V3.lookAt=V3.look;const nice=V3.look==='nice';V3.scene.traverse(o=>{const m=o.material;if(m&&m.isMeshStandardMaterial)m.envMapIntensity=nice?(m.metalness>0.25?0.85:m.roughness>0.9?0.12:0.3):1;});}
  if(!V3T)V3T={m:_m(),m2:_m(),v:_v(),s:_v(),q:_q(),e:new T3.Euler(),c:new T3.Color(),up:new T3.Vector3(0,1,0)};
  const L={type:{},belts:{belt1:[[],[],[]],belt2:[[],[],[]],belt3:[[],[],[]],belt4:[[],[],[]],belt5:[[],[],[]]},pipes:[],lines:[],led:[],emit:[],carry:[]};V3.L=L;
  for(const e of ents.values()){
@@ -364,6 +379,8 @@ function v3Layout(){
   const am=v3PoolN(V3.pipeArm,arms.length);arms.forEach(([e,d],i)=>{T.e.set(0,-d*Math.PI/2,0);T.q.setFromEuler(T.e);am.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q,T.s.set(1,1,1)));am.setColorAt(i,T.c.set(B[e.d].col));});
   const jm=v3PoolN(V3.pipeJoint,L.pipes.length);L.pipes.forEach((e,i)=>jm.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q.identity(),T.s.set(1,1,1))));}
  v3PoolN(V3.led,L.led.length);
+ {const nice=V3.look==='nice',sh=nice?[...ents.values()].filter(e=>!isLine(e.k)&&e.k!=='sign'):[],am=v3PoolN(V3.aoP,sh.length);
+  sh.forEach((e,i)=>{const k=e.w*1.45+(e.w===1?0.25:0);am.setMatrixAt(i,T.m.compose(T.v.set(e.x+e.w/2,0.025,e.y+e.w/2),T.q.identity(),T.s.set(k,1,k)));});am.visible=nice&&sh.length>0;}
  // power wires
  const pos=[],col=[],cA=new T3.Color('#22201d'),cT=new T3.Color('#ff4a3a'),top=e=>{const m=V3.M[e.d];return[e.x+e.w/2,m&&m.wire||1.3,e.y+e.h/2];};
  for(const [a,b] of pwLinks){const A=top(a),Bp=top(b),len=Math.hypot(A[0]-Bp[0],A[2]-Bp[2]),sag=Math.min(0.9,0.05*len),c=a.grid&&a.grid.trip?cT:cA;
@@ -561,6 +578,7 @@ function render3D(el){
 Object.assign(ACT,{
  toggle3d:()=>setView3D(!V3.on),
  view:v=>setView3D(v==='3d'),
+ look3:v=>{V3.look=v==='classic'?'classic':'nice';v3Look();v3Save();renderPanel(true);toast(V3.look==='nice'?'3D look: Enhanced':'3D look: Classic (faster)');},
  q3:v=>{V3.q=v==='low'?'low':'high';V3.warned=false;v3Quality();v3Save();renderPanel(true);},
  north3d:()=>{if(V3.on)v3Stop(),v3Go({yaw:Math.round(C3.yaw/(2*Math.PI))*2*Math.PI,pitch:0.95});},
 });

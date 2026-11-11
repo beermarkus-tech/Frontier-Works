@@ -178,6 +178,8 @@ Hand mining gives +5 ore from a node.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
 ### 8a. 3D view (agreed with Markus in Session 4)
+- **3D look** (Session 35f, ☰ Menu): *Enhanced* (default: filmic colour grading, sky reflections on metal, soft contact shadows under buildings)
+  or *Classic* (the look up to Build 44, faster). Independent of 3D quality High/Low. Stored per device.
 - A **2D/3D button** (right-side buttons, or key V, or ☰ Menu → View) switches between the flat map and a real 3D view
   of the same world. It's the same game and the same save; only the drawing differs. The choice is remembered.
 - Camera like an online map: one finger drags, pinch zooms, twisting two fingers rotates, sliding two fingers up/down

@@ -230,6 +230,7 @@ function menuHtml(){
  <h4>View</h4><div class="chips"><button class="btn chip ${V3.on?'':'on'}" data-act="view" data-v="2d">2D map</button><button class="btn chip ${V3.on?'on':''}" data-act="view" data-v="3d">3D view</button></div>
  <div class="row"><span>Efficiency rings on buildings</span><span class="chips"><button class="btn chip ${OPT.eff?'on':''}" data-act="optEff" data-v="1">On</button><button class="btn chip ${OPT.eff?'':'on'}" data-act="optEff" data-v="0">Off</button></span></div>
  <div class="row"><span>3D quality</span><span class="chips"><button class="btn chip ${V3.q==='high'?'on':''}" data-act="q3" data-v="high">High</button><button class="btn chip ${V3.q==='low'?'on':''}" data-act="q3" data-v="low">Low (faster)</button></span></div>
+ <div class="row"><span>3D look</span><span class="chips"><button class="btn chip ${V3.look==='nice'?'on':''}" data-act="look3" data-v="nice">Enhanced</button><button class="btn chip ${V3.look==='classic'?'on':''}" data-act="look3" data-v="classic">Classic (faster)</button></span></div>
  <div class="muted">3D: drag to move · pinch to zoom · twist two fingers to rotate · slide two fingers up/down to tilt. Mouse: right-drag rotates &amp; tilts, wheel zooms, Ctrl+wheel tilts. Keys: V switch view, E/Z rotate.</div>
  <h4>How to play</h4><div class="muted">
  1. Drill the iron node, belt the ore into a Smelter, then into a Press. Belt products into the Base Core.<br>

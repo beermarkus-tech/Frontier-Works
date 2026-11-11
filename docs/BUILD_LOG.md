@@ -1127,3 +1127,31 @@ Logistics is too big: split it into fluids and non-fluids. Incinerator to the en
 - `npm test` 65/65. New check: Fluids tab contents, incinerator 2×2 and last in Production, nothing fluid left in Logistics; an old-style save with a
   boxed-in 1×1 incinerator (refunded, belts intact) and a free one (grows from its corner, stays put on a second load).
 - `npm run playthrough`: all recipes and drill rates as expected. Tablet screenshot: seven tabs fit in one row.
+
+---
+
+## Session 35f — 2026-11-11 (Claude Code, cloud session) · Build 45
+
+### What Markus asked
+Make the 3D graphics nicer (2D stays as it is), keeping the current look as a switchable fallback for speed. Session nearly out of tokens,
+so only the first half of the plan.
+
+### What was built
+- ☰ Menu → **3D look: Enhanced / Classic (faster)**, saved per device in `frontierworks_view` (`V3.look`). Enhanced is the default.
+- Enhanced (`v3Look()` / `v3Env()` in `js/view3d.js`):
+  1. Filmic (ACES) colour grading, sun 1.15 / sky fill 0.3.
+  2. Sky reflections: a small sky-gradient-plus-sun scene turned into an environment map (PMREM) once. Metal parts reflect it strongly (0.85),
+     other parts lightly (0.3) and the ground barely (0.12). Strengths are set in `v3Layout` when the look changes.
+  3. Soft contact shadows: one instanced pool of radial-gradient decals under every building (not lines or signs), one extra draw call.
+- Classic = exactly the previous setup (no grading, no environment, no decals).
+- Build number **45**.
+
+### Verified
+- `npm test` 66/66. New check: Classic turns off grading, reflections and contact shadows and is saved; Enhanced turns them back on.
+- Screenshots of both looks. First try was washed-out (exposure 1.32), so it was toned down.
+- Timing here uses software rendering (no GPU): Enhanced took about 1.7× longer per frame than Classic, mostly the reflection maths per pixel.
+  On a real GPU this should be small, but **needs checking on Markus's tablet**. If it's slow, Classic is the switch.
+
+### Next up
+- Part 2 of the 3D pass: more model detail (rounded edges, rivets, vents, lit windows), moving water shimmer, warmer horizon.
+- Overflow splitter (proposed, not confirmed). Late-tier (6–10) balance check.
