@@ -47,16 +47,18 @@ function setHTML(el,h){if(el&&el.__h!==h){el.__h=h;el.innerHTML=h;}}
 /* ---------- panels ---------- */
 function openPanel(kind,arg){const same=UI.panel&&UI.panel.kind===kind&&UI.panel.arg===arg;UI.panel={kind,arg};const p=$('panel');p.classList.remove('hidden');if(!same){p.classList.remove('in');void p.offsetWidth;p.classList.add('in');$('pbody').scrollTop=0;}renderPanel(true);}
 function closePanel(){UI.panel=null;UI.sel=null;$('panel').classList.add('hidden');}
+/* Automatic closes (tapping empty map, picking a building, Esc) are skipped while the panel is pinned (OPT.pin) */
+function autoClose(){if(!OPT.pin)closePanel();}
 function renderPanel(full){
  const P=UI.panel;if(!P)return;const body=$('pbody'),pi=$('picon');
  if(P.kind==='ent'){const e=ents.get(P.arg);if(!e){closePanel();return;}
-  if(full){$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('ppinBtn').style.display='none';$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
+  if(full){$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));setHTML($('pbuild'),effChip(e));return;}
  pi.style.display='none';
  const map={inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml]};
  const [title,fn]=map[P.kind];
  if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'))return;
- $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';$('ppinBtn').style.display=P.kind==='plan'?'inline-flex':'none';$('preload').style.display=P.kind==='menu'?'inline-flex':'none';
+ $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display=P.kind==='menu'?'inline-flex':'none';
  if(P.kind==='node'){pi.src=itemIcon(NODE_T[P.arg.t][0]);pi.style.display='';}
  const st=body.scrollTop;setHTML(body,fn(P.arg));body.scrollTop=st;
 }
@@ -216,7 +218,8 @@ function closeDlg(){$('dlg').classList.add('hidden');}
 /* ---------- actions ---------- */
 const ACT={
  cat:v=>{UI.cat=v;buildCats();},
- tool:v=>{setTool(UI.tool===v?null:v);closePanel();},
+ tool:v=>{setTool(UI.tool===v?null:v);autoClose();},
+ pinPanel:()=>{OPT.pin=!OPT.pin;saveOpt();$('ppinBtn').classList.toggle('on',OPT.pin);toast(OPT.pin?'📌 Panel pinned: it stays open while you tap the map or build':'Panel unpinned');},
  toolNone:()=>setTool(null),
  toolDel:()=>setTool(UI.tool==='del'?null:'del'),
  rotate:()=>{UI.rot=(UI.rot+1)&3;UI.rotA=(UI.rotA||0)+90;updInfo();},

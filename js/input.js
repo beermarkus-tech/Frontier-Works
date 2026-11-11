@@ -24,7 +24,7 @@ function tap(t){
  const e=entAt(t.x,t.y);
  if(e){UI.sel=e.id;openPanel('ent',e.id);return;}
  const n=t.x>=0&&t.y>=0&&t.x<MW&&t.y<MH?nodeAt[t.y*MW+t.x]:null;if(n){UI.sel=null;openPanel('node',n);return;}
- closePanel();
+ autoClose();
 }
 function puff(e){for(let k=0;k<10;k++)parts.push({x:e.x+Math.random()*e.w,y:e.y+Math.random()*e.h,vx:(Math.random()-0.5)*1.2,vy:-Math.random()*0.8,r:0.18+Math.random()*0.15,t:0,m:0.9,k:1});}
 cv.addEventListener('contextmenu',e=>e.preventDefault());
@@ -63,7 +63,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();vel.x=vel.y=0;const m=toTile(
 const keys=new Set();
 addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const k=e.key.toLowerCase();keys.add(k);
  if(k==='r'){if(UI.tool)ACT.rotate();else if(UI.panel&&UI.panel.kind==='ent')ACT.rotSel();}
- else if(k==='escape'){setTool(null);closePanel();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
+ else if(k==='escape'){setTool(null);autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
  else if(k==='q'&&hover){const x=entAt(hover.x,hover.y);if(x&&B[x.d].cat&&ub(x.d)){UI.cat=B[x.d].cat;UI.rot=x.dir||0;UI.rotA=UI.rot*90;buildCats();setTool(x.d);}}});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 addEventListener('blur',()=>keys.clear());

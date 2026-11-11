@@ -133,15 +133,15 @@ const server=require('./serve.js');
  const ui2=await p.evaluate(()=>{PL=plDefault();PL.locked=true;PL.mode='rev';ACT.openPlan();ACT.plTAdd();const n1=PL.rev.targets.length,sel=document.querySelectorAll('#pbody select[data-pl^="r.t."][data-pl$=".item"]').length;
   ACT.plTDel('1');const n2=PL.rev.targets.length;return{n1,sel,n2};});
  check(`planner: + Add product / ✕ remove (${ui2.n1} → ${ui2.n2}, ${ui2.sel} pickers)`,ui2.n1===2&&ui2.sel===2&&ui2.n2===1);
- // pin: planner moves to its own panel and survives taps on the map and opening other panels
- const pin=await p.evaluate(()=>{ACT.plPin();const vis=()=>!document.getElementById('ppin').classList.contains('hidden');const a=vis()&&!UI.panel;
-  tap({x:2,y:2});const b=vis();const core=[...ents.values()].find(e=>e.k==='core');openPanel('ent',core.id);const c=vis()&&UI.panel&&UI.panel.kind==='ent';
-  ACT.closePanel();ACT.plTAdd();const d=document.querySelectorAll('#ppbody .pltarget').length===PL.rev.targets.length;ACT.plUnpin();const e=!vis()&&UI.panel&&UI.panel.kind==='plan';ACT.closePanel();
-  localStorage.removeItem('frontierworks_plan');PL=plDefault();return{a,b,c,d,e};});
- check(`planner pin: stays open on map taps and other panels, updates, unpins (${Object.values(pin).join(',')})`,Object.values(pin).every(Boolean));
+ // pin: the whole panel (right side) stays open for any content while pinned
+ const pin=await p.evaluate(()=>{OPT.pin=false;ACT.openPlan();ACT.pinPanel();const btnOn=document.getElementById('ppinBtn').classList.contains('on');
+  tap({x:2,y:2});const a=UI.panel&&UI.panel.kind==='plan';ACT.tool('belt1');const b=UI.panel&&UI.panel.kind==='plan';setTool(null);
+  ACT.openStats();tap({x:2,y:2});const c=UI.panel&&UI.panel.kind==='stats';ACT.pinPanel();tap({x:2,y:2});const d=!UI.panel;
+  localStorage.removeItem('frontierworks_plan');PL=plDefault();return{btnOn,a,b,c,d};});
+ check(`pin keeps the panel open (planner on map tap & tool pick, Stats too), unpinned closes again (${Object.values(pin).join(',')})`,Object.values(pin).every(Boolean));
  check('tool buttons (inspect, rotate, dismantle…) live in the bottom dock',await p.evaluate(()=>document.getElementById('dock').contains(document.getElementById('fabs'))));
  // clock badge drawn on a machine that isn't at 100 %
- const cb=await p.evaluate(()=>{const e=[...ents.values()].find(x=>x.k==='mach');const old=e.clock;e.clock=0.73;cam.x=camT.x=e.x+1;cam.y=camT.y=e.y+1;cam.z=camT.z=2;
+ const cb=await p.evaluate(()=>{const e=[...ents.values()].find(x=>x.k==='mach');const old=e.clock;e.clock=0.73;cam.x=camT.x=e.x+1;cam.y=camT.y=e.y+1;cam.z=camT.z=3;
   const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;e.clock=old;return seen.includes('73%');});
  check('2D shows a clock badge on machines not at 100 %',cb);
  // planner maths (pure functions, no factory state)

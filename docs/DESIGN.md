@@ -119,9 +119,11 @@ Hand mining gives +5 ore from a node.
 - Bottom dock: hint/cost line → category tabs (Logistics, Extraction, Production, Power) → building cards with drawn icons.
 - Tool buttons (Inspect/pan, Rotate, Dismantle, 2D/3D, compass, Center on Core) sit in a row at the top of the bottom dock (moved from the right edge in
   Session 24 so panels never cover them). Minimap on desktop.
-- The planner can be **pinned** (📌 in its header): it then lives in its own panel (top-left on desktop, top on phones) that stays open while you
-  tap the map, build or inspect machines; 📌 again turns it back into a normal panel.
-- Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D.
+- **Pin** (📌 in every panel's header, Session 25): while pinned, the panel (always in its normal place on the right / bottom) stays open when you
+  tap the empty map, pick a building or press Esc, whatever it shows: planner, Stats, Items, a machine… Tapping a machine still switches it to
+  that machine. ✕ closes it. The pin setting is remembered per device.
+- Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D, at the same size and
+  zoom level as the number in the efficiency ring.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
 - **Production Planner** (☰ Menu → Tools). A paper-planning tool that only does maths. It never changes the factory.
   - *From a node:* pick resource, purity, extractor, count and clock, then add steps (recipes). Each step takes a chosen

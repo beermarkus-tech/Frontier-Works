@@ -206,8 +206,8 @@ function drawLive(e,X,Y,s){
 /* Efficiency ring in the building's top-left corner (fills clockwise, coloured like the panel badge) */
 /* Clock badge, bottom-right, when a machine/drill/pump doesn't run at 100 % (amber = overclocked, blue = slowed down) */
 function clockBadge(e,X,Y,s){
- if(s<14||!(e.k==='mach'||e.k==='drill'||e.k==='pump'))return;const c=e.clock||1;if(Math.abs(c-1)<0.005)return;
- const P=e.w*s,txt=Math.round(c*100)+'%',fs=Math.max(9,Math.min(16,s*0.3));ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
+ if(s<46||!(e.k==='mach'||e.k==='drill'||e.k==='pump'))return;const c=e.clock||1;if(Math.abs(c-1)<0.005)return;   // same zoom level and font size as the efficiency ring's number
+ const P=e.w*s,txt=Math.round(c*100)+'%',fs=Math.round(Math.max(3,s*0.17)*0.78);ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
  const w=ctx.measureText(txt).width+fs*0.8,h=fs*1.45,x=X+P-w-s*0.1,y=Y+P-h-s*0.1;
  ctx.fillStyle='rgba(10,14,18,0.82)';rr(x,y,w,h,h/2);ctx.fill();ctx.strokeStyle=c>1?'#ffb547':'#7fb6ff';ctx.lineWidth=Math.max(1,fs*0.1);ctx.stroke();
  ctx.fillStyle=c>1?'#ffcf7a':'#bcd8ff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x+w/2,y+h/2+0.5);ctx.textAlign='left';

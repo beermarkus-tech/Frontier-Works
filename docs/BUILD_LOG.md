@@ -783,3 +783,22 @@ How do machines decide where output goes, and how is a crossing attached directl
 
 ### Known issues
 - On phones the pinned planner (40 % height) plus an open machine panel leave little map visible. Close the machine panel to see more.
+
+---
+
+## Session 25 — 2026-11-11 (Claude Code, cloud session) · Build 30
+
+### What Markus asked for
+1. The clock badge should use the same font size and zoom behaviour as the efficiency indicator.
+2. Pin the whole panel on the right (whatever it shows: planner, Stats, …) instead of moving the planner to the left.
+
+### What changed
+- **Clock badge:** appears from the same zoom level as the efficiency ring's number (≥ 46 px per tile) with the same font size (`r·0.78`, `r = max(3, s·0.17)`).
+- **Pin:** the separate left-side pinned planner (Build 29) is removed. Every panel header now has 📌 (`ACT.pinPanel`, `OPT.pin`, remembered
+  per device). While pinned, automatic closes are skipped (`autoClose()`: tapping the empty map, picking a building, Esc). Tapping a machine
+  still switches the panel to it, and ✕ closes it. The tool buttons stay in the dock row (Build 29).
+- DESIGN.md §8 updated. Build number **30**.
+
+### Verified
+- `npm test` 54/54: pinned planner stays open on a map tap and when picking a building; pinned Stats too; unpinned, a map tap closes the panel;
+  a 73 % smelter draws its clock badge at close zoom. Phone screenshot of the pinned planner in its normal place.

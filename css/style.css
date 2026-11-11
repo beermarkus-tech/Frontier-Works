@@ -76,12 +76,9 @@ img.ii{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
 #phead img{width:34px;height:34px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 #ptitle{font:700 18px/1.1 Rajdhani,Inter,sans-serif;letter-spacing:.04em;flex:1}
 #phead .btn{width:32px;height:32px;padding:0;border-radius:9px}
-#pbody,
-#ppbody{overflow-y:auto;padding:12px 16px 16px;touch-action:pan-y;user-select:text;-webkit-user-select:text;scrollbar-width:thin;scrollbar-color:#3a4652 transparent}
-#pbody h4,
-#ppbody h4{margin:14px 0 7px;color:var(--acc);font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
-#pbody h4:first-child,
-#ppbody h4:first-child{margin-top:0}
+#pbody{overflow-y:auto;padding:12px 16px 16px;touch-action:pan-y;user-select:text;-webkit-user-select:text;scrollbar-width:thin;scrollbar-color:#3a4652 transparent}
+#pbody h4{margin:14px 0 7px;color:var(--acc);font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+#pbody h4:first-child{margin-top:0}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0}
 .row>span:last-child{font-variant-numeric:tabular-nums}
 .muted{color:var(--mut)}
@@ -129,20 +126,13 @@ input[type=range]{width:100%;accent-color:#ffb547;margin:4px 0}
  #fabs .btn{width:44px;height:36px}
 }
 /* production planner */
-#pbody select,#pbody input[type=number],
-/* production planner */
-#ppbody select,#ppbody input[type=number]{background:rgba(0,0,0,.35);color:var(--txt);border:1px solid var(--line2);border-radius:8px;padding:5px 7px;font:inherit;font-size:12px;max-width:62%;user-select:auto;-webkit-user-select:auto}
-#pbody .row>span:last-child>select,
-#ppbody .row>span:last-child>select{min-width:160px}
-#pbody input[type=number],
-#ppbody input[type=number]{width:96px;text-align:right;flex-shrink:0}
-#pbody .row>span:last-child,
-#ppbody .row>span:last-child{flex-shrink:0}
-#pbody select.wide,
-#ppbody select.wide{display:block;width:100%;max-width:100%;margin:6px 0}
-#pbody option,#pbody optgroup,
-#ppbody option,#ppbody optgroup{background:#141b22;color:var(--txt)}
-@media (pointer:coarse){#pbody select,#pbody input[type=number],#ppbody select,#ppbody input[type=number]{font-size:16px}}
+#pbody select,#pbody input[type=number]{background:rgba(0,0,0,.35);color:var(--txt);border:1px solid var(--line2);border-radius:8px;padding:5px 7px;font:inherit;font-size:12px;max-width:62%;user-select:auto;-webkit-user-select:auto}
+#pbody .row>span:last-child>select{min-width:160px}
+#pbody input[type=number]{width:96px;text-align:right;flex-shrink:0}
+#pbody .row>span:last-child{flex-shrink:0}
+#pbody select.wide{display:block;width:100%;max-width:100%;margin:6px 0}
+#pbody option,#pbody optgroup{background:#141b22;color:var(--txt)}
+@media (pointer:coarse){#pbody select,#pbody input[type=number]{font-size:16px}}
 .plbig{font:700 18px/1.2 Rajdhani,sans-serif;color:var(--acc);margin-top:6px}
 .plsub{margin:8px 0 2px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut,#8a97a3)}
 .plbad,.row.plbad span{color:#ff8a6a}
@@ -160,15 +150,8 @@ body.v3 #fNorth{display:inline-flex}
 #preload{display:none}
 .effchip{display:inline-block;padding:2px 8px;border:1px solid var(--line2);border-radius:999px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .clockbtns{justify-content:center;margin:2px 0 4px}.clockbtns .chip{min-width:46px}
-/* pinned planner */
-#ppin{position:fixed;left:calc(10px + var(--sal));top:calc(64px + var(--sat));width:380px;max-height:calc(100% - var(--dockH) - 92px - var(--sat) - var(--sab));border-radius:18px;display:flex;flex-direction:column;z-index:5}
-#ppin.hidden{display:none}
-body.pinned #mini{display:none}
-.phead2{display:flex;align-items:center;gap:8px;padding:10px 10px 8px 14px;border-bottom:1px solid var(--line)}
-.phead2 .ptitle2{flex:1;font:700 16px/1.1 Rajdhani,Inter,sans-serif;letter-spacing:.04em}.phead2 small{color:var(--mut);font:500 11px Inter,sans-serif;letter-spacing:0}
-.phead2 .btn{width:32px;height:32px;padding:0;border-radius:9px}
-#ppinBtn{display:none;width:32px;height:32px;padding:0;border-radius:9px}
+/* pinned panel */
+#ppinBtn{display:inline-flex;width:32px;height:32px;padding:0;border-radius:9px;opacity:.55}
+#ppinBtn.on{opacity:1;background:linear-gradient(180deg,#ffc56a,#ff9433);border-color:transparent}
 .pltarget{padding-bottom:6px;margin-bottom:6px;border-bottom:1px dashed var(--line)}
 .plgoal{font-size:10px;font-weight:600;color:var(--acc);margin-left:4px}
-@media (max-width:700px){#ppin{left:calc(8px + var(--sal));right:calc(8px + var(--sar));width:auto;top:calc(60px + var(--sat));max-height:40%}
- body.pinned #panel{max-height:min(34%,calc(100% - var(--dockH) - 90px - var(--sat) - var(--sab)))}}

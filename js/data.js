@@ -146,7 +146,7 @@ const START_INV={coal:40,iron_plate:120,iron_rod:80,wire:120,cable:60,concrete:6
    res: resource weights · pure: purity bias (+ = more pure nodes) · dens: node density
    d2: 2D painted detail · d3: 3D decoration chances per tile */
 /* Per-device display options (not part of the save) */
-const OPT={eff:true};try{Object.assign(OPT,JSON.parse(localStorage.getItem('frontierworks_opts')||'{}'));}catch(e){}
+const OPT={eff:true,pin:false};try{Object.assign(OPT,JSON.parse(localStorage.getItem('frontierworks_opts')||'{}'));}catch(e){}
 function saveOpt(){try{localStorage.setItem('frontierworks_opts',JSON.stringify(OPT));}catch(e){}}
 const BIOMES=[
  {id:'greenvale',n:'Greenvale',desc:'Gentle meadows around the landing site.',t:[0.30,0.04,0.70,0.45],

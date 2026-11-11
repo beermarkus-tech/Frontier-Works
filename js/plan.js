@@ -13,7 +13,7 @@ const PL_RAW=new Set(PL_RES.map(plResItem));
 const PL_EPS=1e-6;
 function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{targets:[{item:'iron_plate',rate:60}],pick:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
 let PL=plDefault();
-try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,pinned:!!o.pinned,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow)};}}catch(e){PL=plDefault();}
+try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow)};}}catch(e){PL=plDefault();}
 function plSave(){try{localStorage.setItem(PLAN_KEY,JSON.stringify(PL));}catch(e){}}
 
 /* ---------- visibility (unlocked only, unless "Show locked") ---------- */
@@ -235,23 +235,16 @@ function plSet(key,v){
  else if(p[0]==='r'){if(p[1]==='pick')PL.rev.pick[p[2]]=v;else if(p[1]==='t'){const t=PL.rev.targets[+p[2]];if(t)t[p[3]]=p[3]==='rate'?+v:v;}}
  plFix();
 }
-const plRefresh=()=>{plSave();if(PL.pinned)plRenderPin();if(UI.panel&&UI.panel.kind==='plan')renderPanel(true);};
-/* Pinned planner: its own panel (#ppin) that stays open while you tap the map, build or inspect machines */
-function plRenderPin(top){const b=$('ppbody'),st=b.scrollTop;b.innerHTML=planHtml();b.scrollTop=top?0:st;}
-function plShowPin(){$('ppin').classList.remove('hidden');document.body.classList.add('pinned');plRenderPin();}
-function plHidePin(){$('ppin').classList.add('hidden');document.body.classList.remove('pinned');}
-function plShow(){if(PL.pinned){plShowPin();plRenderPin(true);}else{openPanel('plan');$('pbody').scrollTop=0;}}
+const plRefresh=()=>{plSave();if(UI.panel&&UI.panel.kind==='plan')renderPanel(true);};
+function plShow(){openPanel('plan');$('pbody').scrollTop=0;}
 document.addEventListener('change',ev=>{const k=ev.target.dataset&&ev.target.dataset.pl;if(!k)return;plSet(k,ev.target.value);plRefresh();});
 Object.assign(ACT,{
- openPlan:()=>{if(PL.pinned)plShowPin();else openPanel('plan');},
- plPin:()=>{PL.pinned=true;plSave();closePanel();plShowPin();toast('Planner pinned: it stays open while you build');},
- plUnpin:()=>{PL.pinned=false;plSave();plHidePin();openPanel('plan');},
- plPinClose:()=>{PL.pinned=false;plSave();plHidePin();},
+ openPlan:()=>openPanel('plan'),
  plTAdd:()=>{const have=new Set(PL.rev.targets.map(t=>t.item)),k=plTargets().find(x=>!have.has(x))||'iron_plate';PL.rev.targets.push({item:k,rate:30});plRefresh();},
  plTDel:v=>{PL.rev.targets.splice(+v,1);plFix();plRefresh();},
  plMode:v=>{PL.mode=v;plRefresh();},
  plLocked:()=>{PL.locked=!PL.locked;plFix();plRefresh();},
- plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();(PL.pinned?$('ppbody'):$('pbody')).scrollTop=0;},
+ plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();$('pbody').scrollTop=0;},
  plAdd:()=>{if(!plAddStep())toast(Object.keys(plFwd(PL.fwd).left).length?'Nothing can use what is left over. Try “Show locked”.':'Nothing left over to use');plRefresh();},
  plDel:v=>{PL.fwd.steps.splice(+v,1);plRefresh();},
  plClear:()=>{PL.fwd.steps=[];plRefresh();},
