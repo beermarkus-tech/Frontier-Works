@@ -137,7 +137,8 @@ function gridHtml(g){if(!g)return'<div class="muted">Not connected to a grid.</d
  return`<h4>Power grid</h4><div class="row"><span>Consumption</span><span>${fmt(g.dem)} MW</span></div><div class="row"><span>Capacity</span><span>${fmt(g.cap)} MW</span></div><div class="row"><span>Generators / consumers</span><span>${g.gens.length} / ${g.cons.length}</span></div>${g.trip?'<button class="btn warn" data-act="resetFuse">⚠ Reset fuse</button>':''}`;}
 function invHtml(){
  const ks=Object.keys(S.inv).filter(k=>S.inv[k]>0).sort((a,b)=>IT[a].n.localeCompare(IT[b].n));
- let h=`<h4>Item stock</h4>`+(ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(S.inv[k])}</span></div>`).join(''):'<div class="muted">empty</div>');
+ const crates=[...ents.values()].filter(e=>e.k==='storage');let inCrates=0;for(const c of crates)for(const k in c.store)inCrates+=c.store[k];
+ let h=(crates.length?`<div class="card"><div class="row"><span>${crates.length} storage crate${crates.length>1?'s':''} hold ${fmt(inCrates)} items</span></div><button class="btn" data-act="collectAll" ${inCrates?'':'disabled'}>📦 Move everything from all crates into the stock</button><div class="muted" style="margin-top:4px">Crates that buffer a production line will be empty afterwards.</div></div>`:'')+`<h4>Item stock</h4>`+(ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(S.inv[k])}</span></div>`).join(''):'<div class="muted">empty</div>');
  h+=`<h4>Hand crafting</h4><div class="muted" style="margin-bottom:4px">Bootstrap: craft unlocked Smelter, Press and Assembler recipes from your item stock (e.g. Braced Plates and Rotors for your first Assembler).</div>`;
  for(const r of RL){if(!ur(r.id)||(r.m!=='smelter'&&r.m!=='press'&&r.m!=='assembler'))continue;const ok=afford(r.i);
   h+=`<div class="card"><div>${recLine(r)}</div><button class="btn" data-act="craft" data-v="${r.id}" data-n="1" ${ok?'':'disabled'}>×1</button> <button class="btn" data-act="craft" data-v="${r.id}" data-n="10" ${afford(r.i,10)?'':'disabled'}>×10</button></div>`;}
@@ -224,6 +225,7 @@ const ACT={
  openMs:()=>openPanel('ms'),openInv:()=>openPanel('inv'),openStats:()=>openPanel('stats'),openMenu:()=>openPanel('menu'),openCodex:()=>openPanel('codex'),
  setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v)return;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;renderPanel(true);},
  filter:v=>{const e=ents.get(UI.panel.arg);if(e){e.filter=v||null;renderPanel(true);}},
+ collectAll:()=>{let n=0,c=0;for(const e of ents.values())if(e.k==='storage'){let any=false;for(const k in e.store){give(k,e.store[k]);n+=e.store[k];any=true;}if(any)c++;e.store={};}toast(n?`Moved ${fmt(n)} items from ${c} crate${c>1?'s':''} into the stock`:'The crates are empty');renderPanel(true);buildTools();},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},

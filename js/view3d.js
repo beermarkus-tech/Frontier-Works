@@ -388,7 +388,7 @@ function v3Anim(dt,t){
  // status lights
  const led=V3.led.mesh;if(led){L.led.forEach((e,i)=>{const st=bStatus(e),w=e.w;led.setMatrixAt(i,T.m.compose(T.v.set(e.x+w-0.2,0.3,e.y+w-0.2),T.q.identity(),T.s.set(0.13,0.13,0.13)));T.c.set(st?st[0]:'#8a96a0');led.setColorAt(i,T.c);});led.instanceMatrix.needsUpdate=true;led.instanceColor.needsUpdate=true;}
  // pipe flanges show the fluid inside
- const fm=V3.flange.mesh;if(fm&&L.flanged.length){L.flanged.forEach((e,i)=>fm.setColorAt(i,e.item?V3.icol[e.item]:T.c.set('#3a434c')));fm.instanceColor.needsUpdate=true;}
+ const fm=V3.flange.mesh;if(fm&&L.flanged.length){L.flanged.forEach((e,i)=>{const ft=e.item||e._ft,lv=e._fl==null?(e.item?1:0):Math.min(1,e._fl*1.5);T.c.set('#3a434c');if(ft)T.c.lerp(V3.icol[ft],lv);fm.setColorAt(i,T.c);});fm.instanceColor.needsUpdate=true;}
  // belt treads move at belt speed
  for(const id in V3.belt){const b=V3.belt[id];b.tex.offset.x=-(t*Math.min(4,B[id].spd))%1;}
  if(V3.wNorm){V3.wNorm.offset.set(t*0.004,t*0.0025);}

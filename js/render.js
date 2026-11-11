@@ -293,11 +293,11 @@ function drawLines(list,sx,sy,s,alpha,tint){
  }
  if(pipes.length){
   const all=new Path2D(),byT={},fl={};
-  for(const e of pipes){const X=sx(e.x),Y=sy(e.y);pathLine(all,e,X,Y,s,ext);(byT[e.d]||(byT[e.d]=new Path2D()));pathLine(byT[e.d],e,X,Y,s,ext);if(e.item){const c=IT[e.item].c;(fl[c]||(fl[c]=new Path2D()));pathLine(fl[c],e,X,Y,s,0);}}
+  for(const e of pipes){const X=sx(e.x),Y=sy(e.y);pathLine(all,e,X,Y,s,ext);(byT[e.d]||(byT[e.d]=new Path2D()));pathLine(byT[e.d],e,X,Y,s,ext);const lv=e._fl==null?(e.item?1:0):e._fl,ft=e.item||e._ft;if(ft&&lv>0.04){const b=Math.ceil(Math.min(1,lv*1.5)*4)/4,key=IT[ft].c+'|'+b;(fl[key]||(fl[key]=new Path2D()));pathLine(fl[key],e,X,Y,s,0);}}
   ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=s*0.54;ctx.stroke(all);
   for(const d in byT){ctx.strokeStyle=tint||B[d].col;ctx.lineWidth=s*0.46;ctx.stroke(byT[d]);}
   ctx.strokeStyle='#141a20';ctx.lineWidth=s*0.26;ctx.stroke(all);
-  for(const c in fl){ctx.strokeStyle=c;ctx.lineWidth=s*0.26;ctx.stroke(fl[c]);ctx.setLineDash([s*0.08,s*0.17]);ctx.lineDashOffset=-((animT*s*1.6)%(s*0.25));ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=s*0.1;ctx.stroke(fl[c]);ctx.setLineDash([]);}
+  const ga=ctx.globalAlpha;for(const key in fl){const [c,b]=key.split('|');ctx.globalAlpha=ga*(0.3+0.7*b);ctx.strokeStyle=c;ctx.lineWidth=s*0.26;ctx.stroke(fl[key]);ctx.setLineDash([s*0.08,s*0.17]);ctx.lineDashOffset=-((animT*s*1.6)%(s*0.25));ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=s*0.1;ctx.stroke(fl[key]);ctx.setLineDash([]);}ctx.globalAlpha=ga;
   ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=s*0.05;ctx.stroke(all);
   if(s>9){for(const e of pipes){if(e.cin!=null)continue;const X=sx(e.x),Y=sy(e.y),d=e.dir;ctx.fillStyle=shade(B[e.d].col,-35);const cx=X+s/2-DX[d]*s*0.5,cy=Y+s/2-DY[d]*s*0.5;if(d===0||d===2)ctx.fillRect(cx-s*0.05,cy-s*0.3,s*0.1,s*0.6);else ctx.fillRect(cx-s*0.3,cy-s*0.05,s*0.6,s*0.1);}}
  }

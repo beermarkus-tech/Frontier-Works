@@ -268,6 +268,8 @@ function burn(g,mj){const d=B[g.d];
  if(d.water){g.wacc+=mj*d.water;while(g.wacc>=1&&g.water>0){g.water--;g.wacc--;stat.c.water=(stat.c.water||0)+1;}}
 }
 function updBelt(e,dt){
+ // pipes: smoothed fill level (~1 s) and last fluid, so drawing doesn't blink when a pipe isn't completely full
+ if(e.k==='pipe'){const f=e._fl||0;e._fl=f+((e.item?1:0)-f)*Math.min(1,dt/1.1);if(e.item)e._ft=e.item;}
  if(!e.item)return;e.prog+=e.spd*dt;
  if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]);if(t&&t!==e&&accept(t,e.item,e.dir,e.prog-1)){e.item=null;e.prog=0;}else e.prog=1;}
 }

@@ -732,3 +732,25 @@ How do machines decide where output goes, and how is a crossing attached directl
 - Same scenario after the fix: the ore runs out, is refilled, and the smelter is back to 30 ingots/min (96 % working). Output through a crossing onto an outgoing
   belt still works (100 %). New smoke check covers both. `npm test` 47/47.
 - Follow-up (Build 27): the DESIGN.md §5 note for this rule (and the Session 21 curve rule) didn't apply in Build 26 because of a wording mismatch; added in Build 27. No code change.
+
+---
+
+## Session 23 — 2026-11-11 (Claude Code, cloud session) · Build 28
+
+### What Markus asked
+1. Pipes flicker on and off all the time when not fully loaded. Find another way.
+2. A button in the Items panel that pulls everything from all storage containers into the main stock.
+
+### What was built
+- **Steady pipes:** a pipe tile holds one fluid unit at a time, and the fluid used to be drawn only in the instant it held one, so partly loaded pipes
+  blinked. Now each pipe keeps a smoothed fill level (`e._fl`, ~1 s, updated in `updBelt`) and its last fluid (`e._ft`). 2D draws the fluid in that
+  colour at a steady strength (4 levels, faint when nearly empty, fading out when it stops). The 3D fluid rings blend the same way.
+  Transient fields, not saved.
+- **Items → "Move everything from all crates into the stock":** a card at the top of the Items panel shows how many Storage Crates exist and how
+  many items they hold, with one button that empties them all into the stock (toast with the total). It notes that crates used as buffers end up empty.
+  The per-crate button stays.
+- Build number **28**.
+
+### Verified
+- `npm test` 49/49. New checks: a pipe fed at ~40 % of capacity flips its raw contents 60× in 15 s while the drawn fill level stays between 0.34 and 0.46;
+  the collect-all button moves exactly the 15 test items from two crates and leaves them empty.

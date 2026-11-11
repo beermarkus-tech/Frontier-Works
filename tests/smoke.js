@@ -115,6 +115,17 @@ const server=require('./serve.js');
   run(90);fw.entAt(X-4,Y).store={iron_ore:999};stat.hist=[];run(90);const a=fw.entAt(X,Y)._ef,b=fw.entAt(X-1,Y+5)._ef;
   for(let j=-1;j<8;j++)for(let i=-5;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{ok:r.every(v=>v===''),a,b};});
  check(`crossing in front of a machine: input survives a pause (${Math.round(xj.a*100)}%), output through a crossing works (${Math.round(xj.b*100)}%)`,xj.ok&&xj.a>0.8&&xj.b>0.8);
+ // pipes keep a steady fill level instead of blinking; Items panel can empty all crates at once
+ const pf=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<6&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  P('tank',X,Y,0);for(let i=2;i<8;i++)P('pipe1',X+i,Y,0);P('incin',X+8,Y,0);const tk=fw.entAt(X,Y),pp=fw.entAt(X+5,Y);let lo=1,hi=0,flips=0,last=null;
+  for(let t=0;t<400;t++){if(t%10===0){tk.ft='water';tk.amt+=1;}tick(0.05);if(t>100){lo=Math.min(lo,pp._fl);hi=Math.max(hi,pp._fl);const on=!!pp.item;if(last!==null&&on!==last)flips++;last=on;}}
+  P('storage',X,Y+3,0);P('storage',X+3,Y+3,0);fw.entAt(X,Y+3).store={iron_plate:7};fw.entAt(X+3,Y+3).store={wire:5,bolts:3};const before=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);
+  openPanel('inv');const btn=!!document.querySelector('#pbody [data-act="collectAll"]');ACT.collectAll();const after=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);ACT.closePanel();
+  const empty=Object.keys(fw.entAt(X,Y+3).store).length+Object.keys(fw.entAt(X+3,Y+3).store).length;
+  for(let j=-1;j<6;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{lo,hi,flips,btn,gain:after-before,empty};});
+ check(`pipe fill stays steady (${pf.lo.toFixed(2)}–${pf.hi.toFixed(2)}) while the raw contents flip ${pf.flips}×`,pf.flips>20&&pf.lo>0.15&&pf.hi-pf.lo<0.45);
+ check(`Items: "Move everything from all crates" collects ${pf.gain} items and empties the crates`,pf.btn&&pf.gain===15&&pf.empty===0);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
