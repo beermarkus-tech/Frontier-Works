@@ -34,6 +34,7 @@ and keep the game playable after every commit.
   animated parts as own InstancedMesh). `v3Layout()` rebuilds instances when `v3Sig()` changes; `v3Anim/v3Items/v3Smoke` run per frame.
   Input reuses `tap()`, `linePath()`, `buildPath()`. **A new building type needs a 3D model in `v3Models()` too**, or it won't show in 3D.
   Three.js is r149 on purpose: the last release with a classic-script build (`THREE` global), matching our no-module setup.
+- Drone Pads (`k:'dpad'`): `updPad` in `js/sim.js`, state `e.dr` + route `e.lx/e.ly` (saved), list `pads` from `rebuildTopo`; drawn by `drawDrones` (2D) and `v3Drones` (3D). Numbers in `DRONE` (`js/data.js`).
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).
 
 ## Rules

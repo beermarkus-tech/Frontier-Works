@@ -215,6 +215,8 @@ function v3Models(){
  // core, storage, tank, incinerator
  {const c=B.core.col;def('core',[['box','#272c32',[0,0.15,0],[3.85,0.3,3.85]],['box',c,[0,0.52,0],[3.2,0.45,3.2]],['box',shade(c,-30),[0,0.78,0],[2.6,0.08,2.6]],['cyl6','#4a525b',[0,1.9,0],[1.9,2.3,1.9]],['cyl6','#ffcf7a',[0,1.9,0],[1.95,0.06,1.95]],['cyl6',c,[0,1.5,0],[2.0,0.18,2.0]],['cyl6',c,[0,2.6,0],[2.0,0.18,2.0]],['cyl','#545b63',[0,3.25,0],[0.25,0.9,0.25]]],
   [['oct','#ffc56a',[0,3.85,0],[0.6,0.8,0.6],{glow:1,an:(e,ph,act,t)=>({ry:t*0.8,dy:Math.sin(t*1.6)*0.08})}],['torThin','#ffb547',[0,2.2,0],[2.5,2.5,2.5],{rot:[Math.PI/2,0,0],glow:1,an:(e,ph,act,t)=>({ry:t*0.5,rx:Math.sin(t*0.7)*0.15})}]],{h:3.6});}
+ {const c=B.dpad.col;def('dpad',[...base(3),['cyl','#30373f',[0,0.32,0],[2.6,0.18,2.6]],['tor',c,[0,0.43,0],[2.0,2.0,2.0],{rot:[Math.PI/2,0,0]}],['box',shade(c,-25),[0,0.42,0],[1.1,0.02,0.1]],['box',shade(c,-25),[0,0.42,0],[0.1,0.02,1.1]]],
+  [['sph','#ffd36a',[-1.2,0.36,-1.2],[0.16,0.16,0.16],{glow:1}],['sph','#ffd36a',[1.2,0.36,-1.2],[0.16,0.16,0.16],{glow:1}],['sph','#ffd36a',[1.2,0.36,1.2],[0.16,0.16,0.16],{glow:1}],['sph','#ffd36a',[-1.2,0.36,1.2],[0.16,0.16,0.16],{glow:1}]],{h:0.5});}
  {const c=B.storage.col;def('storage',[...base(2,c),['box',c,[0,0.8,0],[1.6,1.1,1.6]],['box',shade(c,-30),[0,0.55,0],[1.64,0.12,1.64]],['box',shade(c,-30),[0,0.95,0],[1.64,0.12,1.64]],['box',shade(c,20),[0,1.37,0],[1.68,0.08,1.68]],['box',shade(c,-45),[0,0.8,0],[0.12,1.12,1.65]],['box',shade(c,-45),[0,0.8,0],[1.65,1.12,0.12]]],[],{h:1.4});}
  {const c=B.tank.col;def('tank',[...base(2),['cyl',c,[0,0.95,0],[1.55,1.45,1.55]],['sph',shade(c,25),[0,1.67,0],[1.55,0.4,1.55]],['box','#1c2024',[0,0.92,0.78],[0.24,1.1,0.03]]],
   [['box','#3d8ee6',[0,0.92,0.8],[0.16,1.0,0.03],{cf:e=>e.ft?IT[e.ft].c:'#333a40',an:e=>({sy:Math.max(0.02,(e.amt||0)/B.tank.cap)})}]],{h:1.9});}
@@ -236,6 +238,12 @@ function v3Models(){
    const glow=!!(o.glow||o.cf);const mat=glow?V3.glowMat:V3.mat;
    return{pos,o,glow,col:v3col(c),pool:v3Pool(geo,mat,{cast:!glow,recv:!glow,color:glow})};});}
  V3.led=v3Pool(G.sph,V3.glowMat,{color:1});
+ {const parts=[{g:G.box,m:new T3.Matrix4().makeScale(0.55,0.18,0.42),c:v3col('#e9eef2')},{g:G.box,m:new T3.Matrix4().compose(new T3.Vector3(0,0.02,0),new T3.Quaternion(),new T3.Vector3(0.57,0.05,0.12)),c:v3col(B.dpad.col)}];
+  for(const [ax,az] of [[-1,-1],[1,-1],[1,1],[-1,1]]){parts.push({g:G.box,m:new T3.Matrix4().compose(new T3.Vector3(ax*0.3,0.03,az*0.3),new T3.Quaternion().setFromEuler(new T3.Euler(0,ax*az>0?-Math.PI/4:Math.PI/4,0)),new T3.Vector3(0.5,0.05,0.06)),c:v3col('#3a4048')});
+   parts.push({g:G.cyl,m:new T3.Matrix4().compose(new T3.Vector3(ax*0.5,0.1,az*0.5),new T3.Quaternion(),new T3.Vector3(0.46,0.02,0.46)),c:v3col('#cfd8de')});}
+  V3.droneP=v3Pool(v3Merge(parts),V3.mat,{cast:1});
+  V3.cargoP=v3Pool(G.box,new T3.MeshStandardMaterial({roughness:0.6}),{color:1,cast:1});
+  const sh=new T3.CircleGeometry(0.6,20);sh.rotateX(-Math.PI/2);V3.dshadowP=v3Pool(sh,new T3.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.25,depthWrite:false}),{order:4});}
 }
 
 /* ---------- belts & pipes (procedural ribbons) ---------- */
@@ -394,6 +402,13 @@ function v3Anim(dt,t){
  for(const id in V3.belt){const b=V3.belt[id];b.tex.offset.x=-(t*Math.min(4,B[id].spd))%1;}
  if(V3.wNorm){V3.wNorm.offset.set(t*0.004,t*0.0025);}
 }
+/* Drones: hover on their pad, rise, fly the route at cruise height, land; a box underneath shows the cargo */
+function v3Drones(){const T=V3T,list=pads.filter(e=>e.dr.st||padTarget(e)),dm=v3PoolN(V3.droneP,list.length),sm=v3PoolN(V3.dshadowP,list.length);let nc=0;const cm=v3PoolN(V3.cargoP,list.length);
+ list.forEach((e,i)=>{const p=dronePos(e),y=0.75+p.h*6+Math.sin(animT*3+e.id)*0.05,yaw=e.dr.st?-Math.atan2(e.dr.ty-e.y,e.dr.tx-e.x):0;
+  T.e.set(0,yaw,e.dr.st?0.08:0);T.q.setFromEuler(T.e);dm.setMatrixAt(i,T.m.compose(T.v.set(p.x,y,p.y),T.q,T.s.set(1.4,1.4,1.4)));
+  sm.setMatrixAt(i,T.m.compose(T.v.set(p.x+p.h*1.2,0.03,p.y+p.h*0.8),T.q.identity(),T.s.set(1-p.h*0.3,1,1-p.h*0.3)));
+  const c=Object.keys(e.dr.c||{})[0];if(c){cm.setMatrixAt(nc,T.m.compose(T.v.set(p.x,y-0.28,p.y),T.q.identity(),T.s.set(0.42,0.3,0.42)));cm.setColorAt(nc,V3.icol[c]);nc++;}});
+ cm.count=nc;cm.visible=nc>0;dm.instanceMatrix.needsUpdate=sm.instanceMatrix.needsUpdate=cm.instanceMatrix.needsUpdate=true;if(cm.instanceColor)cm.instanceColor.needsUpdate=true;}
 function v3Items(){
  const T=V3T,I=V3.items;for(const k in I)I[k].n=0;
  const put=(it,x,y,z,yaw)=>{const s=I[SHAPE[it]||'block']||I.block,ms=s.pool.mesh;if(!ms||s.n>=s.pool.cap)return;T.e.set(0,yaw,0);T.q.setFromEuler(T.e);ms.setMatrixAt(s.n,T.m.compose(T.v.set(x,y,z),T.q,T.s.set(1,1,1)));ms.setColorAt(s.n,V3.icol[it]);s.n++;};
@@ -505,7 +520,7 @@ function render3D(el){
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
- v3Anim(el,t);v3Items();v3Smoke(el);v3Overlay(t);
+ v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Overlay(t);
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}

@@ -81,6 +81,11 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
 - Splitter (back → front/left/right), Merger (back/left/right → front, fair alternation),
   Sorting Splitter (filter item → front, rest → sides), Crossing (two lines cross), Pipe Junction (fluid to all other sides).
 - Storage Crate (2000 items) and Fluid Tank (400 m³) buffer and pass items on. The Incinerator destroys anything.
+- **Cargo Drones** (agreed with Markus, Session 28; Tier 5): a **Drone Pad** (3×3, holds 400 solid items, fed by belts like a crate). In its panel,
+  "Send to…" then tap another pad sets a route (stored by position, so it survives saves). A linked pad is a sender: its drone waits for a full
+  load (40 items, at most 8 s), flies straight there at 10 tiles/s (over anything), unloads what fits and flies back. Leftovers return to the pad.
+  It draws 25 MW only while busy. An unlinked pad is a receiver and passes items on to outgoing belts. Chains work. Solids only for now; the
+  panel shows throughput (≈ items/min), the drone's state and items delivered. Freight rail may come later for bulk.
 - The Base Core accepts any solid on any side and adds it to the item stock.
 
 ## 6. Power
@@ -103,7 +108,7 @@ Ten sequential tiers (Goals panel). Each requires parts from the item stock and 
 | 2 | Structural Works | Pipes, Junction, Water Pump, Tank, Sorting Splitter, Truss Frame |
 | 3 | Steam Power | Steam Generator, Power Tower, Drill Mk2 |
 | 4 | Steelworks | Foundry, Belt Mk3, steel chain, Cased Girder, Stator, Motor, overclocking |
-| 5 | Heavy Industry | Fabricator, Heavy Truss |
+| 5 | Heavy Industry | Fabricator, Heavy Truss, Drone Pad (Cargo Drones) |
 | 6 | Petrochemistry | Oil Pump, Refinery, Fuel Turbine, Pipe Mk2, Belt Mk4, plastic/rubber/fuel, Circuit Board |
 | 7 | Electronics | Compute Module, Data Bus, quartz parts, Resonator |
 | 8 | Lightweight Alloys | Blender, Drill Mk3, aluminum chain, Heat Sink, acid, Battery, Coolant, Control Chip |
@@ -182,5 +187,5 @@ Hand mining gives +5 ore from a node.
 - New features must keep old saves loading.
 
 ## 11. Explicitly out of scope (for now)
-Vehicles/trains, combat/creatures, multiplayer, accounts or cloud saves, sound.
+Trains/rail and other vehicles beyond Cargo Drones, combat/creatures, multiplayer, accounts or cloud saves, sound.
 These can be reconsidered; record the decision here if that happens.

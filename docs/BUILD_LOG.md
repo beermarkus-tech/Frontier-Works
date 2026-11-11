@@ -839,3 +839,36 @@ The Coal Burner panel doesn't show how much coal it consumes, unlike the machine
 ### Verified
 - `npm test` 55/55, new check: the test factory's burner at 18 % load shows 2.2 coal/min (= 12 × 0.18), "At full load … 12 Coal/min", and the ⚡ badge.
 - Phone screenshot: burner at 40 % load → 4.8 coal/min, 12/min at full, one coal lasts 5 s, the coal inside lasts 8 min.
+
+---
+
+## Session 28 — 2026-11-11 (Claude Code, cloud session) · Build 33
+
+### What Markus asked for
+Vehicles. After options were discussed (drones, freight rail, trucks), he chose the recommendation: **Cargo Drones first**, Tier 5,
+powered at the pad, solid items only.
+
+### What was built
+- **Drone Pad** (`dpad`, 3×3, Logistics, unlocked by Tier 5 "Heavy Industry"; cost 4 Motor, 4 Stator, 6 Cased Girder, 30 Cable; 25 MW while busy;
+  holds 400 items). `DRONE` in `js/data.js`: 40 items per trip, 10 tiles/s, 1.5 s load, 1.5 s unload, waits up to 8 s for a full load.
+- **Sim** (`updPad` in `js/sim.js`): sender pads (route set) load, fly straight to the target pad, unload what fits, fly back, and return leftovers.
+  Unlinked pads pass items on to outgoing belts like crates. If the target is removed mid-flight, the drone turns back. Dismantling a pad refunds its
+  store and cargo. Route (`lx`,`ly`), drone state (`dr`) and delivered count (`del`) are saved. Old saves are unaffected.
+- **Panel:** route text and distance, "📍 Send to…" (then tap the destination pad; the hint line explains), "✕ Unlink", "Move all into item stock",
+  stored items, drone state (on the pad / waiting for a full load / flying out % / returning %), cargo, throughput (≈ items/min and round-trip time), delivered so far.
+  Status light: waiting for items / flying / destination full / no power.
+- **2D:** pad sprite (landing ring, cross-hair, corner lights); drones with spinning rotors, a cargo box in the item colour, a shadow that
+  shrinks with height, take-off and landing; the selected pad's route as an animated dashed line (also while choosing a destination). Simple blocks at far zoom.
+- **3D:** pad model (ring, corner lights that glow while busy); drones as instanced models flying at cruise height with cargo box and ground shadow.
+- DESIGN.md (§5 logistics, §7 tier 5, §11), CLAUDE.md updated. Build number **33**.
+
+### Verified
+- `npm test` 56/56, new check: Tier 5 unlocks the pad; tap-to-link works; two pads 56 tiles apart move exactly 400 items in 150 s (10 full trips),
+  the receiver passes them on, and the route plus delivered count survive save/load. The dead-end audit covers the pad's cost.
+- A first run showed only 131 items: a Mk1 input belt (60/min) made the drone leave nearly empty each time. That led to the
+  "wait for a full load (max 8 s)" rule. The test now feeds a fast belt so it measures the drone.
+- Screenshots: drone mid-route in 2D with cargo and dashed route; in 3D flying over the landscape with its cargo box.
+
+### Known issues / next
+- One drone per pad (build more pads for more throughput). No fluids yet.
+- Possible next steps: planner support for drone routes, fluid tank drones, freight rail for bulk.

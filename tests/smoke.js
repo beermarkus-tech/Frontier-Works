@@ -147,6 +147,20 @@ const server=require('./serve.js');
  const cb=await p.evaluate(()=>{const e=[...ents.values()].find(x=>x.k==='mach');const old=e.clock;e.clock=0.73;cam.x=camT.x=e.x+1;cam.y=camT.y=e.y+1;cam.z=camT.z=3;
   const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;e.clock=old;return seen.includes('73%');});
  check('2D shows a clock badge on machines not at 100 %',cb);
+ // Cargo Drones (Tier 5): link two pads by tapping, drone carries items over ~60 tiles, receiver passes them on; route survives save/load
+ const dr=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);const dry=(x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])return false;return true;};
+  let A=null,Bq=null;for(let r=10;r<170&&!Bq;r+=3)for(let a=0;a<64&&!Bq;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));if(!dry(x-1,y-2,9,6))continue;
+   if(!A){A={x,y};continue;}if(Math.hypot(x-A.x,y-A.y)>=55&&Math.hypot(x-A.x,y-A.y)<=90)Bq={x,y};}
+  const unlocked=MS[4].b.includes('dpad');S.ub.push('dpad');
+  const r=[P('storage',A.x-1,A.y,0),P('belt5',A.x+1,A.y,0),P('dpad',A.x+2,A.y-1,0),P('burner',A.x+2,A.y+2,0),P('dpad',Bq.x,Bq.y-1,0),P('belt5',Bq.x+3,Bq.y,0),P('incin',Bq.x+4,Bq.y,0)];
+  const crate=fw.entAt(A.x-1,A.y),snd=fw.entAt(A.x+2,A.y-1),rcv=fw.entAt(Bq.x,Bq.y-1),g=fw.entAt(A.x+2,A.y+2);
+  openPanel('ent',snd.id);ACT.padLink();tap({x:Bq.x+1,y:Bq.y});const linked=padTarget(snd)===rcv;
+  const dist=padRoute(snd,rcv),trip=2*dist/DRONE.spd+DRONE.load+DRONE.unload;
+  for(let s=0;s<150;s++){crate.store={iron_ore:999};g.fuel.coal=50;for(let k=0;k<20;k++)tick(0.05);}
+  const del=snd.del||0,exp=Math.floor((150-DRONE.load-1)/trip)*DRONE.cap,passed=(rcv.store.iron_ore||0)<B.dpad.cap;
+  const sv=serialize();load(sv);const s2=fw.entAt(A.x+2,A.y-1),keep=!!s2&&padTarget(s2)&&padTarget(s2).x===Bq.x&&s2.del===del;
+  ACT.closePanel();return{unlocked,ok:r.every(v=>v===''),linked,del,exp,dist:Math.round(dist),passed,keep};});
+ check(`drones: Tier 5 unlock, tap-to-link, ${dr.del} items flown ${dr.dist} tiles (expected ≈${dr.exp}), receiver passes them on, route survives save/load`,dr.unlocked&&dr.ok&&dr.linked&&dr.del>=dr.exp*0.9&&dr.del<=dr.exp+40&&dr.passed&&dr.keep);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;

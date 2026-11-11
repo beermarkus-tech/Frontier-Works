@@ -104,6 +104,8 @@ D('crossing',{n:'Crossing',k:'cross',cat:'log',col:'#6c6c6c',cost:{iron_plate:3,
 D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'log',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'Splits fluid to all other sides (pipes or touching buildings).'});
 D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',cost:{iron_plate:10,iron_rod:10},desc:'Buffers 2000 items; passes them on to outgoing belts.'});
 D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'log',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
+D('dpad',{n:'Drone Pad',k:'dpad',w:3,pw:25,cap:400,cat:'log',col:'#2fa7a0',cost:{motor:4,stator:4,cased_girder:6,cable:30},desc:'Holds 400 items. Link it to another pad and its drone flies them there (40 per trip). An unlinked pad receives drones and passes items to outgoing belts.'});
+const DRONE={cap:40,spd:10,load:1.5,unload:1.5,wait:8};   // items per trip, tiles per second, seconds to load / unload, max seconds to wait for a full load
 D('incin',{n:'Incinerator',k:'incin',cat:'log',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('drill1',{n:'Drill Mk1',k:'drill',w:2,rate:1,pw:5,cat:'ext',col:'#6b7f3a',cost:{iron_plate:10,concrete:10},desc:'Place over an ore node. 60/min on a normal node.'});
 D('drill2',{n:'Drill Mk2',k:'drill',w:2,rate:2,pw:12,cat:'ext',col:'#8a9a2a',cost:{braced_plate:8,truss_frame:2,concrete:20},desc:'120/min on a normal node.'});
@@ -130,7 +132,7 @@ const MS=[
 {n:'Structural Works',req:{braced_plate:50,rotor:30,concrete:200,cable:100},b:['pipe1','junction','wpump','tank','sorter'],r:['r_truss_frame','r_stitched_plate','r_cast_bolts']},
 {n:'Steam Power',req:{truss_frame:25,rotor:50,copper_sheet:100,cable:200},b:['steam','pole2','drill2']},
 {n:'Steelworks',req:{truss_frame:50,braced_plate:100,concrete:500,cable:300},b:['foundry','belt3'],r:['r_steel_ingot','r_steel_beam','r_steel_pipe','r_cased_girder','r_stator','r_motor','r_steel_rod','r_iron_alloy'],oc:1},
-{n:'Heavy Industry',req:{motor:50,cased_girder:100,stator:100,steel_pipe:300},b:['fabricator'],r:['r_heavy_truss','r_iron_wire','r_steel_rotor']},
+{n:'Heavy Industry',req:{motor:50,cased_girder:100,stator:100,steel_pipe:300},b:['fabricator','dpad'],r:['r_heavy_truss','r_iron_wire','r_steel_rotor']},
 {n:'Petrochemistry',req:{heavy_truss:10,motor:100,steel_beam:300,cased_girder:200},b:['opump','refinery','turbine','pipe2','belt4'],r:['r_plastic','r_rubber','r_fuel','r_residual_fuel','r_petro_coke','r_residual_plastic','r_residual_rubber','r_wet_concrete','r_circuit_board','r_coke_steel','r_insulated_cable']},
 {n:'Electronics',req:{plastic:300,rubber:300,circuit_board:100,heavy_truss:20},b:[],r:['r_compute_module','r_data_bus','r_quartz_crystal','r_silica','r_resonator']},
 {n:'Lightweight Alloys',req:{compute_module:25,data_bus:50,resonator:100,steel_pipe:500},b:['blender','drill3'],r:['r_alumina','r_alu_scrap','r_alu_ingot','r_pure_alu','r_alu_casing','r_alloy_panel','r_heat_sink','r_acid','r_battery','r_coolant_block','r_control_chip']},

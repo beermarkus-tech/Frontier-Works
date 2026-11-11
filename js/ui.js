@@ -37,6 +37,7 @@ function updInfo(){
  const t=UI.tool;let h;
  if(t==='del')h='<b>Dismantle</b><span class="hint">Tap to remove (full refund) · drag across belts, pipes & poles to clear them</span>';
  else if(t&&B[t])h=`<b>${B[t].n}</b>${costHtml(B[t].cost)}<span class="hint">${B[t].desc||''}</span>`;
+ else if(UI.linkFrom)h='<b>Drone route</b><span class="hint">Tap the destination Drone Pad · tap anywhere else to cancel</span>';
  else h='<span class="hint">Tap anything to inspect · drag to pan · pinch or scroll to zoom · pick a building below to place it</span>';
  if($('info').__h!==h){$('info').__h=h;$('info').innerHTML=h;}
  $('fInspect').classList.toggle('on',!t);$('fDel').classList.toggle('on',t==='del');$('fRot').firstElementChild.style.transform=`rotate(${UI.rotA}deg)`;
@@ -81,6 +82,7 @@ function entStatic(e){
   h+=`<h4>Filter (goes out the front)</h4><div class="chips"><button class="btn chip ${!e.filter?'on':''}" data-act="filter" data-v="">None (split all)</button>${items.map(k=>`<button class="btn chip ${e.filter===k?'on':''}" data-act="filter" data-v="${k}">${nm(k)}</button>`).join('')}</div>`;
  }
  if(e.k==='gen')h+=`<h4>Hand-feed</h4><div class="chips">${d.fuels.filter(f=>!IT[f].f).map(f=>`<button class="btn chip" data-act="feed" data-v="${f}">+10 ${nm(f)} from stock</button>`).join('')}</div>`;
+ if(e.k==='dpad'){const tg=padTarget(e);h+=`<h4>Drone route</h4><div class="muted" style="margin-bottom:6px">${tg?`Sends its items by drone to the Drone Pad at ${tg.x}, ${tg.y} (${Math.round(padRoute(e,tg))} tiles away).`:'Not linked: this pad receives drones and passes their items on to outgoing belts.'}</div><button class="btn" data-act="padLink">📍 ${tg?'Change destination':'Send to…'}</button>${tg?' <button class="btn" data-act="padUnlink">✕ Unlink</button>':''} <button class="btn" data-act="takeAll">Move all into item stock</button>`;}
  if(e.k==='storage')h+=`<h4>Actions</h4><button class="btn" data-act="takeAll">Move all into item stock</button>`;
  if(e.k==='tank')h+=`<h4>Actions</h4><button class="btn" data-act="flushTank">Flush tank</button>`;
  if(e.k==='core')h+=`<h4>Base Core</h4><p class="muted">Belt items into any side of the Core to add them to your item stock. Buildings are paid for from that stock.</p><button class="btn" data-act="openMs" style="margin-top:6px">🏁 Open goals</button> <button class="btn" data-act="openInv">📦 Items</button>`;
@@ -140,6 +142,11 @@ function entDyn(e){
   if(e.d==='reactor')h+=`<div class="row"><span>${nm('waste')}</span><span>${e.outb.waste||0}/50</span></div>`;
   h+=gridHtml(e.grid);}
  if(e.k==='pole')h+=gridHtml(e.grid);
+ if(e.k==='dpad'){const tg=padTarget(e),D=e.dr,n=padCount(e),dist=tg?padRoute(e,tg):0,trip=2*dist/DRONE.spd+DRONE.load+DRONE.unload;
+  h+=`<div class="row"><span>Stored</span><span>${n}/${B[e.d].cap}</span></div><div class="bar"><i style="width:${n/B[e.d].cap*100}%"></i></div>${bufList(e.store)}`;
+  if(tg){h+=`<h4>Drone</h4><div class="row"><span>Now</span><span>${D.st===1?`flying out (${Math.round(D.t*100)}%)`:D.st===2?`returning (${Math.round((1-D.t)*100)}%)`:D.w>0?(n>=DRONE.cap?'loading':`waiting for a full load (${Math.max(0,Math.ceil(DRONE.wait-D.w))} s)`):'on the pad'}</span></div>`;
+   const ck=Object.keys(D.c||{});if(ck.length)h+=`<div class="row"><span>Cargo</span><span>${ck.map(k=>`${D.c[k]} ${IT[k].n}`).join(', ')}</span></div>`;
+   h+=`<div class="row"><span>Throughput</span><span>≈ ${fmt(DRONE.cap*60/trip)} items/min</span></div><div class="muted">${DRONE.cap} items per trip (waits up to ${DRONE.wait} s for a full load) · ${Math.round(trip)} s round trip over ${Math.round(dist)} tiles</div><div class="row"><span>Delivered so far</span><span>${fmt(e.del||0)}</span></div>`;}}
  if(e.k==='storage'){let t=0;for(const k in e.store)t+=e.store[k];h+=`<div class="row"><span>Used</span><span>${t}/${d.cap}</span></div><div class="bar"><i style="width:${t/d.cap*100}%"></i></div>${bufList(e.store)}`;}
  if(e.k==='tank')h+=`<div class="row"><span>${e.ft?nm(e.ft):'Empty'}</span><span>${e.amt}/${d.cap} m³</span></div>`;
  if(isLine(e.k))h+=`<div class="row"><span>Throughput</span><span>${fmt(d.spd*60)}/min</span></div><div class="row"><span>Carrying</span><span>${e.item?nm(e.item):'—'}</span></div>`;
@@ -240,6 +247,8 @@ const ACT={
  setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v)return;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;renderPanel(true);},
  filter:v=>{const e=ents.get(UI.panel.arg);if(e){e.filter=v||null;renderPanel(true);}},
  collectAll:()=>{let n=0,c=0;for(const e of ents.values())if(e.k==='storage'){let any=false;for(const k in e.store){give(k,e.store[k]);n+=e.store[k];any=true;}if(any)c++;e.store={};}toast(n?`Moved ${fmt(n)} items from ${c} crate${c>1?'s':''} into the stock`:'The crates are empty');renderPanel(true);buildTools();},
+ padLink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.linkFrom=e.id;setTool(null);toast('Tap the Drone Pad the drone should fly to');updInfo();},
+ padUnlink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;delete e.lx;delete e.ly;renderPanel(true);toast('Route removed: this pad now receives drones');},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},

@@ -2,7 +2,7 @@
 /* ================= STATE ================= */
 let S, ents=new Map(), grid=new Int32Array(MW*MH), nextId=1;
 let terr, nodeAt, nodes=[], terrC, bio;
-let topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[];
+let topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[];
 let tickNo=0;
 const stat={p:{},c:{},hist:[],acc:0};
 
@@ -133,6 +133,7 @@ function initEnt(e,d){
   case 'gen':e.fuel=e.fuel||{};e.energy=e.energy||0;e.water=e.water||0;e.wacc=e.wacc||0;e.outb=e.outb||{};e.trip=!!e.trip;e.load=0;e.rr=0;break;
   case 'pole':e.trip=!!e.trip;break;
   case 'storage':e.store=e.store||{};e.rr=0;break;
+  case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
  }
  e.pw=0;e.want=false;
@@ -146,6 +147,7 @@ function removeEnt(e,ref,silent){
   if(e.k==='cross'){if(e.hs)give(e.hs,1);if(e.vs)give(e.vs,1);}
   for(const b of [e.inb,e.outb,e.store,e.fuel])if(b)for(const k in b)give(k,Math.floor(b[k]));
   if((e.k==='drill')&&e.node&&e.buf)give(NODE_T[e.node.t][0],e.buf);
+  if(e.k==='dpad'&&e.dr)for(const k in e.dr.c)give(k,e.dr.c[k]);
  }
  topoDirty=true;
 }
@@ -179,7 +181,7 @@ function accept(e,item,dir,carry){
   case 'gen':{const d=B[e.d];
    if(item==='water'&&d.water){if(e.water>=100)return false;e.water++;return true;}
    if(!has(d.fuels,item))return false;const cap=item==='fuel_rod'?5:50;if((e.fuel[item]||0)>=cap)return false;e.fuel[item]=(e.fuel[item]||0)+1;return true;}
-  case 'storage':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}
+  case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;return true;
   case 'incin':stat.c[item]=(stat.c[item]||0)+1;return true;
@@ -220,12 +222,12 @@ function feedsInto(sd,e,o){const into=(o+2)&3;
  if(sd.k==='cross'){const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&isLine(far.k)&&far.k===e.k&&far.dir===into;}
  return false;}
 function rebuildTopo(){
- topoDirty=false;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];
+ topoDirty=false;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];
  const lines=[];
  for(const e of ents.values()){
   if(isLine(e.k))lines.push(e);else if(e.k==='router')routers.push(e);else if(e.k==='cross')crosses.push(e);
   else if(e.k!=='pole'){e.ports=perim(e);buildings.push(e);}
-  if(e.k==='pole'||e.k==='gen')pnodes.push(e);
+  if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);
   e.grid=null;if(B[e.d].pw)e.pw=0;
  }
  for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):true))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
@@ -296,6 +298,26 @@ function effTrack(e,dt,st){const T=e._efT=Math.min(EFF_T,(e._efT||0)+dt),a=dt/T;
  const w=e._efw||(e._efw={});for(const k in w){w[k]*=1-a;if(w[k]<0.002)delete w[k];}if(st!=='work')w[st]=(w[st]||0)+a;}
 function machState(e,r){if(!r)return'recipe';if(e.run)return e.pw>0?'work':'power';
  for(const k in r.i)if((e.inb[k]||0)<r.i[k])return'in:'+k;return'out';}
+/* ---------- Drone Pads ----------
+   A pad linked to another pad (e.lx,e.ly = its corner) is a sender: its drone loads up to DRONE.cap items, flies straight to the target,
+   unloads what fits and flies back (leftovers go back into the pad). It draws power only while busy. An unlinked pad is a receiver
+   and passes items on to outgoing belts like a crate. e.dr = {st:0 on pad | 1 out | 2 back, t:0..1 along the route, c:cargo, w:timer, tx,ty:route end}. */
+const padCount=e=>{let n=0;for(const k in e.store)n+=e.store[k];return n;};
+function padTarget(e){if(e.lx==null)return null;const t=entAt(e.lx,e.ly);return t&&t.k==='dpad'&&t!==e&&t.x===e.lx&&t.y===e.ly?t:null;}
+const padRoute=(e,tg)=>Math.hypot(tg.x-e.x,tg.y-e.y);
+function updPad(e,dt){const d=B[e.d],D=e.dr,tg=padTarget(e),pw=e.pw>0;
+ if(!tg){const ks=Object.keys(e.store);if(ks.length)for(let a=0;a<2;a++){let moved=false;for(let k=0;k<ks.length;k++){const it=ks[(e.si=(e.si||0)+1)%ks.length];if(e.store[it]>0&&pushOut(e,it)){if(--e.store[it]<=0)delete e.store[it];moved=true;break;}}if(!moved)break;}}
+ e.want=D.st!==0||(!!tg&&padCount(e)>0&&padCount(tg)<d.cap);
+ if(D.st===0){
+  if(tg&&pw&&e.want){D.w+=dt;const full=padCount(e)>=Math.min(DRONE.cap,d.cap-padCount(tg));if(D.w>=DRONE.load&&(full||D.w>=DRONE.wait)){let take=Math.min(DRONE.cap,d.cap-padCount(tg));D.c={};
+    for(const k of Object.keys(e.store)){const m=Math.min(take,e.store[k]);if(m>0){D.c[k]=m;e.store[k]-=m;if(!e.store[k])delete e.store[k];take-=m;}if(take<=0)break;}
+    D.st=1;D.t=0;D.w=0;D.tx=tg.x;D.ty=tg.y;}}else D.w=0;}
+ else if(pw){const dist=Math.max(1,Math.hypot(D.tx-e.x,D.ty-e.y));
+  if(D.st===1){if(!tg||tg.x!==D.tx||tg.y!==D.ty){D.st=2;}else{D.t=Math.min(1,D.t+DRONE.spd*dt/dist);if(D.t>=1){D.w+=dt;if(D.w>=DRONE.unload){let n=0;
+     for(const k in D.c){const m=Math.min(d.cap-padCount(tg),D.c[k]);if(m>0){tg.store[k]=(tg.store[k]||0)+m;D.c[k]-=m;n+=m;}if(!D.c[k])delete D.c[k];}
+     e.del=(e.del||0)+n;D.st=2;D.w=0;}}}}
+  if(D.st===2){D.t=Math.max(0,D.t-DRONE.spd*dt/dist);if(D.t<=0){for(const k in D.c)e.store[k]=(e.store[k]||0)+D.c[k];D.c={};D.st=0;}}}
+}
 function updBuilding(e,dt){
  switch(e.k){
   case 'mach':{
@@ -319,6 +341,7 @@ function updBuilding(e,dt){
    for(let a=0;a<2;a++){let moved=false;for(let k=0;k<ks.length;k++){const it=ks[(e.si=(e.si||0)+1)%ks.length];if(e.store[it]>0&&pushOut(e,it)){if(--e.store[it]<=0)delete e.store[it];moved=true;break;}}if(!moved)break;}
    break;}
   case 'tank':if(e.amt>0&&e.ft)for(let a=0;a<3&&e.amt>0;a++){if(pushOut(e,e.ft))e.amt--;else break;}break;
+  case 'dpad':updPad(e,dt);break;
  }
 }
 function tick(dt){

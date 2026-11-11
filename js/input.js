@@ -16,6 +16,8 @@ function linePath(a,b,rot){
 }
 function buildPath(id,path){let fail='';for(const p of path){const why=placeEnt(id,p.x,p.y,p.d);if(why&&why!=='same'&&why!=='Blocked'){fail=why;if(why==='Not enough materials')break;}}if(fail)toast(fail);refreshTools();updInfo();}
 function tap(t){
+ if(UI.linkFrom){const src=ents.get(UI.linkFrom),e=entAt(t.x,t.y);UI.linkFrom=null;updInfo();
+  if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
  const tool=UI.tool;
  if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();}return;}
  if(tool&&B[tool]){const d=B[tool];
