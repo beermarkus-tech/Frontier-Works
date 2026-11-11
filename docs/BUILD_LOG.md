@@ -1030,3 +1030,32 @@ Signs don't appear in the Logistics menu. And they shouldn't be there anyway (it
 ### Verified
 - `npm test` 63/63. New check: a save with signs and Drone Pad removed from its unlock list (and 5 tiers done) gets both back on load, and the Signs tab lists exactly the four signs.
 - Tablet screenshot of the dock with the Signs tab.
+
+---
+
+## Session 35 — 2026-11-11 (Claude Code, cloud session) · Build 40
+
+### What Markus asked
+Move a building with a long press and drag, if that works on a tablet; otherwise think of another way.
+
+### What was built
+- **Long press + drag** (2D and 3D): with no build tool selected, hold a building ~0.45 s without moving (short vibration where supported, toast
+  "Moving …"). Drag: a see-through copy follows the finger, outlined green (fits) or red (blocked). Let go to place; on a red spot it stays where it was
+  and a toast says why. A second finger (pinch) cancels the move. Moving the finger before the 0.45 s is a normal pan, so panning is unchanged.
+- **✥ Move button** in every building panel (next to Rotate/Dismantle), for long distances: tap it, pan anywhere, tap the new spot. Esc cancels.
+- `canMove(e,x,y)` / `moveEnt(e,x,y)` in `js/sim.js`: same entity object, so recipe, buffers, clock, fuel, sign text and drone route all stay.
+  Pads whose route pointed at a moved pad follow it. Drills/pumps re-check their node via `initEnt`. The Core can't be moved. Moving is free.
+- Canvas gets `-webkit-touch-callout:none` so iPad/Android don't show their own long-press menu.
+- Build number **40**.
+
+### Decisions
+- Long press only in inspect mode (no tool), so it never clashes with placing or belt dragging.
+- The new spot must be fully empty (even belts can't be overlaid by a moved belt), plus the usual placement rules (water, ore node, …).
+
+### Verified
+- `npm test` 64/64. New check: moving keeps recipe/buffer/clock, a blocked spot is refused, a real mouse long-press + drag moves a smelter
+  (preview green during drag), and the ✥ Move button + tap moves it back.
+
+### Next up / open questions
+- Overflow splitter (proposed earlier, not yet confirmed).
+- Maybe: moving a whole selection of buildings at once.

@@ -37,6 +37,7 @@ function updInfo(){
  const t=UI.tool;let h;
  if(t==='del')h='<b>Dismantle</b><span class="hint">Tap to remove (full refund) · drag across belts, pipes & poles to clear them</span>';
  else if(t&&B[t])h=`<b>${B[t].n}</b>${costHtml(B[t].cost)}<span class="hint">${B[t].desc||''}</span>`;
+ else if(UI.moveId)h='<b>Move</b><span class="hint">Pan to the new spot and tap where it should go · Esc cancels · tip: long-press a building to drag it</span>';
  else if(UI.linkFrom)h='<b>Drone route</b><span class="hint">Tap the destination Drone Pad · tap anywhere else to cancel</span>';
  else h='<span class="hint">Tap anything to inspect · drag to pan · pinch or scroll to zoom · pick a building below to place it</span>';
  if($('info').__h!==h){$('info').__h=h;$('info').innerHTML=h;}
@@ -88,7 +89,7 @@ function entStatic(e){
  if(e.k==='tank')h+=`<h4>Actions</h4><button class="btn" data-act="flushTank">Flush tank</button>`;
  if(e.k==='core')h+=`<h4>Base Core</h4><p class="muted">Belt items into any side of the Core to add them to your item stock. Buildings are paid for from that stock.</p><button class="btn" data-act="openMs" style="margin-top:6px">🏁 Open goals</button> <button class="btn" data-act="openInv">📦 Items</button>`;
  if(e.k==='router'||e.k==='cross'||isLine(e.k)||e.k==='pole')h+='';
- if(e.k!=='core')h+=`<h4>&nbsp;</h4><button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'&&e.k!=='pipe'&&!(e.k==='router'&&B[e.d].sub==='junc')?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button>`;
+ if(e.k!=='core')h+=`<h4>&nbsp;</h4><button class="btn" data-act="moveSel" title="Or long-press the building and drag it">✥ Move</button> <button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'&&e.k!=='pipe'&&!(e.k==='router'&&B[e.d].sub==='junc')?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button>`;
  return h;
 }
 function bufList(b){const ks=Object.keys(b).filter(k=>b[k]>0);return ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(b[k]))}</span></div>`).join(''):'<div class="muted">empty</div>';}
@@ -265,6 +266,7 @@ const ACT={
  padUnlink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;delete e.lx;delete e.ly;renderPanel(true);toast('Route removed: this pad now receives drones');},
  netFlush:()=>{const e=ents.get(UI.panel.arg);if(e&&e.net){e.net.amt=0;e.net.fluid=null;e.net.conflict=null;toast('Network emptied');}},
  signColor:v=>{const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tc=+v;topoVer++;renderPanel(true);}},
+ moveSel:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.moveId=e.id;setTool(null);closePanel();toast(`Tap where the ${B[e.d].n} should go`);updInfo();},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},

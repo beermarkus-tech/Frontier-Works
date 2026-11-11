@@ -136,6 +136,9 @@ Hand mining gives +5 ore from a node.
 - Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D, at the same size and
   zoom level as the number in the efficiency ring.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
+- **Moving buildings (Session 35):** with no build tool selected, press and hold a building ~0.45 s (short buzz), drag it, let go. A see-through
+  preview outlined green/red shows the spot. Or ✥ Move in its panel, then tap the new spot (Esc cancels). Moving is free and keeps everything
+  (recipe, buffers, clock, fuel, sign text, drone routes; routes from other pads follow). The new spot must be free and valid; the Base Core can't move. Works in 3D too.
 - **Production Planner** (☰ Menu → Tools). A paper-planning tool that only does maths. It never changes the factory.
   - *From a node:* pick resource, purity, extractor, count and clock, then add steps (recipes). Each step takes a chosen
     share (%) of what's left of its input. It shows exact and rounded machine counts (e.g. "3 × Smelter: 2 at 100% + 1 at 67%"),

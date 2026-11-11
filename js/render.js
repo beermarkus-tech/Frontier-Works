@@ -495,6 +495,10 @@ function render(){
   else if(d.k==='pole'){ctx.globalAlpha=0.8;drawPole(ctx,{d:tool},X,Y,s);ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,215,90,0.6)';ctx.setLineDash([5*DPR,5*DPR]);ctx.beginPath();ctx.arc(X+s/2,Y+s/2,d.link*s,0,7);ctx.stroke();ctx.setLineDash([]);}
   else blit(tool,X,Y,s,0.7);
   ctx.strokeStyle=bad?'#ff5a46':'#6ef08a';ctx.lineWidth=2*DPR;rr(X+1,Y+1,P-2,P-2,s*0.15);ctx.stroke();ctx.fillStyle=bad?'rgba(255,70,50,0.18)':'rgba(110,240,138,0.1)';ctx.fill();}
+ else if(movePrev&&ents.has(movePrev.e.id)){const m=movePrev,e=m.e,X=sx(m.nx),Y=sy(m.ny),P=e.w*s;
+  ctx.globalAlpha=0.35;ctx.fillStyle='#000';rr(sx(e.x),sy(e.y),P,P,s*0.15);ctx.fill();ctx.globalAlpha=1;
+  ctx.globalAlpha=0.7;if(e.k==='sign')drawSign(ctx,e,X,Y,P);else if(isLine(e.k))drawLines([Object.assign({},e,{x:m.nx,y:m.ny,cin:null})],sx,sy,s,0.75);else if(e.k==='router'||e.k==='cross')drawRouter(ctx,Object.assign({},e,{x:m.nx,y:m.ny}),X,Y,s);else if(e.k==='pole')drawPole(ctx,e,X,Y,s);else blit(e.d,X,Y,s,0.7);ctx.globalAlpha=1;
+  ctx.strokeStyle=m.ok?'#6ef08a':'#ff5a46';ctx.lineWidth=2.5*DPR;rr(X+1,Y+1,P-2,P-2,s*0.15);ctx.stroke();ctx.fillStyle=m.ok?'rgba(110,240,138,0.12)':'rgba(255,70,50,0.2)';ctx.fill();}
  else if(hover&&tool==='del'){const e=entAt(hover.x,hover.y);ctx.strokeStyle='#ff5a46';ctx.lineWidth=2*DPR;if(e&&e.k!=='core'){ctx.fillStyle='rgba(255,70,50,0.2)';rr(sx(e.x),sy(e.y),e.w*s,e.h*s,s*0.15);ctx.fill();ctx.stroke();}else{rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();}}
  else if(hover&&!tool&&!G){const e=entAt(hover.x,hover.y);if(e&&e.id!==UI.sel){ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5*DPR;rr(sx(e.x)+1,sy(e.y)+1,e.w*s-2,e.h*s-2,s*0.18);ctx.stroke();}}
  if(UI.sel&&ents.has(UI.sel)){const e=ents.get(UI.sel),X=sx(e.x)-3*DPR,Y=sy(e.y)-3*DPR,P=e.w*s+6*DPR;ctx.strokeStyle='rgba(255,181,71,0.25)';ctx.lineWidth=7*DPR;rr(X,Y,P,P,s*0.2);ctx.stroke();ctx.strokeStyle='#ffb547';ctx.lineWidth=2*DPR;ctx.setLineDash([7*DPR,5*DPR]);ctx.lineDashOffset=-animT*24*DPR;ctx.stroke();ctx.setLineDash([]);}

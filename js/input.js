@@ -15,7 +15,15 @@ function linePath(a,b,rot){
  path.push({x,y,d:steps[steps.length-1]});return path;
 }
 function buildPath(id,path){let fail='';for(const p of path){const why=placeEnt(id,p.x,p.y,p.d);if(why&&why!=='same'&&why!=='Blocked'){fail=why;if(why==='Not enough materials')break;}}if(fail)toast(fail);refreshTools();updInfo();}
+/* Long press (≈0.45 s, no tool, finger still) on a building lifts it; dragging moves the preview, releasing places it */
+let movePrev=null;
+function armLongPress(g,t0){if(UI.tool||UI.moveId||UI.linkFrom)return;const en=t0&&entAt(t0.x,t0.y);if(!en||en.k==='core')return;
+ g.lp=setTimeout(()=>{if(g.type!=='pending')return;g.type='move';g.mv={e:en,dx:en.x-t0.x,dy:en.y-t0.y};movePrev={e:en,nx:en.x,ny:en.y,ok:true};
+  try{navigator.vibrate&&navigator.vibrate(18);}catch(_){}toast(`Moving ${B[en.d].n}: drag and let go`);},450);}
+function dragMove(g,t){if(!t)return;const nx=t.x+g.mv.dx,ny=t.y+g.mv.dy;movePrev={e:g.mv.e,nx,ny,ok:!canMove(g.mv.e,nx,ny)};}
+function dropMove(){const m=movePrev;movePrev=null;if(!m)return;if(!ents.has(m.e.id))return;const why=moveEnt(m.e,m.nx,m.ny);if(why)toast(why+': not moved');else{UI.sel=m.e.id;refreshTools();}}
 function tap(t){
+ if(UI.moveId){const e=ents.get(UI.moveId);UI.moveId=null;movePrev=null;updInfo();if(!e)return;const fp=footprint(e.d,t.x,t.y),why=moveEnt(e,fp.x,fp.y);toast(why?why+': not moved':`${B[e.d].n} moved`);if(!why)UI.sel=e.id;return;}
  if(UI.linkFrom){const src=ents.get(UI.linkFrom),e=entAt(t.x,t.y);UI.linkFrom=null;updInfo();
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
  const tool=UI.tool;
@@ -34,19 +42,21 @@ function puff(e){for(let k=0;k<10;k++)parts.push({x:e.x+Math.random()*e.w,y:e.y+
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('pointerdown',e=>{
  cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});vel.x=vel.y=0;zAnchor=null;syncT();
- if(ptrs.size===2){const [a,b]=[...ptrs.values()];G={type:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y),z0:cam.z,m:toTile((a.x+b.x)/2,(a.y+b.y)/2)};linePrev=null;return;}
+ if(ptrs.size===2){if(G&&G.lp)clearTimeout(G.lp);if(G&&G.type==='move'){movePrev=null;}const [a,b]=[...ptrs.values()];G={type:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y),z0:cam.z,m:toTile((a.x+b.x)/2,(a.y+b.y)/2)};linePrev=null;return;}
  if(ptrs.size>2)return;
  const base={sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y,lt:performance.now(),lx:e.clientX,ly:e.clientY,vx:0,vy:0};
  if(e.button===1||e.button===2){G=Object.assign(base,{type:'pan'});return;}
- G=Object.assign(base,{type:'pending',t0:toTile(e.clientX,e.clientY)});
+ G=Object.assign(base,{type:'pending',t0:toTile(e.clientX,e.clientY)});armLongPress(G,G.t0);
 });
 cv.addEventListener('pointermove',e=>{
  if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
  const t=toTile(e.clientX,e.clientY);if(e.pointerType==='mouse'||G)hover=t;
+ if(UI.moveId&&!G){const en=ents.get(UI.moveId);if(en){const fp=footprint(en.d,t.x,t.y);movePrev={e:en,nx:fp.x,ny:fp.y,ok:!canMove(en,fp.x,fp.y)};}}
  if(!G)return;
  if(G.type==='pinch'&&ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);cam.z=Math.max(zMin(),Math.min(3.5,G.z0*d/Math.max(10,G.d0)));const s=TS*cam.z,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;cam.x=G.m.fx-(mx-innerWidth/2)/s;cam.y=G.m.fy-(my-innerHeight/2)/s;clampCam();syncT();return;}
  const moved=Math.hypot(e.clientX-G.sx,e.clientY-G.sy);
- if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else G.type='pan';}
+ if(G.type==='move'){dragMove(G,t);return;}
+ if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(G.lp);const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else G.type='pan';}
  if(G.type==='pan'){const s=TS*cam.z,now=performance.now(),dt=Math.max(1,now-G.lt)/1000;
   const nx=G.cx-(e.clientX-G.sx)/s,ny=G.cy-(e.clientY-G.sy)/s;G.vx=G.vx*0.5+((nx-cam.x)/dt)*0.5;G.vy=G.vy*0.5+((ny-cam.y)/dt)*0.5;G.lt=now;cam.x=nx;cam.y=ny;clampCam();syncT();}
  else if(G.type==='line'){linePrev={id:UI.tool,path:linePath(G.t0,t,UI.rot)};}
@@ -55,19 +65,21 @@ cv.addEventListener('pointermove',e=>{
 function endPtr(e){
  ptrs.delete(e.pointerId);if(!G)return;
  if(G.type==='pinch'){if(ptrs.size===0)G=null;else G={type:'dead'};return;}
- if(G.type==='pending')tap(G.t0);
+ clearTimeout(G.lp);
+ if(G.type==='move')dropMove();
+ else if(G.type==='pending')tap(G.t0);
  else if(G.type==='line'&&linePrev){buildPath(linePrev.id,linePrev.path);linePrev=null;}
  else if(G.type==='pan'&&performance.now()-G.lt<70){const sp=Math.hypot(G.vx,G.vy),mx=120/cam.z;const k=sp>mx?mx/sp:1;vel.x=G.vx*k;vel.y=G.vy*k;}
  if(ptrs.size===0)G=null;
  if(e.pointerType!=='mouse')hover=null;
 }
-cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);G=null;linePrev=null;});
+cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);if(G)clearTimeout(G.lp);G=null;linePrev=null;movePrev=null;});
 cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!G)hover=null;});
 cv.addEventListener('wheel',e=>{e.preventDefault();vel.x=vel.y=0;const m=toTile(e.clientX,e.clientY);const dy=e.deltaMode===1?e.deltaY*30:e.deltaY;camT.z=Math.max(zMin(),Math.min(3.5,camT.z*Math.exp(-dy*0.0016)));zAnchor={sx:e.clientX,sy:e.clientY,fx:m.fx,fy:m.fy};},{passive:false});
 const keys=new Set();
 addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const k=e.key.toLowerCase();keys.add(k);
  if(k==='r'){if(UI.tool)ACT.rotate();else if(UI.panel&&UI.panel.kind==='ent')ACT.rotSel();}
- else if(k==='escape'){setTool(null);autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
+ else if(k==='escape'){setTool(null);UI.moveId=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
  else if(k==='q'&&hover){const x=entAt(hover.x,hover.y);if(x&&B[x.d].cat&&ub(x.d)){UI.cat=B[x.d].cat;UI.rot=x.dir||0;UI.rotA=UI.rot*90;buildCats();setTool(x.d);}}});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 addEventListener('blur',()=>keys.clear());

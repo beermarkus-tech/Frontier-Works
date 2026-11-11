@@ -140,6 +140,15 @@ function initEnt(e,d){
  }
  e.pw=0;e.want=false;
 }
+/* Moving: same entity (recipe, buffers, clock, fuel, text, routes) at a new corner. The new footprint must be free (apart from itself)
+   and valid for the building (water, ore node, …). Drone Pad routes pointing at a moved pad follow it. */
+function canMove(e,nx,ny){if(e.k==='core')return 'The Base Core stays put';const w=e.w;
+ for(let j=0;j<w;j++)for(let i=0;i<w;i++){const x=nx+i,y=ny+j;if(x<0||y<0||x>=MW||y>=MH)return 'Out of bounds';const id=grid[y*MW+x];if(id&&id!==e.id)return 'Blocked';}
+ for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(e.y+j)*MW+e.x+i]=0;const why=canPlace(e.d,nx,ny);for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;return why;}
+function moveEnt(e,nx,ny){const why=canMove(e,nx,ny);if(why)return why;if(nx===e.x&&ny===e.y)return '';const ox=e.x,oy=e.y,w=e.w;
+ for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(oy+j)*MW+ox+i]=0;e.x=nx;e.y=ny;for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(ny+j)*MW+nx+i]=e.id;
+ if(e.k==='dpad')for(const o of ents.values())if(o.k==='dpad'&&o.lx===ox&&o.ly===oy){o.lx=nx;o.ly=ny;}
+ initEnt(e,B[e.d]);e.born=animT;topoDirty=true;return '';}
 function removeEnt(e,ref,silent){
  if(e.k==='core')return;
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=0;

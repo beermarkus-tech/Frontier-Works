@@ -181,6 +181,19 @@ const server=require('./serve.js');
   ACT.hlClear();const cleared=!UI.hl.types.length&&document.getElementById('hlchip').style.display==='none';ACT.closePanel();cam.x=camT.x=core.x+2;cam.y=camT.y=core.y+2;
   return{n,chip,arrow,flew,btn,iron,cleared};});
  check(`highlight nodes: ${hl.n} uranium nodes, chip, edge arrow with distance, fly to nearest, node-panel button, clear (${Object.values(hl).join(',')})`,hl.n>0&&hl.chip&&hl.arrow&&hl.flew&&hl.btn&&hl.iron==='iron'&&hl.cleared);
+ // moving buildings: keeps state, blocked spots refused, long-press drag (mouse) and the panel ✥ Move button
+ const mv=await p.evaluate(()=>{const fw=window.__fw;const free=(x,y)=>{for(let j=-1;j<3;j++)for(let i=-1;i<9;i++)if(canPlace('smelter',x+i,y+j))return false;return true;};let X,Y;
+  for(let r=8;r<160&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(free(x,y)){X=x;Y=y;break;}}
+  fw.placeEnt('smelter',X,Y,0,true);fw.placeEnt('smelter',X+3,Y,0,true);const a=fw.entAt(X,Y),b=fw.entAt(X+3,Y);a.r='r_iron_ingot';a.inb={iron_ore:7};a.clock=0.73;
+  const blocked=moveEnt(a,X+2,Y)!==''&&fw.entAt(X,Y)===a;const why=moveEnt(a,X+6,Y);const kept=why===''&&fw.entAt(X+6,Y)===a&&fw.entAt(X,Y)==null&&a.r==='r_iron_ingot'&&a.inb.iron_ore===7&&a.clock===0.73;
+  moveEnt(a,X,Y);cam.x=camT.x=X+4;cam.y=camT.y=Y+1;cam.z=camT.z=2;const s=TS*cam.z,scr=(tx,ty)=>({x:innerWidth/2+(tx+0.5-cam.x)*s,y:innerHeight/2+(ty+0.5-cam.y)*s});
+  return{X,Y,blocked,kept,from:scr(X,Y),to:scr(X+6,Y)};});
+ await p.mouse.move(mv.from.x,mv.from.y);await p.mouse.down();await p.waitForTimeout(650);await p.mouse.move(mv.to.x,mv.to.y,{steps:6});await p.waitForTimeout(80);
+ const prevOk=await p.evaluate(()=>!!movePrev&&movePrev.ok);await p.mouse.up();await p.waitForTimeout(80);
+ const mv2=await p.evaluate(m=>{const fw=window.__fw,a=fw.entAt(m.X+6,m.Y),dragged=!!a&&a.r==='r_iron_ingot'&&fw.entAt(m.X,m.Y)==null;
+  openPanel('ent',a.id);const btn=!!document.querySelector('#pbody [data-act="moveSel"]');ACT.moveSel();tap({x:m.X,y:m.Y});const back=fw.entAt(m.X,m.Y)===a&&!UI.moveId;
+  const b=fw.entAt(m.X+3,m.Y);removeEnt(a,false,true);removeEnt(b,false,true);ACT.closePanel&&ACT.closePanel();return{dragged,btn,back};},mv);
+ check(`move buildings: keeps recipe/buffer/clock, blocked spot refused, long-press drag moves it, ✥ Move button + tap (${[mv.blocked,mv.kept,prevOk,mv2.dragged,mv2.btn,mv2.back].join(',')})`,mv.blocked&&mv.kept&&prevOk&&mv2.dragged&&mv2.btn&&mv2.back);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=['sign1','sign2','sign3','sign4'].map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
