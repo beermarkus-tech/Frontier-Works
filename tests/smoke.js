@@ -118,17 +118,26 @@ const server=require('./serve.js');
   run(90);fw.entAt(X-4,Y).store={iron_ore:999};stat.hist=[];run(90);const a=fw.entAt(X,Y)._ef,b=fw.entAt(X-1,Y+5)._ef;
   for(let j=-1;j<8;j++)for(let i=-5;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{ok:r.every(v=>v===''),a,b};});
  check(`crossing in front of a machine: input survives a pause (${Math.round(xj.a*100)}%), output through a crossing works (${Math.round(xj.b*100)}%)`,xj.ok&&xj.a>0.8&&xj.b>0.8);
- // pipes keep a steady fill level instead of blinking; Items panel can empty all crates at once
- const pf=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
-  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<6&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
-  P('tank',X,Y,0);for(let i=2;i<8;i++)P('pipe1',X+i,Y,0);P('incin',X+8,Y,0);const tk=fw.entAt(X,Y),pp=fw.entAt(X+5,Y);let lo=1,hi=0,flips=0,last=null;
-  for(let t=0;t<400;t++){if(t%10===0){tk.ft='water';tk.amt+=1;}tick(0.05);if(t>100){lo=Math.min(lo,pp._fl);hi=Math.max(hi,pp._fl);const on=!!pp.item;if(last!==null&&on!==last)flips++;last=on;}}
-  P('storage',X,Y+3,0);P('storage',X+3,Y+3,0);fw.entAt(X,Y+3).store={iron_plate:7};fw.entAt(X+3,Y+3).store={wire:5,bolts:3};const before=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);
+ // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
+ // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
+ const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<8&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  S.ub.push('junction','pipe1','tank');
+  const r=[P('tank',X,Y,0),P('pipe1',X+2,Y,2),P('pipe1',X+3,Y,2),P('pipe1',X+4,Y,2),P('junction',X+5,Y,0),P('pipe1',X+6,Y,1),P('pipe1',X+6,Y+1,3),P('pipe1',X+6,Y+2,3),P('incin',X+7,Y+2,0),P('tank',X+2,Y+1,0)];
+  const tk=fw.entAt(X,Y),t2=fw.entAt(X+2,Y+1);tick(0.05);const one=new Set([X+2,X+3,X+4,X+5].map(x=>fw.entAt(x,Y).net).concat([fw.entAt(X+6,Y+2).net])).size===1;
+  for(let s=0;s<5;s++){tk.ft='water';tk.amt=400;for(let k=0;k<20;k++)tick(0.05);}
+  stat.hist=[];t2.ft='crude';t2.amt=100;for(let s=0;s<70;s++){tk.ft='water';tk.amt=400;t2.ft='crude';t2.amt=100;for(let k=0;k<20;k++)tick(0.05);}
+  const n=fw.entAt(X+3,Y).net,rate=Math.round(rates().c.water||0),mix=!!n.conflict&&n.conflict.fluid==='crude'&&n.fluid==='water'&&t2.ft==='crude'&&t2.amt===100;
+  const amt=n.amt,sv=serialize();load(sv);tick(0.05);const n2=fw.entAt(X+3,Y).net,kept=n2&&n2.fluid==='water'&&Math.abs(n2.amt-amt)<=1;
+  P('storage',X,Y+5,0);P('storage',X+3,Y+5,0);fw.entAt(X,Y+5).store={iron_plate:7};fw.entAt(X+3,Y+5).store={wire:5,bolts:3};const before=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);
   openPanel('inv');const btn=!!document.querySelector('#pbody [data-act="collectAll"]');ACT.collectAll();const after=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);ACT.closePanel();
-  const empty=Object.keys(fw.entAt(X,Y+3).store).length+Object.keys(fw.entAt(X+3,Y+3).store).length;
-  for(let j=-1;j<6;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{lo,hi,flips,btn,gain:after-before,empty};});
- check(`pipe fill stays steady (${pf.lo.toFixed(2)}–${pf.hi.toFixed(2)}) while the raw contents flip ${pf.flips}×`,pf.flips>20&&pf.lo>0.15&&pf.hi-pf.lo<0.45);
- check(`Items: "Move everything from all crates" collects ${pf.gain} items and empties the crates`,pf.btn&&pf.gain===15&&pf.empty===0);
+  const empty=Object.keys(fw.entAt(X,Y+5).store).length+Object.keys(fw.entAt(X+3,Y+5).store).length;
+  for(let j=-1;j<8;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),one,rate,mix,kept,btn,gain:after-before,empty};});
+ check(`pipes without direction: backwards pipes + junction + corner form one network, ${pnet.rate} m³/min (Mk1 = 300)`,pnet.ok&&pnet.one&&pnet.rate>=270&&pnet.rate<=310);
+ check('pipe network refuses a second fluid (no mixing) and flags it',pnet.mix);
+ check('pipe network fluid and amount survive save/load',pnet.kept);
+ check(`Items: "Move everything from all crates" collects ${pnet.gain} items and empties the crates`,pnet.btn&&pnet.gain===15&&pnet.empty===0);
  // planner: several end products at once share their parts (Steel Beam 10/min + Steel Pipe 20/min → 70 Steel Ingot/min)
  const mt=await p.evaluate(()=>{PL.locked=true;const o=plRevMulti([{item:'steel_beam',rate:10},{item:'steel_pipe',rate:20}],{});PL.locked=false;
   const ing=o.rows.find(r=>r.item==='steel_ingot');return{ing:ing&&Math.round(ing.rate),goals:Object.keys(o.goal).length,beam:o.rows.find(r=>r.item==='steel_beam').n};});
@@ -163,7 +172,7 @@ const server=require('./serve.js');
  check(`drones: Tier 5 unlock, tap-to-link, ${dr.del} items flown ${dr.dist} tiles (expected ≈${dr.exp}), receiver passes them on, route survives save/load`,dr.unlocked&&dr.ok&&dr.linked&&dr.del>=dr.exp*0.9&&dr.del<=dr.exp+40&&dr.passed&&dr.keep);
  // find & highlight resource nodes: panel toggle, rings drawn, edge arrow for off-screen, fly to nearest, clear
  const hl=await p.evaluate(()=>{ACT.openFind();ACT.hlToggle('uranium');const n=hlNodes().length,chip=document.getElementById('hlchip').style.display==='flex';
-  const nr=hlNearest(hlNodes());cam.x=camT.x=MW/2;cam.y=camT.y=MH/2;cam.z=camT.z=1.2;
+  cam.x=camT.x=MW/2;cam.y=camT.y=MH/2;cam.z=camT.z=3.4;const nr=hlNearest(hlNodes());   // close zoom: no uranium on screen (it's ≥45 tiles out), so the edge arrow must show
   const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;const arrow=seen.includes(String(Math.round(nr.d)));
   ACT.hlFly();const flew=Math.hypot(camT.x-(nr.n.x+0.5),camT.y-(nr.n.y+0.5))<0.01;
   const core=[...ents.values()].find(e=>e.k==='core');const node=nodes.find(x=>x.t==='iron');openPanel('node',node);const btn=!!document.querySelector('#pbody [data-act="hlNode"]');ACT.hlNode();const iron=UI.hl.types.join();

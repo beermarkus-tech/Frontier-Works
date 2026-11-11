@@ -1,11 +1,11 @@
 'use strict';
 /* ---------- save/load ---------- */
-const SKEYS=['d','x','y','dir','lx','ly','dr','del','item','prog','r','inb','outb','run','clock','buf','fuel','energy','water','wacc','trip','store','ft','amt','filter','hs','vs','hd','vd'];
+const SKEYS=['d','x','y','dir','lx','ly','dr','del','lv','item','prog','r','inb','outb','run','clock','buf','fuel','energy','water','wacc','trip','store','ft','amt','filter','hs','vs','hd','vd'];
 /* Save format v2: compact JSON (entities as [d,x,y,dir,{only non-default fields}]), gzip-compressed where the browser supports it,
    stored in IndexedDB (lots of room) with localStorage as fallback. Old v1 saves (base64 JSON, entity objects) still load.
    Exported text: "FW2:" + base64(gzip). If saving fails, the player sees a warning (it used to fail silently). */
 const SAVE_KEY='frontierworks_save',SAVE={busy:null,last:0,bytes:0,where:'',err:'',warned:0};
-function serialize(){const es=[];
+function serialize(){syncPipes();const es=[];
  for(const e of ents.values()){const x={};
   for(const k of SKEYS){if(k==='d'||k==='x'||k==='y'||k==='dir')continue;let v=e[k];if(v===undefined||v===null||v===false||v===0)continue;
    if(k==='clock'&&v===1)continue;if(typeof v==='number'&&!Number.isInteger(v))v=Math.round(v*1000)/1000;if(typeof v==='object'&&!Object.keys(v).length)continue;x[k]=v;}

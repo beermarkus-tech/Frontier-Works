@@ -276,14 +276,11 @@ function v3Lines(){
   V3.belt[id]={tex:t,mat:new T3.MeshStandardMaterial({map:t,roughness:0.9}),pools:[]};
   for(let k=0;k<3;k++)V3.belt[id].pools.push(v3Pool(v3Ribbon(v3Path(k),[[-0.37,0.37,0.02,0.15]]),V3.belt[id].mat,{recv:1}));}
  V3.rail=[0,1,2].map(k=>v3Pool(v3Ribbon(v3Path(k),[[-0.45,-0.37,0,0.2],[0.37,0.45,0,0.2]]),new T3.MeshStandardMaterial({roughness:0.5,metalness:0.4}),{color:1,cast:1,recv:1}));
- // pipes: straight cylinder or bent tube, with small supports
- const pg=[];{const g=new T3.CylinderGeometry(0.17,0.17,1,14,1,true);g.rotateZ(Math.PI/2);g.translate(0,0.34,0);pg.push(g);}
- for(const k of [1,2]){const ez=k===1?-0.5:0.5;const c=new T3.QuadraticBezierCurve3(new T3.Vector3(0,0.34,ez),new T3.Vector3(0,0.34,0),new T3.Vector3(0.5,0.34,0));pg.push(new T3.TubeGeometry(c,10,0.17,14,false));}
+ // pipes have no direction: an arm from the tile centre to each connected side (tier colour), plus a joint ball tinted by the network's fluid
  const pmat=new T3.MeshStandardMaterial({roughness:0.35,metalness:0.55});
- V3.pipe=pg.map(g=>{const sup=new T3.BoxGeometry(0.12,0.2,0.34);sup.translate(0,0.1,0);
-  const parts=[{g,m:new T3.Matrix4(),c:v3col('#ffffff')},{g:sup,m:new T3.Matrix4(),c:v3col('#55606b')}];return v3Pool(v3Merge(parts),pmat,{color:1,cast:1,recv:1});});
- const fl=new T3.TorusGeometry(0.19,0.045,6,16);fl.rotateY(Math.PI/2);fl.translate(0,0.34,0);
- V3.flange=v3Pool(fl,V3.glowMat,{color:1});
+ {const g=new T3.CylinderGeometry(0.17,0.17,0.5,14,1,true);g.rotateZ(Math.PI/2);g.translate(0.25,0.34,0);V3.pipeArm=v3Pool(g,pmat,{color:1,cast:1,recv:1});}
+ {const j=new T3.SphereGeometry(0.2,14,10);j.translate(0,0.34,0);const sup=new T3.BoxGeometry(0.12,0.2,0.3);sup.translate(0,0.1,0);
+  V3.pipeJoint=v3Pool(v3Merge([{g:j,m:new T3.Matrix4(),c:v3col('#ffffff')},{g:sup,m:new T3.Matrix4(),c:v3col('#8a949e')}]),new T3.MeshStandardMaterial({roughness:0.3,metalness:0.3,vertexColors:true}),{color:1,cast:1,recv:1});}
 }
 
 /* ---------- items ---------- */
@@ -343,9 +340,9 @@ const _m=()=>new T3.Matrix4(),_v=()=>new T3.Vector3(),_q=()=>new T3.Quaternion()
 let V3T;   // scratch objects
 function v3Layout(){
  if(!V3T)V3T={m:_m(),m2:_m(),v:_v(),s:_v(),q:_q(),e:new T3.Euler(),c:new T3.Color(),up:new T3.Vector3(0,1,0)};
- const L={type:{},belts:{belt1:[[],[],[]],belt2:[[],[],[]],belt3:[[],[],[]],belt4:[[],[],[]],belt5:[[],[],[]]},pipes:[[],[],[]],lines:[],led:[],emit:[],carry:[]};V3.L=L;
+ const L={type:{},belts:{belt1:[[],[],[]],belt2:[[],[],[]],belt3:[[],[],[]],belt4:[[],[],[]],belt5:[[],[],[]]},pipes:[],lines:[],led:[],emit:[],carry:[]};V3.L=L;
  for(const e of ents.values()){
-  if(isLine(e.k)){const rel=e.cin==null?0:((e.cin-e.dir)&3)===1?1:((e.cin-e.dir)&3)===3?2:0;(e.k==='belt'?L.belts[e.d][rel]:L.pipes[rel]).push(e);L.lines.push(e);if(e.k==='belt')L.carry.push(e);continue;}
+  if(isLine(e.k)){const rel=e.cin==null?0:((e.cin-e.dir)&3)===1?1:((e.cin-e.dir)&3)===3?2:0;(e.k==='belt'?L.belts[e.d][rel]:L.pipes).push(e);L.lines.push(e);if(e.k==='belt')L.carry.push(e);continue;}
   (L.type[e.d]=L.type[e.d]||[]).push(e);if(e.k==='router'||e.k==='cross')L.carry.push(e);
   if(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')L.led.push(e);
   const m=V3.M[e.d];if(m&&m.smoke)for(const s of m.smoke)L.emit.push([e,s]);}
@@ -356,8 +353,9 @@ function v3Layout(){
  const railN=[0,0,0],railL=[[],[],[]];
  for(const id in L.belts)L.belts[id].forEach((list,k)=>{const ms=v3PoolN(V3.belt[id].pools[k],list.length);list.forEach((e,i)=>ms.setMatrixAt(i,lineM(e)));railN[k]+=list.length;railL[k].push(...list);});
  railL.forEach((list,k)=>{const ms=v3PoolN(V3.rail[k],list.length);list.forEach((e,i)=>{ms.setMatrixAt(i,lineM(e));ms.setColorAt(i,T.c.set(B[e.d].col));});});
- L.pipes.forEach((list,k)=>{const ms=v3PoolN(V3.pipe[k],list.length);list.forEach((e,i)=>{ms.setMatrixAt(i,lineM(e));ms.setColorAt(i,T.c.set(B[e.d].col));});});
- L.flanged=L.pipes[0];v3PoolN(V3.flange,L.flanged.length).count=L.flanged.length;L.flanged.forEach((e,i)=>V3.flange.mesh.setMatrixAt(i,lineM(e)));
+ {const arms=[];for(const e of L.pipes){const m=e.pc||((1<<e.dir)|(1<<((e.dir+2)&3)));for(let d=0;d<4;d++)if(m&(1<<d))arms.push([e,d]);}
+  const am=v3PoolN(V3.pipeArm,arms.length);arms.forEach(([e,d],i)=>{T.e.set(0,-d*Math.PI/2,0);T.q.setFromEuler(T.e);am.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q,T.s.set(1,1,1)));am.setColorAt(i,T.c.set(B[e.d].col));});
+  const jm=v3PoolN(V3.pipeJoint,L.pipes.length);L.pipes.forEach((e,i)=>jm.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q.identity(),T.s.set(1,1,1))));}
  v3PoolN(V3.led,L.led.length);
  // power wires
  const pos=[],col=[],cA=new T3.Color('#22201d'),cT=new T3.Color('#ff4a3a'),top=e=>{const m=V3.M[e.d];return[e.x+e.w/2,m&&m.wire||1.3,e.y+e.h/2];};
@@ -398,7 +396,7 @@ function v3Anim(dt,t){
  // status lights
  const led=V3.led.mesh;if(led){L.led.forEach((e,i)=>{const st=bStatus(e),w=e.w;led.setMatrixAt(i,T.m.compose(T.v.set(e.x+w-0.2,0.3,e.y+w-0.2),T.q.identity(),T.s.set(0.13,0.13,0.13)));T.c.set(st?st[0]:'#8a96a0');led.setColorAt(i,T.c);});led.instanceMatrix.needsUpdate=true;led.instanceColor.needsUpdate=true;}
  // pipe flanges show the fluid inside
- const fm=V3.flange.mesh;if(fm&&L.flanged.length){L.flanged.forEach((e,i)=>{const ft=e.item||e._ft,lv=e._fl==null?(e.item?1:0):Math.min(1,e._fl*1.5);T.c.set('#3a434c');if(ft)T.c.lerp(V3.icol[ft],lv);fm.setColorAt(i,T.c);});fm.instanceColor.needsUpdate=true;}
+ const jm=V3.pipeJoint.mesh;if(jm&&L.pipes.length){L.pipes.forEach((e,i)=>{const n=e.net;T.c.set('#5a646e');if(n&&n.fluid)T.c.lerp(V3.icol[n.fluid],Math.min(1,0.25+n._fl*1.5));jm.setColorAt(i,T.c);});jm.instanceColor.needsUpdate=true;}
  // belt treads move at belt speed
  for(const id in V3.belt){const b=V3.belt[id];b.tex.offset.x=-(t*Math.min(4,B[id].spd))%1;}
  if(V3.wNorm){V3.wNorm.offset.set(t*0.004,t*0.0025);}

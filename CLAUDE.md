@@ -15,6 +15,8 @@ and keep the game playable after every commit.
 - `docs/DESIGN.md` = what the game *is*. Change it only when Markus agrees a design decision, and say so in the log.
 - `js/data.js` = the exact numbers. DESIGN.md explains structure and intent, not every value.
 - Ask Markus before big design changes (new systems, removing features, breaking saves). Small fixes and polish: just do them.
+- **Markus's standing preference (Session 31): when Claude offers options with a recommendation, use the recommendation** unless he says otherwise.
+  Still describe big changes briefly first, then build with the suggested defaults.
 
 **End of session**
 1. Append a new `## Session N — date` entry to `docs/BUILD_LOG.md`: what was asked, what was built, decisions and why,
@@ -34,6 +36,8 @@ and keep the game playable after every commit.
   animated parts as own InstancedMesh). `v3Layout()` rebuilds instances when `v3Sig()` changes; `v3Anim/v3Items/v3Smoke` run per frame.
   Input reuses `tap()`, `linePath()`, `buildPath()`. **A new building type needs a 3D model in `v3Models()` too**, or it won't show in 3D.
   Three.js is r149 on purpose: the last release with a classic-script build (`THREE` global), matching our no-module setup.
+- Fluids: pipes have no direction. `buildNets()` (end of `rebuildTopo`) makes networks (`nets`, `e.net`, connection bitmask `e.pc`); `updNets(dt)` moves fluid
+  between attached buildings and the network. Contents live on the network and are copied to tiles (`item`, `lv`) by `syncPipes()` for saves/rebuilds.
 - Drone Pads (`k:'dpad'`): `updPad` in `js/sim.js`, state `e.dr` + route `e.lx/e.ly` (saved), list `pads` from `rebuildTopo`; drawn by `drawDrones` (2D) and `v3Drones` (3D). Numbers in `DRONE` (`js/data.js`).
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).
 

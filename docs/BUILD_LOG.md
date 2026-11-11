@@ -930,3 +930,36 @@ Desktop far zoom 43.8 → **2.2 ms**. `npm test` 56/56. Screenshots before/after
 - `npm test` 57/57, new check: highlight uranium (113 nodes), chip shown, edge arrow with distance drawn, fly-to-nearest moves the camera, node-panel
   button highlights iron, clear removes everything.
 - Tablet screenshots: Find panel with two resources highlighted at far zoom; 3D beams (made slimmer and more transparent after the first look).
+
+---
+
+## Session 31 — 2026-11-11 (Claude Code, cloud session) · Build 36
+
+### What Markus asked for
+"Pipes have a direction. I think they shouldn't." After the proposal: go with the suggestions, but **keep the Pipe Junction**
+(easier to feed machines) while plain pipes also connect without it. He also said to always use the suggestions (recorded in CLAUDE.md).
+
+### What was built
+- **Fluid networks** (`buildNets`/`updNets`/`syncPipes` in `js/sim.js`): pipe tiles and Pipe Junctions that touch (or line up through a Crossing)
+  form one network. A network has one fluid (sticky until emptied), 10 m³ per tile (`PIPE_CAP`), and moves at most the slowest pipe's rate in and out
+  (Mk1 300, Mk2 600 m³/min). Touching buildings take part automatically: pumps, machine fluid outputs and tanks (when the network is < 50 %) fill it;
+  machines/generators needing that fluid, tanks (> 80 %) and incinerators draw from it. A second fluid is refused and recorded as a conflict.
+  Pipes no longer accept single items (`accept`); routing via the old per-tile movement is gone for pipes.
+- **Pipe Junction kept** as a 4-way network piece (same as a pipe, can't be rotated). Plain pipes connect just as well.
+- **2D:** pipes are drawn by their connections (straight, corner, T, cross, end) with round joints; fluid colour and fill come from the network (no moving
+  direction dashes any more). A red "!" marks where a building's second fluid is refused. Far view draws pipe crosses too.
+- **3D:** pipes are arms from each tile centre to every connected side (tier colour) with a joint ball tinted by the network's fluid and fill.
+- **Pipe panel:** network fluid, filled m³ / capacity, in/out per minute, max flow (slowest pipe), number of pipes and connected buildings, the mixing
+  warning, and "Empty this network". No Rotate button for pipes or junctions.
+- **Saves:** each pipe tile stores the network's fluid (`item`) and fill (`lv`). Old saves load (one unit per tile that held fluid), direction ignored.
+- Descriptions, DESIGN.md §5, CLAUDE.md updated. Build number **36**.
+
+### Verified
+- `npm test` 59/59, twice on different maps. New checks: tank → three pipes laid "backwards" → junction → corner → incinerator form **one network
+  flowing 300 m³/min**; a crude-oil tank on a water network is refused and flagged (no mixing); fluid and amount survive save/load.
+- Fixed two shaky tests found on the way (highlight test now zooms in so no uranium node is on screen and measures from the camera's final position).
+- Screenshots: 2D T-junction network with the network panel (water, 297 / 297 m³/min in/out); 3D connected tubes with joints, junction, Mk2 section.
+
+### Known issues
+- "First fluid wins": an empty network takes whatever fluid arrives first. If the wrong one got in, use "Empty this network".
+- Fluid recipes above tier 5 (refinery chains, blender) aren't bench-tested with the new pipes yet. Worth running when Markus reaches Petrochemistry.

@@ -87,7 +87,7 @@ function entStatic(e){
  if(e.k==='tank')h+=`<h4>Actions</h4><button class="btn" data-act="flushTank">Flush tank</button>`;
  if(e.k==='core')h+=`<h4>Base Core</h4><p class="muted">Belt items into any side of the Core to add them to your item stock. Buildings are paid for from that stock.</p><button class="btn" data-act="openMs" style="margin-top:6px">🏁 Open goals</button> <button class="btn" data-act="openInv">📦 Items</button>`;
  if(e.k==='router'||e.k==='cross'||isLine(e.k)||e.k==='pole')h+='';
- if(e.k!=='core')h+=`<h4>&nbsp;</h4><button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button>`;
+ if(e.k!=='core')h+=`<h4>&nbsp;</h4><button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'&&e.k!=='pipe'&&!(e.k==='router'&&B[e.d].sub==='junc')?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button>`;
  return h;
 }
 function bufList(b){const ks=Object.keys(b).filter(k=>b[k]>0);return ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(b[k]))}</span></div>`).join(''):'<div class="muted">empty</div>';}
@@ -149,7 +149,8 @@ function entDyn(e){
    h+=`<div class="row"><span>Throughput</span><span>≈ ${fmt(DRONE.cap*60/trip)} items/min</span></div><div class="muted">${DRONE.cap} items per trip (waits up to ${DRONE.wait} s for a full load) · ${Math.round(trip)} s round trip over ${Math.round(dist)} tiles</div><div class="row"><span>Delivered so far</span><span>${fmt(e.del||0)}</span></div>`;}}
  if(e.k==='storage'){let t=0;for(const k in e.store)t+=e.store[k];h+=`<div class="row"><span>Used</span><span>${t}/${d.cap}</span></div><div class="bar"><i style="width:${t/d.cap*100}%"></i></div>${bufList(e.store)}`;}
  if(e.k==='tank')h+=`<div class="row"><span>${e.ft?nm(e.ft):'Empty'}</span><span>${e.amt}/${d.cap} m³</span></div>`;
- if(isLine(e.k))h+=`<div class="row"><span>Throughput</span><span>${fmt(d.spd*60)}/min</span></div><div class="row"><span>Carrying</span><span>${e.item?nm(e.item):'—'}</span></div>`;
+ if(e.k==='pipe'&&e.net){const n=e.net,cf=n.conflict&&tickNo-n.conflict.t<60;h+=`<h4>Pipe network</h4><div class="row"><span>Fluid</span><span>${n.fluid?nm(n.fluid):'empty'}</span></div><div class="row"><span>Filled</span><span>${fmt(n.amt)} / ${n.cap} m³</span></div><div class="bar"><i style="width:${n.cap?n.amt/n.cap*100:0}%"></i></div><div class="row"><span>In / out now</span><span>${fmt(n.inR)} / ${fmt(n.outR)} m³/min</span></div><div class="row"><span>Max flow</span><span>${fmt(n.rate*60)} m³/min <small class="muted">(slowest pipe)</small></span></div><div class="row"><span>Pipes · connected buildings</span><span>${n.tiles.length} · ${n.att.length}</span></div>${cf?`<div class="plbad">⚠ ${B[n.conflict.b.d].n} wants to put ${IT[n.conflict.fluid].n} into this ${IT[n.fluid].n} network. Fluids don't mix: give it its own pipe.</div>`:''}<div class="muted" style="margin-top:4px">Pipes have no direction: all touching pipes and Pipe Junctions form one network.</div><button class="btn" data-act="netFlush">Empty this network</button>`;}
+ else if(isLine(e.k))h+=`<div class="row"><span>Throughput</span><span>${fmt(d.spd*60)}/min</span></div><div class="row"><span>Carrying</span><span>${e.item?nm(e.item):'—'}</span></div>`;
  if(e.k==='router'||e.k==='cross'){const its=[e.item,e.hs,e.vs].filter(Boolean);h+=`<div class="row"><span>Holding</span><span>${its.length?its.map(nm).join(', '):'—'}</span></div>`;}
  return h;
 }
@@ -261,6 +262,7 @@ const ACT={
  collectAll:()=>{let n=0,c=0;for(const e of ents.values())if(e.k==='storage'){let any=false;for(const k in e.store){give(k,e.store[k]);n+=e.store[k];any=true;}if(any)c++;e.store={};}toast(n?`Moved ${fmt(n)} items from ${c} crate${c>1?'s':''} into the stock`:'The crates are empty');renderPanel(true);buildTools();},
  padLink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.linkFrom=e.id;setTool(null);toast('Tap the Drone Pad the drone should fly to');updInfo();},
  padUnlink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;delete e.lx;delete e.ly;renderPanel(true);toast('Route removed: this pad now receives drones');},
+ netFlush:()=>{const e=ents.get(UI.panel.arg);if(e&&e.net){e.net.amt=0;e.net.fluid=null;e.net.conflict=null;toast('Network emptied');}},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},

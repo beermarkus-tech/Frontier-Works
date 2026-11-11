@@ -2,6 +2,7 @@
 /* ================= STATE ================= */
 let S, ents=new Map(), grid=new Int32Array(MW*MH), nextId=1;
 let terr, nodeAt, nodes=[], terrC, bio;
+let nets=[];   // fluid networks (pipes have no direction)
 let topoVer=0, topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[];
 let tickNo=0;
 const stat={p:{},c:{},hist:[],acc:0};
@@ -158,11 +159,12 @@ function capOut(n){return Math.max(n*2,10);}
 function accept(e,item,dir,carry){
  const fl=IT[item].f;
  switch(e.k){
-  case 'belt':case 'pipe':
+  case 'pipe':return false;   // pipes are part of a fluid network (updNets), they don't pass single items
+  case 'belt':
    if(e.item||fl!==(e.k==='pipe'))return false; if(((dir+2)&3)===e.dir)return false;
    e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;return true;
   case 'router':{
-   if(fl!==!!B[e.d].fl)return false;
+   if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc')return false;   // a Pipe Junction is a network piece
    const sub=B[e.d].sub;
    if(sub==='split'||sub==='sort'){if(dir!==e.dir||e.item)return false;}
    else if(sub==='merge'){
@@ -222,12 +224,12 @@ function feedsInto(sd,e,o){const into=(o+2)&3;
  if(sd.k==='cross'){const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&isLine(far.k)&&far.k===e.k&&far.dir===into;}
  return false;}
 function rebuildTopo(){
- topoDirty=false;topoVer++;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];
+ syncPipes();topoDirty=false;topoVer++;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];
  const lines=[];
  for(const e of ents.values()){
-  if(isLine(e.k))lines.push(e);else if(e.k==='router')routers.push(e);else if(e.k==='cross')crosses.push(e);
+  if(isLine(e.k))lines.push(e);else if(e.k==='router'){if(B[e.d].sub!=='junc')routers.push(e);}else if(e.k==='cross')crosses.push(e);
   else if(e.k!=='pole'){e.ports=perim(e);buildings.push(e);}
-  if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);
+  if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);if(e.k==='router'&&B[e.d].sub==='junc')e.item=null;
   e.grid=null;if(B[e.d].pw)e.pw=0;
  }
  for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):true))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
@@ -246,7 +248,45 @@ function rebuildTopo(){
  for(const e of ents.values()){if(!B[e.d].pw)continue;let best=null,bd=1e9;
   for(let i=0;i<n;i++){const dd=rectDist(C[i].x,C[i].y,e);if(dd<=B[pnodes[i].d].sup&&dd<bd){bd=dd;best=pnodes[i];}}
   if(best){best.grid.cons.push(e);e.grid=best.grid;}}
+ buildNets();
 }
+/* ---------- Fluid networks ----------
+   Pipes have no direction: touching pipe tiles and Pipe Junctions (also straight through a Crossing) form one network, like a power grid.
+   A network holds one fluid (sticky until flushed), PIPE_CAP m³ per tile, and moves at most `rate` m³/s in and out (slowest pipe: Mk1 5, Mk2 10).
+   Touching buildings take part: pumps, machine fluid outputs and tanks (when the network is under half full) fill it; machines and generators
+   needing that fluid, tanks (when it's over 80 % full) and incinerators draw from it. A second fluid is refused and flagged (no mixing). */
+const PIPE_CAP=10,pipeLike=e=>!!e&&(e.k==='pipe'||(e.k==='router'&&B[e.d].sub==='junc'));
+function syncPipes(){for(const n of nets)for(const t of n.tiles){t.item=n.fluid;t.lv=n.cap?n.amt/n.cap:0;}}   // store contents on the tiles (save, rebuild)
+function buildNets(){
+ nets=[];const list=[],ix=new Map();for(const e of ents.values())if(pipeLike(e)){ix.set(e,list.length);list.push(e);e.net=null;e.pc=0;}
+ const par=list.map((_,i)=>i),f=i=>par[i]===i?i:(par[i]=f(par[i])),un=(a,b)=>{par[f(a)]=f(b);};
+ for(const t of list)for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(!n)continue;
+  if(pipeLike(n)){un(ix.get(t),ix.get(n));t.pc|=1<<d;}
+  else if(n.k==='cross'){const far=entAt(n.x+DX[d],n.y+DY[d]);if(pipeLike(far)){un(ix.get(t),ix.get(far));t.pc|=1<<d;}}
+  else if(['mach','gen','pump','tank','incin'].includes(n.k))t.pc|=1<<d;}
+ const G=new Map();list.forEach((t,i)=>{const r=f(i);if(!G.has(r))G.set(r,[]);G.get(r).push(t);});
+ for(const tiles of G.values()){const cnt={};let rate=Infinity;
+  for(const t of tiles){if(t.item)cnt[t.item]=(cnt[t.item]||0)+1;if(t.k==='pipe')rate=Math.min(rate,B[t.d].spd);}
+  const fluid=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]||null;let amt=0;
+  for(const t of tiles)if(t.item===fluid)amt+=t.lv!=null?t.lv*PIPE_CAP:1;   // old saves: one unit per pipe tile holding fluid
+  const att=new Set();for(const t of tiles)for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(n&&['mach','gen','pump','tank','incin'].includes(n.k))att.add(n);}
+  const n={tiles,fluid,cap:tiles.length*PIPE_CAP,amt:0,rate:isFinite(rate)?rate:5,att:[...att],bi:0,bo:0,inR:0,outR:0,_fl:0,conflict:null};n.amt=Math.min(n.cap,amt);n._fl=n.cap?n.amt/n.cap:0;
+  for(const t of tiles)t.net=n;nets.push(n);}
+}
+function updNets(dt){
+ for(const n of nets){const lim=n.rate;n.bi=Math.min(lim,n.bi+lim*dt);n.bo=Math.min(lim,n.bo+lim*dt);let got=0,sent=0;
+  const take=(fluid,avail)=>{if(n.fluid&&n.fluid!==fluid)return 0;const m=Math.min(avail,Math.floor(n.cap-n.amt),Math.floor(n.bi));if(m<=0)return 0;n.fluid=fluid;n.amt+=m;n.bi-=m;got+=m;return m;};
+  for(const b of n.att){
+   if(b.k==='pump'){if(b.item&&b.buf>0){if(n.fluid&&n.fluid!==b.item){n.conflict={fluid:b.item,b,t:tickNo};continue;}b.buf-=take(b.item,b.buf);}}
+   else if(b.k==='mach'){for(const k in b.outb)if(IT[k].f&&b.outb[k]>0){if(n.fluid&&n.fluid!==k){n.conflict={fluid:k,b,t:tickNo};continue;}b.outb[k]-=take(k,b.outb[k]);}}
+   else if(b.k==='tank'&&b.ft&&b.amt>0&&n.amt<n.cap*0.5){if(n.fluid&&n.fluid!==b.ft){n.conflict={fluid:b.ft,b,t:tickNo};continue;}b.amt-=take(b.ft,b.amt);if(!b.amt)b.ft=null;}}
+  if(n.fluid&&n.amt>=1){
+   for(let k=0;k<n.att.length&&n.amt>=1&&n.bo>=1;k++){const b=n.att[(k+(n.rr=(n.rr||0)+1))%n.att.length];
+    if(b.k==='pump')continue;if(b.k==='tank'&&n.amt<=n.cap*0.8)continue;if(b.k==='mach'&&!(b.r&&RC[b.r].i[n.fluid]))continue;
+    while(n.amt>=1&&n.bo>=1&&accept(b,n.fluid,0,0)){n.amt--;n.bo--;sent++;}}}
+  const a=Math.min(1,dt/3);n.inR+=(got/dt*60-n.inR)*a;n.outR+=(sent/dt*60-n.outR)*a;n._fl+=((n.cap?n.amt/n.cap:0)-n._fl)*Math.min(1,dt/1.2);}
+}
+
 
 /* ================= SIMULATION ================= */
 function drawMW(e){const d=B[e.d];return e.want?d.pw*Math.pow(e.clock||1,1.6):0;}
@@ -270,8 +310,7 @@ function burn(g,mj){const d=B[g.d];
  if(d.water){g.wacc+=mj*d.water;while(g.wacc>=1&&g.water>0){g.water--;g.wacc--;stat.c.water=(stat.c.water||0)+1;}}
 }
 function updBelt(e,dt){
- // pipes: smoothed fill level (~1 s) and last fluid, so drawing doesn't blink when a pipe isn't completely full
- if(e.k==='pipe'){const f=e._fl||0;e._fl=f+((e.item?1:0)-f)*Math.min(1,dt/1.1);if(e.item)e._ft=e.item;}
+ if(e.k==='pipe')return;
  if(!e.item)return;e.prog+=e.spd*dt;
  if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]);if(t&&t!==e&&accept(t,e.item,e.dir,e.prog-1)){e.item=null;e.prog=0;}else e.prog=1;}
 }
@@ -352,6 +391,7 @@ function tick(dt){
  for(const e of crosses)updCross(e);
  for(const e of beltOrder)updBelt(e,dt);
  for(const e of buildings)updBuilding(e,dt);
+ updNets(dt);
  stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}
 }
 function rates(){const p={},c={};for(const h of stat.hist){for(const k in h.p)p[k]=(p[k]||0)+h.p[k];for(const k in h.c)c[k]=(c[k]||0)+h.c[k];}const m=60/Math.max(1,stat.hist.length);for(const k in p)p[k]*=m;for(const k in c)c[k]*=m;return{p,c};}

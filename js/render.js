@@ -237,7 +237,8 @@ function effRing(e,X,Y,s){
 function drawLOD(vis,sx,sy,s,g){g=g||ctx;
  const G=new Map(),add=(c,x,y,w,h)=>{let p=G.get(c);if(!p){p=new Path2D();G.set(c,p);}p.rect(x,y,w,h);},rim=new Path2D(),dots=new Map();
  for(const e of vis){const d=B[e.d],X=sx(e.x),Y=sy(e.y);
-  if(isLine(e.k)){const c=e.k==='pipe'?'#6f93b8':d.col,h=e.dir===0||e.dir===2;if(h)add(c,X,Y+s*0.32,s+0.6,s*0.36);else add(c,X+s*0.32,Y,s*0.36,s+0.6);continue;}
+  if(e.k==='pipe'){const c='#6f93b8';let m=e.pc||((1<<e.dir)|(1<<((e.dir+2)&3)));add(c,X+s*0.32,Y+s*0.32,s*0.36,s*0.36);if(m&1)add(c,X+s*0.5,Y+s*0.32,s*0.5+0.6,s*0.36);if(m&4)add(c,X,Y+s*0.32,s*0.5,s*0.36);if(m&2)add(c,X+s*0.32,Y+s*0.5,s*0.36,s*0.5+0.6);if(m&8)add(c,X+s*0.32,Y,s*0.36,s*0.5);continue;}
+  if(isLine(e.k)){const c=d.col,h=e.dir===0||e.dir===2;if(h)add(c,X,Y+s*0.32,s+0.6,s*0.36);else add(c,X+s*0.32,Y,s*0.36,s+0.6);continue;}
   if(e.k==='pole'){add(d.col,X+s*0.3,Y+s*0.3,s*0.4,s*0.4);continue;}
   const W=e.w*s;rim.rect(X+0.5,Y+0.5,W-1,W-1);add(e.k==='router'||e.k==='cross'?d.col:shade(d.col,-10),X+s*0.12,Y+s*0.12,W-s*0.24,W-s*0.24);
   const st=(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')&&bStatus(e);if(st&&W>=5){let p=dots.get(st[0]);if(!p){p=new Path2D();dots.set(st[0],p);}const r=Math.max(1.2,W*0.12);p.rect(X+W/2-r,Y+W/2-r,r*2,r*2);}}
@@ -376,14 +377,20 @@ function drawLines(list,sx,sy,s,alpha,tint){
   if(s>10){ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=s*0.03;const hl=new Path2D();for(const e of belts){const X=sx(e.x),Y=sy(e.y);if(e.cin!=null)continue;const d=e.dir,px=-DY[d],py=DX[d],cx=X+s/2+px*s*0.39,cy=Y+s/2+py*s*0.39;hl.moveTo(cx-DX[d]*s/2,cy-DY[d]*s/2);hl.lineTo(cx+DX[d]*s/2,cy+DY[d]*s/2);}ctx.stroke(hl);}
  }
  if(pipes.length){
-  const all=new Path2D(),byT={},fl={};
-  for(const e of pipes){const X=sx(e.x),Y=sy(e.y);pathLine(all,e,X,Y,s,ext);(byT[e.d]||(byT[e.d]=new Path2D()));pathLine(byT[e.d],e,X,Y,s,ext);const lv=e._fl==null?(e.item?1:0):e._fl,ft=e.item||e._ft;if(ft&&lv>0.04){const b=Math.ceil(Math.min(1,lv*1.5)*4)/4,key=IT[ft].c+'|'+b;(fl[key]||(fl[key]=new Path2D()));pathLine(fl[key],e,X,Y,s,0);}}
+  // pipes have no direction: draw arms from the tile centre to every connected side (e.pc bitmask); fluid colour and fill come from the network
+  const all=new Path2D(),byT={},fl={},arm=(p,e,X,Y)=>{const cx=X+s/2,cy=Y+s/2,h=s/2+ext;let m=e.pc||0;if(!m)m=(1<<e.dir)|(1<<((e.dir+2)&3));
+   for(let d=0;d<4;d++)if(m&(1<<d)){p.moveTo(cx,cy);p.lineTo(cx+DX[d]*h,cy+DY[d]*h);}};
+  for(const e of pipes){const X=sx(e.x),Y=sy(e.y);arm(all,e,X,Y);(byT[e.d]||(byT[e.d]=new Path2D()));arm(byT[e.d],e,X,Y);
+   const n=e.net,lv=n?Math.min(1,n._fl*1.4):0,ft=n&&n.fluid;if(ft&&lv>0.03){const bk=Math.ceil(lv*4)/4,key=IT[ft].c+'|'+bk;(fl[key]||(fl[key]=new Path2D()));arm(fl[key],e,X,Y);}}
+  ctx.lineCap='round';
   ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=s*0.54;ctx.stroke(all);
   for(const d in byT){ctx.strokeStyle=tint||B[d].col;ctx.lineWidth=s*0.46;ctx.stroke(byT[d]);}
   ctx.strokeStyle='#141a20';ctx.lineWidth=s*0.26;ctx.stroke(all);
-  const ga=ctx.globalAlpha;for(const key in fl){const [c,b]=key.split('|');ctx.globalAlpha=ga*(0.3+0.7*b);ctx.strokeStyle=c;ctx.lineWidth=s*0.26;ctx.stroke(fl[key]);ctx.setLineDash([s*0.08,s*0.17]);ctx.lineDashOffset=-((animT*s*1.6)%(s*0.25));ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=s*0.1;ctx.stroke(fl[key]);ctx.setLineDash([]);}ctx.globalAlpha=ga;
-  ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=s*0.05;ctx.stroke(all);
-  if(s>9){for(const e of pipes){if(e.cin!=null)continue;const X=sx(e.x),Y=sy(e.y),d=e.dir;ctx.fillStyle=shade(B[e.d].col,-35);const cx=X+s/2-DX[d]*s*0.5,cy=Y+s/2-DY[d]*s*0.5;if(d===0||d===2)ctx.fillRect(cx-s*0.05,cy-s*0.3,s*0.1,s*0.6);else ctx.fillRect(cx-s*0.3,cy-s*0.05,s*0.6,s*0.1);}}
+  const ga=ctx.globalAlpha;for(const key in fl){const [c,b]=key.split('|');ctx.globalAlpha=ga*(0.3+0.7*b);ctx.strokeStyle=c;ctx.lineWidth=s*0.26;ctx.stroke(fl[key]);ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=s*0.07;ctx.stroke(fl[key]);}ctx.globalAlpha=ga;
+  ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=s*0.05;ctx.stroke(all);ctx.lineCap='butt';
+  // a red mark where a second fluid is refused (no mixing)
+  for(const e of pipes){const n=e.net;if(!n||!n.conflict||tickNo-n.conflict.t>40)continue;const b=n.conflict.b;if(Math.abs(e.x-(b.x+b.w/2))+Math.abs(e.y-(b.y+b.h/2))>b.w/2+1.5)continue;
+   ctx.fillStyle='#ff5a46';ctx.beginPath();ctx.arc(sx(e.x+0.5),sy(e.y+0.5),Math.max(3,s*0.18),0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font=`800 ${Math.max(7,s*0.24)}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('!',sx(e.x+0.5),sy(e.y+0.5)+0.5);ctx.textAlign='left';}
  }
  ctx.globalAlpha=1;
 }
