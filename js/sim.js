@@ -259,7 +259,7 @@ function powerStep(dt){
   const ok=!tr&&cap>0&&dem<=cap+1e-6;
   for(const c of g.cons)c.pw=ok?1:0;
   const load=ok&&cap>0?dem/cap:0;g.prod=ok?dem:0;
-  for(const ge of g.gens){ge.load=ge.can?load:0;if(ok&&ge.can&&load>0)burn(ge,B[ge.d].cap*load*dt);}
+  for(const ge of g.gens){ge.load=ge.can?load:0;ge._ls=(ge._ls||0)+(ge.load-(ge._ls||0))*Math.min(1,dt/4);if(ok&&ge.can&&load>0)burn(ge,B[ge.d].cap*load*dt);}   // _ls: load averaged over ~4 s, for the panel
  }
 }
 function burn(g,mj){const d=B[g.d];

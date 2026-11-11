@@ -13,8 +13,11 @@ const server=require('./serve.js');
   const n=fw.nodes(),iron=n.find(x=>x.t==='iron'&&x.p===2),coal=n.find(x=>x.t==='coal'&&x.p===1),P=(...a)=>fw.placeEnt(...a);
   const res=[P('drill1',iron.x,iron.y,0),P('belt1',iron.x+2,iron.y,0),P('belt1',iron.x+3,iron.y,0),P('smelter',iron.x+4,iron.y,0)];fw.entAt(iron.x+4,iron.y).r='r_iron_ingot';
   res.push(P('belt1',iron.x+6,iron.y+1,0),P('drill1',coal.x,coal.y,0),P('belt1',coal.x-1,coal.y,2),P('burner',coal.x-3,coal.y,0));fw.entAt(coal.x-3,coal.y).fuel.coal=10;
-  res.push(P('pole1',MW/2-7,MH/2-7,0),P('pole1',MW/2-7,MH/2,0));const before=S.inv.iron_ingot||0;for(let i=0;i<20*120;i++)fw.tick(0.05);return{res,ingots:(S.inv.iron_ingot||0)-before};});
- check('placements',r.res.every(x=>x===''));check('ingots delivered ('+r.ingots+')',r.ingots>40);
+  res.push(P('pole1',MW/2-7,MH/2-7,0),P('pole1',MW/2-7,MH/2,0));const before=S.inv.iron_ingot||0;for(let i=0;i<20*120;i++)fw.tick(0.05);
+  const g=fw.entAt(coal.x-3,coal.y);fw.ACT.closePanel();openPanel('ent',g.id);const txt=document.getElementById('pbody').innerText,chip=document.getElementById('pbuild').textContent;fw.ACT.closePanel();
+  const m=txt.match(/Burns now\s*([\d.]+)\s*Coal\/min/);return{res,ingots:(S.inv.iron_ingot||0)-before,gen:{burn:m&&+m[1],exp:+(12*Math.min(1,g._ls)).toFixed(1),chip,full:/At full load[\s\S]*12 Coal\/min/.test(txt)}};});
+ check('placements',r.res.every(x=>x===''));
+ check(`coal burner panel shows consumption (${r.gen.burn} coal/min now, expected ≈${r.gen.exp}; header ${r.gen.chip})`,r.gen.burn!=null&&Math.abs(r.gen.burn-r.gen.exp)<=0.2&&r.gen.full&&/⚡ \d+%/.test(r.gen.chip));check('ingots delivered ('+r.ingots+')',r.ingots>40);
  await p.click('#msBtn');await p.waitForTimeout(300);check('goals list renders',(await p.$$('#pbody .card')).length===10);
  // build number: shown in the Menu header and matching the service-worker version
  await p.evaluate(()=>ACT.openMenu());await p.waitForTimeout(150);

@@ -820,3 +820,22 @@ Steel Beam and Steel Pipe look too much alike.
 
 ### Verified
 - Side-by-side render of Iron Rod / Steel Beam / Steel Pipe at icon and belt size: clearly different. `npm test` 54/54 (3D view starts with the new shapes).
+
+---
+
+## Session 27 — 2026-11-11 (Claude Code, cloud session) · Build 32
+
+### What Markus reported
+The Coal Burner panel doesn't show how much coal it consumes, unlike the machines.
+
+### Finding and fix
+- Confirmed: generator panels showed only capacity, current load and the fuel inside.
+- New **Consumption** section (`genUseHtml` in `js/ui.js`) for all generators: **Burns now** (fuel/min at the current load, averaged over
+  ~4 s via `_ls` in the power update, so it doesn't jump), **At full load** (max/min and how long one item lasts), water/min (Steam Generator,
+  Reactor), nuclear waste/min (Reactor), and **Fuel inside lasts** at the current load. Formula as in `burn()`: fuel/min = MW × 60 ÷ item energy.
+- The panel header shows a load badge "⚡ 40%" (green, yellow from 80 %, red from 95 %).
+- Build number **32**.
+
+### Verified
+- `npm test` 55/55, new check: the test factory's burner at 18 % load shows 2.2 coal/min (= 12 × 0.18), "At full load … 12 Coal/min", and the ⚡ badge.
+- Phone screenshot: burner at 40 % load → 4.8 coal/min, 12/min at full, one coal lasts 5 s, the coal inside lasts 8 min.

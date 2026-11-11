@@ -92,9 +92,19 @@ function bufList(b){const ks=Object.keys(b).filter(k=>b[k]>0);return ks.length?k
 /* Efficiency block for machines, drills and pumps (shown in their panel, refreshed live) */
 const effCol=pc=>pc>=90?'#4fe08a':pc>=60?'#ffd34a':pc>=30?'#ffa53a':'#ff5a46';
 /* Small live efficiency badge for the panel header (machines, drills, pumps) */
-function effChip(e){if(!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return'';
+function effChip(e){if(e.k==='gen'){const L=Math.round(Math.min(1,e._ls||0)*100),c=L>=95?'#ff8a6a':L>=80?'#ffd34a':'#4fe08a';return`<span class="effchip" style="color:${c};border-color:${c}" title="Load (last few seconds)">⚡ ${L}%</span>`;}
+ if(!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return'';
  if(e._efT==null||e._efT<3)return`<span class="effchip" title="Efficiency (measuring)">…</span>`;
  const pc=Math.round(e._ef*100);return`<span class="effchip" style="color:${effCol(pc)};border-color:${effCol(pc)}" title="Efficiency, last ${Math.round(e._efT)} s">${pc}%</span>`;}
+/* Generator consumption: fuel burned in proportion to load (fuel/min = MW·60 / item energy), plus water and waste */
+function genUseHtml(e){const d=B[e.d],f=d.fuels.find(k=>(e.fuel[k]||0)>0)||d.fuels[0],en=IT[f].e,L=Math.min(1,e._ls||0),full=d.cap*60/en;
+ let h=`<h4>Consumption</h4><div class="row"><span>Burns now</span><span><b>${fmt(full*L)} ${IT[f].n}/min</b> <small class="muted">at ${Math.round(L*100)}% load</small></span></div>`;
+ h+=`<div class="row"><span class="muted">At full load (${d.cap} MW)</span><span class="muted">${fmt(full)} ${IT[f].n}/min · one lasts ${fmtSec(en/d.cap)}</span></div>`;
+ if(d.water)h+=`<div class="row"><span>${nm('water')}</span><span>${fmt(d.cap*60*d.water*L)}/min <small class="muted">(full: ${fmt(d.cap*60*d.water)})</small></span></div>`;
+ if(e.d==='reactor')h+=`<div class="row"><span>${nm('waste')} out</span><span>${fmt(full*L*10)}/min <small class="muted">(full: ${fmt(full*10)})</small></span></div>`;
+ let stock=e.energy||0;for(const k of d.fuels)stock+=(e.fuel[k]||0)*IT[k].e;
+ h+=`<div class="row"><span>Fuel inside lasts</span><span>${L>0.005?fmtSec(stock/(d.cap*L)):'— (standby)'}</span></div>`;
+ return h;}
 function effHtml(e){
  const d=B[e.d];if(e.k==='mach'&&!e.r)return'';
  if(e._efT==null||e._efT<3)return`<h4>Efficiency</h4><div class="muted">Measuring…</div>`;
@@ -125,6 +135,7 @@ function entDyn(e){
   h+=`<div class="muted" style="margin-top:6px">Connect a belt/pipe pointing away from the drill.</div>`;}
  if(e.k==='gen'){
   h+=`<div class="row"><span>Capacity</span><span>${d.cap} MW</span></div><div class="row"><span>Load</span><span>${(e.load*100).toFixed(0)}%</span></div><div class="bar"><i style="width:${e.load*100}%"></i></div>`;
+  h+=genUseHtml(e);
   h+=`<h4>Fuel</h4>${bufList(e.fuel)}`;if(d.water)h+=`<div class="row"><span>${nm('water')}</span><span>${e.water}/100</span></div>`;
   if(e.d==='reactor')h+=`<div class="row"><span>${nm('waste')}</span><span>${e.outb.waste||0}/50</span></div>`;
   h+=gridHtml(e.grid);}
