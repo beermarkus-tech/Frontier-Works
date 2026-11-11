@@ -117,13 +117,19 @@ Hand mining gives +5 ore from a node.
 ## 8. Interface
 - Mobile-first, frosted-glass panels. Top bar: logo, power meter, Goals (shows tier, glows when it can be submitted), Items, Stats, Menu.
 - Bottom dock: hint/cost line → category tabs (Logistics, Extraction, Production, Power) → building cards with drawn icons.
-- Right-side buttons: Inspect/pan, Rotate, Dismantle, Center on Core. Minimap on desktop.
+- Tool buttons (Inspect/pan, Rotate, Dismantle, 2D/3D, compass, Center on Core) sit in a row at the top of the bottom dock (moved from the right edge in
+  Session 24 so panels never cover them). Minimap on desktop.
+- The planner can be **pinned** (📌 in its header): it then lives in its own panel (top-left on desktop, top on phones) that stays open while you
+  tap the map, build or inspect machines; 📌 again turns it back into a normal panel.
+- Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
 - **Production Planner** (☰ Menu → Tools). A paper-planning tool that only does maths. It never changes the factory.
   - *From a node:* pick resource, purity, extractor, count and clock, then add steps (recipes). Each step takes a chosen
     share (%) of what's left of its input. It shows exact and rounded machine counts (e.g. "3 × Smelter: 2 at 100% + 1 at 67%"),
     rates, the belt/pipe tier each line needs, power, leftovers, missing inputs and "Node output used: N%".
-  - *For a target:* pick an item and a rate per minute. It lists every machine for the whole chain (with a recipe picker
+  - *For a target:* pick **one or more end products**, each with its own rate per minute (Session 24). Shared parts are summed, end products are
+    marked 🎯. It lists every machine for the whole chain (with a recipe picker where there are alternatives), raw resources (with an extractor estimate),
+    byproducts and total power.
     where there are alternatives), raw resources (with an extractor estimate), byproducts and total power.
   - *⚡ Power* (Session 9 request): enter the MW needed and pick a generator and fuel. It shows how many generators
     (and their load), fuel, water and nuclear waste per minute, the chain that makes the fuel, the drills/pumps for it

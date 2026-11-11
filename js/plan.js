@@ -11,9 +11,9 @@ const PL_RES=[...Object.keys(NODE_T),'water'];
 const plResItem=res=>res==='water'?'water':NODE_T[res][0];
 const PL_RAW=new Set(PL_RES.map(plResItem));
 const PL_EPS=1e-6;
-function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{item:'iron_plate',rate:60,pick:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
+function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{targets:[{item:'iron_plate',rate:60}],pick:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
 let PL=plDefault();
-try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow)};}}catch(e){PL=plDefault();}
+try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,pinned:!!o.pinned,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow)};}}catch(e){PL=plDefault();}
 function plSave(){try{localStorage.setItem(PLAN_KEY,JSON.stringify(PL));}catch(e){}}
 
 /* ---------- visibility (unlocked only, unless "Show locked") ---------- */
@@ -26,9 +26,10 @@ function plFix(){
  const ex=plExtractors(f.res);if(!ex.includes(f.ex))f.ex=ex[0];
  f.n=Math.max(1,Math.min(99,Math.round(+f.n||1)));f.clock=Math.max(10,Math.min(250,Math.round(+f.clock||100)));
  f.steps=(f.steps||[]).filter(s=>s&&RC[s.r]);
- const r=PL.rev;r.rate=Math.max(0.1,Math.min(1e5,+r.rate||60));r.pick=r.pick||{};
+ const r=PL.rev;r.pick=r.pick||{};if(!Array.isArray(r.targets))r.targets=[{item:r.item||'iron_plate',rate:+r.rate||60}];delete r.item;delete r.rate;
+ const tg=plTargets();r.targets=r.targets.filter(t=>t&&IT[t.item]);if(!r.targets.length)r.targets=[{item:'iron_plate',rate:60}];
+ for(const t of r.targets){t.rate=Math.max(0.1,Math.min(1e5,+t.rate||60));if(!tg.includes(t.item))t.item=tg.includes('iron_plate')?'iron_plate':tg[0];}
  const w=PL.pow;w.mw=Math.max(0.1,Math.min(1e6,+w.mw||100));const gens=plGens();if(!gens.includes(w.gen))w.gen=gens[0];if(!B[w.gen].fuels.includes(w.fuel))w.fuel=B[w.gen].fuels[0];w.self=w.self?1:0;
- const targets=plTargets();if(!targets.includes(r.item))r.item=targets.includes('iron_plate')?'iron_plate':targets[0];
 }
 
 /* Biomes where a resource is most common (new maps only) */
@@ -86,11 +87,15 @@ function plProducers(item){return RL.filter(r=>r.o[item]&&!r.i[item]&&plRecOk(r)
 function plPick(item,pick){const ps=plProducers(item);if(!ps.length)return null;return ps.find(r=>r.id===pick[item])||ps[0];}
 function plTargets(){const s=new Set();for(const r of RL)if(plRecOk(r))for(const k in r.o)if(!PL_RAW.has(k)&&!r.i[k])s.add(k);return[...s].sort((a,b)=>IT[a].n.localeCompare(IT[b].n));}
 /* Reverse: target per minute → machines per item (summed across the whole tree), raw resources, byproducts. */
-function plRev(item,rate,pick){
+/* Reverse planner for one or more end products [{item,rate}]: shared parts are summed (e.g. Steel Ingot for both Steel Beam and Steel Pipe).
+   Items are processed consumers-first (reverse DFS post-order over all targets), so every demand is complete before its producer is sized. */
+function plRev(item,rate,pick){return plRevMulti([{item,rate}],pick);}
+function plRevMulti(targets,pick){
  const order=[],state={},rec={};
  const visit=it=>{if(state[it]||PL_RAW.has(it))return;state[it]=1;const r=plPick(it,pick);if(r){rec[it]=r;for(const k in r.i)visit(k);}order.push(it);};
- visit(item);
- const dem={[item]:rate},done=new Set(),out={rows:[],raw:{},by:{},none:{},power:0,mach:{}};
+ for(const t of targets)visit(t.item);
+ const dem={},done=new Set(),out={rows:[],raw:{},by:{},none:{},power:0,mach:{},goal:{}};
+ for(const t of targets){dem[t.item]=(dem[t.item]||0)+t.rate;out.goal[t.item]=(out.goal[t.item]||0)+t.rate;}
  const add=(o,k,v)=>{o[k]=(o[k]||0)+v;};
  for(let i=order.length-1;i>=0;i--){const it=order[i],need=dem[it]||0;done.add(it);if(need<=PL_EPS)continue;const r=rec[it];
   if(!r){add(out.none,it,need);continue;}
@@ -165,13 +170,13 @@ function plFwdHtml(){
  return h+`</div>`;
 }
 function plRevHtml(){
- const r=PL.rev,o=plRev(r.item,r.rate,r.pick);
- let h=`<div class="muted">Pick what you want to make and how much per minute. The planner lists every machine and raw resource the whole chain needs.</div>`;
- h+=`<h4>Target</h4><div class="card">`+plSel('r.item',plTargets().map(k=>plOpt(k,IT[k].n)).join(''),r.item,'wide')+plRow('Per minute',plNum('r.rate',r.rate,0.1,100000,'any'))+`</div>`;
+ const r=PL.rev,o=plRevMulti(r.targets,r.pick),opts=plTargets().map(k=>plOpt(k,IT[k].n)).join('');
+ let h=`<div class="muted">Pick one or more end products and how many of each per minute. The planner combines them: shared parts are counted once, with all machines, raw resources and power.</div>`;
+ h+=`<h4>End products</h4><div class="card">`+r.targets.map((t,i)=>`<div class="pltarget">${plSel(`r.t.${i}.item`,opts,t.item,'wide')}<div class="row"><span>Per minute</span><span>${plNum(`r.t.${i}.rate`,t.rate,0.1,100000,'any')}${r.targets.length>1?` <button class="btn chip" data-act="plTDel" data-v="${i}" title="Remove">✕</button>`:''}</span></div></div>`).join('')+`<button class="btn" data-act="plTAdd">+ Add product</button></div>`;
  h+=`<h4>Machines</h4>`;
  for(const row of o.rows){
   const ps=plProducers(row.item);
-  h+=`<div class="card"><div class="row"><b>${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div>`;
+  const g=o.goal[row.item];h+=`<div class="card"><div class="row"><b>${nm(row.item)}${g?' <span class="plgoal">🎯 end product</span>':''}</b><span>${fmt(row.rate)}/min</span></div>${g&&row.rate-g>PL_EPS?`<div class="muted">${fmt(g)} as end product + ${fmt(row.rate-g)} used by other steps</div>`:''}`;
   if(ps.length>1)h+=plSel(`r.pick.${row.item}`,plRecOpts(ps),row.r.id,'wide');else h+=`<div class="muted">${row.r.n}</div>`;
   h+=plCount(row.n,row.r.m)+plIO(row.r,row.n)+`</div>`;
  }
@@ -214,7 +219,7 @@ function plPowHtml(){
 const d3res=e=>B[e.d].water?'water':e.node?e.node.t:'iron';
 function planFrom(res,p,ex,clock){const f=PL.fwd,list=plExtractors(res);
  f.res=res;f.p=p==null?1:p;f.ex=ex&&list.includes(ex)?ex:(list.filter(id=>ub(id)).pop()||list[0]);f.n=1;f.clock=Math.round((clock||1)*100);f.steps=[];
- PL.mode='fwd';plFix();plAddStep();plSave();openPanel('plan');$('pbody').scrollTop=0;}
+ PL.mode='fwd';plFix();plAddStep();plSave();plShow();}
 /* Default recipe for a new step: use the biggest leftover, preferring recipes whose inputs are all available, then standard ones. */
 function plAddStep(){
  const o=plFwd(PL.fwd),left=Object.keys(o.left).sort((a,b)=>o.left[b]-o.left[a]);
@@ -227,16 +232,26 @@ function plSet(key,v){
  if(p[0]==='f'){PL.fwd[p[1]]=p[1]==='res'||p[1]==='ex'?v:+v;}
  else if(p[0]==='s'){const st=PL.fwd.steps[+p[1]];if(!st)return;if(p[2]==='share')st.share=Math.max(0,Math.min(100,+v||0));else st[p[2]]=v;}
  else if(p[0]==='w'){PL.pow[p[1]]=p[1]==='gen'||p[1]==='fuel'?v:+v;}
- else if(p[0]==='r'){if(p[1]==='pick')PL.rev.pick[p[2]]=v;else PL.rev[p[1]]=p[1]==='rate'?+v:v;}
+ else if(p[0]==='r'){if(p[1]==='pick')PL.rev.pick[p[2]]=v;else if(p[1]==='t'){const t=PL.rev.targets[+p[2]];if(t)t[p[3]]=p[3]==='rate'?+v:v;}}
  plFix();
 }
-const plRefresh=()=>{plSave();if(UI.panel&&UI.panel.kind==='plan')renderPanel(true);};
+const plRefresh=()=>{plSave();if(PL.pinned)plRenderPin();if(UI.panel&&UI.panel.kind==='plan')renderPanel(true);};
+/* Pinned planner: its own panel (#ppin) that stays open while you tap the map, build or inspect machines */
+function plRenderPin(top){const b=$('ppbody'),st=b.scrollTop;b.innerHTML=planHtml();b.scrollTop=top?0:st;}
+function plShowPin(){$('ppin').classList.remove('hidden');document.body.classList.add('pinned');plRenderPin();}
+function plHidePin(){$('ppin').classList.add('hidden');document.body.classList.remove('pinned');}
+function plShow(){if(PL.pinned){plShowPin();plRenderPin(true);}else{openPanel('plan');$('pbody').scrollTop=0;}}
 document.addEventListener('change',ev=>{const k=ev.target.dataset&&ev.target.dataset.pl;if(!k)return;plSet(k,ev.target.value);plRefresh();});
 Object.assign(ACT,{
- openPlan:()=>openPanel('plan'),
+ openPlan:()=>{if(PL.pinned)plShowPin();else openPanel('plan');},
+ plPin:()=>{PL.pinned=true;plSave();closePanel();plShowPin();toast('Planner pinned: it stays open while you build');},
+ plUnpin:()=>{PL.pinned=false;plSave();plHidePin();openPanel('plan');},
+ plPinClose:()=>{PL.pinned=false;plSave();plHidePin();},
+ plTAdd:()=>{const have=new Set(PL.rev.targets.map(t=>t.item)),k=plTargets().find(x=>!have.has(x))||'iron_plate';PL.rev.targets.push({item:k,rate:30});plRefresh();},
+ plTDel:v=>{PL.rev.targets.splice(+v,1);plFix();plRefresh();},
  plMode:v=>{PL.mode=v;plRefresh();},
  plLocked:()=>{PL.locked=!PL.locked;plFix();plRefresh();},
- plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();$('pbody').scrollTop=0;},
+ plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();(PL.pinned?$('ppbody'):$('pbody')).scrollTop=0;},
  plAdd:()=>{if(!plAddStep())toast(Object.keys(plFwd(PL.fwd).left).length?'Nothing can use what is left over. Try “Show locked”.':'Nothing left over to use');plRefresh();},
  plDel:v=>{PL.fwd.steps.splice(+v,1);plRefresh();},
  plClear:()=>{PL.fwd.steps=[];plRefresh();},

@@ -199,11 +199,19 @@ function drawLive(e,X,Y,s){
  // badge + status
  let icon=null;if(e.k==='mach'&&e.r)icon=Object.keys(RC[e.r].o)[0];else if((e.k==='drill'||e.k==='pump')&&e.item)icon=e.item;else if(e.k==='storage'){for(const k in e.store){icon=k;break;}}
  if(icon&&s>9){const r=Math.min(s*0.32,P*0.16),bx=X+s*0.42,by=Y+P-s*0.42;ctx.fillStyle='rgba(10,14,18,0.85)';ctx.beginPath();ctx.arc(bx,by,r*1.25,0,7);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();drawItem(icon,bx,by,r*2.1);}
- effRing(e,X,Y,s);const st=bStatus(e);if(st&&s>7){const lx=X+P-s*0.36,ly=Y+s*0.36,lr=Math.max(1.6,s*0.09);glow(lx,ly,lr*3,st[0],0.45);ctx.fillStyle=st[0];ctx.beginPath();ctx.arc(lx,ly,lr,0,7);ctx.fill();}
+ effRing(e,X,Y,s);clockBadge(e,X,Y,s);const st=bStatus(e);if(st&&s>7){const lx=X+P-s*0.36,ly=Y+s*0.36,lr=Math.max(1.6,s*0.09);glow(lx,ly,lr*3,st[0],0.45);ctx.fillStyle=st[0];ctx.beginPath();ctx.arc(lx,ly,lr,0,7);ctx.fill();}
  let pg=null;if(e.k==='mach'&&e.run)pg=e.prog;else if(e.k==='storage'){let t=0;for(const k in e.store)t+=e.store[k];pg=t/B[e.d].cap;}
  if(pg!==null&&s>9){const bw=P-s*0.9,bx=X+s*0.62,by=Y+P-s*0.2;ctx.fillStyle='rgba(0,0,0,0.6)';rr(bx,by,bw,s*0.08,s*0.04);ctx.fill();ctx.fillStyle='#ffb547';rr(bx,by,bw*Math.min(1,pg),s*0.08,s*0.04);ctx.fill();}
 }
 /* Efficiency ring in the building's top-left corner (fills clockwise, coloured like the panel badge) */
+/* Clock badge, bottom-right, when a machine/drill/pump doesn't run at 100 % (amber = overclocked, blue = slowed down) */
+function clockBadge(e,X,Y,s){
+ if(s<14||!(e.k==='mach'||e.k==='drill'||e.k==='pump'))return;const c=e.clock||1;if(Math.abs(c-1)<0.005)return;
+ const P=e.w*s,txt=Math.round(c*100)+'%',fs=Math.max(9,Math.min(16,s*0.3));ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
+ const w=ctx.measureText(txt).width+fs*0.8,h=fs*1.45,x=X+P-w-s*0.1,y=Y+P-h-s*0.1;
+ ctx.fillStyle='rgba(10,14,18,0.82)';rr(x,y,w,h,h/2);ctx.fill();ctx.strokeStyle=c>1?'#ffb547':'#7fb6ff';ctx.lineWidth=Math.max(1,fs*0.1);ctx.stroke();
+ ctx.fillStyle=c>1?'#ffcf7a':'#bcd8ff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x+w/2,y+h/2+0.5);ctx.textAlign='left';
+}
 function effRing(e,X,Y,s){
  if(!OPT.eff||s<9||e._efT==null||e._efT<3||!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return;
  const r=Math.max(3,s*0.17),cx=X+s*0.36,cy=Y+s*0.36,f=e._ef,col=effCol(Math.round(f*100));

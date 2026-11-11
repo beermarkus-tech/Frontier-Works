@@ -754,3 +754,32 @@ How do machines decide where output goes, and how is a crossing attached directl
 ### Verified
 - `npm test` 49/49. New checks: a pipe fed at ~40 % of capacity flips its raw contents 60× in 15 s while the drawn fill level stays between 0.34 and 0.46;
   the collect-all button moves exactly the 15 test items from two crates and leaves them empty.
+
+---
+
+## Session 24 — 2026-11-11 (Claude Code, cloud session) · Build 29
+
+### What Markus asked for
+1. Planner "For a target" with several end products (e.g. Steel Beam and Steel Pipe), each with its own target, combined into one plan.
+2. Pin the planner so it stays open while clicking elsewhere, moving the tool buttons (hand, dismantle, …) out of the way.
+3. Show the clock on machines in 2D when it isn't 100 %.
+
+### What was built
+- **Multi-product reverse planner:** `plRevMulti(targets,pick)` in `js/plan.js` (`plRev` is now a one-target wrapper, so the Power tab, tests and
+  play-through tool are unchanged). Demands from all targets are summed and items processed consumers-first, so shared parts are counted once.
+  UI: an "End products" card with one picker + rate per product, ✕ to remove, "+ Add product". Cards mark end products with 🎯 and split
+  "N as end product + M used by other steps". Old saved planner state (single item/rate) converts automatically.
+- **Pinned planner:** 📌 in the planner's header moves it into its own panel `#ppin` (top-left on desktop, replacing the minimap there; top 40 % on phones,
+  where other panels then open shorter at the bottom). It stays open on map taps, building and inspecting. It re-renders when the plan changes. 📌 unpins,
+  ✕ closes. The pinned state is remembered. All planner styles apply to both panels (CSS rules for `#pbody` duplicated for `#ppbody`).
+- **Tool buttons moved** from the right edge into a row at the top of the bottom dock (`#fabs` inside `#dock`), so no panel covers them. Panel heights follow the dock automatically.
+- **Clock badge** (`clockBadge` in `js/render.js`): bottom-right "73 %" pill on machines/drills/pumps when the clock isn't 100 %: amber when overclocked, blue when slowed.
+- DESIGN.md §8 updated. Build number **29**.
+
+### Verified
+- `npm test` 54/54. New checks: Steel Beam 10/min + Steel Pipe 20/min share 70 Steel Ingot/min; add/remove products; pinned planner survives a map tap and
+  an entity panel, updates when edited, unpins back to a normal panel; tool row is inside the dock; a 73 % smelter draws its badge.
+- Phone screenshot: pinned planner with two products at the top, tool row in the dock, clock badge on a smelter.
+
+### Known issues
+- On phones the pinned planner (40 % height) plus an open machine panel leave little map visible. Close the machine panel to see more.

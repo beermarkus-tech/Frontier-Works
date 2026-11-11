@@ -126,6 +126,24 @@ const server=require('./serve.js');
   for(let j=-1;j<6;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{lo,hi,flips,btn,gain:after-before,empty};});
  check(`pipe fill stays steady (${pf.lo.toFixed(2)}–${pf.hi.toFixed(2)}) while the raw contents flip ${pf.flips}×`,pf.flips>20&&pf.lo>0.15&&pf.hi-pf.lo<0.45);
  check(`Items: "Move everything from all crates" collects ${pf.gain} items and empties the crates`,pf.btn&&pf.gain===15&&pf.empty===0);
+ // planner: several end products at once share their parts (Steel Beam 10/min + Steel Pipe 20/min → 70 Steel Ingot/min)
+ const mt=await p.evaluate(()=>{PL.locked=true;const o=plRevMulti([{item:'steel_beam',rate:10},{item:'steel_pipe',rate:20}],{});PL.locked=false;
+  const ing=o.rows.find(r=>r.item==='steel_ingot');return{ing:ing&&Math.round(ing.rate),goals:Object.keys(o.goal).length,beam:o.rows.find(r=>r.item==='steel_beam').n};});
+ check(`planner multi-target: shared Steel Ingot ${mt.ing}/min for 10 beams + 20 pipes`,mt.ing===70&&mt.goals===2&&Math.abs(mt.beam-10/15)<1e-6);
+ const ui2=await p.evaluate(()=>{PL=plDefault();PL.locked=true;PL.mode='rev';ACT.openPlan();ACT.plTAdd();const n1=PL.rev.targets.length,sel=document.querySelectorAll('#pbody select[data-pl^="r.t."][data-pl$=".item"]').length;
+  ACT.plTDel('1');const n2=PL.rev.targets.length;return{n1,sel,n2};});
+ check(`planner: + Add product / ✕ remove (${ui2.n1} → ${ui2.n2}, ${ui2.sel} pickers)`,ui2.n1===2&&ui2.sel===2&&ui2.n2===1);
+ // pin: planner moves to its own panel and survives taps on the map and opening other panels
+ const pin=await p.evaluate(()=>{ACT.plPin();const vis=()=>!document.getElementById('ppin').classList.contains('hidden');const a=vis()&&!UI.panel;
+  tap({x:2,y:2});const b=vis();const core=[...ents.values()].find(e=>e.k==='core');openPanel('ent',core.id);const c=vis()&&UI.panel&&UI.panel.kind==='ent';
+  ACT.closePanel();ACT.plTAdd();const d=document.querySelectorAll('#ppbody .pltarget').length===PL.rev.targets.length;ACT.plUnpin();const e=!vis()&&UI.panel&&UI.panel.kind==='plan';ACT.closePanel();
+  localStorage.removeItem('frontierworks_plan');PL=plDefault();return{a,b,c,d,e};});
+ check(`planner pin: stays open on map taps and other panels, updates, unpins (${Object.values(pin).join(',')})`,Object.values(pin).every(Boolean));
+ check('tool buttons (inspect, rotate, dismantle…) live in the bottom dock',await p.evaluate(()=>document.getElementById('dock').contains(document.getElementById('fabs'))));
+ // clock badge drawn on a machine that isn't at 100 %
+ const cb=await p.evaluate(()=>{const e=[...ents.values()].find(x=>x.k==='mach');const old=e.clock;e.clock=0.73;cam.x=camT.x=e.x+1;cam.y=camT.y=e.y+1;cam.z=camT.z=2;
+  const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;e.clock=old;return seen.includes('73%');});
+ check('2D shows a clock badge on machines not at 100 %',cb);
  // planner maths (pure functions, no factory state)
  const pm=await p.evaluate(()=>{const f=(res,steps)=>plFwd({res,p:1,ex:'drill1',n:1,clock:100,steps:steps.map(r=>({r,share:100}))});
   const a=f('iron',['r_iron_ingot','r_iron_plate']),b=f('copper',['r_copper_ingot','r_wire','r_cable']),c=(PL.locked=true,plRev('motor',10,{}));PL.locked=false;
@@ -153,7 +171,7 @@ const server=require('./serve.js');
  await p.selectOption('#pbody select[data-pl="f.p"]','2');await p.waitForTimeout(100);
  check('planner reacts to purity change',await p.evaluate(()=>document.querySelector('#pbody .plbig').textContent==='4 × Smelter'));
  await p.click('#pbody [data-act="plLocked"]');await p.click('#pbody [data-act="plMode"][data-v="rev"]');await p.waitForTimeout(100);
- await p.selectOption('#pbody select[data-pl="r.item"]','quantum_core');await p.waitForTimeout(100);
+ await p.selectOption('#pbody select[data-pl="r.t.0.item"]','quantum_core');await p.waitForTimeout(100);
  check('planner reverse mode with locked recipes (quantum core chain)',await p.evaluate(()=>document.querySelectorAll('#pbody .plbig').length>10));
  check('planner reverse cards list In and Out per machine',await p.evaluate(()=>{const c=[...document.querySelectorAll('#pbody .card')].find(x=>x.querySelector('.plbig'));return !!c&&/In[\s\S]*\/min[\s\S]*Out[\s\S]*\/min/i.test(c.innerText);}));
  await p.click('#pbody [data-act="plMode"][data-v="fwd"]');await p.waitForTimeout(100);await p.click('#pbody [data-act="plPowFrom"]');await p.waitForTimeout(100);
