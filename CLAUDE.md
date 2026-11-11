@@ -36,7 +36,7 @@ and keep the game playable after every commit.
   animated parts as own InstancedMesh). `v3Layout()` rebuilds instances when `v3Sig()` changes; `v3Anim/v3Items/v3Smoke` run per frame.
   Input reuses `tap()`, `linePath()`, `buildPath()`. **A new building type needs a 3D model in `v3Models()` too**, or it won't show in 3D.
   Three.js is r149 on purpose: the last release with a classic-script build (`THREE` global), matching our no-module setup.
-- Fluids: pipes have no direction. `buildNets()` (end of `rebuildTopo`) makes networks (`nets`, `e.net`, connection bitmask `e.pc`); `updNets(dt)` moves fluid
+- Fluids: pipes have no direction; buildings attach only through Pipe Junction tiles. `buildNets()` (end of `rebuildTopo`) makes networks (`nets`, `e.net`, connection bitmask `e.pc`); `updNets(dt)` moves fluid
   between attached buildings and the network. Contents live on the network and are copied to tiles (`item`, `lv`) by `syncPipes()` for saves/rebuilds.
 - Drone Pads (`k:'dpad'`): `updPad` in `js/sim.js`, state `e.dr` + route `e.lx/e.ly` (saved), list `pads` from `rebuildTopo`; drawn by `drawDrones` (2D) and `v3Drones` (3D). Numbers in `DRONE` (`js/data.js`).
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).

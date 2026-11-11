@@ -70,9 +70,10 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
 - One item per belt tile. Belt speeds: Mk1 60/min, Mk2 120, Mk3 270, Mk4 480, Mk5 780. Pipes: Mk1 300 m³/min, Mk2 600.
 - **Pipes have no direction** (agreed with Markus, Session 31). Touching pipe tiles and Pipe Junctions (also straight through a Crossing) form one
   **fluid network**, like a power grid: one fluid per network (sticky until emptied in the pipe's panel), 10 m³ per tile, max flow set by the slowest
-  pipe (Mk1 300, Mk2 600 m³/min). Touching buildings join automatically: pumps, machine fluid outputs and tanks (under half full) fill it; machines and
-  generators needing that fluid, tanks (over 80 % full) and incinerators draw from it. A second fluid is refused and marked with a red "!" (no mixing).
-  The Pipe Junction stays as a 4-way pipe piece; plain pipes connect just as well. Old saves keep their pipes, with direction ignored.
+  pipe (Mk1 300, Mk2 600 m³/min). **Buildings join only where a Pipe Junction touches them** (Session 33, Markus's choice: plain pipes can run right
+  past a machine without connecting; the junction is the dedicated entry point). Pumps, machine fluid outputs and tanks (under half full) fill the
+  network; machines and generators needing that fluid, tanks (over 80 % full) and incinerators draw from it. A second fluid is refused and marked with a red "!" (no mixing).
+  The Pipe Junction connects all four sides, to pipes and to the buildings it touches. Old saves keep their pipes, with direction ignored.
 - **A building outputs into any belt/pipe that points away from its edge, and accepts input from any belt/pipe pointing into it.**
   There are no fixed ports. Solids only go to belts and fluids only to pipes.
   **Routers touch buildings directly** (confirmed with Markus, Session 10): a Splitter/Sorting Splitter output side (or Pipe Junction side)

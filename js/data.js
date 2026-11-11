@@ -11,7 +11,7 @@ I('iron_ingot','Iron Ingot','#a3a9b1');I('copper_ingot','Copper Ingot','#e08d4c'
 I('iron_plate','Iron Plate','#c3c9d1');I('iron_rod','Iron Rod','#8a93a3');I('bolts','Bolts','#b0b8c6');I('wire','Wire','#f0a54a');
 I('cable','Cable','#3b3b70');I('concrete','Concrete','#b5b5aa');I('copper_sheet','Copper Sheet','#e8955f');I('steel_beam','Steel Beam','#5a6270');
 I('steel_pipe','Steel Pipe','#8eb0cf');I('quartz_crystal','Quartz Crystal','#f4a8f0');I('silica','Silica','#f3f3f3');I('alu_casing','Aluminum Casing','#c6d0da');
-I('braced_plate','Braced Plate','#7d8fa2');I('truss_frame','Truss Frame','#5878a6');I('rotor','Rotor','#8f6c48');I('cased_girder','Cased Girder','#91917c');
+I('braced_plate','Braced Plate','#7d8fa2');I('truss_frame','Truss Frame','#5878a6');I('rotor','Rotor','#8f6c48');I('cased_girder','Cased Girder','#a39a86');
 I('stator','Stator','#6e5c92');I('motor','Motor','#466c92');I('circuit_board','Circuit Board','#3da35f');I('resonator','Resonator','#c27ee6');
 I('alloy_panel','Alloy Panel','#a9c6e6');I('heat_sink','Heat Sink','#e6704f');I('plastic','Plastic','#46d3d3');I('rubber','Rubber','#505050');
 I('petro_coke','Petroleum Coke','#3d3333',0,180);I('polymer_resin','Polymer Resin','#d6a83e');I('heavy_residue','Heavy Residue','#7a3a7a',1);
@@ -95,13 +95,13 @@ D('belt2',{n:'Conveyor Mk2',k:'belt',spd:2,cat:'log',col:'#e0c040',cost:{iron_pl
 D('belt3',{n:'Conveyor Mk3',k:'belt',spd:4.5,cat:'log',col:'#ee7a30',cost:{steel_beam:1},ow:1,desc:'270 items/min'});
 D('belt4',{n:'Conveyor Mk4',k:'belt',spd:8,cat:'log',col:'#40b8ee',cost:{steel_pipe:1,plastic:1},ow:1,desc:'480 items/min'});
 D('belt5',{n:'Conveyor Mk5',k:'belt',spd:13,cat:'log',col:'#c25cf0',cost:{alloy_panel:1,plastic:1},ow:1,desc:'780 items/min'});
-D('pipe1',{n:'Pipeline Mk1',k:'pipe',spd:5,cat:'log',col:'#6f93b8',cost:{copper_sheet:1},ow:1,desc:'300 m³/min of fluid. No direction: connects to every touching pipe. Drag to lay.'});
-D('pipe2',{n:'Pipeline Mk2',k:'pipe',spd:10,cat:'log',col:'#d6a640',cost:{copper_sheet:1,plastic:1},ow:1,desc:'600 m³/min of fluid. No direction: connects to every touching pipe.'});
+D('pipe1',{n:'Pipeline Mk1',k:'pipe',spd:5,cat:'log',col:'#6f93b8',cost:{copper_sheet:1},ow:1,desc:'300 m³/min of fluid. No direction: connects to touching pipes and junctions. Buildings connect only through a Pipe Junction.'});
+D('pipe2',{n:'Pipeline Mk2',k:'pipe',spd:10,cat:'log',col:'#d6a640',cost:{copper_sheet:1,plastic:1},ow:1,desc:'600 m³/min of fluid. No direction: connects to touching pipes and junctions. Buildings connect only through a Pipe Junction.'});
 D('splitter',{n:'Splitter',k:'router',sub:'split',cat:'log',col:'#d08a2a',cost:{iron_plate:2,cable:2},ow:1,desc:'Input from the back, splits to front/left/right. Outputs go into belts or straight into a building touching that side.'});
 D('merger',{n:'Merger',k:'router',sub:'merge',cat:'log',col:'#2a9ad0',cost:{iron_plate:2,cable:2},ow:1,desc:'Inputs from back/left/right (belts, or a machine touching that side), outputs to the front (belt or building).'});
 D('sorter',{n:'Sorting Splitter',k:'router',sub:'sort',cat:'log',col:'#9a50d0',cost:{braced_plate:1,cable:5},ow:1,desc:'Filtered item goes front, everything else left/right (into belts or touching buildings). Tap it to set the filter.'});
 D('crossing',{n:'Crossing',k:'cross',cat:'log',col:'#6c6c6c',cost:{iron_plate:3,bolts:6},ow:1,desc:'Lets two belts/pipes cross each other.'});
-D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'log',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'A pipe piece that connects all four sides, to pipes and touching buildings. Plain pipes connect too.'});
+D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'log',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'The entry point between pipes and a building: connects all four sides, to pipes and to every building it touches.'});
 D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',cost:{iron_plate:10,iron_rod:10},desc:'Buffers 2000 items; passes them on to outgoing belts.'});
 D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'log',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
 D('dpad',{n:'Drone Pad',k:'dpad',w:3,pw:25,cap:400,cat:'log',col:'#2fa7a0',cost:{motor:4,stator:4,cased_girder:6,cable:30},desc:'Holds 400 items. Link it to another pad and its drone flies them there (40 per trip). An unlinked pad receives drones and passes items to outgoing belts.'});

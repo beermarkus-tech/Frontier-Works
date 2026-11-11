@@ -985,3 +985,29 @@ Desktop far zoom 43.8 → **2.2 ms**. `npm test` 56/56. Screenshots before/after
 - `npm test` 61/61. New checks: four sign sizes; placing opens the text box; typed text "Iron Works" + colour is drawn and survives save/load. Fly-in starts top-down,
   ends at 0.62, keeps circling, and a click stops it (the test waits for the fly-in to finish because the headless 3D runs only a few frames per second).
 - Tablet screenshots: signs in six sizes and colours close up and fully zoomed out; 3D labels on posts (made slightly smaller after the first look).
+
+---
+
+## Session 33 — 2026-11-11 (Claude Code, cloud session) · Build 38
+
+### What Markus asked for
+1. Cased Girder and Concrete look identical: give one a different icon.
+2. Pipes should connect to buildings **only through Pipe Junctions**. A pipe running right next to a machine shouldn't connect everywhere; the junction
+   is the dedicated entry point. (Pipes still have no direction and connect to each other.)
+
+### What changed
+- **Cased Girder** has its own item shape `girder` (2D `paintItem`, 3D belt item): a long sand-coloured concrete beam with dark steel end caps,
+  a steel band and an "I" profile on the end. Colour `#a39a86`. Concrete stays the plain grey block.
+- **Junction-only entry points** (`buildNets` in `js/sim.js`): network attachments and the building-side connection arms come only from Pipe Junction tiles.
+  Plain pipes connect to pipes, junctions and crossings, never to buildings. Descriptions, pipe panel text, DESIGN.md §5 and CLAUDE.md updated.
+- **Fix found on the way:** `rebuildTopo` still cleared a junction's stored item (from Build 36) on every layout change, which threw away the junctions'
+  share of the network contents on reload. Removed.
+- Build number **38**.
+
+### Note for Markus
+- Pipe setups built since Build 36 where a plain pipe touches a machine directly now need a Pipe Junction at that entry point.
+
+### Verified
+- `npm test` 62/62, twice. The pipe test now uses junctions as entry points (300 m³/min). New check: plain pipes running past an incinerator stay unconnected.
+  The save/load check for network contents passes again.
+- Icon comparison: Concrete / Cased Girder / Steel Beam clearly different at icon and belt size.

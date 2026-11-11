@@ -325,7 +325,7 @@ function drawBuilding(e,X,Y,s){
 const SHAPE={};const setS=(sh,ids)=>ids.split(' ').forEach(i=>SHAPE[i]=sh);
 setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium');setS('crystal','quartz quartz_crystal resonator');
 setS('ingot','iron_ingot copper_ingot steel_ingot alu_ingot alu_casing');setS('plate','iron_plate copper_sheet alloy_panel braced_plate plastic heat_sink');
-setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete cased_girder rubber coolant_block');
+setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete rubber coolant_block');setS('girder','cased_girder');
 setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell fuel_rod battery');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
 setS('gear','rotor motor stator turbine_core');setS('chip','circuit_board compute_module control_chip data_bus');setS('orb','quantum_core');
 const ISPR=new Map();
@@ -346,6 +346,12 @@ function paintItem(g,id,R){
   case 'plate':rrg(g,-R*0.38,-R*0.38,R*0.76,R*0.76,R*0.08);g.fillStyle=lin(R*0.38);g.fill();fin();g.strokeStyle='rgba(255,255,255,0.3)';g.lineWidth=lw*0.7;rrg(g,-R*0.3,-R*0.3,R*0.6,R*0.6,R*0.05);g.stroke();
    if(id==='braced_plate'){g.strokeStyle='rgba(0,0,0,0.4)';g.lineWidth=lw*1.3;g.beginPath();g.moveTo(-R*0.28,-R*0.28);g.lineTo(R*0.28,R*0.28);g.moveTo(R*0.28,-R*0.28);g.lineTo(-R*0.28,R*0.28);g.stroke();}
    if(id==='heat_sink'){g.strokeStyle='rgba(0,0,0,0.4)';g.lineWidth=lw;for(let k=-2;k<=2;k++){g.beginPath();g.moveTo(k*R*0.12,-R*0.28);g.lineTo(k*R*0.12,R*0.28);g.stroke();}}break;
+  case 'girder':{g.save();g.rotate(-0.7);const L=R*0.94,H=R*0.36;   // concrete-cased steel girder: long concrete body, steel end caps and bands, "I" on the end
+   rrg(g,-L/2,-H/2,L,H,R*0.04);g.fillStyle=lin(H/2);g.fill();fin();
+   g.fillStyle='rgba(0,0,0,0.12)';for(let k=0;k<5;k++)g.fillRect(-L/2+R*0.12+k*R*0.15,-H/2+R*0.06+((k*37)%3)*R*0.06,R*0.04,R*0.04);
+   const st='#3d4652';g.fillStyle=st;g.fillRect(-L/2,-H/2,R*0.09,H);g.fillRect(L/2-R*0.09,-H/2,R*0.09,H);g.fillRect(-R*0.03,-H/2,R*0.06,H);
+   g.fillStyle='#c9d2dc';const ex=L/2-R*0.045;g.fillRect(ex-R*0.035,-H*0.32,R*0.07,R*0.03);g.fillRect(ex-R*0.035,H*0.32-R*0.03,R*0.07,R*0.03);g.fillRect(ex-R*0.012,-H*0.32,R*0.024,H*0.64);
+   g.restore();break;}
   case 'beam':{g.save();g.rotate(-0.7);const L=R*0.92,H=R*0.34;   // I-beam seen from the side: solid bar, recessed web groove, bold "I" profile at the end
    rrg(g,-L/2,-H/2,L,H,R*0.03);g.fillStyle=lin(H/2);g.fill();fin();
    g.fillStyle=shade(col,-50);g.fillRect(-L/2+R*0.05,-H*0.18,L-R*0.13,H*0.36);

@@ -230,7 +230,7 @@ function rebuildTopo(){
  for(const e of ents.values()){
   if(isLine(e.k))lines.push(e);else if(e.k==='router'){if(B[e.d].sub!=='junc')routers.push(e);}else if(e.k==='cross')crosses.push(e);
   else if(e.k!=='pole'){e.ports=perim(e);buildings.push(e);}
-  if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);if(e.k==='router'&&B[e.d].sub==='junc')e.item=null;
+  if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);
   e.grid=null;if(B[e.d].pw)e.pw=0;
  }
  for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):true))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
@@ -254,7 +254,7 @@ function rebuildTopo(){
 /* ---------- Fluid networks ----------
    Pipes have no direction: touching pipe tiles and Pipe Junctions (also straight through a Crossing) form one network, like a power grid.
    A network holds one fluid (sticky until flushed), PIPE_CAP m³ per tile, and moves at most `rate` m³/s in and out (slowest pipe: Mk1 5, Mk2 10).
-   Touching buildings take part: pumps, machine fluid outputs and tanks (when the network is under half full) fill it; machines and generators
+   Buildings take part only where a Pipe Junction touches them (plain pipes can run right past a machine without connecting): pumps, machine fluid outputs and tanks (when the network is under half full) fill it; machines and generators
    needing that fluid, tanks (when it's over 80 % full) and incinerators draw from it. A second fluid is refused and flagged (no mixing). */
 const PIPE_CAP=10,pipeLike=e=>!!e&&(e.k==='pipe'||(e.k==='router'&&B[e.d].sub==='junc'));
 function syncPipes(){for(const n of nets)for(const t of n.tiles){t.item=n.fluid;t.lv=n.cap?n.amt/n.cap:0;}}   // store contents on the tiles (save, rebuild)
@@ -264,13 +264,13 @@ function buildNets(){
  for(const t of list)for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(!n)continue;
   if(pipeLike(n)){un(ix.get(t),ix.get(n));t.pc|=1<<d;}
   else if(n.k==='cross'){const far=entAt(n.x+DX[d],n.y+DY[d]);if(pipeLike(far)){un(ix.get(t),ix.get(far));t.pc|=1<<d;}}
-  else if(['mach','gen','pump','tank','incin'].includes(n.k))t.pc|=1<<d;}
+  else if(t.k!=='pipe'&&['mach','gen','pump','tank','incin'].includes(n.k))t.pc|=1<<d;}   // only a Pipe Junction is an entry point into a building
  const G=new Map();list.forEach((t,i)=>{const r=f(i);if(!G.has(r))G.set(r,[]);G.get(r).push(t);});
  for(const tiles of G.values()){const cnt={};let rate=Infinity;
   for(const t of tiles){if(t.item)cnt[t.item]=(cnt[t.item]||0)+1;if(t.k==='pipe')rate=Math.min(rate,B[t.d].spd);}
   const fluid=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]||null;let amt=0;
   for(const t of tiles)if(t.item===fluid)amt+=t.lv!=null?t.lv*PIPE_CAP:1;   // old saves: one unit per pipe tile holding fluid
-  const att=new Set();for(const t of tiles)for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(n&&['mach','gen','pump','tank','incin'].includes(n.k))att.add(n);}
+  const att=new Set();for(const t of tiles)if(t.k!=='pipe')for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(n&&['mach','gen','pump','tank','incin'].includes(n.k))att.add(n);}
   const n={tiles,fluid,cap:tiles.length*PIPE_CAP,amt:0,rate:isFinite(rate)?rate:5,att:[...att],bi:0,bo:0,inR:0,outR:0,_fl:0,conflict:null};n.amt=Math.min(n.cap,amt);n._fl=n.cap?n.amt/n.cap:0;
   for(const t of tiles)t.net=n;nets.push(n);}
 }

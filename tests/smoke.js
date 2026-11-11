@@ -123,19 +123,21 @@ const server=require('./serve.js');
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
   for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<8&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
   S.ub.push('junction','pipe1','tank');
-  const r=[P('tank',X,Y,0),P('pipe1',X+2,Y,2),P('pipe1',X+3,Y,2),P('pipe1',X+4,Y,2),P('junction',X+5,Y,0),P('pipe1',X+6,Y,1),P('pipe1',X+6,Y+1,3),P('pipe1',X+6,Y+2,3),P('incin',X+7,Y+2,0),P('tank',X+2,Y+1,0)];
+  const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,2),P('pipe1',X+4,Y,2),P('junction',X+5,Y,0),P('pipe1',X+6,Y,1),P('pipe1',X+6,Y+1,3),P('junction',X+6,Y+2,0),P('incin',X+7,Y+2,0),P('tank',X+2,Y+1,0),P('pipe1',X+8,Y+3,0),P('pipe1',X+9,Y+3,0),P('incin',X+8,Y+4,0)];
   const tk=fw.entAt(X,Y),t2=fw.entAt(X+2,Y+1);tick(0.05);const one=new Set([X+2,X+3,X+4,X+5].map(x=>fw.entAt(x,Y).net).concat([fw.entAt(X+6,Y+2).net])).size===1;
   for(let s=0;s<5;s++){tk.ft='water';tk.amt=400;for(let k=0;k<20;k++)tick(0.05);}
   stat.hist=[];t2.ft='crude';t2.amt=100;for(let s=0;s<70;s++){tk.ft='water';tk.amt=400;t2.ft='crude';t2.amt=100;for(let k=0;k<20;k++)tick(0.05);}
+  const lone=fw.entAt(X+8,Y+3).net,past=lone.att.length===0;   // plain pipes next to an incinerator: no connection
   const n=fw.entAt(X+3,Y).net,rate=Math.round(rates().c.water||0),mix=!!n.conflict&&n.conflict.fluid==='crude'&&n.fluid==='water'&&t2.ft==='crude'&&t2.amt===100;
   const amt=n.amt,sv=serialize();load(sv);tick(0.05);const n2=fw.entAt(X+3,Y).net,kept=n2&&n2.fluid==='water'&&Math.abs(n2.amt-amt)<=1;
   P('storage',X,Y+5,0);P('storage',X+3,Y+5,0);fw.entAt(X,Y+5).store={iron_plate:7};fw.entAt(X+3,Y+5).store={wire:5,bolts:3};const before=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);
   openPanel('inv');const btn=!!document.querySelector('#pbody [data-act="collectAll"]');ACT.collectAll();const after=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);ACT.closePanel();
   const empty=Object.keys(fw.entAt(X,Y+5).store).length+Object.keys(fw.entAt(X+3,Y+5).store).length;
   for(let j=-1;j<8;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
-  return{ok:r.every(v=>v===''),one,rate,mix,kept,btn,gain:after-before,empty};});
- check(`pipes without direction: backwards pipes + junction + corner form one network, ${pnet.rate} m³/min (Mk1 = 300)`,pnet.ok&&pnet.one&&pnet.rate>=270&&pnet.rate<=310);
+  return{ok:r.every(v=>v===''),one,rate,mix,kept,past,btn,gain:after-before,empty};});
+ check(`pipes without direction: junction entry points + backwards pipes + junction + corner form one network, ${pnet.rate} m³/min (Mk1 = 300)`,pnet.ok&&pnet.one&&pnet.rate>=270&&pnet.rate<=310);
  check('pipe network refuses a second fluid (no mixing) and flags it',pnet.mix);
+ check('a plain pipe running past a building does not connect (only Pipe Junctions are entry points)',pnet.past);
  check('pipe network fluid and amount survive save/load',pnet.kept);
  check(`Items: "Move everything from all crates" collects ${pnet.gain} items and empties the crates`,pnet.btn&&pnet.gain===15&&pnet.empty===0);
  // planner: several end products at once share their parts (Steel Beam 10/min + Steel Pipe 20/min → 70 Steel Ingot/min)
