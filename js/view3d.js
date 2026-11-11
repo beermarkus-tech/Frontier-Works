@@ -45,6 +45,14 @@ const v3col=h=>new T3.Color(h);
 function v3Mat(){return new T3.MeshStandardMaterial({vertexColors:true,roughness:0.72,metalness:0.18});}
 function v3Canvas(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c;}
 /* Merge simple parts into one non-indexed BufferGeometry with vertex colours. part: {g, m:Matrix4, c:Color} */
+/* Rounded box (Enhanced look): real size in tiles, so the edge radius is the same on big blocks and small parts. Cached by size. */
+const RBOX=new Map();
+function v3RBox(sx,sy,sz){const k=sx.toFixed(3)+'|'+sy.toFixed(3)+'|'+sz.toFixed(3);let g=RBOX.get(k);if(g)return g;
+ const r=Math.min(0.075,Math.min(sx,sz)*0.18,sy*0.3),w=sx-2*r,d=sz-2*r,c=Math.min(w,d)*0.15,sh=new T3.Shape();
+ sh.moveTo(-w/2+c,-d/2);sh.lineTo(w/2-c,-d/2);sh.quadraticCurveTo(w/2,-d/2,w/2,-d/2+c);sh.lineTo(w/2,d/2-c);sh.quadraticCurveTo(w/2,d/2,w/2-c,d/2);
+ sh.lineTo(-w/2+c,d/2);sh.quadraticCurveTo(-w/2,d/2,-w/2,d/2-c);sh.lineTo(-w/2,-d/2+c);sh.quadraticCurveTo(-w/2,-d/2,-w/2+c,-d/2);
+ g=new T3.ExtrudeGeometry(sh,{depth:Math.max(0.001,sy-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:2,curveSegments:2});
+ g.translate(0,0,-(sy-2*r)/2);g.rotateX(-Math.PI/2);g.deleteAttribute('uv');g.computeVertexNormals();RBOX.set(k,g);return g;}
 function v3Merge(parts){
  let n=0;const gs=parts.map(p=>{const g=(p.g.index?p.g.toNonIndexed():p.g.clone());g.applyMatrix4(p.m);n+=g.attributes.position.count;return g;});
  const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3);let o=0;
@@ -110,8 +118,8 @@ function v3Env(){if(V3.env)return V3.env;const es=new T3.Scene(),g=new T3.Sphere
  const sunD=new T3.Mesh(new T3.SphereGeometry(4,12,8),new T3.MeshBasicMaterial({color:new T3.Color(6,5.6,4.8)}));sunD.position.set(-28,32,-22);es.add(sunD);
  const pm=new T3.PMREMGenerator(V3.r);V3.env=pm.fromScene(es,0.02).texture;pm.dispose();return V3.env;}
 function v3Look(){if(!V3.r)return;const nice=V3.look==='nice',r=V3.r;
- r.toneMapping=nice?T3.ACESFilmicToneMapping:T3.NoToneMapping;r.toneMappingExposure=nice?1.0:1;
- V3.scene.environment=nice?v3Env():null;V3.hemi.intensity=nice?0.3:0.56;V3.sun.intensity=nice?1.15:0.62;
+ r.toneMapping=nice?T3.ACESFilmicToneMapping:T3.NoToneMapping;r.toneMappingExposure=nice?0.9:1;
+ V3.scene.environment=nice?v3Env():null;V3.hemi.intensity=nice?0.3:0.56;V3.sun.intensity=nice?0.95:0.62;
  if(V3.aoP&&V3.aoP.mesh)V3.aoP.mesh.visible=nice&&V3.aoP.mesh.count>0;V3.sig=null;V3.lookAt=null;}
 
 /* ---------- terrain, water, decoration ---------- */
@@ -192,7 +200,8 @@ function v3Decor(){
    Part: [geo, colour, [x,y,z], [sx,sy,sz], opts]; opts: rot [rx,ry,rz], pivot [x,y,z], an(e,ph,act,t)→{dx,dy,dz,rx,ry,rz,sy},
    glow (unlit, brightness follows activity) or cf(e,act,t)→hex for per-building colour. Origin = footprint centre. */
 function v3Models(){
- const M={},base=(w,col)=>[['box','#2a3037',[0,0.11,0],[w*0.95,0.22,w*0.95]],['box',col?shade(col,-40):'#3b434c',[0,0.235,0],[w*0.85,0.03,w*0.85]]];
+ const M={},bolts=w=>V3.look!=='nice'?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>['cyl6','#8a939c',[a*w*0.43,0.245,b*w*0.43],[0.09,0.05,0.09]]),
+  base=(w,col)=>[['box','#2a3037',[0,0.11,0],[w*0.95,0.22,w*0.95]],['box',col?shade(col,-40):'#3b434c',[0,0.235,0],[w*0.85,0.03,w*0.85]],...bolts(w)];
  const def=(id,st,an,extra)=>{M[id]=Object.assign({st,an:an||[]},extra||{});};
  const spin=s=>(e,ph)=>({ry:ph*s}),glowF=(e,act,t)=>0.16+0.84*act*(0.85+0.15*Math.sin(t*9+e.id));
  // machines
@@ -253,7 +262,7 @@ function v3Models(){
  const pm=(pos,scl,rot)=>{eu.set(...(rot||[0,0,0]));q.setFromEuler(eu);return new T3.Matrix4().compose(new T3.Vector3(...pos),q.clone(),new T3.Vector3(...scl));};
  V3.M=M;
  for(const id in M){const m=M[id];if(!B[id])continue;
-  m.geo=v3Merge(m.st.map(([g,c,pos,scl,o])=>({g:G[g],c:v3col(c),m:pm(pos,scl,o&&o.rot)})));m.pool=v3Pool(m.geo,V3.mat,{cast:1,recv:1});
+  const nice=V3.look==='nice';m.geo=v3Merge(m.st.map(([g,c,pos,scl,o])=>nice&&g==='box'&&Math.min(scl[0],scl[1],scl[2])>=0.08?{g:v3RBox(scl[0],scl[1],scl[2]),c:v3col(c),m:pm(pos,[1,1,1],o&&o.rot)}:{g:G[g],c:v3col(c),m:pm(pos,scl,o&&o.rot)}));m.pool=v3Pool(m.geo,V3.mat,{cast:1,recv:1});
   m.parts=m.an.map(([g,c,pos,scl,o])=>{o=o||{};const geo=v3Merge([{g:G[g],c:v3col(o.glow||o.cf?'#ffffff':c),m:pm([0,0,0],scl,o.rot)}]);
    const glow=!!(o.glow||o.cf);const mat=glow?V3.glowMat:V3.mat;
    return{pos,o,glow,col:v3col(c),pool:v3Pool(geo,mat,{cast:!glow,recv:!glow,color:glow})};});}
@@ -578,7 +587,7 @@ function render3D(el){
 Object.assign(ACT,{
  toggle3d:()=>setView3D(!V3.on),
  view:v=>setView3D(v==='3d'),
- look3:v=>{V3.look=v==='classic'?'classic':'nice';v3Look();v3Save();renderPanel(true);toast(V3.look==='nice'?'3D look: Enhanced':'3D look: Classic (faster)');},
+ look3:v=>{V3.look=v==='classic'?'classic':'nice';v3Look();v3Save();renderPanel(true);toast((V3.look==='nice'?'3D look: Enhanced':'3D look: Classic (faster)')+'. Model shapes change after ↻ reload');},
  q3:v=>{V3.q=v==='low'?'low':'high';V3.warned=false;v3Quality();v3Save();renderPanel(true);},
  north3d:()=>{if(V3.on)v3Stop(),v3Go({yaw:Math.round(C3.yaw/(2*Math.PI))*2*Math.PI,pitch:0.95});},
 });

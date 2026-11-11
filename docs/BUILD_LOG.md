@@ -1155,3 +1155,25 @@ so only the first half of the plan.
 ### Next up
 - Part 2 of the 3D pass: more model detail (rounded edges, rivets, vents, lit windows), moving water shimmer, warmer horizon.
 - Overflow splitter (proposed, not confirmed). Late-tier (6–10) balance check.
+
+---
+
+## Session 35g — 2026-11-11 (Claude Code, cloud session) · Build 46
+
+### What Markus said
+Build 45 Enhanced mostly looked brighter; only the shadow under poles was visible. He wants the looks fixed now (more fun than balance):
+do part 2, more model detail and rounded edges.
+
+### What was built
+- **Rounded edges** (Enhanced only): every static box part of every building model is built as a bevelled box at its real size
+  (`v3RBox`, cached by size; edge radius ≤ 0.075 tiles, smaller for small parts; parts thinner than 0.08 stay sharp). Same draw calls, more vertices.
+- **Corner bolts** on every building plinth (`base()` in `v3Models`).
+- Brightness back near Classic (exposure 0.9, sun 0.95); contact shadows and metal reflections kept.
+- Models are built when 3D starts, so switching Enhanced/Classic changes the shapes after ↻ reload (toast says so); lighting switches at once.
+- Build number **46**.
+
+### Verified
+- `npm test` 66/66 (3D renders, 53 draw calls). Screenshot: rounded smelter/press/burner/core edges catch the light, bolts visible, no washed-out look.
+
+### Next up
+- More per-model detail (vents, rivets rows, lit windows, pipes on machines), moving water shimmer, warmer horizon. Check tablet speed of Enhanced.
