@@ -1074,3 +1074,19 @@ Put the Drone Pads into their own transport menu.
 
 ### Verified
 - `npm test` 64/64; the unlock/tabs check now also confirms the Drone Pad is listed under Transport. Tablet screenshot of the dock (six tabs fit in one row).
+
+---
+
+## Session 35c — 2026-11-11 (Claude Code, cloud session) · Build 42
+
+### What Markus asked
+Change the size of a sign after it is placed.
+
+### What was built
+- Sign panel: new **Size** row (S / M / L / XL, finger-sized buttons) between Text and Colour.
+- `resizeSign(e,id)` in `js/sim.js`: same entity (text, colour kept), tries the same top-left corner, then the same centre. Bigger costs the extra
+  iron plates, smaller refunds them. No room → toast "No room for that size here", nothing changes.
+- Build number **42**.
+
+### Verified
+- `npm test` 64/64. The signs check now also shrinks L→S (3 plates back, text kept) and grows S→L again (covers 3×3, plates paid). Tablet screenshot of the panel.

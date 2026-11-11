@@ -136,6 +136,8 @@ Hand mining gives +5 ore from a node.
 - Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D, at the same size and
   zoom level as the number in the efficiency ring.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
+- **Resizing signs (Session 35c):** a placed sign's panel has Size S/M/L/XL buttons. Text and colour stay; it grows from the same top-left corner
+  (or keeps its centre if that fits better); the plate difference is paid or refunded. If there's no room, a toast says so.
 - **Moving buildings (Session 35):** with no build tool selected, press and hold a building ~0.45 s (short buzz), drag it, let go. A see-through
   preview outlined green/red shows the spot. Or ✥ Move in its panel, then tap the new spot (Esc cancels). Moving is free and keeps everything
   (recipe, buffers, clock, fuel, sign text, drone routes; routes from other pads follow). The new spot must be free and valid; the Base Core can't move. Works in 3D too.

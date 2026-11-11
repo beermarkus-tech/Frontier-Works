@@ -145,6 +145,14 @@ function initEnt(e,d){
 function canMove(e,nx,ny){if(e.k==='core')return 'The Base Core stays put';const w=e.w;
  for(let j=0;j<w;j++)for(let i=0;i<w;i++){const x=nx+i,y=ny+j;if(x<0||y<0||x>=MW||y>=MH)return 'Out of bounds';const id=grid[y*MW+x];if(id&&id!==e.id)return 'Blocked';}
  for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(e.y+j)*MW+e.x+i]=0;const why=canPlace(e.d,nx,ny);for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;return why;}
+/* Resize a placed sign (S/M/L/XL): keeps text and colour; tries the same top-left corner, then the same centre. Pays or refunds the plate difference. */
+function resizeSign(e,id){if(e.k!=='sign'||!B[id]||B[id].k!=='sign')return 'Not a sign';if(e.d===id)return '';const o=B[e.d],n=B[id];
+ const diff={};for(const k in n.cost)diff[k]=n.cost[k]-((o.cost||{})[k]||0);const more={};for(const k in diff)if(diff[k]>0)more[k]=diff[k];if(!afford(more))return 'Not enough materials';
+ const w=e.w;for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(e.y+j)*MW+e.x+i]=0;const c=Math.floor((w-n.w)/2);let at=null,why='';
+ for(const [x,y] of [[e.x,e.y],[e.x+c,e.y+c]]){why=canPlace(id,x,y);if(!why){at=[x,y];break;}}
+ if(!at){for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;return why==='Blocked'?'No room for that size here':why;}
+ for(const k in diff){if(diff[k]>0)S.inv[k]-=diff[k];else give(k,-diff[k]);}
+ e.d=id;e.x=at[0];e.y=at[1];e.w=e.h=n.w;for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;e.born=animT;topoDirty=true;topoVer++;return '';}
 function moveEnt(e,nx,ny){const why=canMove(e,nx,ny);if(why)return why;if(nx===e.x&&ny===e.y)return '';const ox=e.x,oy=e.y,w=e.w;
  for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(oy+j)*MW+ox+i]=0;e.x=nx;e.y=ny;for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(ny+j)*MW+nx+i]=e.id;
  if(e.k==='dpad')for(const o of ents.values())if(o.k==='dpad'&&o.lx===ox&&o.ly===oy){o.lx=nx;o.ly=ny;}

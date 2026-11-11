@@ -199,8 +199,10 @@ const server=require('./serve.js');
   const sizes=['sign1','sign2','sign3','sign4'].map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
   const inp=document.getElementById('signTxt');inp.value='Iron Works';inp.dispatchEvent(new Event('input',{bubbles:true}));ACT.signColor('3');ACT.closePanel();
   cam.x=camT.x=X+1.5;cam.y=camT.y=Y+1.5;cam.z=camT.z=2;const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;
-  const sv=serialize();load(sv);const e2=fw.entAt(X,Y);const r={sizes,opened,txt:e.tx,col:e.tc,drawn:seen.join(' ').includes('Iron')&&seen.join(' ').includes('Works'),kept:e2&&e2.tx==='Iron Works'&&e2.tc===3};removeEnt(e2,false,true);return r;});
- check(`signs: sizes ${sg.sizes}, placing opens the text box, "${sg.txt}" in colour ${sg.col} is drawn and survives save/load`,sg.sizes==='1,2,3,4'&&sg.opened&&sg.txt==='Iron Works'&&sg.col===3&&sg.drawn&&sg.kept);
+  const sv=serialize();load(sv);const e2=fw.entAt(X,Y);const r={sizes,opened,txt:e.tx,col:e.tc,drawn:seen.join(' ').includes('Iron')&&seen.join(' ').includes('Works'),kept:e2&&e2.tx==='Iron Works'&&e2.tc===3};
+  openPanel('ent',e2.id);const sb=document.querySelectorAll('#pbody [data-act="signSize"]').length===4;S.inv.iron_plate=(S.inv.iron_plate||0)+10;const pl=S.inv.iron_plate;ACT.signSize('sign1');const small=e2.d==='sign1'&&e2.w===1&&S.inv.iron_plate===pl+3&&e2.tx==='Iron Works';
+  ACT.signSize('sign3');const big=e2.d==='sign3'&&e2.w===3&&fw.entAt(e2.x+2,e2.y+2)===e2&&S.inv.iron_plate===pl;ACT.closePanel();r.resize=sb&&small&&big;removeEnt(e2,false,true);return r;});
+ check(`signs: sizes ${sg.sizes}, placing opens the text box, "${sg.txt}" in colour ${sg.col} is drawn and survives save/load; size changes S↔L after placing (${sg.resize})`,sg.resize&&sg.sizes==='1,2,3,4'&&sg.opened&&sg.txt==='Iron Works'&&sg.col===3&&sg.drawn&&sg.kept);
  // older saves get buildings added later (signs, Drone Pad) on load; signs have their own tab
  const ul=await p.evaluate(()=>{const keep=serialize();const o=JSON.parse(keep);o.S.ub=o.S.ub.filter(x=>!x.startsWith('sign')&&x!=='dpad');o.S.ms=5;load(JSON.stringify(o));
   const r={signs:['sign1','sign2','sign3','sign4'].every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===4&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
