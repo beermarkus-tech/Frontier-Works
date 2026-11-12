@@ -222,28 +222,30 @@ function drawLive(e,X,Y,s){
 /* Efficiency ring in the building's top-left corner (fills clockwise, coloured like the panel badge) */
 /* Clock badge, bottom-right, when a machine/drill/pump doesn't run at 100 % (amber = overclocked, blue = slowed down) */
 function clockBadge(e,X,Y,s){
- if(s<46||!(e.k==='mach'||e.k==='drill'||e.k==='pump'))return;const c=e.clock||1;if(Math.abs(c-1)<0.005)return;   // same zoom level and font size as the efficiency ring's number
- const P=e.w*s,txt=Math.round(c*100)+'%',fs=Math.round(Math.max(3,s*0.17)*0.78);ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
+ if(s<34||!(e.k==='mach'||e.k==='drill'||e.k==='pump'))return;const c=e.clock||1;if(Math.abs(c-1)<0.005)return;   // same zoom level and font size as the efficiency ring's number
+ const P=e.w*s,txt=Math.round(c*100)+'%',fs=badgeFs(s,P);ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
  const w=ctx.measureText(txt).width+fs*0.8,h=fs*1.45,x=X+P-w-s*0.1,y=Y+P-h-s*0.1;
  ctx.fillStyle='rgba(10,14,18,0.82)';rr(x,y,w,h,h/2);ctx.fill();ctx.strokeStyle=c>1?'#ffb547':'#7fb6ff';ctx.lineWidth=Math.max(1,fs*0.1);ctx.stroke();
  ctx.fillStyle=c>1?'#ffcf7a':'#bcd8ff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x+w/2,y+h/2+0.5);ctx.textAlign='left';
 }
+/* Badge size shared by the efficiency ring, clock badge and Flow Meter: the dark circle of the item icon on a machine (Session 36g) */
+const badgeR=(s,P)=>Math.min(s*0.32,(P||2*s)*0.16)*1.25,badgeFs=(s,P)=>Math.round(badgeR(s,P)/1.35*0.78);
 function drawMeters(sx,sy,s){if(!meters.length||s<6)return;const W=cv.width,H=cv.height;
  for(const e of meters){if(!ents.has(e.id))continue;const X=sx(e.x),Y=sy(e.y);if(X<-3*s||Y<-3*s||X>W+2*s||Y>H+2*s)continue;
-  const cx=X+s/2,cy=Y+s/2,r=s*0.2;ctx.fillStyle='#2a3037';ctx.beginPath();ctx.arc(cx,cy,r*1.15,0,7);ctx.fill();ctx.fillStyle='#e8eef2';ctx.beginPath();ctx.arc(cx,cy,r*0.9,0,7);ctx.fill();
+  const cx=X+s/2,cy=Y+s/2,r=s*0.26;ctx.fillStyle='#2a3037';ctx.beginPath();ctx.arc(cx,cy,r*1.15,0,7);ctx.fill();ctx.fillStyle='#e8eef2';ctx.beginPath();ctx.arc(cx,cy,r*0.9,0,7);ctx.fill();
   const [v,mx]=fmRate(e),f=Math.min(1,mx?v/mx:0),a=Math.PI*0.8+f*Math.PI*1.4;ctx.strokeStyle='#2a3037';ctx.lineWidth=Math.max(1,r*0.22);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r*0.75,cy+Math.sin(a)*r*0.75);ctx.stroke();
-  if(s<20)continue;const txt=e.k==='pipe'?`${fmt(v)} m³/min`:`${fmt(v)}/min`,fs=Math.max(Math.round(s*0.17*0.78),Math.round(8*DPR));ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
+  if(s<20)continue;const txt=e.k==='pipe'?`${fmt(v)} m³/min`:`${fmt(v)}/min`,fs=Math.max(badgeFs(s),Math.round(8*DPR));ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
   const w=ctx.measureText(txt).width+fs*0.8,h=fs*1.45,x=cx-w/2,y=Y-h-s*0.06,full=mx&&v>=mx*0.97,idle=v<0.5;
   ctx.fillStyle='rgba(10,14,18,0.82)';rr(x,y,w,h,h/2);ctx.fill();ctx.strokeStyle=full?'#ffb547':idle?'#6c7680':'#e8eef2';ctx.lineWidth=Math.max(1,fs*0.1);ctx.stroke();
   ctx.fillStyle=full?'#ffcf7a':idle?'#9aa4ad':'#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,cx,y+h/2+0.5);ctx.textAlign='left';}}
 function effRing(e,X,Y,s){
  if(!OPT.eff||s<9||e._efT==null||e._efT<3||!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return;
- const r=Math.max(3,s*0.17),cx=X+s*0.36,cy=Y+s*0.36,f=e._ef,col=effCol(Math.round(f*100));
+ const R0=badgeR(s,e.w*s),r=Math.max(3,R0/1.35),cx=X+s*0.42,cy=Y+s*0.42,f=e._ef,col=effCol(Math.round(f*100));
  ctx.fillStyle='rgba(10,14,18,0.78)';ctx.beginPath();ctx.arc(cx,cy,r*1.35,0,7);ctx.fill();
  ctx.lineWidth=Math.max(1.5,r*0.42);ctx.lineCap='round';ctx.strokeStyle='rgba(255,255,255,0.13)';ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.stroke();
  if(f>0.005){ctx.strokeStyle=col;ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,f));ctx.stroke();}
  ctx.lineCap='butt';
- if(s>=46){ctx.fillStyle='#fff';ctx.font=`700 ${Math.round(r*0.78)}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(f*100),cx,cy+0.5);ctx.textAlign='left';}
+ if(s>=34){ctx.fillStyle='#fff';ctx.font=`700 ${Math.round(r*0.78)}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(f*100),cx,cy+0.5);ctx.textAlign='left';}
 }
 /* Level of detail for huge factories / far zoom: one filled path per colour (a handful of draw calls for thousands of objects).
    Belts/pipes become thin strips in their tier colour, buildings coloured blocks with a dark rim, machines keep a status dot. */

@@ -1423,3 +1423,21 @@ A throughput meter for belts and pipes, in the same font style as the efficiency
 
 ### Next up
 - Power: Markus wants cleaner pole connections (no spider web) and a way to switch off single factories when the grid trips. Proposal pending.
+
+---
+
+## Session 36g — 2026-11-12 (Claude Code, cloud session) · Build 58
+
+### What Markus asked
+The efficiency badge feels smaller than before. Make its circle as large as the item icon's circle on the machine, and size the Flow Meter badge
+to match.
+
+### What changed
+- `badgeR(s,P)` / `badgeFs(s,P)` in `js/render.js`: the item icon's dark circle (`min(s·0.32, P·0.16)·1.25`) is now the reference.
+  The efficiency ring's background circle has that radius (was ≈ 0.23 tiles, now ≈ 0.4 on a 2×2 machine), with its number scaled along; it sits at
+  the top-left, mirrored to the item icon at the bottom-left. Clock badge and Flow Meter pill use the same text size; the meter's dial is a bit bigger.
+- Numbers show from a slightly farther zoom (tile ≥ 34 px instead of 46), since they're bigger now.
+- Build number **58**.
+
+### Verified
+- `npm test` 73/73. Screenshot: ring, item icon, clock badge and meter badges at matching sizes.
