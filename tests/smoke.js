@@ -314,6 +314,38 @@ const server=require('./serve.js');
   for(let j=-1;j<5;j++)for(let i=-1;i<12;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),unlocked,paid,rate:Math.round(v),max:mx,pipe:Array.isArray(pr)&&pr[1]===300,drawn,panel,kept,upKept,off,notCrate};});
  check(`Flow Meter: Mk1 line measured ${fmt_.rate}/min of ${fmt_.max} (${Object.entries(fmt_).filter(([k])=>k!=='rate'&&k!=='max').map(([k,v])=>k+'='+v).join(' ')})`,fmt_.rate>=50&&fmt_.rate<=61&&fmt_.max===60&&Object.entries(fmt_).every(([k,v])=>k==='rate'||k==='max'||v===true));
+ // power wires: tree instead of web, old saves migrate to a tree with the same grids, Power Switch cuts a factory, rewiring, manual wires, save/load
+ const pwr=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};let X,Y;
+  for(let r=10;r<170&&X==null;r+=2)for(let a=0;a<64;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));let ok=true;for(let j=-2;j<14&&ok;j++)for(let i=-2;i<26&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  // 1) a cluster of 6 poles all in range of each other + a burner: one wire per new node → 6 wires (old rule: a web of ~15)
+  P('burner',X,Y+8,0);for(const [i,j] of [[4,8],[6,8],[4,10],[6,10],[5,12],[8,9]])P('pole1',X+i,Y+j,0);tick(0.05);
+  const cl=pnodes.filter(e=>e.y>=Y+8&&e.y<Y+14&&e.x>=X&&e.x<X+12);out.tree=pwLinks.filter(([a,b])=>cl.includes(a)&&cl.includes(b)).length===cl.length-1&&new Set(cl.map(e=>e.grid)).size===1;
+  // 2) migration: strip wires (old save), load → tree with the same single grid
+  const o=JSON.parse(serialize());delete o.S.pw2;for(const e of o.es)if(e[4])delete e[4].pl;load(JSON.stringify(o));tick(0.05);
+  const cl2=pnodes.filter(e=>e.y>=Y+8&&e.y<Y+14&&e.x>=X&&e.x<X+12);out.migrated=!!S.pw2&&pwLinks.filter(([a,b])=>cl2.includes(a)&&cl2.includes(b)).length===cl2.length-1&&new Set(cl2.map(e=>e.grid)).size===1;
+  for(const e of cl2)removeEnt(e,false,true);
+  // 3) switch: burner — pole A — switch — pole B — smelter (only reachable through the switch)
+  P('burner',X,Y,0);P('pole1',X+6,Y,0);P('pswitch',X+12,Y,0);P('pole1',X+18,Y,0);P('smelter',X+19,Y+2,0);
+  const g=fw.entAt(X,Y),A=fw.entAt(X+6,Y),sw=fw.entAt(X+12,Y),Bp=fw.entAt(X+18,Y),sm=fw.entAt(X+19,Y+2);sm.r='r_iron_ingot';sm.inb={iron_ore:50};
+  const run=n=>{for(let i=0;i<n;i++){g.fuel={coal:50};sm.inb.iron_ore=50;tick(0.05);}};run(40);
+  out.chain=pnLinked(A,sw)&&pnLinked(sw,Bp)&&!pnLinked(A,Bp)&&sm.grid===g.grid&&sm.pw===1;
+  if(!out.chain)out.dbg=[pnLinked(g,A),pnLinked(A,sw),pnLinked(sw,Bp),pnLinked(A,Bp),sm.grid===g.grid,sm.pw,pnPeers(A).map(e=>e.d+'@'+(e.x-X)+','+(e.y-Y)).join('/'),sm.pnode&&(sm.pnode.d+'@'+(sm.pnode.x-X)+','+(sm.pnode.y-Y))].join(';');
+  out.load=Math.abs(swLoad(sw)-B.smelter.pw)<0.01;
+  ACT.swToggle(sw.id);run(10);out.off=sw.off===true&&sm.grid!==g.grid&&sm.pw===0&&!g.grid.trip;
+  sw.tx='Iron Works';const sv=serialize();load(sv);const sw2=fw.entAt(X+12,Y);run(2);out.saved=sw2.off===true&&sw2.tx==='Iron Works'&&pnLinked(fw.entAt(X+6,Y),sw2);if(!out.saved)out.dbg2=[sw2.off,sw2.tx,JSON.stringify(sw2.pl),fw.entAt(X+6,Y)&&fw.entAt(X+6,Y).d].join(';');
+  ACT.swToggle(sw2.id);run(10);out.on=fw.entAt(X+19,Y+2).pw===1;
+  // panel lists the switch with its name
+  openPanel('ent',fw.entAt(X+6,Y).id);out.panel=document.getElementById('pbody').textContent.includes('Iron Works')&&!!document.querySelector('#pbody [data-act="pnWire"]');ACT.closePanel();
+  // 4) removing the switch: pole B is left without wire → rewires to the nearest in range (none within 10 except… A is 12 away) → stays unwired
+  // so instead remove pole A: the burner (8 range) and switch (10) are 6 apart from A; switch rewires to the burner? (distance 11 > 10) → no; place a pole between first
+  P('pole1',X+7,Y+4,0);const mid=fw.entAt(X+7,Y+4);removeEnt(fw.entAt(X+6,Y),true,true);tick(0.05);
+  out.rewire=fw.entAt(X+19,Y+2).grid===fw.entAt(X,Y).grid&&pwLinks.length>0;
+  // 5) manual wire: connect B directly to mid by hand, then cut it
+  P('pole1',X+16,Y+6,0);const Q=fw.entAt(X+16,Y+6),swQ=fw.entAt(X+12,Y);const pre=pnLinked(Q,swQ);openPanel('ent',Q.id);ACT.pnWire();tap({x:X+12,y:Y});out.manual=!pre&&pnLinked(Q,swQ);
+  openPanel('ent',Q.id);ACT.pnCut(String(swQ.id));out.cut=!pnLinked(Q,swQ);ACT.closePanel();
+  for(let j=-2;j<14;j++)for(let i=-2;i<26;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  out.unlock=MS[0].b.includes('pswitch');return out;});
+ check(`power wires & switch: ${Object.entries(pwr).map(([k,v])=>k+'='+v).join(' ')}`,Object.entries(pwr).every(([k,v])=>k.startsWith('dbg')||v===true));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

@@ -137,6 +137,12 @@ Hand mining gives +5 ore from a node.
 - Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D, at the same size and
   zoom level as the number in the efficiency ring.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
+- **Power wires & Power Switch** (Session 36h, agreed with Markus): poles, towers, switches and generators connect by saved wires. A new one gets a
+  single wire to the nearest in range (a tidy tree, no web); its panel lists the wires (✕ to remove) and "Connect to…" adds one by hand. Removing a
+  pole rewires neighbours left alone and bridges a split where another pole is in range. Old saves were reduced once to the fewest wires with the
+  same connections. **Power Switch** (Tier 1, 4 Iron Plate + 6 Wire): a pole that powers nothing itself; turned off it cuts its wires, so the part
+  behind it forms its own grid. Name tag shown above it. Every pole/switch panel lists the grid's switches with the load behind each and on/off.
+  The selected grid's wires light up yellow; cut wires are dashed grey.
 - **Flow Meter** (Session 36f, Tier 1 Field Assembly, 2 Iron Plate + 4 Wire, Logistics tab): tap a belt or pipe with it to clip a gauge on
   (tap again to take it off, refunded). Badge above the tile in the efficiency-number font: items/min on belts (counted on that tile, 30 s average),
   m³/min on pipes (the network's flow). White = flowing, amber = at the line's limit, grey = idle. The belt's panel shows flow, maximum and % used.

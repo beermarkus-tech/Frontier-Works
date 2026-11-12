@@ -27,6 +27,9 @@ function armLongPress(g,t0){if(UI.tool||UI.moveId||UI.linkFrom)return;const en=t
 function dragMove(g,t){if(!t)return;const nx=t.x+g.mv.dx,ny=t.y+g.mv.dy;movePrev={e:g.mv.e,nx,ny,ok:!canMove(g.mv.e,nx,ny)};}
 function dropMove(){const m=movePrev;movePrev=null;if(!m)return;if(!ents.has(m.e.id))return;const why=moveEnt(m.e,m.nx,m.ny);if(why)toast(why+': not moved');else{UI.sel=m.e.id;refreshTools();}}
 function tap(t){
+ if(UI.wireFrom){const a=ents.get(UI.wireFrom),b=entAt(t.x,t.y);UI.wireFrom=null;updInfo();if(!a)return;
+  if(!isPN(b)||b===a)toast('That is not a pole, tower, switch or generator');else if(!pnRange(a,b))toast('Too far for a wire (out of range)');else if(pnLinked(a,b))toast('Already connected');else{pnLink(a,b);toast('Wire added');}
+  openPanel('ent',a.id);return;}
  if(UI.moveId){const e=ents.get(UI.moveId);UI.moveId=null;movePrev=null;updInfo();if(!e)return;const fp=footprint(e.d,t.x,t.y),why=moveEnt(e,fp.x,fp.y);toast(why?why+': not moved':`${B[e.d].n} moved`);if(!why)UI.sel=e.id;return;}
  if(UI.linkFrom){const src=ents.get(UI.linkFrom),e=entAt(t.x,t.y);UI.linkFrom=null;updInfo();
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
@@ -90,7 +93,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();vel.x=vel.y=0;const m=toTile(
 const keys=new Set();
 addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const k=e.key.toLowerCase();keys.add(k);
  if(k==='r'){if(UI.tool)ACT.rotate();else if(UI.panel&&UI.panel.kind==='ent')ACT.rotSel();}
- else if(k==='escape'){setTool(null);UI.moveId=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
+ else if(k==='escape'){setTool(null);UI.moveId=null;UI.wireFrom=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
  else if(k==='q'&&hover){const x=entAt(hover.x,hover.y);if(x&&B[x.d].cat&&ub(x.d)){UI.cat=B[x.d].cat;UI.rot=x.dir||0;UI.rotA=UI.rot*90;buildCats();setTool(x.d);}}});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 addEventListener('blur',()=>keys.clear());

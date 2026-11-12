@@ -79,7 +79,7 @@ function boxBlur(a,w,h,rad){const t=new Float32Array(a.length),o=new Float32Arra
 const biomeAt=(x,y)=>bio&&x>=0&&y>=0&&x<MW&&y<MH?BIOMES[bio[(y|0)*MW+(x|0)]]:BIOMES[0];
 function newGame(seed){
  MW=MH=MAP_NEW;
- S={gen:2,mw:MAP_NEW,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};
+ S={pw2:1,gen:2,mw:MAP_NEW,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};
  ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  genMap(S.seed);
  placeEnt('core',MW/2-2,MH/2-2,0,true);
@@ -123,6 +123,7 @@ function placeEnt(id,x,y,dir,free){
  if(cfm&&afford(B.fmeter.cost)){pay(B.fmeter.cost);e.fm=1;e.fh=[];}   // the meter stays on an upgraded belt
  ents.set(e.id,e);e.born=animT;
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(y+j)*MW+x+i]=e.id;
+ if(isPN(e)&&S.pw2)pnAuto(e);
  topoDirty=true;return '';
 }
 function initEnt(e,d){
@@ -155,9 +156,11 @@ function resizeSign(e,id){if(e.k!=='sign'||!B[id]||B[id].k!=='sign')return 'Not 
  for(const k in diff){if(diff[k]>0)S.inv[k]-=diff[k];else give(k,-diff[k]);}
  e.d=id;e.x=at[0];e.y=at[1];e.w=e.h=n.w;for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;e.born=animT;topoDirty=true;topoVer++;return '';}
 function moveEnt(e,nx,ny){const why=canMove(e,nx,ny);if(why)return why;if(nx===e.x&&ny===e.y)return '';const ox=e.x,oy=e.y,w=e.w;
+ const peers=isPN(e)?pnPeers(e):null;if(peers)for(const p of peers)pnUnlink(e,p);
  for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(oy+j)*MW+ox+i]=0;e.x=nx;e.y=ny;for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(ny+j)*MW+nx+i]=e.id;
  if(e.k==='dpad')for(const o of ents.values())if(o.k==='dpad'&&o.lx===ox&&o.ly===oy){o.lx=nx;o.ly=ny;}
- initEnt(e,B[e.d]);e.born=animT;topoDirty=true;return '';}
+ initEnt(e,B[e.d]);e.born=animT;topoDirty=true;
+ if(peers){pnAuto(e);for(const p of peers)if(!pnPeers(p).length)pnAuto(p);pnHeal(peers);}return '';}
 /* Eraser (Session 36d): empty a building's contents without removing it. Items go back to the item stock, fluids drain away
    (a pipe or junction empties its whole network). Storage (crates, tanks, pads, Core) is left alone. Returns the number of items/units removed. */
 const ERASE_K=['belt','pipe','router','cross','mach','drill','pump','gen'];
@@ -175,10 +178,40 @@ function fmRate(e){if(e.k==='pipe'){const n=e.net;return[n?Math.max(n.inR,n.outR
  const h=e.fh||[];return[h.length?h.reduce((a,b)=>a+b,0)/h.length*60:0,e.spd*60];}
 function toggleMeter(e){if(!e||!isLine(e.k))return 'Put it on a belt or pipe';if(e.fm){e.fm=0;e.fh=null;refund(B.fmeter.cost);topoDirty=true;return 'off';}
  if(!afford(B.fmeter.cost))return 'Not enough materials';pay(B.fmeter.cost);e.fm=1;e.fh=[];e.fc=0;topoDirty=true;return 'on';}
+/* ---------- Power wires (Session 36h) ----------
+   Wires are saved per node (pole, tower, switch, generator) as e.pl=[[x,y],…] (corners of linked nodes), kept on both ends.
+   A new node wires itself only to the nearest node in range (a tidy tree instead of a web); the pole panel can add/remove wires by hand.
+   Removing or moving a node rewires neighbours that were left without any wire. Old saves (no S.pw2): the old web (up to 5 nearest)
+   is reduced once to a spanning tree, so exactly the same buildings stay connected. A Power Switch that is off cuts its wires. */
+const isPN=e=>!!e&&(e.k==='pole'||e.k==='gen');
+function pnRange(a,b){const A=cen(a),C=cen(b);return Math.hypot(A.x-C.x,A.y-C.y)<=Math.max(B[a.d].link||0,B[b.d].link||0)+1e-6;}
+function pnLinked(a,b){return (a.pl||[]).some(p=>p[0]===b.x&&p[1]===b.y);}
+function pnLink(a,b){if(!a||!b||a===b||pnLinked(a,b))return;(a.pl=a.pl||[]).push([b.x,b.y]);(b.pl=b.pl||[]).push([a.x,a.y]);topoDirty=true;}
+function pnUnlink(a,b){a.pl=(a.pl||[]).filter(p=>!(p[0]===b.x&&p[1]===b.y));b.pl=(b.pl||[]).filter(p=>!(p[0]===a.x&&p[1]===a.y));topoDirty=true;}
+function pnPeers(e){const out=[];for(const [x,y] of e.pl||[]){const o=entAt(x,y);if(isPN(o)&&o!==e&&o.x===x&&o.y===y&&!out.includes(o))out.push(o);}return out;}
+function pnNearest(e,skip){let best=null,bd=1e9;const A=cen(e);for(const o of ents.values()){if(!isPN(o)||o===e||o===skip||!pnRange(e,o))continue;const C=cen(o),d=Math.hypot(A.x-C.x,A.y-C.y);if(d<bd){bd=d;best=o;}}return best;}
+function pnAuto(e){const o=pnNearest(e);if(o)pnLink(e,o);}
+function pnComp(e){const seen=new Set([e]),q=[e];while(q.length){const a=q.pop();for(const b of pnPeers(a))if(!seen.has(b)){seen.add(b);q.push(b);}}return seen;}
+/* after a node is removed or moved: each former neighbour that is now cut off from the others gets one wire to the nearest node in range
+   outside its own part (so removing a pole in the middle of a line doesn't split the grid when another pole can bridge the gap) */
+function pnHeal(peers){for(const p of peers){if(!ents.has(p.id))continue;const comp=pnComp(p);if(peers.every(q=>q===p||!ents.has(q.id)||comp.has(q)))continue;
+ let best=null,bd=1e9;const A=cen(p);for(const c of comp)for(const o of ents.values()){if(!isPN(o)||comp.has(o)||!pnRange(c,o))continue;const C=cen(o),Cc=cen(c),d=Math.hypot(Cc.x-C.x,Cc.y-C.y);if(d<bd){bd=d;best=[c,o];}}
+ if(best)pnLink(best[0],best[1]);}}
+function pnMigrate(){const P=[...ents.values()].filter(isPN),C=P.map(cen),edges=[];
+ for(let i=0;i<P.length;i++){const cand=[];for(let j=0;j<P.length;j++){if(i===j)continue;const d=Math.hypot(C[i].x-C[j].x,C[i].y-C[j].y);if(d<=Math.max(B[P[i].d].link,B[P[j].d].link))cand.push([d,j]);}
+  cand.sort((a,b)=>a[0]-b[0]);for(const [d,j] of cand.slice(0,5))edges.push([d,i,j]);}
+ edges.sort((a,b)=>a[0]-b[0]);const par=P.map((_,i)=>i),f=i=>par[i]===i?i:(par[i]=f(par[i]));for(const e of P)e.pl=[];
+ for(const [,i,j] of edges){const a=f(i),b=f(j);if(a!==b){par[a]=b;pnLink(P[i],P[j]);}}S.pw2=1;topoDirty=true;}
+/* the part of the grid behind a switch: nodes reachable from its smaller side (not through the switch or other off switches) */
+function swSide(sw){const sides=pnPeers(sw).map(p=>{const seen=new Set([sw,p]),q=[p];while(q.length){const a=q.pop();if(a.d==='pswitch'&&a.off&&a!==p)continue;for(const b of pnPeers(a))if(!seen.has(b)){seen.add(b);q.push(b);}}seen.delete(sw);return seen;});
+ if(!sides.length)return new Set();const gens=s=>[...s].filter(x=>x.k==='gen').length;sides.sort((a,b)=>gens(a)-gens(b)||a.size-b.size);return sides[0];}
+function swLoad(sw){const side=swSide(sw);let mw=0;for(const e of ents.values())if(e.pnode&&side.has(e.pnode))mw+=B[e.d].pw?B[e.d].pw*Math.pow(e.clock||1,1.6)*(e.k==='mach'&&!e.r?0:1):0;return mw;}
 function removeEnt(e,ref,silent){
  if(e.k==='core')return;if(ref&&e.fm)refund(B.fmeter.cost);
+ const peers=isPN(e)?pnPeers(e):null;if(peers)for(const p of peers)pnUnlink(e,p);
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=0;
  ents.delete(e.id);
+ if(peers&&S.pw2){for(const p of peers)if(!pnPeers(p).length)pnAuto(p);pnHeal(peers);}
  if(ref){refund(B[e.d].cost);
   if(!silent&&e.item)give(e.item,1);
   if(e.k==='cross'){if(e.hs)give(e.hs,1);if(e.vs)give(e.vs,1);}
@@ -274,17 +307,15 @@ function rebuildTopo(){
  for(const b of lines){if(vis.has(b))continue;const ch=[];let c=b;while(c&&isLine(c.k)&&!vis.has(c)){vis.add(c);ch.push(c);c=entAt(c.x+DX[c.dir],c.y+DY[c.dir]);}for(let i=ch.length-1;i>=0;i--)beltOrder.push(ch[i]);}
  // power
  const n=pnodes.length,par=[...Array(n).keys()];const f=i=>par[i]===i?i:(par[i]=f(par[i]));
- const C=pnodes.map(cen);const seen=new Set();
- for(let i=0;i<n;i++){const Li=B[pnodes[i].d].link;const cand=[];
-  for(let j=0;j<n;j++){if(i===j)continue;const dd=Math.hypot(C[i].x-C[j].x,C[i].y-C[j].y);if(dd<=Math.max(Li,B[pnodes[j].d].link))cand.push([dd,j]);}
-  cand.sort((a,b)=>a[0]-b[0]);
-  for(const [,j] of cand.slice(0,5)){par[f(i)]=f(j);const key=i<j?i+','+j:j+','+i;if(!seen.has(key)){seen.add(key);pwLinks.push([pnodes[i],pnodes[j]]);}}}
+ const C=pnodes.map(cen);const seen=new Set(),ix=new Map(pnodes.map((e,i)=>[e,i]));
+ for(let i=0;i<n;i++){const a=pnodes[i];for(const b of pnPeers(a)){const j=ix.get(b);if(j==null)continue;const key=i<j?i+','+j:j+','+i;if(seen.has(key))continue;seen.add(key);
+  const cut=(a.d==='pswitch'&&a.off)||(b.d==='pswitch'&&b.off);pwLinks.push([a,b,cut]);if(!cut)par[f(i)]=f(j);}}
  const gm=new Map();
  for(let i=0;i<n;i++){const r=f(i);if(!gm.has(r))gm.set(r,{gens:[],cons:[],nodes:[],dem:0,cap:0,trip:false});const g=gm.get(r);g.nodes.push(pnodes[i]);pnodes[i].grid=g;if(pnodes[i].k==='gen')g.gens.push(pnodes[i]);}
  grids=[...gm.values()];
- for(const e of ents.values()){if(!B[e.d].pw)continue;let best=null,bd=1e9;
-  for(let i=0;i<n;i++){const dd=rectDist(C[i].x,C[i].y,e);if(dd<=B[pnodes[i].d].sup&&dd<bd){bd=dd;best=pnodes[i];}}
-  if(best){best.grid.cons.push(e);e.grid=best.grid;}}
+ for(const e of ents.values()){if(!B[e.d].pw)continue;let best=null,bd=1e9;e.pnode=null;
+  for(let i=0;i<n;i++){if(!B[pnodes[i].d].sup)continue;const dd=rectDist(C[i].x,C[i].y,e);if(dd<=B[pnodes[i].d].sup&&dd<bd){bd=dd;best=pnodes[i];}}
+  if(best){best.grid.cons.push(e);e.grid=best.grid;e.pnode=best;}}
  buildNets();
 }
 /* ---------- Fluid networks ----------

@@ -27,7 +27,10 @@ and keep the game playable after every commit.
 ## Architecture
 - Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → plan → view3d → input → pwa → sync → main (Three.js is injected by `view3d.js` on first 3D use). Top-level `const`/`let` are visible across files; don't redeclare names.
 - Sim runs at fixed 20 ticks/s (`tick(0.05)` in `js/sim.js`). Belts hold one item per tile; `beltOrder` processes downstream first. Buildings push output only into belts/pipes pointing away from them; input is any belt/pipe pointing into them.
-- Power: poles/generators link (max 5 nearest within range), consumers attach to nearest node in supply range. Demand > capacity trips the fuse (`trip` flag on nodes).
+- Power: wires are saved per node (`e.pl` = corners of linked poles/generators/switches, both ends). A new node wires itself to the nearest node in range
+  (`pnAuto`); removing/moving one rewires orphans and bridges splits (`pnHeal`). Old saves without `S.pw2` are reduced once to a spanning tree (`pnMigrate`).
+  Power Switch (`pswitch`, k 'pole', sup 0): `e.off` cuts its wires, `e.tx` = name. Consumers attach to the nearest node with supply range (`e.pnode`).
+  Demand > capacity trips the fuse (`trip` flag on nodes).
 - Map: `MW`/`MH` are variables (128 for old saves, `MAP_NEW`=384 for new). `genClassic` must never change (old saves rely on it); biome maps use `genBiome` + `BIOMES` in `data.js`.
 - Rendering: terrain painted on demand in 32×32-tile chunks (`getChunk`/`bakeChunk`, LRU cache, ~8 ms paint budget per frame) plus a small overview `terrO`
   (minimap, far zoom, far 3D ground); all random terrain detail is hashed per tile so chunks match, and 3D uses the same chunks near the camera; building sprites cached per zoom bucket (`getSprite`), animated parts drawn live in `drawLive`; belts/pipes stroked as batched Path2D with curves (`e.cin`).

@@ -1441,3 +1441,35 @@ to match.
 
 ### Verified
 - `npm test` 73/73. Screenshot: ring, item icon, clock badge and meter badges at matching sizes.
+
+---
+
+## Session 36h — 2026-11-12 (Claude Code, cloud session) · Build 59
+
+### What Markus asked
+Power lines connect to whatever is in range (spider web), and when a grid trips it's nearly impossible to switch off single factories. He agreed
+to my proposal: tidy wires + a Power Switch per factory.
+
+### What was built
+- **Saved wires** (`e.pl`, in `SKEYS`): `pnLink/pnUnlink/pnPeers` in `js/sim.js`. `rebuildTopo` builds grids from saved wires instead of
+  "up to 5 nearest". New nodes get one wire to the nearest node in range (`pnAuto`, in `placeEnt`).
+- **Removing/moving** a node: neighbours left without wires rewire to the nearest; `pnHeal` also bridges a split (a neighbour cut off from the
+  others gets one wire to the nearest node in range outside its part). Found while testing: without this, removing a pole in the middle of a line
+  split the grid.
+- **Migration**: saves without `S.pw2` rebuild the old web once, then keep a minimum spanning tree (Kruskal by length), so exactly the same
+  buildings stay connected with far fewer wires. New games set `S.pw2`.
+- **Power Switch** (`pswitch`, Power tab, Tier 1 Field Assembly, 4 Iron Plate + 6 Wire): k 'pole', link 10, supply 0 (powers nothing itself).
+  `e.off` cuts its wires (`pwLinks` entries carry a `cut` flag; no union), `e.tx` name. 2D: box with a green/red lever + name tag; 3D: post with a
+  coloured lever; cut wires dashed grey (2D) / grey (3D).
+- **Panels**: switch name field + Turn off/on; every node lists its wires (✕) with "＋ Connect to…" (tap mode `UI.wireFrom`, range-checked);
+  the grid section lists the grid's switches with the load behind each (`swLoad` over `swSide`, the side with fewer generators) and on/off buttons.
+- Selected grid's wires drawn thick yellow; placing a pole previews its one wire.
+- Build number **59**.
+
+### Verified
+- `npm test` 74/74. New check: a 6-pole cluster + burner gets exactly 6 wires (tree) in one grid; an old-style save (wires and `pw2` removed)
+  migrates to a tree with the same single grid; burner—pole—switch—pole—smelter powers the smelter, switch load = smelter's 4 MW; off → smelter
+  unpowered in its own grid, main grid not tripped; off state, name and wires survive save/load; back on → powered; panel lists "Iron Works";
+  removing the middle pole keeps the smelter on the burner's grid; manual wire add + cut.
+- `npm run playthrough`: recipes and pacing unchanged (measurement noise only).
+- Screenshot: switch with name tag, yellow highlighted grid, clean single wires, panel controls.

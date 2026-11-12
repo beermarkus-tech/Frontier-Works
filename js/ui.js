@@ -38,6 +38,7 @@ function updInfo(){
  if(t==='clr')h='<b>Eraser</b><span class="hint">Swipe over belts, splitters, mergers, crossings & pipes to empty them · tap a machine to empty it · items go back to stock</span>';
  else if(t==='del')h='<b>Dismantle</b><span class="hint">Tap to remove (full refund) · drag across belts, pipes & poles to clear them</span>';
  else if(t&&B[t])h=`<b>${B[t].n}</b>${costHtml(B[t].cost)}<span class="hint">${B[t].desc||''}</span>`;
+ else if(UI.wireFrom)h='<b>Connect wire</b><span class="hint">Tap a pole, tower, switch or generator in range · Esc cancels</span>';
  else if(UI.moveId)h='<b>Move</b><span class="hint">Pan to the new spot and tap where it should go · Esc cancels · tip: long-press a building to drag it</span>';
  else if(UI.linkFrom)h='<b>Drone route</b><span class="hint">Tap the destination Drone Pad · tap anywhere else to cancel</span>';
  else h='<span class="hint">Tap anything to inspect · drag to pan · pinch or scroll to zoom · pick a building below to place it</span>';
@@ -92,6 +93,10 @@ function entStatic(e){
  if(e.k==='tank')h+=`<h4>Actions</h4><button class="btn" data-act="flushTank">Flush tank</button>`;
  if(e.k==='core')h+=`<h4>Base Core</h4><p class="muted">Belt items into any side of the Core to add them to your item stock. Buildings are paid for from that stock.</p><button class="btn" data-act="openMs" style="margin-top:6px">🏁 Open goals</button> <button class="btn" data-act="openInv">📦 Items</button>`;
  if(e.k==='router'||e.k==='cross'||isLine(e.k)||e.k==='pole')h+='';
+ if(e.d==='pswitch')h+=`<h4>Switch</h4><input type="text" id="swName" class="signtxt" data-act="swName" maxlength="30" placeholder="Name, e.g. Iron Works" value="${(e.tx||'').replace(/"/g,'&quot;')}">
+  <button class="btn ${e.off?'pri':'warn'}" data-act="swToggle" data-v="${e.id}" style="margin-top:8px">${e.off?'▶ Turn on':'⏻ Turn off'}</button>`;
+ if(isPN(e)){const ps=pnPeers(e),C=cen(e);h+=`<h4>Wires (${ps.length})</h4>`+ps.map(p=>{const P2=cen(p);return`<div class="row"><span>${B[p.d].n}${p.tx?' “'+p.tx+'”':''}</span><span>${Math.round(Math.hypot(P2.x-C.x,P2.y-C.y))} tiles <button class="btn chip" data-act="pnCut" data-v="${p.id}" title="Remove this wire">✕</button></span></div>`;}).join('')+
+  `<button class="btn" data-act="pnWire">＋ Connect to…</button>`;}
  if(e.k!=='core')h+=`<h4>&nbsp;</h4><button class="btn" data-act="moveSel" title="Or long-press the building and drag it">✥ Move</button> <button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'&&e.k!=='pipe'&&!(e.k==='router'&&B[e.d].sub==='junc')?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button>`;
  return h;
 }
@@ -147,7 +152,7 @@ function entDyn(e){
   h+=`<h4>Fuel</h4>${bufList(e.fuel)}`;if(d.water)h+=`<div class="row"><span>${nm('water')}</span><span>${e.water}/100</span></div>`;
   if(e.d==='reactor')h+=`<div class="row"><span>${nm('waste')}</span><span>${e.outb.waste||0}/50</span></div>`;
   h+=gridHtml(e.grid);}
- if(e.k==='pole')h+=gridHtml(e.grid);
+ if(e.k==='pole')h+=e.d==='pswitch'&&e.off?'<div class="muted">Switched off: everything behind it is cut from the grid.</div>'+gridHtml(e.grid):gridHtml(e.grid);
  if(e.k==='dpad'){const tg=padTarget(e),D=e.dr,n=padCount(e),dist=tg?padRoute(e,tg):0,trip=2*dist/DRONE.spd+DRONE.load+DRONE.unload;
   h+=`<div class="row"><span>Stored</span><span>${n}/${B[e.d].cap}</span></div><div class="bar"><i style="width:${n/B[e.d].cap*100}%"></i></div>${bufList(e.store)}`;
   if(tg){h+=`<h4>Drone</h4><div class="row"><span>Now</span><span>${D.st===1?`flying out (${Math.round(D.t*100)}%)`:D.st===2?`returning (${Math.round((1-D.t)*100)}%)`:D.w>0?(n>=DRONE.cap?'loading':`waiting for a full load (${Math.max(0,Math.ceil(DRONE.wait-D.w))} s)`):'on the pad'}</span></div>`;
@@ -161,7 +166,9 @@ function entDyn(e){
  return h;
 }
 function gridHtml(g){if(!g)return'<div class="muted">Not connected to a grid.</div>';
- return`<h4>Power grid</h4><div class="row"><span>Consumption</span><span>${fmt(g.dem)} MW</span></div><div class="row"><span>Capacity</span><span>${fmt(g.cap)} MW</span></div><div class="row"><span>Generators / consumers</span><span>${g.gens.length} / ${g.cons.length}</span></div>${g.trip?'<button class="btn warn" data-act="resetFuse">⚠ Reset fuse</button>':''}`;}
+ const sws=pnodes.filter(x=>x.d==='pswitch'&&(x.grid===g||pnPeers(x).some(p=>p.grid===g)));
+ const swl=sws.length?`<h4>Switches</h4>`+sws.map(x=>`<div class="row"><span>${x.off?'🔴':'🟢'} ${x.tx||'Power Switch'}</span><span>${x.off?'off':fmt(swLoad(x))+' MW'} <button class="btn chip" data-act="swToggle" data-v="${x.id}">${x.off?'Turn on':'Turn off'}</button></span></div>`).join(''):'';
+ return swl+`<h4>Power grid</h4><div class="row"><span>Consumption</span><span>${fmt(g.dem)} MW</span></div><div class="row"><span>Capacity</span><span>${fmt(g.cap)} MW</span></div><div class="row"><span>Generators / consumers</span><span>${g.gens.length} / ${g.cons.length}</span></div>${g.trip?'<button class="btn warn" data-act="resetFuse">⚠ Reset fuse</button>':''}`;}
 function invHtml(){
  const ks=Object.keys(S.inv).filter(k=>S.inv[k]>0).sort((a,b)=>IT[a].n.localeCompare(IT[b].n));
  const crates=[...ents.values()].filter(e=>e.k==='storage');let inCrates=0;for(const c of crates)for(const k in c.store)inCrates+=c.store[k];
@@ -267,6 +274,9 @@ const ACT={
  netFlush:()=>{const e=ents.get(UI.panel.arg);if(e&&e.net){e.net.amt=0;e.net.fluid=null;e.net.conflict=null;toast('Network emptied');}},
  signSize:v=>{const e=ents.get(UI.panel.arg);if(!e||e.k!=='sign')return;const why=resizeSign(e,v);if(why)toast(why);renderPanel(true);},
  signColor:v=>{const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tc=+v;topoVer++;renderPanel(true);}},
+ swToggle:v=>{const e=ents.get(+v);if(!e||e.d!=='pswitch')return;e.off=!e.off;topoDirty=true;toast(`${e.tx||'Power Switch'} ${e.off?'off':'on'}`);renderPanel(true);},
+ pnCut:v=>{const a=ents.get(UI.panel.arg),b=ents.get(+v);if(a&&b){pnUnlink(a,b);toast('Wire removed');}renderPanel(true);},
+ pnWire:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.wireFrom=e.id;setTool(null);toast('Tap the pole, tower, switch or generator to connect to');updInfo();},
  moveSel:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.moveId=e.id;setTool(null);closePanel();toast(`Tap where the ${B[e.d].n} should go`);updInfo();},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
@@ -305,3 +315,5 @@ document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');
 const f=ACT[el.dataset.act];if(f)f(el.dataset.v,el);});
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset.act==='signText'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tx=el.value.slice(0,60);e._tk=null;topoVer++;}return;}if(el.dataset.act==='clock'&&UI.panel){const e=ents.get(UI.panel.arg);if(e){e.clock=+el.value/100;const cv2=document.getElementById('clockv');if(cv2)cv2.textContent=el.value+'%';}}});
 document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.act==='clock')renderPanel(true);});
+
+document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='swName'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.d==='pswitch')e.tx=el.value.slice(0,30);}});

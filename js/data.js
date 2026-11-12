@@ -132,11 +132,12 @@ D('steam',{n:'Steam Generator',k:'gen',w:3,cap:75,fuels:['coal','petro_coke'],wa
 D('turbine',{n:'Fuel Turbine',k:'gen',w:3,cap:150,fuels:['fuel'],link:8,sup:5,cat:'pow',col:'#9a6a1a',cost:{motor:15,cased_girder:15,rubber:50,steel_pipe:30},desc:'150 MW. Burns liquid fuel (12 m³/min).'});
 D('reactor',{n:'Fission Reactor',k:'gen',w:4,cap:2500,fuels:['fuel_rod'],water:240/(2500*60),link:8,sup:5,cat:'pow',col:'#3a8a3a',cost:{heavy_truss:25,compute_module:25,cased_girder:100,control_chip:10},desc:'2500 MW. Fuel rods + 240 m³/min water. Outputs nuclear waste — belt it away!'});
 D('pole1',{n:'Power Pole',k:'pole',link:10,sup:6,cat:'pow',col:'#c8a040',cost:{wire:3,concrete:1},ow:1,desc:'Links to poles within 10 tiles, powers buildings within 6.'});
+D('pswitch',{n:'Power Switch',k:'pole',link:10,sup:0,cat:'pow',col:'#5be36a',cost:{iron_plate:4,wire:6},ow:1,desc:'Connects wires like a pole but powers nothing around it. Turn it off to cut everything behind it from the grid. Give it a name, e.g. the factory it feeds.'});
 D('pole2',{n:'Power Tower',k:'pole',link:24,sup:9,cat:'pow',col:'#e0c060',cost:{cable:10,braced_plate:2,concrete:5},ow:1,desc:'Links within 24 tiles, powers within 9.'});
 
 const CATS=[['log','Logistics'],['fluid','Fluids'],['ext','Extraction'],['prod','Production'],['pow','Power'],['trans','Transport'],['sign','Signs']];
 const MS=[
-{n:'Field Assembly',req:{iron_plate:100,iron_rod:100,wire:100},b:['assembler','belt2','incin','fmeter'],r:['r_braced_plate','r_rotor','r_copper_sheet']},
+{n:'Field Assembly',req:{iron_plate:100,iron_rod:100,wire:100},b:['assembler','belt2','incin','fmeter','pswitch'],r:['r_braced_plate','r_rotor','r_copper_sheet']},
 {n:'Structural Works',req:{braced_plate:50,rotor:30,concrete:200,cable:100},b:['pipe1','junction','wpump','tank','sorter'],r:['r_truss_frame','r_stitched_plate','r_cast_bolts']},
 {n:'Steam Power',req:{truss_frame:25,rotor:50,copper_sheet:100,cable:200},b:['steam','pole2','drill2']},
 {n:'Steelworks',req:{truss_frame:50,braced_plate:100,concrete:500,cable:300},b:['foundry','belt3'],r:['r_steel_ingot','r_steel_beam','r_steel_pipe','r_cased_girder','r_stator','r_motor','r_steel_rod','r_iron_alloy'],oc:1},

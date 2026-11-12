@@ -253,6 +253,8 @@ function v3Models(){
  {const c=B.reactor.col;def('reactor',[...base(4),['sph','#d9ddd2',[-0.4,0.3,0.45],[2.5,2.3,2.5]],['tower','#cfcfc6',[0.95,1.5,-0.95],[2.0,2.7,2.0]],['box',c,[-0.4,0.4,0.45],[2.7,0.3,2.7]]],
   [['tor','#7cff6a',[-0.4,0.6,0.45],[2.55,2.55,2.55],{rot:[Math.PI/2,0,0],glow:1}],['sph','#7cff6a',[-0.4,1.45,0.45],[0.3,0.3,0.3],{glow:1,an:(e,ph,act,t)=>({sy:1})}]],{smoke:[[0.95,2.95,-0.95,2]],h:2.9,wire:1.5});}
  def('pole1',[['box','#4a4f55',[0,0.05,0],[0.3,0.1,0.3]],['cyl','#8a6a42',[0,0.85,0],[0.12,1.7,0.12]],['box','#5c4a32',[0,1.55,0],[0.75,0.07,0.08]],['cyl','#dfe6ea',[-0.3,1.64,0],[0.07,0.12,0.07]],['cyl','#dfe6ea',[0.3,1.64,0],[0.07,0.12,0.07]]],[],{wire:1.64,h:1.7});
+ def('pswitch',[['box','#4a4f55',[0,0.05,0],[0.5,0.1,0.5]],['box','#3a4048',[0,0.5,0],[0.42,0.8,0.3]],['cyl','#8a6a42',[0,1.1,0],[0.1,1.0,0.1]],['box','#5c4a32',[0,1.55,0],[0.6,0.07,0.08]],['cyl','#dfe6ea',[-0.24,1.64,0],[0.07,0.12,0.07]],['cyl','#dfe6ea',[0.24,1.64,0],[0.07,0.12,0.07]]],
+  [['box','#5be36a',[0,0.62,0.16],[0.18,0.24,0.04],{cf:e=>e.off?'#ff4a3a':'#5be36a'}]],{wire:1.64,h:1.7});
  def('pole2',[['box','#4a4f55',[0,0.06,0],[0.8,0.12,0.8]],['frust','#9aa3ab',[0,1.5,0],[0.5,2.9,0.5]],['box','#6f7880',[0,1.5,0],[0.08,2.9,0.6]],['box','#6f7880',[0,1.5,0],[0.6,2.9,0.08]],['box',B.pole2.col,[0,2.85,0],[1.3,0.09,0.09]],['box',B.pole2.col,[0,2.3,0],[0.9,0.08,0.08]],['cyl','#dfe6ea',[-0.55,2.95,0],[0.08,0.14,0.08]],['cyl','#dfe6ea',[0.55,2.95,0],[0.08,0.14,0.08]]],[],{wire:2.95,h:3});
  // core, storage, tank, incinerator
  {const c=B.core.col;def('core',[['box','#272c32',[0,0.15,0],[3.85,0.3,3.85]],['box',c,[0,0.52,0],[3.2,0.45,3.2]],['box',shade(c,-30),[0,0.78,0],[2.6,0.08,2.6]],['cyl6','#4a525b',[0,1.9,0],[1.9,2.3,1.9]],['cyl6','#ffcf7a',[0,1.9,0],[1.95,0.06,1.95]],['cyl6',c,[0,1.5,0],[2.0,0.18,2.0]],['cyl6',c,[0,2.6,0],[2.0,0.18,2.0]],['cyl','#545b63',[0,3.25,0],[0.25,0.9,0.25]]],
@@ -406,7 +408,7 @@ function v3Layout(){
   sh.forEach((e,i)=>{const k=e.w*1.45+(e.w===1?0.25:0);am.setMatrixAt(i,T.m.compose(T.v.set(e.x+e.w/2,0.025,e.y+e.w/2),T.q.identity(),T.s.set(k,1,k)));});am.visible=nice&&sh.length>0;}
  // power wires
  const pos=[],col=[],cA=new T3.Color('#22201d'),cT=new T3.Color('#ff4a3a'),top=e=>{const m=V3.M[e.d];return[e.x+e.w/2,m&&m.wire||1.3,e.y+e.h/2];};
- for(const [a,b] of pwLinks){const A=top(a),Bp=top(b),len=Math.hypot(A[0]-Bp[0],A[2]-Bp[2]),sag=Math.min(0.9,0.05*len),c=a.grid&&a.grid.trip?cT:cA;
+ const cOff=new T3.Color('#9a9a9a');for(const [a,b,cut] of pwLinks){const A=top(a),Bp=top(b),len=Math.hypot(A[0]-Bp[0],A[2]-Bp[2]),sag=Math.min(0.9,0.05*len),c=cut?cOff:a.grid&&a.grid.trip?cT:cA;
   for(let i=0;i<10;i++){for(const t of [i/10,(i+1)/10]){pos.push(A[0]+(Bp[0]-A[0])*t,A[1]+(Bp[1]-A[1])*t-sag*Math.sin(Math.PI*t),A[2]+(Bp[2]-A[2])*t);col.push(c.r,c.g,c.b);}}}
  if(V3.wires){V3.scene.remove(V3.wires);V3.wires.geometry.dispose();}
  const wg=new T3.BufferGeometry();wg.setAttribute('position',new T3.Float32BufferAttribute(pos,3));wg.setAttribute('color',new T3.Float32BufferAttribute(col,3));
@@ -422,7 +424,7 @@ function v3Layout(){
  // power ranges
  L.pn=pnodes.slice();
 }
-function v3TripSig(){let s='';for(const g of grids)s+=g.trip?1:0;return s+':'+pwLinks.length;}
+function v3TripSig(){let s='';for(const g of grids)s+=g.trip?1:0;let c=0;for(const l of pwLinks)if(l[2])c++;return s+':'+pwLinks.length+':'+c;}
 
 /* ---------- per-frame animation ---------- */
 function v3Anim(dt,t){
