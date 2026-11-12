@@ -84,6 +84,8 @@ img.ii{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
 .muted{color:var(--mut)}
 .rec{display:block;width:100%;text-align:left;margin:5px 0;padding:9px 10px;font-size:12px;line-height:1.55;border-radius:12px}
 .rec small{color:#9aa8b3}
+.recmore{float:right;font-size:12px;font-weight:700;color:var(--acc)}
+.rec.on .recmore{color:#3a2306;background:rgba(255,255,255,.35);border-radius:8px;padding:1px 8px}
 .rec.on small{color:#5a3a08}
 .bar{height:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin:3px 0 7px}
 .bar>i{display:block;height:100%;background:linear-gradient(90deg,#ffb547,#ff8a3a);border-radius:4px;transition:width .35s ease}

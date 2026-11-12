@@ -72,7 +72,9 @@ function entStatic(e){
  if(e.k==='mach'){
   h+=`<h4>Recipe</h4>`;
   const rs=RL.filter(r=>r.m===d.mt&&ur(r.id));
-  h+=rs.map(r=>`<button class="btn rec ${e.r===r.id?'on':''}" data-act="setRec" data-v="${r.id}"><b>${r.n}</b><br>${recLine(r,e.clock)}</button>`).join('')||'<div class="muted">No recipes unlocked for this machine yet.</div>';
+  // with a recipe set, only that one shows (tap it to see the others); a new machine shows the full list
+  const all=!e.r||UI.recOpen===e.id||!rs.some(r=>r.id===e.r),list=all?rs:rs.filter(r=>r.id===e.r);
+  h+=list.map(r=>`<button class="btn rec ${e.r===r.id?'on':''}" data-act="setRec" data-v="${r.id}"><b>${r.n}</b>${!all?'<span class="recmore">Change ▾</span>':e.r===r.id&&rs.length>1?'<span class="recmore">▴</span>':''}<br>${recLine(r,e.clock)}</button>`).join('')||'<div class="muted">No recipes unlocked for this machine yet.</div>';
  }
  if((e.k==='drill'&&e.node)||e.k==='pump')h+=`<div style="margin:4px 0 8px"><button class="btn" data-act="planDrill">📐 Plan this ${e.k==='drill'?'drill':'pump'}</button></div>`;
  if(e.k==='mach'||e.k==='drill'||e.k==='pump'){
@@ -261,7 +263,7 @@ const ACT={
  home:()=>{camT.x=MW/2;camT.y=MH/2;camT.z=1.2;vel.x=vel.y=0;zAnchor=null;},
  closePanel,
  openMs:()=>openPanel('ms'),openInv:()=>openPanel('inv'),openStats:()=>openPanel('stats'),openMenu:()=>openPanel('menu'),openCodex:()=>openPanel('codex'),
- setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v)return;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;renderPanel(true);},
+ setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v){UI.recOpen=UI.recOpen===e.id?null:e.id;renderPanel(true);return;}UI.recOpen=null;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;renderPanel(true);},
  filter:v=>{const e=ents.get(UI.panel.arg);if(e){e.filter=v||null;renderPanel(true);}},
  collectAll:()=>{let n=0,c=0;for(const e of ents.values())if(e.k==='storage'){let any=false;for(const k in e.store){give(k,e.store[k]);n+=e.store[k];any=true;}if(any)c++;e.store={};}toast(n?`Moved ${fmt(n)} items from ${c} crate${c>1?'s':''} into the stock`:'The crates are empty');renderPanel(true);buildTools();},
  padLink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.linkFrom=e.id;setTool(null);toast('Tap the Drone Pad the drone should fly to');updInfo();},

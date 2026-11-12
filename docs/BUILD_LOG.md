@@ -1313,3 +1313,23 @@ Not introduced by a recent build: the bottom-sheet layout and tap-on-release hav
 ### Verified
 - Phone-size reproduction before/after: recipe stays at all tested positions (portrait 412×915, 390×844, landscape 915×412).
 - `npm test` 68/68. New check: phone portrait + touch, tapping a machine at three heights opens its panel and the recipe stays.
+
+---
+
+## Session 36b — 2026-11-12 (Claude Code, cloud session) · Build 53
+
+### What Markus asked
+1. After Build 52 the ghost tap no longer selects a recipe, but the button under the finger still visibly "presses".
+2. Once a machine has a recipe, show only that one (declutter); tapping it shows the others to change. A new machine shows the full list.
+
+### What was built
+- `calmPanel()` (`js/input.js`): after a finger tap on the map (2D and 3D), the panel ignores touches for 0.45 s (`pointer-events:none`), so the
+  ghost tap neither selects nor highlights anything. Mouse taps are unaffected. The Build 52 click filter stays as a second guard.
+- Recipe list (`entStatic` in `js/ui.js`): with a recipe set, only the active recipe shows, with a "Change ▾" tag. Tapping it opens the full list
+  (`UI.recOpen` = that machine). Tapping the active one again folds it, and picking another recipe folds it too. With no recipe set (or a recipe no
+  longer in the list), all recipes show.
+- Build number **53**.
+
+### Verified
+- `npm test` 69/69. New check: a new machine shows all 6 press recipes; after picking, 1 plus "Change"; tapping shows 6; a new pick folds to 1.
+- Phone screenshot: the folded panel is much shorter; "Change ▾" is readable on the orange active button (dark text on a light chip).

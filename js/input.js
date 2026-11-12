@@ -20,6 +20,7 @@ let movePrev=null;
 /* Ghost taps (phones): after a finger tap on the map opens the panel, the browser can send the same tap again as a click to whatever button
    now sits under the finger (e.g. a recipe). Panel clicks right after, and at the spot of, a map tap are ignored (see the click handler in ui.js). */
 let mapTap={t:-1e9,x:0,y:0};
+function calmPanel(){const p=document.getElementById('panel');if(!p)return;p.style.pointerEvents='none';clearTimeout(calmPanel.t);calmPanel.t=setTimeout(()=>{p.style.pointerEvents='';},450);}
 function armLongPress(g,t0){if(UI.tool||UI.moveId||UI.linkFrom)return;const en=t0&&entAt(t0.x,t0.y);if(!en||en.k==='core')return;
  g.lp=setTimeout(()=>{if(g.type!=='pending')return;g.type='move';g.mv={e:en,dx:en.x-t0.x,dy:en.y-t0.y};movePrev={e:en,nx:en.x,ny:en.y,ok:true};
   try{navigator.vibrate&&navigator.vibrate(18);}catch(_){}toast(`Moving ${B[en.d].n}: drag and let go`);},450);}
@@ -70,7 +71,7 @@ function endPtr(e){
  if(G.type==='pinch'){if(ptrs.size===0)G=null;else G={type:'dead'};return;}
  clearTimeout(G.lp);
  if(G.type==='move')dropMove();
- else if(G.type==='pending'){mapTap={t:performance.now(),x:e.clientX,y:e.clientY};tap(G.t0);}
+ else if(G.type==='pending'){mapTap={t:performance.now(),x:e.clientX,y:e.clientY};tap(G.t0);if(e.pointerType!=='mouse')calmPanel();}
  else if(G.type==='line'&&linePrev){buildPath(linePrev.id,linePrev.path);linePrev=null;}
  else if(G.type==='pan'&&performance.now()-G.lt<70){const sp=Math.hypot(G.vx,G.vy),mx=120/cam.z;const k=sp>mx?mx/sp:1;vel.x=G.vx*k;vel.y=G.vy*k;}
  if(ptrs.size===0)G=null;

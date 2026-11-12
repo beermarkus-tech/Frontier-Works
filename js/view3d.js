@@ -562,7 +562,7 @@ function v3Input(){
   if(g.type==='two'){g=P.size?{type:'dead'}:null;return;}
   clearTimeout(g.lp);
   if(g.type==='move')dropMove();
-  else if(g.type==='pending'&&g.t0){mapTap={t:performance.now(),x:e.clientX,y:e.clientY};tap(g.t0);}
+  else if(g.type==='pending'&&g.t0){mapTap={t:performance.now(),x:e.clientX,y:e.clientY};tap(g.t0);if(e.pointerType!=='mouse')calmPanel();}
   else if(g.type==='line'&&linePrev){buildPath(linePrev.id,linePrev.path);linePrev=null;}
   else if(g.type==='pan'&&performance.now()-g.lt<70){const sp=Math.hypot(g.vx,g.vy),mx=C3.dist*3;const k=sp>mx?mx/sp:1;C3.vx=g.vx*k;C3.vy=g.vy*k;}
   if(!P.size)g=null;if(e.pointerType!=='mouse')hover=null;
