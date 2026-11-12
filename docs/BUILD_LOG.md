@@ -1289,3 +1289,27 @@ Note the agreed plan in the devlog (Build 50), then build the cloud save sync ac
 
 ### Next up
 - Markus tries the sync on two devices. Then the 3D brightness question, then the code audit session.
+
+---
+
+## Session 36 — 2026-11-12 (Claude Code, cloud session) · Build 52
+
+### What Markus reported
+On his phone, opening a machine's panel switched its recipe (to "the first one"). He then noticed it is the recipe button that appears under
+his finger after the tap.
+
+### Cause
+A ghost tap. On phones the panel opens as a bottom sheet. A finger tap on the map opens it on pointer-up; the browser then sends the same tap as a
+`click` to whatever is now under the finger, which can be a recipe button (`setRec`). Reproduced in a phone-sized touch browser (412×915 and 390×844):
+taps at 42 % and 53 % of the screen height changed Wire to Iron Rod / Bolts. The tablet (side panel) and landscape phones weren't affected.
+Not introduced by a recent build: the bottom-sheet layout and tap-on-release have worked this way for a long time.
+
+### Fix
+- `mapTap` (`js/input.js`) records time and position of every map tap (2D `endPtr` and the 3D end handler).
+- The global click handler in `js/ui.js` ignores a click that comes less than 0.6 s after, and within 40 px of, a map tap
+  (except in the bottom dock). Real taps on the panel are unaffected.
+- Build number **52**.
+
+### Verified
+- Phone-size reproduction before/after: recipe stays at all tested positions (portrait 412×915, 390×844, landscape 915×412).
+- `npm test` 68/68. New check: phone portrait + touch, tapping a machine at three heights opens its panel and the recipe stays.

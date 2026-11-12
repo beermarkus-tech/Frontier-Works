@@ -348,6 +348,14 @@ const server=require('./serve.js');
  check('Stats shows factory size',await p.evaluate(()=>{ACT.openStats();const t=document.getElementById('pbody').innerText;ACT.closePanel();return /Factory size[\s\S]*Objects\s*[\d,]+/i.test(t);}));
  check('far zoom draws without errors (simple blocks)',await p.evaluate(()=>{cam.z=camT.z=0.3;render();cam.z=camT.z=1.2;return true;}));
  await ctx.setOffline(false);
+ // phone (portrait, touch): tapping a machine opens the bottom panel under the finger; the browser's follow-up click must not pick a recipe
+ {const pc=await b.newContext({viewport:{width:412,height:915},hasTouch:true,isMobile:true,deviceScaleFactor:2.6});const pp=await pc.newPage();
+  await pp.goto('http://localhost:8099/');await pp.waitForFunction(()=>typeof ents!=='undefined'&&ents.size>0,null,{timeout:30000});await pp.waitForTimeout(800);   // a new game opens the Menu by itself shortly after start
+  const i=await pp.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=6;r<80&&X==null;r++)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(!canPlace('press',x,y)){X=x;Y=y;break;}}
+   fw.placeEnt('press',X,Y,0,true);S.ur.push('r_iron_rod','r_bolts','r_wire');fw.entAt(X,Y).r='r_wire';if(UI.panel)ACT.closePanel();cam.z=camT.z=2;return{X,Y};});
+  const got=[];for(const fy of [0.42,0.5,0.58]){await pp.evaluate(([i,fy])=>{if(UI.panel)ACT.closePanel();const s=TS*cam.z;cam.x=camT.x=i.X+1;cam.y=camT.y=i.Y+1-(fy*innerHeight-innerHeight/2)/s;},[i,fy]);await pp.waitForTimeout(250);
+   await pp.touchscreen.tap(206,Math.round(915*fy));await pp.waitForTimeout(500);got.push(await pp.evaluate(i=>window.__fw.entAt(i.X,i.Y).r+(UI.panel&&UI.panel.kind==='ent'?'':'(no panel)'),i));}
+  check(`phone: tapping a machine opens its panel without a ghost tap changing the recipe (${got.join(', ')})`,got.every(r=>r==='r_wire'));await pc.close();}
  check('no page errors',errs.length===0);
  for(const [n,v] of ok)console.log((v?'PASS ':'FAIL ')+n);if(errs.length)console.log(errs);
  await b.close();server.close();process.exit(ok.every(x=>x[1])?0:1);
