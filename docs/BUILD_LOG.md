@@ -1381,3 +1381,19 @@ clogging a line) without rebuilding, and maybe tap a machine to empty it.
 - `npm test` 72/72. New checks: belts/splitter/crossing emptied with exact stock refunds, machine buffers emptied with the recipe kept, crate
   untouched, pipe network drained, no building removed; a real mouse swipe over a 6-belt line leaves 0 items and all 6 belts.
 - Phone screenshot: the eraser fits in the dock row.
+
+---
+
+## Session 36e — 2026-11-12 (Claude Code, cloud session) · Build 56
+
+### What Markus asked
+Remove the help texts from ☰ Menu: how to play, how to rotate in 3D, and the "app is installed" note.
+
+### What changed
+- Removed the 3D controls line and the "How to play" block (incl. key list) from `menuHtml`.
+- The Install app section disappears when the game runs as an installed app. On a device where it isn't installed yet it still shows the
+  install button, since that's the only way to install it there.
+- Build number **56**.
+
+### Verified
+- `npm test` 72/72.

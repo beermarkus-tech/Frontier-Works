@@ -234,14 +234,7 @@ function menuHtml(){
  <div class="row"><span>Efficiency rings on buildings</span><span class="chips"><button class="btn chip ${OPT.eff?'on':''}" data-act="optEff" data-v="1">On</button><button class="btn chip ${OPT.eff?'':'on'}" data-act="optEff" data-v="0">Off</button></span></div>
  <div class="row"><span>3D quality</span><span class="chips"><button class="btn chip ${V3.q==='high'?'on':''}" data-act="q3" data-v="high">High</button><button class="btn chip ${V3.q==='low'?'on':''}" data-act="q3" data-v="low">Low (faster)</button></span></div>
  <div class="row"><span>3D look</span><span class="chips"><button class="btn chip ${V3.look==='nice'?'on':''}" data-act="look3" data-v="nice">Enhanced</button><button class="btn chip ${V3.look==='classic'?'on':''}" data-act="look3" data-v="classic">Classic (faster)</button></span></div>
- <div class="muted">3D: drag to move · pinch to zoom · twist two fingers to rotate · slide two fingers up/down to tilt. Mouse: right-drag rotates &amp; tilts, wheel zooms, Ctrl+wheel tilts. Keys: V switch view, E/Z rotate.</div>
- <h4>How to play</h4><div class="muted">
- 1. Drill the iron node, belt the ore into a Smelter, then into a Press. Belt products into the Base Core.<br>
- 2. Power: drill coal → belt into a Coal Burner. Power Poles link generators to machines (yellow circles show range).<br>
- 3. Hit the goals (🏁) to unlock new machines, recipes and alternates. 10 tiers end with launching the Orbital Beacon.<br>
- 4. If demand exceeds supply the fuse trips — add generators, then reset it.<br>
- Keys: R rotate · X dismantle · Esc inspect · WASD/arrows pan · wheel zoom · right-drag pan.</div>
- <h4>Install app</h4>${installHtml()}
+ ${PWA.standalone?'':'<h4>Install app</h4>'+installHtml()}
  <h4>Simulation speed</h4><div class="chips">${[1,2,4].map(v=>`<button class="btn chip ${S.spd===v?'on':''}" data-act="spd" data-v="${v}">${v}×</button>`).join('')}</div>
  <h4>Save</h4><button class="btn" data-act="saveNow">💾 Save now</button> <span class="muted">(auto-saves every 30 s)</span>
  <div class="muted" style="margin-top:4px">${saveInfo()}</div>
