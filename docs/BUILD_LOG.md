@@ -1229,3 +1229,20 @@ He likes the textures, but the changed lighting makes the whole landscape look p
 
 ### Verified
 - `npm test` 66/66. Screenshot: landscape colours as in Classic, buildings textured and rounded.
+
+---
+
+## Plan agreed with Markus — 2026-11-12 (next steps, in this order)
+
+1. **3D brightness (ask Markus first, change nothing until he answers).** He saw a brighter, nicer glimpse when 3D opened: materials start
+   with full sky light (`envMapIntensity` 1) until `v3Layout` turns it to 0 for non-metal. Idea: keep the sky light on for everything at a
+   strength tuned with him, compared against a screenshot from his tablet. He is adjusting his screen brightness first.
+2. **Cloud save sync via a private GitHub Gist** (being built now, see the next entry). Rules agreed:
+   - A device uploads only if the cloud still holds the version it started from (its *base*).
+   - Cloud newer and this device not played since its base → load automatically; both played → ask, keep the loser as backup.
+   - First connection of a device to a non-empty cloud always asks. Downgrade guard: never auto-load a cloud save with a lower tier
+     or far fewer buildings; ask instead.
+   - Import asks "all devices" or "only this device" (pauses sync there). "Undo last sync" restores the local copy made before a cloud load.
+   - "Playing now" marker warns when another device played in the last few minutes. Automatic, plus Sync now and status in ☰ Menu.
+3. **Code audit session** after the sync: report first (dead code, leftovers of removed features, duplicates, slow spots), then cleanup in small
+   commits that change no behaviour, tests after each. No big rewrite. Repeat every 10–15 builds or after a big feature.
