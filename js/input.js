@@ -32,6 +32,7 @@ function tap(t){
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
  const tool=UI.tool;
  if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();}return;}
+ if(tool==='fmeter'){const e=entAt(t.x,t.y),r=toggleMeter(e);toast(r==='on'?'Flow Meter on: the rate settles over 30 s':r==='off'?'Flow Meter taken off (refunded)':r);refreshTools();return;}
  if(tool==='clr'){const e=entAt(t.x,t.y);if(!e)return;if(!ERASE_K.includes(e.k)){toast(`The eraser leaves ${B[e.d].n} alone (it's storage)`);return;}const n=eraseEnt(e);sparkle(e);toast(n?`Emptied ${B[e.d].n}: ${n} back to stock (fluids drain away)`:`${B[e.d].n} was already empty`);refreshTools();return;}
  if(tool&&B[tool]){const d=B[tool];
   if(isLine(d.k)){const o=entAt(t.x,t.y);buildPath(tool,[{x:t.x,y:t.y,d:o&&o.k===d.k?o.dir:UI.rot}]);return;}   // tapping an existing belt/pipe upgrades it in place, keeping its direction

@@ -1397,3 +1397,29 @@ Remove the help texts from ☰ Menu: how to play, how to rotate in 3D, and the "
 
 ### Verified
 - `npm test` 72/72.
+
+---
+
+## Session 36f — 2026-11-12 (Claude Code, cloud session) · Build 57
+
+### What Markus asked
+A throughput meter for belts and pipes, in the same font style as the efficiency indicator; proposal plus tier. He agreed to the proposal.
+
+### What was built
+- **Flow Meter** (`fmeter` in `js/data.js`, Logistics tab, unlocks with Tier 1 "Field Assembly", 2 Iron Plate + 4 Wire). Not its own entity: a
+  marker `e.fm` on a belt/pipe tile (added to `SKEYS`, so saved). `toggleMeter(e)` puts it on/takes it off (pay/refund).
+- Measuring (`js/sim.js`): `accept()` counts items arriving on a metered belt (`e.fc`); once per second the counts go into a 30-entry window
+  (`e.fh`). `fmRate(e)` → [per minute, max per minute]; pipes use their network's `max(inR,outR)` and the network's speed limit.
+  List `meters` built in `rebuildTopo`.
+- 2D (`drawMeters`): small dial with a needle on the tile + a pill badge above it in the clock/efficiency style (Inter 700, dark pill,
+  white/amber/grey rim). 3D (`v3Meters`): dial disc + floating label sprite. Panel: Flow, Maximum here, Used %.
+- Belt upgrade keeps the meter; dismantling refunds it; tapping a non-line tile says to use a belt or pipe.
+- Build number **57**.
+
+### Verified
+- `npm test` 73/73. New check: unlocked in Tier 1, costs paid; a full Mk1 line measures 60/min of 60; pipe meter max 300; badge drawn; panel rows;
+  kept through save/load and a belt upgrade; taking it off refunds; crates can't take one.
+- Screenshots in 2D and 3D (amber badge at the belt limit).
+
+### Next up
+- Power: Markus wants cleaner pole connections (no spider web) and a way to switch off single factories when the grid trips. Proposal pending.

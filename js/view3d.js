@@ -456,6 +456,16 @@ function v3Drones(){const T=V3T,list=pads.filter(e=>e.dr.st||padTarget(e)),dm=v3
   const c=Object.keys(e.dr.c||{})[0];if(c){cm.setMatrixAt(nc,T.m.compose(T.v.set(p.x,y-0.28,p.y),T.q.identity(),T.s.set(0.42,0.3,0.42)));cm.setColorAt(nc,V3.icol[c]);nc++;}});
  cm.count=nc;cm.visible=nc>0;dm.instanceMatrix.needsUpdate=sm.instanceMatrix.needsUpdate=cm.instanceMatrix.needsUpdate=true;if(cm.instanceColor)cm.instanceColor.needsUpdate=true;}
 /* Sign labels in 3D: one sprite per sign (texture redrawn when text/colour/size change), standing above its posts and always facing the camera */
+function v3Meters(){V3.fm=V3.fm||new Map();const seen=new Set();
+ for(const e of meters){if(!ents.has(e.id))continue;seen.add(e.id);let o=V3.fm.get(e.id);
+  if(!o){const c=document.createElement('canvas');c.width=256;c.height=72;const tex=new T3.CanvasTexture(c);const sp=new T3.Sprite(new T3.SpriteMaterial({map:tex,depthWrite:false,depthTest:false}));sp.renderOrder=5;
+   const dial=new T3.Mesh(V3.G.cyl,new T3.MeshStandardMaterial({color:'#e8eef2',roughness:0.4,metalness:0.3}));dial.scale.set(0.42,0.12,0.42);V3.scene.add(sp);V3.scene.add(dial);o={c,tex,sp,dial,key:''};V3.fm.set(e.id,o);}
+  const [v,mx]=fmRate(e),txt=e.k==='pipe'?`${fmt(v)} m³/min`:`${fmt(v)}/min`,full=mx&&v>=mx*0.97,idle=v<0.5,key=txt+(full?'f':idle?'i':'');
+  if(o.key!==key){o.key=key;const g=o.c.getContext('2d');g.clearRect(0,0,256,72);g.font='700 40px Inter,system-ui,sans-serif';const w=Math.min(250,g.measureText(txt).width+34);
+   g.fillStyle='rgba(10,14,18,0.85)';rrg(g,(256-w)/2,6,w,60,30);g.fill();g.lineWidth=4;g.strokeStyle=full?'#ffb547':idle?'#6c7680':'#e8eef2';g.stroke();
+   g.fillStyle=full?'#ffcf7a':idle?'#9aa4ad':'#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,128,38);o.tex.needsUpdate=true;}
+  const h=e.k==='pipe'?0.62:0.3;o.dial.position.set(e.x+0.5,h,e.y+0.5);o.sp.position.set(e.x+0.5,h+0.75,e.y+0.5);o.sp.scale.set(1.6,0.45,1);}
+ for(const [k,o] of V3.fm)if(!seen.has(k)){V3.scene.remove(o.sp);V3.scene.remove(o.dial);o.tex.dispose();o.sp.material.dispose();o.dial.material.dispose();V3.fm.delete(k);}}
 function v3Signs(){const T=V3T,seen=new Set();V3.signs=V3.signs||new Map();
  for(const id of SIGNS){const list=(V3.M[id]&&V3.M[id].list)||[];for(const e of list){seen.add(e.id);let o=V3.signs.get(e.id);const key=(e.tx||'')+'|'+(e.tc||0)+'|'+e.w;
   if(!o){const c=document.createElement('canvas');c.width=256;c.height=160;const tex=new T3.CanvasTexture(c);const sp=new T3.Sprite(new T3.SpriteMaterial({map:tex,depthWrite:false}));V3.scene.add(sp);o={c,tex,sp,key:null};V3.signs.set(e.id,o);}
@@ -495,6 +505,7 @@ function v3Overlay(t){
  if(linePrev){const n=linePrev.path.length,ok=afford(B[linePrev.id].cost,n);for(const p of linePrev.path){const why=canPlace(linePrev.id,p.x,p.y),bad=why&&!(why==='Blocked'&&entAt(p.x,p.y)&&entAt(p.x,p.y).k===B[linePrev.id].k);gh.push([p.x,p.y,1,0.12,bad||!ok]);}
   const l=linePrev.path[n-1];tagAt=[l.x+0.5,0.6,l.y+0.5];tag=`${n} × ${B[linePrev.id].n}`;V3.tag.classList.toggle('bad',!ok);}
  else if(movePrev&&ents.has(movePrev.e.id)){const m=movePrev,e=m.e;gh.push([m.nx,m.ny,e.w,isLine(e.k)?0.12:Math.min(2.2,(V3.M[e.d]&&V3.M[e.d].h)||1),!m.ok]);}
+ else if(hover&&tool==='fmeter'){const e=entAt(hover.x,hover.y);gh.push([hover.x,hover.y,1,0.3,!(e&&isLine(e.k))]);}
  else if(hover&&tool&&B[tool]){const d=B[tool],fp=footprint(tool,hover.x,hover.y),why=canPlace(tool,fp.x,fp.y),bad=why&&!(why==='Blocked'&&isLine(d.k)&&entAt(hover.x,hover.y)&&entAt(hover.x,hover.y).k===d.k);
   gh.push([fp.x,fp.y,d.w,isLine(d.k)?0.12:Math.min(2.2,(V3.M[tool]&&V3.M[tool].h)||1),bad]);}
  const gm=v3PoolN(V3.ghost,gh.length);gh.forEach(([x,y,w,h,bad],i)=>{gm.setMatrixAt(i,T.m.compose(T.v.set(x+w/2,h/2+0.01,y+w/2),T.q.identity(),T.s.set(w*0.96,h,w*0.96)));gm.setColorAt(i,T.c.set(bad?'#ff5a46':'#6ef08a'));});
@@ -584,7 +595,7 @@ function render3D(el){
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
- v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Signs();v3Overlay(t);
+ v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Signs();v3Meters();v3Overlay(t);
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}

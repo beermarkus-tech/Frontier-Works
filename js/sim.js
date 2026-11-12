@@ -3,7 +3,7 @@
 let S, ents=new Map(), grid=new Int32Array(MW*MH), nextId=1;
 let terr, nodeAt, nodes=[], terrC, bio;
 let nets=[];   // fluid networks (pipes have no direction)
-let topoVer=0, topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[];
+let topoVer=0, topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[], meters=[];
 let tickNo=0;
 const stat={p:{},c:{},hist:[],acc:0};
 
@@ -115,11 +115,12 @@ function placeEnt(id,x,y,dir,free){
  const old=d.w===1?entAt(x,y):null;
  if(old){ if(old.d===id&&old.dir===dir)return 'same'; }
  if(!free){ let c=d.cost; if(!afford(c))return 'Not enough materials'; }
- if(old){carry=old.item;removeEnt(old,true,true);}
+ let cfm=0;if(old){carry=old.item;cfm=old.fm&&isLine(d.k);removeEnt(old,true,true);}
  if(!free)pay(d.cost);
  const e={id:nextId++,d:id,k:d.k,x,y,w:d.w,h:d.w,dir:dir||0};
  initEnt(e,d);
  if(carry&&isLine(e.k)&&IT[carry].f===(e.k==='pipe'))e.item=carry;
+ if(cfm&&afford(B.fmeter.cost)){pay(B.fmeter.cost);e.fm=1;e.fh=[];}   // the meter stays on an upgraded belt
  ents.set(e.id,e);e.born=animT;
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(y+j)*MW+x+i]=e.id;
  topoDirty=true;return '';
@@ -168,8 +169,14 @@ function eraseEnt(e){if(!e||!ERASE_K.includes(e.k))return 0;let n=0;const back=(
  if(e.k==='drill'||e.k==='pump'){if(e.buf>0&&e.node){back(NODE_T[e.node.t][0],e.buf);if(IT[NODE_T[e.node.t][0]]&&IT[NODE_T[e.node.t][0]].f)n+=Math.floor(e.buf);}e.buf=0;e.prog=0;return n;}
  if(e.k==='gen'){for(const k in e.outb)back(k,e.outb[k]);e.outb={};return n;}
  return n;}
+/* Flow Meter (Session 36f): a marker on a belt/pipe tile (e.fm, saved). Belts count arriving items per second (e.fc → e.fh, 30 s window);
+   pipes show their network's flow. fmRate → [per minute, max per minute]. */
+function fmRate(e){if(e.k==='pipe'){const n=e.net;return[n?Math.max(n.inR,n.outR):0,(n?n.rate:e.spd)*60];}
+ const h=e.fh||[];return[h.length?h.reduce((a,b)=>a+b,0)/h.length*60:0,e.spd*60];}
+function toggleMeter(e){if(!e||!isLine(e.k))return 'Put it on a belt or pipe';if(e.fm){e.fm=0;e.fh=null;refund(B.fmeter.cost);topoDirty=true;return 'off';}
+ if(!afford(B.fmeter.cost))return 'Not enough materials';pay(B.fmeter.cost);e.fm=1;e.fh=[];e.fc=0;topoDirty=true;return 'on';}
 function removeEnt(e,ref,silent){
- if(e.k==='core')return;
+ if(e.k==='core')return;if(ref&&e.fm)refund(B.fmeter.cost);
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=0;
  ents.delete(e.id);
  if(ref){refund(B[e.d].cost);
@@ -191,7 +198,7 @@ function accept(e,item,dir,carry){
   case 'pipe':return false;   // pipes are part of a fluid network (updNets), they don't pass single items
   case 'belt':
    if(e.item||fl!==(e.k==='pipe'))return false; if(((dir+2)&3)===e.dir)return false;
-   e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;return true;
+   e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;if(e.fm)e.fc=(e.fc||0)+1;return true;
   case 'router':{
    if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc')return false;   // a Pipe Junction is a network piece
    const sub=B[e.d].sub;
@@ -253,8 +260,9 @@ function feedsInto(sd,e,o){const into=(o+2)&3;
  if(sd.k==='cross'){const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&isLine(far.k)&&far.k===e.k&&far.dir===into;}
  return false;}
 function rebuildTopo(){
- syncPipes();topoDirty=false;topoVer++;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];
+ syncPipes();topoDirty=false;topoVer++;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];meters=[];
  const lines=[];
+ for(const e of ents.values())if(e.fm&&isLine(e.k))meters.push(e);
  for(const e of ents.values()){
   if(isLine(e.k))lines.push(e);else if(e.k==='router'){if(B[e.d].sub!=='junc')routers.push(e);}else if(e.k==='cross')crosses.push(e);
   else if(e.k!=='pole'){e.ports=perim(e);buildings.push(e);}
@@ -415,6 +423,7 @@ function updBuilding(e,dt){
 function tick(dt){
  if(topoDirty)rebuildTopo();
  tickNo++;S.t+=dt;
+ if(tickNo%20===0)for(const e of meters){(e.fh||(e.fh=[])).push(e.fc||0);e.fc=0;if(e.fh.length>30)e.fh.shift();}   // Flow Meters: items per second, last 30 s
  powerStep(dt);
  for(const e of routers)updRouter(e);
  for(const e of crosses)updCross(e);

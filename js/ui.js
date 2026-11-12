@@ -129,6 +129,7 @@ function effHtml(e){
 }
 function entDyn(e){
  const d=B[e.d];let h='';const st=bStatus(e);
+ if(e.fm){const [v,mx]=fmRate(e),u=e.k==='pipe'?' m³/min':'/min';h+=`<h4>Flow Meter</h4><div class="row"><span>Flow</span><span><b>${fmt(v)}${u}</b></span></div><div class="row"><span>Maximum here</span><span>${fmt(mx)}${u}</span></div><div class="row"><span>Used</span><span>${mx?Math.round(v/mx*100):0}%</span></div>`;}
  if(st)h+=`<div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>`;
  if(d.pw){h+=`<div class="row"><span>Power</span><span>${fmt(d.pw*Math.pow(e.clock||1,1.6))} MW ${e.grid?'':'<span style="color:#e04030">(not connected)</span>'}</span></div>`;}
  if(e.k==='mach')h+=effHtml(e);

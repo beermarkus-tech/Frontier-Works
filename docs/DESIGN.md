@@ -137,6 +137,10 @@ Hand mining gives +5 ore from a node.
 - Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D, at the same size and
   zoom level as the number in the efficiency ring.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
+- **Flow Meter** (Session 36f, Tier 1 Field Assembly, 2 Iron Plate + 4 Wire, Logistics tab): tap a belt or pipe with it to clip a gauge on
+  (tap again to take it off, refunded). Badge above the tile in the efficiency-number font: items/min on belts (counted on that tile, 30 s average),
+  m³/min on pipes (the network's flow). White = flowing, amber = at the line's limit, grey = idle. The belt's panel shows flow, maximum and % used.
+  Stays on a belt when it's upgraded, refunded when the belt is dismantled. Saved as `fm` on the tile.
 - **Eraser** (Session 36d, dock button next to Dismantle, key C): swipe over belts, splitters, mergers, crossings and pipes to empty them; tap a
   machine, drill, pump or generator to empty its buffers (recipe stays). Buildings stay. Items go back to the item stock; fluids drain away (a pipe
   empties its whole network). Crates, tanks, Drone Pads and the Core are storage and are left alone.

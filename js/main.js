@@ -1,6 +1,6 @@
 'use strict';
 /* ---------- save/load ---------- */
-const SKEYS=['d','x','y','dir','lx','ly','dr','del','lv','tx','tc','item','prog','r','inb','outb','run','clock','buf','fuel','energy','water','wacc','trip','store','ft','amt','filter','hs','vs','hd','vd'];
+const SKEYS=['d','x','y','dir','fm','lx','ly','dr','del','lv','tx','tc','item','prog','r','inb','outb','run','clock','buf','fuel','energy','water','wacc','trip','store','ft','amt','filter','hs','vs','hd','vd'];
 /* Save format v2: compact JSON (entities as [d,x,y,dir,{only non-default fields}]), gzip-compressed where the browser supports it,
    stored in IndexedDB (lots of room) with localStorage as fallback. Old v1 saves (base64 JSON, entity objects) still load.
    Exported text: "FW2:" + base64(gzip). If saving fails, the player sees a warning (it used to fail silently). */
