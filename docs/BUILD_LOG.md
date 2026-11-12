@@ -1246,3 +1246,46 @@ He likes the textures, but the changed lighting makes the whole landscape look p
    - "Playing now" marker warns when another device played in the last few minutes. Automatic, plus Sync now and status in ☰ Menu.
 3. **Code audit session** after the sync: report first (dead code, leftovers of removed features, duplicates, slow spots), then cleanup in small
    commits that change no behaviour, tests after each. No big rewrite. Repeat every 10–15 builds or after a big feature.
+
+---
+
+## Session 35k — 2026-11-12 (Claude Code, cloud session) · Builds 50–51
+
+### What Markus asked
+Note the agreed plan in the devlog (Build 50), then build the cloud save sync across devices.
+
+### What was built (Build 51)
+- New file `js/sync.js` (added to `index.html` and the offline list in `sw.js`):
+  - **Private GitHub Gist** `Frontier Works save (managed by the game, do not edit)`, found by its description, so a second device only needs the key.
+    Files: `fw-save.txt` (FW2 export text), `fw-meta.json` {ver, dev, name, time, tier, n, t}, `fw-live.json` (playing-now marker, `closed` when the app is left),
+    `fw-backup.txt` (the cloud game replaced by a forced upload).
+  - State `SC` in localStorage `frontierworks_sync`: token, gist id, device id/name, base (meta ver + writer), game time at the base, paused.
+  - "Played since base" = more than 20 s of game time (`S.t`) since the last sync.
+  - Decision table in `syncNow()`: cloud empty → upload; cloud = base → upload if played, else a heartbeat every 2 min; no base yet → ask;
+    cloud newer and not played → auto-load, but ask if it looks older (lower tier or under 70 % of the buildings); both played → ask.
+    Another device's live marker under 3 min old and not closed → ask before taking over.
+  - Conflict dialog shows both sides (tier, buildings, play time, when saved): Keep this device's game / Use the cloud game / Decide later.
+    The loser is kept: a forced upload stores the old cloud game in `fw-backup.txt`; a cloud load first stores the local game in IndexedDB `presync`.
+  - Undo last sync restores `presync` and pauses sync. Resume forgets the base, so it asks which game to keep. Import asks "All devices" (forced
+    upload) or "Only this device" (pause).
+  - Automatic: on start (`syncBoot` from main's boot), when coming back to the app, every 3 min while visible, when going online; on leaving it uploads
+    if changed and marks the live marker closed.
+  - ☰ Menu → Cloud save (GitHub): setup text (classic token, only the "gist" box), key + device name fields, Connect; then status, Sync now,
+    Pause/Resume, Undo last sync, Disconnect.
+- Build number **51**.
+
+### Verified
+- `npm test` 67/67. New check against a fake GitHub (Playwright `page.route`), with two simulated devices: tablet uploads first; phone with a fresh map
+  is asked and takes the cloud game; phone plays and uploads v2; tablet gets the playing-now warning, then auto-loads v2; Undo pauses; Resume asks;
+  an injected tiny lower-tier v3 triggers the "looks older" question (kept the local game, old cloud game in the backup file); both played → asked,
+  Decide later holds; import asks and "only this device" pauses; Menu section shows; Disconnect clears the key.
+- Found by the test and fixed: after answering a question the sync wasn't marked busy while loading/uploading.
+- **Not tested against real GitHub** (needs Markus's key). First real check is his.
+
+### How Markus sets it up
+1. On the tablet (the real game): github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token,
+   tick only **gist**, copy it. ☰ Menu → Cloud save → paste key, name "Tablet", Connect.
+2. On the phone: same key, name "Phone", Connect. It asks which game to keep: choose the cloud game (from Tablet).
+
+### Next up
+- Markus tries the sync on two devices. Then the 3D brightness question, then the code audit session.

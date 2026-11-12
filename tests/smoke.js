@@ -206,6 +206,60 @@ const server=require('./serve.js');
   for(let j=-2;j<4;j++)for(let i=-2;i<14;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{fl:fl==='pipe1,pipe2,junction,tank',last:prod[prod.length-1]==='incin'&&B.incin.w===2,log:!log.some(id=>B[id].k==='pipe'||id==='tank'||id==='junction'||id==='incin'),boxed,back,grew,belts,stable};});
  check(`menus: Fluids tab, 2×2 Incinerator last in Production; old 1×1 incinerators grow or are refunded (${Object.values(inc).join(',')})`,Object.values(inc).every(Boolean));
+ // cloud save sync against a fake GitHub Gist API: two simulated devices, first connection asks, auto-load, playing-now warning,
+ // undo + resume, downgrade guard, both-played conflict, import "only this device"
+ const GHS={gists:{},n:0,calls:0};
+ const gjson=g=>({id:g.id,description:g.description,files:Object.fromEntries(Object.entries(g.files).map(([k,v])=>[k,{filename:k,content:v,truncated:false,raw_url:'https://example.invalid/'+k}]))});
+ await p.route('https://api.github.com/**',async route=>{const r=route.request(),u=new URL(r.url()),m=r.method();GHS.calls++;
+  if(r.headers()['authorization']!=='Bearer tok123')return route.fulfill({status:401,body:'{}'});
+  const send=o=>route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(o)});
+  if(u.pathname==='/gists'&&m==='GET')return send(Object.values(GHS.gists).map(g=>({id:g.id,description:g.description})));
+  if(u.pathname==='/gists'&&m==='POST'){const b=JSON.parse(r.postData()),id='g'+(++GHS.n);GHS.gists[id]={id,description:b.description,files:Object.fromEntries(Object.entries(b.files).map(([k,v])=>[k,v.content]))};return send(gjson(GHS.gists[id]));}
+  const g=GHS.gists[u.pathname.split('/')[2]];if(!g)return route.fulfill({status:404,body:'{}'});
+  if(m==='PATCH'){const b=JSON.parse(r.postData());for(const [k,v] of Object.entries(b.files))if(v)g.files[k]=v.content;else delete g.files[k];}
+  return send(gjson(g));});
+ const cloudMeta=()=>{const g=Object.values(GHS.gists)[0];return g?JSON.parse(g.files['fw-meta.json']):null;};
+ await p.evaluate(()=>{window.__dlgDog=setInterval(()=>{if(SY.ans&&!document.getElementById('dlg').classList.contains('hidden')){SY.__t=(SY.__t||0)+1;if(SY.__t>16){SY.__t=0;SY.ans('later');}}else SY.__t=0;},500);});
+ const sy=await p.evaluate(async()=>{const w=ms=>new Promise(r=>setTimeout(r,ms)),dlgOpen=()=>!document.getElementById('dlg').classList.contains('hidden'),dlgTxt=()=>document.getElementById('dlgc').textContent;
+  const until=async f=>{for(let i=0;i<100&&!f();i++)await w(30);return f();};const out={};
+  const gameA=serialize(),nA=ents.size;
+  // device A (tablet) connects first: cloud empty → uploads
+  SC={dev:'A',token:'tok123',name:'Tablet'};await syncNow(true);out.a1=SC.base===1&&!!SC.gist;const gid=SC.gist,stA=JSON.parse(JSON.stringify(SC));
+  // device B (phone) with a fresh small game connects: cloud not empty → asks; pick cloud → gets A's factory
+  newGame();const nB=ents.size;SC={dev:'B',token:'tok123',name:'Phone'};SY.liveOk=true;   // (the playing-now warning is checked on device A below)
+  const pB=syncNow(true);await until(dlgOpen);out.b1=dlgTxt().includes('A cloud save already exists')&&dlgTxt().includes('Tablet');
+  ACT.syncAns('cloud');await pB;out.b2=ents.size===nA&&SC.base===1&&nB<nA;
+  // B plays a bit and syncs → version 2 from B
+  S.t+=60;await syncNow(false);out.b3=SC.base===2&&SC.baseDev==='B';
+  // A again (not played since its base): sees B playing → warning; continue → loads B's newer game automatically
+  SC=stA;load(gameA);SY.liveOk=false;const pA=syncNow(false);await until(dlgOpen);out.a2=dlgTxt().includes('Phone is playing');ACT.syncAns('1');await pA;
+  out.a3=SC.base===2&&!dlgOpen()&&SY.undo;
+  // undo restores the pre-sync game and pauses; resume asks again (base forgotten)
+  await ACT.syncUndo();out.u1=SC.paused===true;
+  return out;});
+ const sy2=await p.evaluate(async()=>{const w=ms=>new Promise(r=>setTimeout(r,ms)),dlgOpen=()=>!document.getElementById('dlg').classList.contains('hidden'),dlgTxt=()=>document.getElementById('dlgc').textContent;
+  const until=async f=>{for(let i=0;i<100&&!f();i++)await w(30);return f();};const out={};
+  out.paused=SC.paused===true;ACT.syncResume();await until(dlgOpen);out.resumeAsks=dlgTxt().includes('A cloud save already exists');ACT.syncAns('cloud');await until(()=>SC.base===2&&!SY.busy);
+  out.back=SC.base===2;return out;});
+ // downgrade guard: another device uploads a tiny, lower-tier game as version 3 → A (not played) must ask, not load
+ const g0=Object.values(GHS.gists)[0];g0.files['fw-meta.json']=JSON.stringify({ver:3,dev:'C',name:'Old phone',time:Date.now(),tier:0,n:3,t:10});g0.files['fw-live.json']=JSON.stringify({dev:'C',time:Date.now(),closed:true});
+ const sy3=await p.evaluate(async()=>{const w=ms=>new Promise(r=>setTimeout(r,ms)),dlgOpen=()=>!document.getElementById('dlg').classList.contains('hidden'),dlgTxt=()=>document.getElementById('dlgc').textContent;
+  const until=async f=>{for(let i=0;i<100&&!f();i++)await w(30);return f();};const out={},n0=ents.size;S.ms=Math.max(S.ms,1);
+  const pr=syncNow(false);await until(dlgOpen);out.down=dlgTxt().includes('looks older')&&ents.size===n0;ACT.syncAns('local');await pr;out.kept=SC.base===4&&ents.size===n0;
+  // both played: cloud v5 from C, A also played → asks; Decide later holds
+  return out;});
+ const out3backup=!!Object.values(GHS.gists)[0].files['fw-backup.txt'];
+ g0.files['fw-meta.json']=JSON.stringify({ver:5,dev:'C',name:'Old phone',time:Date.now(),tier:9,n:999,t:99999});
+ const sy4=await p.evaluate(async()=>{const w=ms=>new Promise(r=>setTimeout(r,ms)),dlgOpen=()=>!document.getElementById('dlg').classList.contains('hidden'),dlgTxt=()=>document.getElementById('dlgc').textContent;
+  const until=async f=>{for(let i=0;i<100&&!f();i++)await w(30);return f();};const out={};S.t+=60;
+  const pr=syncNow(false);await until(dlgOpen);out.both=dlgTxt().includes('Both devices have new progress');ACT.syncAns('later');await pr;out.hold=SY.hold===true&&SC.base===4;
+  // import with sync on → asks; "only this device" pauses
+  openPanel('menu');document.getElementById('saveTxt').value=serialize();const pi=ACT.importSave();await until(dlgOpen);out.imp=dlgTxt().includes('Use this save everywhere');ACT.syncAns('here');await pi;out.impPaused=SC.paused===true;
+  // menu shows the cloud section; disconnect clears the key
+  openPanel('menu');out.menu=document.getElementById('pbody').textContent.includes('Cloud save (GitHub)');ACT.syncOff();out.off=!SC.token;ACT.closePanel();SY.hold=false;return out;});
+ const syncAll=Object.assign({},sy,sy2,sy3,sy4,{backup:out3backup,v:cloudMeta().ver});
+ check(`cloud sync (fake GitHub): ${Object.entries(syncAll).map(([k,v])=>k+'='+v).join(' ')}`,Object.entries(syncAll).every(([k,v])=>k==='v'?v===5:v===true));
+ await p.unroute('https://api.github.com/**');await p.evaluate(()=>clearInterval(window.__dlgDog));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

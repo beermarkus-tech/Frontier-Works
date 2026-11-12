@@ -166,3 +166,8 @@ body.v3 #clouds,body.v3 #vig{display:none}
 .signtxt{width:100%;background:rgba(0,0,0,.35);color:var(--txt);border:1px solid var(--line2);border-radius:9px;padding:8px 10px;font:600 15px Inter,sans-serif;user-select:text;-webkit-user-select:text}
 .signcol{width:34px;height:28px;border:2px solid rgba(255,255,255,.15)}
 .signcol.on{border-color:#fff;box-shadow:0 0 0 2px var(--acc)}
+
+/* cloud save dialogs */
+.syncside{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;margin-bottom:8px;line-height:1.45}
+.syncbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.syncbtns .btn{min-height:40px}
+#syncTok,#syncName{margin:6px 0;width:100%}

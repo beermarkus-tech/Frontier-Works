@@ -244,6 +244,7 @@ function menuHtml(){
  <div class="muted" style="margin-top:4px">${saveInfo()}</div>
  <h4>Transfer</h4><button class="btn" data-act="exportSave">Export</button> <button class="btn" data-act="copySave">Copy</button> <button class="btn" data-act="importSave">Import pasted</button>
  <textarea id="saveTxt" placeholder="Export puts your save here; paste a save here to import."></textarea>
+ ${typeof syncMenu==='function'?syncMenu():''}
  <h4>New game</h4><button class="btn" data-act="newGameAsk">Start a new map…</button>`;
 }
 function dialog(html){$('dlgc').innerHTML=html;$('dlg').classList.remove('hidden');}

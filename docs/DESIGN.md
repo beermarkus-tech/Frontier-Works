@@ -177,6 +177,11 @@ Hand mining gives +5 ore from a node.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
+- **Cloud save** (Session 35k, ☰ Menu → Cloud save): one game on all devices through a private GitHub Gist, with a GitHub key that can only use Gists.
+  Automatic (start, coming back to the app, every 3 min, leaving), plus Sync now / Pause / Undo last sync / Disconnect. A device uploads only if the
+  cloud still holds the version it started from. Newer cloud + no local play → loads; anything unclear (first connection, both played, cloud looks
+  older, another device playing) → asks. The losing game is always kept (cloud backup file or local undo copy). Import asks "all devices" or "only here".
+
 ### 8a. 3D view (agreed with Markus in Session 4)
 - **3D look** (Session 35f, ☰ Menu): *Enhanced* (default: same lighting as Classic, plus rounded edges, panel texture, sky reflections on metal parts only, soft contact shadows)
   or *Classic* (the look up to Build 44, faster). Independent of 3D quality High/Low. Stored per device.

@@ -92,9 +92,9 @@ UI.rotA=0;resize();
 (async()=>{
  const loaded=await loadStored();
  if(!loaded){newGame();}
- buildCats();layoutVars();
+ buildCats();layoutVars();if(typeof syncBoot==='function')syncBoot();
  requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
  if(V3.want)setView3D(true);
  setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),500);if(!loaded)openPanel('menu');},250);
 })();
-window.__fw={save,SAVE,get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam,V3,C3,setView3D,v3Pick:(x,y)=>V3.ready&&(v3Cam(),v3Pick(x,y))};
+window.__fw={SY:typeof SY!=='undefined'?SY:null,save,SAVE,get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam,V3,C3,setView3D,v3Pick:(x,y)=>V3.ready&&(v3Cam(),v3Pick(x,y))};
