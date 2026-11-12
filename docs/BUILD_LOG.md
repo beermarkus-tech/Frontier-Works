@@ -1333,3 +1333,30 @@ Not introduced by a recent build: the bottom-sheet layout and tap-on-release hav
 ### Verified
 - `npm test` 69/69. New check: a new machine shows all 6 press recipes; after picking, 1 plus "Change"; tapping shows 6; a new pick folds to 1.
 - Phone screenshot: the folded panel is much shorter; "Change ▾" is readable on the orange active button (dark text on a light chip).
+
+---
+
+## Session 36c — 2026-11-12 (Claude Code, cloud session) · Build 54
+
+### What Markus asked
+1. Keep the planner on screen while clicking around: a button next to the pin that pins only the planner to the left side. Other panels keep
+   opening/closing on the right and follow today's pin.
+2. Tick boxes on planner steps that grey them out ("built already"). Temporary: a new plan clears them.
+
+### What was built
+- New window `#lpanel` (left; on phones ≤700 px a sheet at the top) with its own header: ⇥ back to the right, ✕ close.
+  `plRenderLeft()` draws `planHtml()` into `#lbody`; `plRefresh` updates whichever planner is visible; `plOpen()` decides left/right.
+  All ways of opening the planner (top bar, Menu, "Plan this node", "Plan the power") go through it.
+- ⇤ button (`#plLeftBtn`) in the right panel's header, shown only for the planner. `OPT.plLeft` / `OPT.plOpen` (per device) remember the choice and
+  reopen it after a reload. The minimap hides while the planner is pinned on the left (same spot).
+- Planner CSS reused for the left window (rules for `#pbody/#phead/#ptitle` extended to `#lbody/#lhead/#ltitle`).
+- Tick boxes: "From a node" steps (key = step + recipe) and "For a target" machine cards (key = item). Ticked cards get 45 % opacity and grey.
+  Stored in `PL.done` with the plan signature `PL.doneSig` (node: resource/purity/extractor; target: the set of end products). A different signature
+  clears all ticks. Rate or clock tweaks keep them. Saved with the planner settings, so they survive a reload.
+- Build number **54**.
+
+### Verified
+- `npm test` 70/70. New check: ⇤ shows on the planner; pinning moves it left; a building panel opens on the right beside it and closes without
+  affecting it; reopening the planner uses the left window; tick greys a card, survives a rate change, clears for other end products; ✕ closes
+  and reopens; ⇥ moves it back to the right.
+- Screenshots: tablet landscape (planner left, Base Core right, ticked card grey) and phone (planner top, panel bottom).

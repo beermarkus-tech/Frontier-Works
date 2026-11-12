@@ -13,7 +13,7 @@ const PL_RAW=new Set(PL_RES.map(plResItem));
 const PL_EPS=1e-6;
 function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{targets:[{item:'iron_plate',rate:60}],pick:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
 let PL=plDefault();
-try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow)};}}catch(e){PL=plDefault();}
+try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow),done:o.done&&typeof o.done==='object'?o.done:{},doneSig:o.doneSig||''};}}catch(e){PL=plDefault();}
 function plSave(){try{localStorage.setItem(PLAN_KEY,JSON.stringify(PL));}catch(e){}}
 
 /* ---------- visibility (unlocked only, unless "Show locked") ---------- */
@@ -147,7 +147,8 @@ function plFwdHtml(){
  h+=`<h4>Steps</h4>`;
  o.steps.forEach((row,i)=>{
   const cands=RL.filter(r=>plRecOk(r)&&Object.keys(r.i).some(k=>row.before[k]>PL_EPS));if(!cands.includes(row.r))cands.push(row.r);
-  h+=`<div class="card"><div class="row"><b>Step ${i+1}</b><button class="btn chip" data-act="plDel" data-v="${i}" title="Remove step">✕</button></div>`;
+  const tk='s'+i+':'+row.r.id;
+  h+=`<div class="card ${plDone(tk)?'pldone':''}"><div class="row"><b>${plTickBtn(tk)} Step ${i+1}</b><button class="btn chip" data-act="plDel" data-v="${i}" title="Remove step">✕</button></div>`;
   h+=plSel(`s.${i}.r`,plRecOpts(cands),row.r.id,'wide');
   if(!row.ok){h+=`<div class="plbad">${row.err}</div></div>`;return;}
   const feeds=Object.keys(row.r.i).filter(k=>row.before[k]>PL_EPS);
@@ -176,7 +177,7 @@ function plRevHtml(){
  h+=`<h4>Machines</h4>`;
  for(const row of o.rows){
   const ps=plProducers(row.item);
-  const g=o.goal[row.item];h+=`<div class="card"><div class="row"><b>${nm(row.item)}${g?' <span class="plgoal">🎯 end product</span>':''}</b><span>${fmt(row.rate)}/min</span></div>${g&&row.rate-g>PL_EPS?`<div class="muted">${fmt(g)} as end product + ${fmt(row.rate-g)} used by other steps</div>`:''}`;
+  const g=o.goal[row.item],tk='m:'+row.item;h+=`<div class="card ${plDone(tk)?'pldone':''}"><div class="row"><b>${plTickBtn(tk)} ${nm(row.item)}${g?' <span class="plgoal">🎯 end product</span>':''}</b><span>${fmt(row.rate)}/min</span></div>${g&&row.rate-g>PL_EPS?`<div class="muted">${fmt(g)} as end product + ${fmt(row.rate-g)} used by other steps</div>`:''}`;
   if(ps.length>1)h+=plSel(`r.pick.${row.item}`,plRecOpts(ps),row.r.id,'wide');else h+=`<div class="muted">${row.r.n}</div>`;
   h+=plCount(row.n,row.r.m)+plIO(row.r,row.n)+`</div>`;
  }
@@ -235,16 +236,31 @@ function plSet(key,v){
  else if(p[0]==='r'){if(p[1]==='pick')PL.rev.pick[p[2]]=v;else if(p[1]==='t'){const t=PL.rev.targets[+p[2]];if(t)t[p[3]]=p[3]==='rate'?+v:v;}}
  plFix();
 }
-const plRefresh=()=>{plSave();if(UI.panel&&UI.panel.kind==='plan')renderPanel(true);};
-function plShow(){openPanel('plan');$('pbody').scrollTop=0;}
+/* Left-pinned planner (Session 36c): its own window on the left (OPT.plLeft), so the normal right panel keeps opening/closing as usual.
+   OPT.plOpen remembers whether it was open, so it comes back after a reload. */
+function plLeftOn(){return !!OPT.plLeft&&!!OPT.plOpen;}
+function plRenderLeft(top){const p=$('lpanel');if(!plLeftOn()){p.classList.add('hidden');document.body.classList.remove('plleft');return;}
+ p.classList.remove('hidden');document.body.classList.add('plleft');const b=$('lbody'),y=b.scrollTop;b.innerHTML=planHtml();b.scrollTop=top?0:y;}
+const plRefresh=()=>{plSave();if(UI.panel&&UI.panel.kind==='plan')renderPanel(true);if(plLeftOn())plRenderLeft();};
+function plOpen(top){if(OPT.plLeft){OPT.plOpen=true;saveOpt();plRenderLeft(top);}else{openPanel('plan');if(top)$('pbody').scrollTop=0;}}
+function plShow(){plOpen(true);}
+/* Tick boxes on plan steps: a temporary "built that already" mark. Kept while the plan stays the same; a new plan (other node/extractor in
+   "From a node", other end products in "For a target") clears them. */
+function plSig(){return PL.mode==='fwd'?'f|'+PL.fwd.res+'|'+PL.fwd.p+'|'+PL.fwd.ex:PL.mode==='rev'?'r|'+PL.rev.targets.map(t=>t.item).sort().join(','):'w';}
+function plDone(k){if(PL.doneSig!==plSig()){PL.doneSig=plSig();PL.done={};}return !!(PL.done&&PL.done[k]);}
+function plTickBtn(k){const on=plDone(k);return`<button class="btn chip pltick ${on?'on':''}" data-act="plTick" data-v="${k}" title="${on?'Mark as not built yet':'Mark as built'}">${on?'☑':'☐'}</button>`;}
 document.addEventListener('change',ev=>{const k=ev.target.dataset&&ev.target.dataset.pl;if(!k)return;plSet(k,ev.target.value);plRefresh();});
 Object.assign(ACT,{
- openPlan:()=>openPanel('plan'),
+ openPlan:()=>plOpen(false),
+ plPinLeft:()=>{OPT.plLeft=true;OPT.plOpen=true;saveOpt();if(UI.panel&&UI.panel.kind==='plan')closePanel();plRenderLeft(true);toast('Planner pinned. Other panels open and close as usual');},
+ plUnpinLeft:()=>{OPT.plLeft=false;OPT.plOpen=false;saveOpt();plRenderLeft();openPanel('plan');},
+ plCloseLeft:()=>{OPT.plOpen=false;saveOpt();plRenderLeft();},
+ plTick:k=>{plDone(k);PL.done[k]=!PL.done[k];plRefresh();},
  plTAdd:()=>{const have=new Set(PL.rev.targets.map(t=>t.item)),k=plTargets().find(x=>!have.has(x))||'iron_plate';PL.rev.targets.push({item:k,rate:30});plRefresh();},
  plTDel:v=>{PL.rev.targets.splice(+v,1);plFix();plRefresh();},
  plMode:v=>{PL.mode=v;plRefresh();},
  plLocked:()=>{PL.locked=!PL.locked;plFix();plRefresh();},
- plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();$('pbody').scrollTop=0;},
+ plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();$('pbody').scrollTop=0;$('lbody').scrollTop=0;},
  plAdd:()=>{if(!plAddStep())toast(Object.keys(plFwd(PL.fwd).left).length?'Nothing can use what is left over. Try “Show locked”.':'Nothing left over to use');plRefresh();},
  plDel:v=>{PL.fwd.steps.splice(+v,1);plRefresh();},
  plClear:()=>{PL.fwd.steps=[];plRefresh();},

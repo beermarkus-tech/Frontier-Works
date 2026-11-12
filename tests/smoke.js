@@ -260,6 +260,20 @@ const server=require('./serve.js');
  const syncAll=Object.assign({},sy,sy2,sy3,sy4,{backup:out3backup,v:cloudMeta().ver});
  check(`cloud sync (fake GitHub): ${Object.entries(syncAll).map(([k,v])=>k+'='+v).join(' ')}`,Object.entries(syncAll).every(([k,v])=>k==='v'?v===5:v===true));
  await p.unroute('https://api.github.com/**');await p.evaluate(()=>clearInterval(window.__dlgDog));
+ // planner pinned on the left: own window, right panel works normally beside it; tick boxes grey out steps and clear on a new plan
+ const lp=await p.evaluate(()=>{const out={};ACT.openPlan();ACT.plMode('rev');PL.rev.targets=[{item:'iron_plate',rate:60}];plRefresh();
+  out.btn=getComputedStyle(document.getElementById('plLeftBtn')).display!=='none';ACT.plPinLeft();
+  out.left=!document.getElementById('lpanel').classList.contains('hidden')&&!UI.panel&&document.getElementById('lbody').textContent.includes('Machines');
+  const core=[...ents.values()].find(e=>e.k==='core');openPanel('ent',core.id);out.both=UI.panel.kind==='ent'&&!document.getElementById('lpanel').classList.contains('hidden');
+  ACT.closePanel();out.stays=!document.getElementById('lpanel').classList.contains('hidden');
+  ACT.openPlan();out.noRight=!UI.panel;
+  const tb=document.querySelector('#lbody [data-act="plTick"]');const k=tb.dataset.v;ACT.plTick(k);out.ticked=PL.done[k]===true&&!!document.querySelector('#lbody .card.pldone');
+  PL.rev.targets[0].rate=120;plRefresh();out.keepOnTweak=!!document.querySelector('#lbody .card.pldone');
+  PL.rev.targets=[{item:'iron_rod',rate:30}];plRefresh();out.clearOnNew=!document.querySelector('#lbody .card.pldone');
+  ACT.plCloseLeft();out.closed=document.getElementById('lpanel').classList.contains('hidden');ACT.openPlan();out.reopen=!document.getElementById('lpanel').classList.contains('hidden');
+  ACT.plUnpinLeft();out.unpinned=document.getElementById('lpanel').classList.contains('hidden')&&UI.panel&&UI.panel.kind==='plan';ACT.closePanel();
+  PL.rev.targets=[{item:'iron_plate',rate:60}];PL.mode='fwd';plSave();return out;});
+ check(`planner pinned left: ${Object.entries(lp).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(lp).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

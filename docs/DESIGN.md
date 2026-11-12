@@ -177,6 +177,10 @@ Hand mining gives +5 ore from a node.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
+- **Planner pinned on the left** (Session 36c): the ⇤ button in the planner's header moves it into its own window on the left (on phones: at the top).
+  The normal panel keeps opening/closing on the right and follows its own 📌 pin. ⇥ puts the planner back on the right; ✕ closes it (it reopens on
+  the left next time). Remembered per device. Planner steps / machine cards have a ☐ tick box: ticked cards are greyed out ("built already").
+  Ticks stay while the plan stays the same and clear when a new plan starts (another node/extractor, or other end products).
 - **Cloud save** (Session 35k, ☰ Menu → Cloud save): one game on all devices through a private GitHub Gist, with a GitHub key that can only use Gists.
   Automatic (start, coming back to the app, every 3 min, leaving), plus Sync now / Pause / Undo last sync / Disconnect. A device uploads only if the
   cloud still holds the version it started from. Newer cloud + no local play → loads; anything unclear (first connection, both played, cloud looks
