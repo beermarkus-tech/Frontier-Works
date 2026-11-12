@@ -35,13 +35,14 @@ function buildTools(){
 function refreshTools(){for(const b of $('tools').children){const id=b.dataset&&b.dataset.v;if(!id)continue;b.classList.toggle('poor',!afford(B[id].cost));b.classList.toggle('on',UI.tool===id);}}
 function updInfo(){
  const t=UI.tool;let h;
- if(t==='del')h='<b>Dismantle</b><span class="hint">Tap to remove (full refund) · drag across belts, pipes & poles to clear them</span>';
+ if(t==='clr')h='<b>Eraser</b><span class="hint">Swipe over belts, splitters, mergers, crossings & pipes to empty them · tap a machine to empty it · items go back to stock</span>';
+ else if(t==='del')h='<b>Dismantle</b><span class="hint">Tap to remove (full refund) · drag across belts, pipes & poles to clear them</span>';
  else if(t&&B[t])h=`<b>${B[t].n}</b>${costHtml(B[t].cost)}<span class="hint">${B[t].desc||''}</span>`;
  else if(UI.moveId)h='<b>Move</b><span class="hint">Pan to the new spot and tap where it should go · Esc cancels · tip: long-press a building to drag it</span>';
  else if(UI.linkFrom)h='<b>Drone route</b><span class="hint">Tap the destination Drone Pad · tap anywhere else to cancel</span>';
  else h='<span class="hint">Tap anything to inspect · drag to pan · pinch or scroll to zoom · pick a building below to place it</span>';
  if($('info').__h!==h){$('info').__h=h;$('info').innerHTML=h;}
- $('fInspect').classList.toggle('on',!t);$('fDel').classList.toggle('on',t==='del');$('fRot').firstElementChild.style.transform=`rotate(${UI.rotA}deg)`;
+ $('fInspect').classList.toggle('on',!t);$('fDel').classList.toggle('on',t==='del');$('fClr').classList.toggle('on',t==='clr');$('fRot').firstElementChild.style.transform=`rotate(${UI.rotA}deg)`;
 }
 function setTool(t){UI.tool=t;linePrev=null;refreshTools();updInfo();}
 function setHTML(el,h){if(el&&el.__h!==h){el.__h=h;el.innerHTML=h;}}
@@ -259,6 +260,7 @@ const ACT={
  pinPanel:()=>{OPT.pin=!OPT.pin;saveOpt();$('ppinBtn').classList.toggle('on',OPT.pin);toast(OPT.pin?'📌 Panel pinned: it stays open while you tap the map or build':'Panel unpinned');},
  toolNone:()=>setTool(null),
  toolDel:()=>setTool(UI.tool==='del'?null:'del'),
+ toolClr:()=>setTool(UI.tool==='clr'?null:'clr'),
  rotate:()=>{UI.rot=(UI.rot+1)&3;UI.rotA=(UI.rotA||0)+90;updInfo();},
  home:()=>{camT.x=MW/2;camT.y=MH/2;camT.z=1.2;vel.x=vel.y=0;zAnchor=null;},
  closePanel,

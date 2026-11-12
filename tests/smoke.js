@@ -274,6 +274,28 @@ const server=require('./serve.js');
   ACT.plUnpinLeft();out.unpinned=document.getElementById('lpanel').classList.contains('hidden')&&UI.panel&&UI.panel.kind==='plan';ACT.closePanel();
   PL.rev.targets=[{item:'iron_plate',rate:60}];PL.mode='fwd';plSave();return out;});
  check(`planner pinned left: ${Object.entries(lp).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(lp).every(Boolean));
+ // eraser: swipe empties belts/splitter/crossing (items back to stock, buildings stay), tap empties a machine, pipes drain their network, crates untouched
+ const er=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<6&&ok;j++)for(let i=-1;i<10&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('belt1',X,Y,0),P('belt1',X+1,Y,0),P('splitter',X+2,Y,0),P('crossing',X+3,Y,0),P('belt1',X+4,Y,0),P('smelter',X+6,Y,0),P('storage',X,Y+3,0),P('pipe1',X+4,Y+3,0),P('pipe1',X+5,Y+3,0)];
+  tick(0.05);const b0=fw.entAt(X,Y),b1=fw.entAt(X+1,Y),sp=fw.entAt(X+2,Y),cr=fw.entAt(X+3,Y),b4=fw.entAt(X+4,Y),sm=fw.entAt(X+6,Y),cr8=fw.entAt(X,Y+3),pp=fw.entAt(X+4,Y+3);
+  b0.item='iron_ore';b1.item='coal';sp.item='iron_ore';cr.hs='copper_ore';b4.item='iron_ore';sm.r='r_iron_ingot';sm.inb={iron_ore:5};sm.outb={iron_ingot:3};cr8.store={coal:9};
+  pp.net.fluid='water';pp.net.amt=12;const inv0=Object.assign({},S.inv),n0=ents.size;
+  setTool('clr');eraseN=0;   // the swipe itself is tested with the mouse below
+  for(const x of [b0,b1,sp,cr,b4])eraseN+=eraseEnt(x);const swiped=eraseN;
+  tap({x:X+6,y:Y});tap({x:X,y:Y+3});tap({x:X+4,y:Y+3});setTool(null);G=null;
+  const out={swiped:swiped===5,lines:[b0,b1,sp,b4].every(e=>!e.item)&&!cr.hs,stock:(S.inv.iron_ore||0)-(inv0.iron_ore||0)===3+5&&(S.inv.coal||0)-(inv0.coal||0)===1&&(S.inv.iron_ingot||0)-(inv0.iron_ingot||0)===3,
+   mach:!Object.keys(sm.inb).length&&!Object.keys(sm.outb).length&&sm.r==='r_iron_ingot',crate:cr8.store.coal===9,pipe:pp.net.amt===0&&!pp.net.fluid,kept:ents.size===n0,btn:!!document.getElementById('fClr')};
+  for(let j=-1;j<6;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return Object.assign(out,{ok:r.every(v=>v==='')});});
+ check(`eraser: ${Object.entries(er).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(er).every(Boolean));
+ // eraser by real mouse swipe over a belt line
+ const es=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let i=-1;i<7&&ok;i++)if(canPlace('belt1',x+i,y))ok=false;if(ok){X=x;Y=y;break;}}
+  for(let i=0;i<6;i++){P('belt1',X+i,Y,0);fw.entAt(X+i,Y).item='iron_ore';}cam.x=camT.x=X+3;cam.y=camT.y=Y+0.5;cam.z=camT.z=2;setTool('clr');const s=TS*cam.z;
+  return{X,Y,a:{x:innerWidth/2+(0.5-3)*s,y:innerHeight/2},b:{x:innerWidth/2+(5.5-3)*s,y:innerHeight/2}};});
+ await p.mouse.move(es.a.x,es.a.y);await p.mouse.down();await p.mouse.move(es.b.x,es.b.y,{steps:12});await p.mouse.up();await p.waitForTimeout(100);
+ const es2=await p.evaluate(m=>{const fw=window.__fw;let left=0,kept=0;for(let i=0;i<6;i++){const e=fw.entAt(m.X+i,m.Y);if(e){kept++;if(e.item)left++;}}setTool(null);for(let i=0;i<6;i++){const e=fw.entAt(m.X+i,m.Y);if(e)removeEnt(e,false,true);}return{left,kept};},es);
+ check(`eraser swipe with the mouse empties a 6-belt line and keeps the belts (${es2.left} items left, ${es2.kept}/6 belts)`,es2.left===0&&es2.kept===6);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

@@ -1360,3 +1360,24 @@ Not introduced by a recent build: the bottom-sheet layout and tap-on-release hav
   affecting it; reopening the planner uses the left window; tick greys a card, survives a rate change, clears for other end products; ✕ closes
   and reopens; ⇥ moves it back to the right.
 - Screenshots: tablet landscape (planner left, Base Core right, ticked card grey) and phone (planner top, panel bottom).
+
+---
+
+## Session 36d — 2026-11-12 (Claude Code, cloud session) · Build 55
+
+### What Markus asked
+A "rubber" next to the trash can: swipe over belts, crossings, splitters and mergers to remove only the items on/in them (e.g. a wrong item
+clogging a line) without rebuilding, and maybe tap a machine to empty it.
+
+### What was built (with my suggested defaults, per his standing preference)
+- Dock button **Eraser** (`#fClr`, tool `'clr'`, key C) next to Dismantle; hint text in the dock; blue hover outline in 2D.
+- `eraseEnt(e)` in `js/sim.js` (kinds in `ERASE_K`): belts/routers (item), crossings (both lanes), machines (input/output buffers + the inputs of
+  a running cycle; recipe stays), drills/pumps (buffer), generators (output, e.g. waste). Pipes and Pipe Junctions empty their whole fluid network.
+  Items go back to the item stock (`give`); fluids just drain. Storage (crate, tank, Drone Pad, Core) is left alone, with a toast saying so.
+- Swipe (2D and 3D) erases lines, routers and crossings it passes over; one toast at the end with the count. Tap erases any erasable building.
+- Build number **55**.
+
+### Verified
+- `npm test` 72/72. New checks: belts/splitter/crossing emptied with exact stock refunds, machine buffers emptied with the recipe kept, crate
+  untouched, pipe network drained, no building removed; a real mouse swipe over a 6-belt line leaves 0 items and all 6 belts.
+- Phone screenshot: the eraser fits in the dock row.

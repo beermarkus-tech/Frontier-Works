@@ -32,6 +32,7 @@ function tap(t){
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
  const tool=UI.tool;
  if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();}return;}
+ if(tool==='clr'){const e=entAt(t.x,t.y);if(!e)return;if(!ERASE_K.includes(e.k)){toast(`The eraser leaves ${B[e.d].n} alone (it's storage)`);return;}const n=eraseEnt(e);sparkle(e);toast(n?`Emptied ${B[e.d].n}: ${n} back to stock (fluids drain away)`:`${B[e.d].n} was already empty`);refreshTools();return;}
  if(tool&&B[tool]){const d=B[tool];
   if(isLine(d.k)){const o=entAt(t.x,t.y);buildPath(tool,[{x:t.x,y:t.y,d:o&&o.k===d.k?o.dir:UI.rot}]);return;}   // tapping an existing belt/pipe upgrades it in place, keeping its direction
   const fp=footprint(tool,t.x,t.y);const why=placeEnt(tool,fp.x,fp.y,UI.rot);if(why&&why!=='same')toast(why);refreshTools();updInfo();
@@ -42,6 +43,9 @@ function tap(t){
  const n=t.x>=0&&t.y>=0&&t.x<MW&&t.y<MH?nodeAt[t.y*MW+t.x]:null;if(n){UI.sel=null;openPanel('node',n);return;}
  autoClose();
 }
+/* eraser feedback: a few light sparkles instead of smoke */
+function sparkle(e){for(let k=0;k<6;k++)parts.push({x:e.x+Math.random()*e.w,y:e.y+Math.random()*e.h,vx:(Math.random()-0.5)*0.8,vy:-Math.random()*0.6,r:0.1+Math.random()*0.08,t:0,m:0.6,k:'spark'});}
+let eraseN=0;
 function puff(e){for(let k=0;k<10;k++)parts.push({x:e.x+Math.random()*e.w,y:e.y+Math.random()*e.h,vx:(Math.random()-0.5)*1.2,vy:-Math.random()*0.8,r:0.18+Math.random()*0.15,t:0,m:0.9,k:1});}
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('pointerdown',e=>{
@@ -60,16 +64,18 @@ cv.addEventListener('pointermove',e=>{
  if(G.type==='pinch'&&ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);cam.z=Math.max(zMin(),Math.min(3.5,G.z0*d/Math.max(10,G.d0)));const s=TS*cam.z,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;cam.x=G.m.fx-(mx-innerWidth/2)/s;cam.y=G.m.fy-(my-innerHeight/2)/s;clampCam();syncT();return;}
  const moved=Math.hypot(e.clientX-G.sx,e.clientY-G.sy);
  if(G.type==='move'){dragMove(G,t);return;}
- if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(G.lp);const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else G.type='pan';}
+ if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(G.lp);const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else if(tool==='clr'){G.type='clr';eraseN=0;}else G.type='pan';}
  if(G.type==='pan'){const s=TS*cam.z,now=performance.now(),dt=Math.max(1,now-G.lt)/1000;
   const nx=G.cx-(e.clientX-G.sx)/s,ny=G.cy-(e.clientY-G.sy)/s;G.vx=G.vx*0.5+((nx-cam.x)/dt)*0.5;G.vy=G.vy*0.5+((ny-cam.y)/dt)*0.5;G.lt=now;cam.x=nx;cam.y=ny;clampCam();syncT();}
  else if(G.type==='line'){linePrev={id:UI.tool,path:linePath(G.t0,t,UI.rot)};}
  else if(G.type==='del'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross'||x.k==='pole')){puff(x);removeEnt(x,true);refreshTools();}}
+ else if(G.type==='clr'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross')){const n=eraseEnt(x);if(n){eraseN+=n;sparkle(x);}}}
 });
 function endPtr(e){
  ptrs.delete(e.pointerId);if(!G)return;
  if(G.type==='pinch'){if(ptrs.size===0)G=null;else G={type:'dead'};return;}
  clearTimeout(G.lp);
+ if(G.type==='clr'){if(eraseN)toast(`Erased ${eraseN} item${eraseN>1?'s':''}: back to stock`);eraseN=0;refreshTools();}
  if(G.type==='move')dropMove();
  else if(G.type==='pending'){mapTap={t:performance.now(),x:e.clientX,y:e.clientY};tap(G.t0);if(e.pointerType!=='mouse')calmPanel();}
  else if(G.type==='line'&&linePrev){buildPath(linePrev.id,linePrev.path);linePrev=null;}
@@ -83,7 +89,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();vel.x=vel.y=0;const m=toTile(
 const keys=new Set();
 addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const k=e.key.toLowerCase();keys.add(k);
  if(k==='r'){if(UI.tool)ACT.rotate();else if(UI.panel&&UI.panel.kind==='ent')ACT.rotSel();}
- else if(k==='escape'){setTool(null);UI.moveId=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
+ else if(k==='escape'){setTool(null);UI.moveId=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
  else if(k==='q'&&hover){const x=entAt(hover.x,hover.y);if(x&&B[x.d].cat&&ub(x.d)){UI.cat=B[x.d].cat;UI.rot=x.dir||0;UI.rotA=UI.rot*90;buildCats();setTool(x.d);}}});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 addEventListener('blur',()=>keys.clear());

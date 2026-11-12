@@ -157,6 +157,17 @@ function moveEnt(e,nx,ny){const why=canMove(e,nx,ny);if(why)return why;if(nx===e
  for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(oy+j)*MW+ox+i]=0;e.x=nx;e.y=ny;for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(ny+j)*MW+nx+i]=e.id;
  if(e.k==='dpad')for(const o of ents.values())if(o.k==='dpad'&&o.lx===ox&&o.ly===oy){o.lx=nx;o.ly=ny;}
  initEnt(e,B[e.d]);e.born=animT;topoDirty=true;return '';}
+/* Eraser (Session 36d): empty a building's contents without removing it. Items go back to the item stock, fluids drain away
+   (a pipe or junction empties its whole network). Storage (crates, tanks, pads, Core) is left alone. Returns the number of items/units removed. */
+const ERASE_K=['belt','pipe','router','cross','mach','drill','pump','gen'];
+function eraseEnt(e){if(!e||!ERASE_K.includes(e.k))return 0;let n=0;const back=(k,c)=>{c=Math.floor(c||0);if(k&&c>0){give(k,c);n+=c;}};
+ if(e.k==='pipe'||(e.k==='router'&&B[e.d].fl)){const nt=e.net;if(nt&&nt.amt>0){n+=Math.round(nt.amt);nt.amt=0;nt.fluid=null;for(const t of nt.tiles){t.item=null;t.lv=0;}}else if(e.item){e.item=null;e.lv=0;n++;}return n;}
+ if(e.k==='belt'||e.k==='router'){if(e.item){back(e.item,1);e.item=null;e.prog=0;}return n;}
+ if(e.k==='cross'){back(e.hs,e.hs?1:0);back(e.vs,e.vs?1:0);e.hs=e.vs=null;return n;}
+ if(e.k==='mach'){for(const b of [e.inb,e.outb])for(const k in b)back(k,b[k]);if(e.run&&e.r)for(const k in RC[e.r].i)back(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;return n;}
+ if(e.k==='drill'||e.k==='pump'){if(e.buf>0&&e.node){back(NODE_T[e.node.t][0],e.buf);if(IT[NODE_T[e.node.t][0]]&&IT[NODE_T[e.node.t][0]].f)n+=Math.floor(e.buf);}e.buf=0;e.prog=0;return n;}
+ if(e.k==='gen'){for(const k in e.outb)back(k,e.outb[k]);e.outb={};return n;}
+ return n;}
 function removeEnt(e,ref,silent){
  if(e.k==='core')return;
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=0;

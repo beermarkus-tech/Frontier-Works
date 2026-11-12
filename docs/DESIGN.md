@@ -137,6 +137,9 @@ Hand mining gives +5 ore from a node.
 - Machines, drills and pumps not at 100 % clock show a small badge with their clock (amber above 100 %, blue below) in 2D, at the same size and
   zoom level as the number in the efficiency ring.
 - Tap = inspect/place, drag = pan, or lay belts when a belt or pipe is selected. Drag with Dismantle clears belts, pipes and poles.
+- **Eraser** (Session 36d, dock button next to Dismantle, key C): swipe over belts, splitters, mergers, crossings and pipes to empty them; tap a
+  machine, drill, pump or generator to empty its buffers (recipe stays). Buildings stay. Items go back to the item stock; fluids drain away (a pipe
+  empties its whole network). Crates, tanks, Drone Pads and the Core are storage and are left alone.
 - **Resizing signs (Session 35c):** a placed sign's panel has Size S/M/L/XL/XXL buttons (XXL = 6×6, added Session 35d). Text and colour stay; it grows from the same top-left corner
   (or keeps its centre if that fits better); the plate difference is paid or refunded. If there's no room, a toast says so.
 - **Moving buildings (Session 35):** with no build tool selected, press and hold a building ~0.45 s (short buzz), drag it, let go. A see-through
