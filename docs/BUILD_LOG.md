@@ -2224,3 +2224,15 @@ A programmable splitter like the one in a well-known factory game: overflow per 
   right; front backs up → plates overflow right; left blocked → copper goes to the overflow; panel shows the rules; adding works; rules survive
   save/load; unlock listed.
 - `npm test` 98 PASS / 0 FAIL. Tablet screenshot of the panel.
+
+## Session 39s — 2026-11-13 (Claude Code, cloud session) · Build 101
+
+**Asked:** "belts connect to pipe junctions, I think they shouldn't."
+
+**Found:** in the game they don't. A belt beside a junction is never linked: it gets no input from the junction and isn't part of a pipe network, and the 2D view drew it correctly. The 3D model was the problem. It always had four fixed pipe stubs, so in 3D a belt next to a junction looked plugged in.
+
+**Built:** the 3D junction is now just its base and sphere. Its stubs come from the same instanced pipe arms that regular pipes use, read from the junction's connection mask `e.pc` (`v3Layout` in `js/view3d.js`). So stubs appear only towards pipes and buildings that really connect, as in 2D.
+
+**Verified:** 3D screenshot showing pipe–junction–pipe with belts on the other sides, where the stubs point only to the pipes. New smoke check: a belt beside a junction doesn't connect (the junction keeps 2 links, and the belt has no input and no network). `npm test` all PASS.
+
+**Known issues / next up / open questions:** unchanged from 39r.

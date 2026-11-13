@@ -271,7 +271,7 @@ function v3Models(){
  for(const id of ['splitter','merger','sorter','lsplit']){const c=B[id].col,mk=[];const sides=id==='merger'?[[-0.36,0],[0,-0.36],[0,0.36]]:[[0.36,0],[0,-0.36],[0,0.36]];
   for(const [x,z] of sides)mk.push(['box',shade(c,45),[x,0.44,z],[Math.abs(x)>0?0.12:0.3,0.04,Math.abs(z)>0?0.12:0.3]]);
   def(id,[['box','#2a3037',[0,0.08,0],[0.92,0.16,0.92]],['box',c,[0,0.28,0],[0.84,0.28,0.84]],['box','#23272c',[0,0.425,0],[0.6,0.03,0.6]],...mk,['box','#f0f2f4',[0.28,0.44,0],[0.1,0.05,0.22]]],[],{h:0.45});}
- def('junction',[['box','#2a3037',[0,0.06,0],[0.6,0.12,0.6]],['sph',B.junction.col,[0,0.32,0],[0.5,0.5,0.5]],['cyl',shade(B.junction.col,-20),[0,0.32,0],[0.3,1.0,0.3],{rot:[0,0,Math.PI/2]}],['cyl',shade(B.junction.col,-20),[0,0.32,0],[0.3,1.0,0.3],{rot:[Math.PI/2,0,0]}]],[],{h:0.6});
+ def('junction',[['box','#2a3037',[0,0.06,0],[0.6,0.12,0.6]],['sph',B.junction.col,[0,0.32,0],[0.5,0.5,0.5]]],[],{h:0.6});   /* stubs only towards real connections (drawn as pipe arms in v3Layout; Session 39s: fixed 4 stubs made belts look plugged in) */
  def('crossing',[['box','#2a3037',[0,0.07,0],[0.94,0.14,0.94]],['box','#5c6168',[0,0.17,0],[0.86,0.06,0.86]],['box','#9aa0a6',[0,0.21,0],[0.86,0.03,0.18]],['box','#9aa0a6',[0,0.21,0],[0.18,0.03,0.86]]],[],{h:0.25});
  // build: merge statics, create pools for animated parts
  const G=V3.G,m4=new T3.Matrix4(),q=new T3.Quaternion(),eu=new T3.Euler();
@@ -401,6 +401,7 @@ function v3Layout(){
  for(const id in L.belts)L.belts[id].forEach((list,k)=>{const ms=v3PoolN(V3.belt[id].pools[k],list.length);list.forEach((e,i)=>ms.setMatrixAt(i,lineM(e)));railN[k]+=list.length;railL[k].push(...list);});
  railL.forEach((list,k)=>{const ms=v3PoolN(V3.rail[k],list.length);list.forEach((e,i)=>{ms.setMatrixAt(i,lineM(e));ms.setColorAt(i,T.c.set(B[e.d].col));});});
  {const arms=[];for(const e of L.pipes){const m=e.pc||((1<<e.dir)|(1<<((e.dir+2)&3)));for(let d=0;d<4;d++)if(m&(1<<d))arms.push([e,d]);}
+  for(const e of (L.type.junction||[])){const m=e.pc||0;for(let d=0;d<4;d++)if(m&(1<<d))arms.push([e,d]);}
   const am=v3PoolN(V3.pipeArm,arms.length);arms.forEach(([e,d],i)=>{T.e.set(0,-d*Math.PI/2,0);T.q.setFromEuler(T.e);am.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q,T.s.set(1,1,1)));am.setColorAt(i,T.c.set(B[e.d].col));});
   const jm=v3PoolN(V3.pipeJoint,L.pipes.length);L.pipes.forEach((e,i)=>jm.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q.identity(),T.s.set(1,1,1))));}
  v3PoolN(V3.led,L.led.length);
