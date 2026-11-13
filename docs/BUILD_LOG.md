@@ -2276,3 +2276,13 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Verified:** new smoke check covering a bend next to a crate (no output into it) and the straight case (output into it). `npm test` all PASS. `npm run playthrough`: all recipes ✓, only noise-level changes.
 
 **Next up:** watch for old factories that relied on the machine + side merge on the same tile.
+
+## Session 39w — 2026-11-13 (Claude Code, cloud session) · Build 105
+
+**Asked:** (screenshot) still couldn't bend a belt next to a pipe junction and a crossing. The tile takes items from a merger below and should turn left, with a junction behind it.
+
+**Found:** the 39v rule kept a belt straight whenever *any* router or crossing sat behind it. A pipe junction is a router, but it never feeds belts.
+
+**Built:** a router or crossing behind a belt now keeps it straight only if it really pushes items into that belt (`feedsInto(bk,e,back)`, the same test used for side feeders). So pipe junctions behind a belt, and crossings whose line doesn't run into it, no longer block the bend.
+
+**Verified:** new smoke check reproducing the screenshot (junction behind, merger feeding from the side, so the belt bends). `npm test` all PASS.

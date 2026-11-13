@@ -322,7 +322,7 @@ function rebuildTopo(){
  }
  /* a belt bends towards a single side feeder unless a line/splitter/crossing feeds it from behind. A building behind no longer forces it straight
     (Session 39v: a line could not turn away from a machine); a bent belt takes no building output from behind (see pushOut). */
- for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):(bk.k==='router'||bk.k==='cross')))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
+ for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):((bk.k==='router'||bk.k==='cross')&&feedsInto(bk,e,(e.dir+2)&3))))continue;   /* only if it really feeds this belt (Session 39w: a pipe junction or an unrelated crossing behind blocked the bend) */let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
  const vis=new Set();
  for(const b of lines){if(vis.has(b))continue;const ch=[];let c=b;while(c&&isLine(c.k)&&!vis.has(c)){vis.add(c);ch.push(c);c=entAt(c.x+DX[c.dir],c.y+DY[c.dir]);}for(let i=ch.length-1;i>=0;i--)beltOrder.push(ch[i]);}
  // power

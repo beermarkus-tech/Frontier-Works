@@ -125,9 +125,12 @@ const server=require('./serve.js');
   const r=[P('storage',X,Y,0),P('belt1',X+2,Y,0),P('belt1',X+2,Y+1,3)];tick(0.05);const a=fw.entAt(X+2,Y),cr=fw.entAt(X,Y);cr.ports=[{x:X+2,y:Y,d:0}];
   const bent=a.cin===3,blocked=!pushOut(cr,'iron_plate');a.item=null;removeEnt(fw.entAt(X+2,Y+1),false,true);tick(0.05);cr.ports=[{x:X+2,y:Y,d:0}];
   const straight=a.cin==null,fed=pushOut(cr,'iron_plate');a.item=null;
-  for(let j=-1;j<4;j++)for(let i=-1;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
-  return{ok:r.every(v=>v===''),bent,blocked,straight,fed};});
+  /* screenshot case: pipe junction behind, merger feeding from the side → the belt bends */
+  S.ub.push('junction','merger');P('belt1',X+2,Y+3,2);P('junction',X+3,Y+3,0);P('merger',X+2,Y+4,3);tick(0.05);const jb=fw.entAt(X+2,Y+3),jbend=jb.cin===3;
+  for(let j=-1;j<6;j++)for(let i=-1;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),bent,blocked,straight,fed,jbend};});
  check('a belt beside a building bends towards its side feeder (and takes no output from that building); without the feeder it stays straight and takes it',bend.ok&&bend.bent&&bend.blocked&&bend.straight&&bend.fed);
+ check('a belt with a pipe junction behind it still bends towards a merger feeding it from the side',bend.jbend);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
