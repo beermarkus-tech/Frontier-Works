@@ -202,17 +202,17 @@ function plPowHtml(){
  h+=`<div class="plsub">Generator</div>`+plSel('w.gen',plGens().map(id=>plOpt(id,`${B[id].n} (${B[id].cap} MW)${plLock(ub(id))}`)).join(''),p.gen,'wide');
  if(d.fuels.length>1)h+=plRow('Fuel',plSel('w.fuel',d.fuels.map(f=>plOpt(f,IT[f].n)).join(''),p.fuel));
  h+=plRow('Add the fuel chain’s own power',plSel('w.self',plOpt(1,'Yes')+plOpt(0,'No'),p.self))+`</div>`;
- h+=`<h4>Power plant</h4><div class="card">`+plCount(o.n,p.gen).replace(' at 100%',' at full load').replace(/ at (\d+)%/g,' at $1% load');
+ h+=`<h4>Power plant</h4><div class="card ${plDone('w:plant')?'pldone':''}"><div class="row"><b>${plTickBtn('w:plant')} ${B[p.gen].n}</b></div>`+plCount(o.n,p.gen).replace(' at 100%',' at full load').replace(/ at (\d+)%/g,' at $1% load');
  h+=plRow('Total power to make',`${fmt(o.tot)} MW`)+(p.self?`<div class="muted">Includes ${fmt(o.own)} MW for the fuel chain below.</div>`:'');
  h+=`<div class="plsub">Burns</div>`+plRate(p.fuel,o.fuelMin);
  if(o.water)h+=plRate('water',o.water);
  if(o.waste)h+=`<div class="plbad">Makes ${fmt(o.waste)}/min ${IT.waste.n}. Belt it away (storage or incinerator), or the reactor stops.</div>`;
  h+=`</div>`;
  const c=o.chain;
- if(c.rows.length){h+=`<h4>Fuel chain</h4>`;for(const row of c.rows)h+=`<div class="card"><div class="row"><b>${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div><div class="muted">${row.r.n}</div>${plCount(row.n,row.r.m)}${plIO(row.r,row.n)}</div>`;
+ if(c.rows.length){h+=`<h4>Fuel chain</h4>`;for(const row of c.rows){const tk='wc:'+row.item;h+=`<div class="card ${plDone(tk)?'pldone':''}"><div class="row"><b>${plTickBtn(tk)} ${nm(row.item)}</b><span>${fmt(row.rate)}/min</span></div><div class="muted">${row.r.n}</div>${plCount(row.n,row.r.m)}${plIO(row.r,row.n)}</div>`;}
   const bk=Object.keys(c.by);if(bk.length)h+=`<div class="card"><div class="plsub">Byproducts</div>${bk.map(k=>plRate(k,c.by[k])).join('')}</div>`;
   const nk=Object.keys(c.none);if(nk.length)h+=`<div class="card"><div class="plsub">Bring in from elsewhere</div>${nk.map(k=>plRate(k,c.none[k],'plbad')).join('')}</div>`;}
- h+=`<h4>Drills & pumps</h4><div class="card">`+(o.ex.list.length?o.ex.list.map(x=>plRate(x.k,x.rate)+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(x.n)} × ${B[x.id].n}${plLock(ub(x.id))} ${x.k==='water'?'on water':'on normal nodes'}${S.gen===2&&x.k!=='water'?` · found mostly in ${plWhere(PL_RES.find(r=>plResItem(r)===x.k))}`:''}</div>`).join(''):'<div class="muted">none</div>')+`</div>`;
+ h+=`<h4>Drills & pumps</h4><div class="card ${plDone('w:ex')?'pldone':''}">${o.ex.list.length?`<div class="row"><b>${plTickBtn('w:ex')} Drills & pumps</b></div>`:''}`+(o.ex.list.length?o.ex.list.map(x=>plRate(x.k,x.rate)+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(x.n)} × ${B[x.id].n}${plLock(ub(x.id))} ${x.k==='water'?'on water':'on normal nodes'}${S.gen===2&&x.k!=='water'?` · found mostly in ${plWhere(PL_RES.find(r=>plResItem(r)===x.k))}`:''}</div>`).join(''):'<div class="muted">none</div>')+`</div>`;
  h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(Object.assign({[p.gen]:Math.ceil(o.n-PL_EPS)},c.mach))||'—')+plRow('Power for others',`${fmt(p.mw)} MW`)+`</div>`;
  return h;
 }
@@ -246,7 +246,7 @@ function plOpen(top){if(OPT.plLeft){OPT.plOpen=true;saveOpt();plRenderLeft(top);
 function plShow(){plOpen(true);}
 /* Tick boxes on plan steps: a temporary "built that already" mark. Kept while the plan stays the same; a new plan (other node/extractor in
    "From a node", other end products in "For a target") clears them. */
-function plSig(){return PL.mode==='fwd'?'f|'+PL.fwd.res+'|'+PL.fwd.p+'|'+PL.fwd.ex:PL.mode==='rev'?'r|'+PL.rev.targets.map(t=>t.item).sort().join(','):'w';}
+function plSig(){return PL.mode==='fwd'?'f|'+PL.fwd.res+'|'+PL.fwd.p+'|'+PL.fwd.ex:PL.mode==='rev'?'r|'+PL.rev.targets.map(t=>t.item).sort().join(','):'w|'+PL.pow.gen+'|'+PL.pow.fuel;}
 function plDone(k){if(PL.doneSig!==plSig()){PL.doneSig=plSig();PL.done={};}return !!(PL.done&&PL.done[k]);}
 function plTickBtn(k){const on=plDone(k);return`<button class="btn chip pltick ${on?'on':''}" data-act="plTick" data-v="${k}" title="${on?'Mark as not built yet':'Mark as built'}">${on?'☑':'☐'}</button>`;}
 document.addEventListener('change',ev=>{const k=ev.target.dataset&&ev.target.dataset.pl;if(!k)return;plSet(k,ev.target.value);plRefresh();});

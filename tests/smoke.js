@@ -270,6 +270,8 @@ const server=require('./serve.js');
   const tb=document.querySelector('#lbody [data-act="plTick"]');const k=tb.dataset.v;ACT.plTick(k);out.ticked=PL.done[k]===true&&!!document.querySelector('#lbody .card.pldone');
   PL.rev.targets[0].rate=120;plRefresh();out.keepOnTweak=!!document.querySelector('#lbody .card.pldone');
   PL.rev.targets=[{item:'iron_rod',rate:30}];plRefresh();out.clearOnNew=!document.querySelector('#lbody .card.pldone');
+  ACT.plMode('pow');PL.pow.gen='burner';PL.pow.fuel='coal';PL.pow.mw=60;plRefresh();const pt=[...document.querySelectorAll('#lbody [data-act="plTick"]')].map(b=>b.dataset.v);out.powTicks=pt.includes('w:plant');
+  ACT.plTick('w:plant');out.powDone=!!document.querySelector('#lbody .card.pldone');PL.pow.mw=90;plRefresh();out.powKeep=!!document.querySelector('#lbody .card.pldone');ACT.plMode('rev');
   ACT.plCloseLeft();out.closed=document.getElementById('lpanel').classList.contains('hidden');ACT.openPlan();out.reopen=!document.getElementById('lpanel').classList.contains('hidden');
   ACT.plUnpinLeft();out.unpinned=document.getElementById('lpanel').classList.contains('hidden')&&UI.panel&&UI.panel.kind==='plan';ACT.closePanel();
   PL.rev.targets=[{item:'iron_plate',rate:60}];PL.mode='fwd';plSave();return out;});

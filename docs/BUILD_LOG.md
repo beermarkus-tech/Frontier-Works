@@ -1473,3 +1473,18 @@ to my proposal: tidy wires + a Power Switch per factory.
   removing the middle pole keeps the smelter on the burner's grid; manual wire add + cut.
 - `npm run playthrough`: recipes and pacing unchanged (measurement noise only).
 - Screenshot: switch with name tag, yellow highlighted grid, clean single wires, panel controls.
+
+---
+
+## Session 37 — 2026-11-13 (Claude Code, cloud session) · Build 60
+
+### What Markus asked
+The power planner (Power tab) needs the same tick boxes as the other planner tabs.
+
+### What was built
+- Tick boxes on the Power tab's "Power plant" card (`w:plant`), each fuel-chain card (`wc:<item>`) and the "Drills & pumps" card (`w:ex`).
+- Plan signature for the Power tab is now generator + fuel: picking another generator or fuel clears the ticks; changing the MW keeps them.
+- Build number **60**.
+
+### Verified
+- `npm test` 74/74; the planner check now also ticks the power plant card and confirms it stays greyed after a MW change.
