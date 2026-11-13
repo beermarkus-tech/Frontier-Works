@@ -548,6 +548,10 @@ const server=require('./serve.js');
   for(let j=-3;j<11;j++)for(let i=-2;i<14;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),made,leaked,eff:Math.round((fab._ef||0)*100)};});
  check(`crossing grid feeding a fabricator doesn't clog: ${xj2.made} Heavy Truss in 4 min (old code: 1), output never leaks into the input crossings (${xj2.leaked}), efficiency ${xj2.eff}% (bolts limit it: the splitter sends half sideways)`,xj2.ok&&xj2.made>=3&&xj2.leaked===0&&xj2.eff>=40);
+ // machine input buffers hold at least 50 of each input (twice a cycle if a recipe needs more)
+ const ib=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('smelter',x,y)){X=x;Y=y;break;}}
+  fw.placeEnt('smelter',X,Y,0,true);const e=fw.entAt(X,Y);e.r='r_iron_ingot';let n=0;while(n<150&&accept(e,'iron_ore',0,0))n++;removeEnt(e,false,true);let ok=true;for(const id in IT)if(!(stackOf(id)>0))ok='missing '+id;for(const r of Object.values(RC))for(const k in r.i)if(r.i[k]>stackOf(k))ok=r.id+' needs '+r.i[k]+' '+k;return{n,big:capIn(100,'bolts'),ok};});
+ check(`machine input buffer = one stack: holds ${ib.n} iron ore (stack 100); bolts for a Heavy Truss ${ib.big} (stack 200); every item has a stack size ≥ its largest need per cycle (${ib.ok})`,ib.n===100&&ib.big===200&&ib.ok===true);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

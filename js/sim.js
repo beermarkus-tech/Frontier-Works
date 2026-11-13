@@ -227,7 +227,7 @@ function removeEnt(e,ref,silent){
 }
 
 /* ================= TRANSFER ================= */
-function capIn(n){return Math.max(n*2,4);}
+function capIn(n,item){return Math.max(n,stackOf(item));}   /* input buffer: one stack of the item (STACK in data.js), at least one cycle's worth (Session 39m; was 2 cycles, min 4) */
 function capOut(n){return Math.max(n*2,10);}
 function accept(e,item,dir,carry){
  const fl=IT[item].f;
@@ -252,7 +252,7 @@ function accept(e,item,dir,carry){
    if(e.vs)return false;e.vs=item;e.vd=dir;e.vT=accT!=null?accT:S.t;return true;
   case 'mach':{
    if(!e.r)return false;const r=RC[e.r];const need=r.i[item];if(!need)return false;
-   if((e.inb[item]||0)>=capIn(need))return false;e.inb[item]=(e.inb[item]||0)+1;return true;}
+   if((e.inb[item]||0)>=capIn(need,item))return false;e.inb[item]=(e.inb[item]||0)+1;return true;}
   case 'gen':{const d=B[e.d];
    if(item==='water'&&d.water){if(e.water>=100)return false;e.water++;return true;}
    if(!has(d.fuels,item))return false;const cap=item==='fuel_rod'?5:50;if((e.fuel[item]||0)>=cap)return false;e.fuel[item]=(e.fuel[item]||0)+1;return true;}

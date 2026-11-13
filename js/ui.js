@@ -142,7 +142,7 @@ function entDyn(e){
  if(d.pw){h+=`<div class="row"><span>Power</span><span>${fmt(d.pw*Math.pow(e.clock||1,1.6))} MW ${e.grid?'':'<span style="color:#e04030">(not connected)</span>'}</span></div>`;}
  if(e.k==='mach')h+=effHtml(e);
  if(e.k==='mach'){
-  if(e.r){h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer</h4>${bufList(e.inb)}<h4>Output buffer</h4>${bufList(e.outb)}`;}
+  if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}<h4>Output buffer</h4>${bufList(e.outb)}`;}
   h+=`<div class="muted" style="margin-top:8px">Belts/pipes pointing <b>into</b> the machine feed it; belts/pipes pointing <b>away</b> from it receive output. A Splitter or Merger touching the machine also works without a belt: a splitter side facing it feeds it, and a merger takes its output (the merger's front must not face the machine).</div>`;}
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;

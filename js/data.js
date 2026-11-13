@@ -24,6 +24,16 @@ const RC={}, RL=[];
 function pr(s){const o={};s.split(',').forEach(p=>{const [k,v]=p.split(':');o[k.trim()]=+v;});return o;}
 function R(id,n,m,t,i,o,alt){const r={id,n,m,t,i:pr(i),o:pr(o),alt:!!alt};RC[id]=r;RL.push(r);}
 // Smelter
+/* Stack sizes (Session 39m): a machine holds one stack of each input (or one cycle's worth if a recipe needs more). Cheap, common items stack
+   high, complex parts low; fluids in m³. */
+const STACK={};{const st=(n,ids)=>ids.split(' ').forEach(i=>STACK[i]=n);
+ st(200,'bolts wire');
+ st(100,'iron_ore copper_ore limestone coal sulfur quartz bauxite uranium iron_ingot copper_ingot steel_ingot alu_ingot iron_plate iron_rod cable concrete copper_sheet silica petro_coke polymer_resin alu_scrap plastic rubber');
+ st(100,'water crude heavy_residue fuel alumina acid');
+ st(50,'steel_beam steel_pipe quartz_crystal alu_casing braced_plate truss_frame rotor cased_girder stator circuit_board alloy_panel heat_sink battery uranium_cell waste');
+ st(20,'motor resonator heavy_truss compute_module data_bus coolant_block control_chip turbine_core fuel_rod');
+ st(10,'quantum_core');}
+const stackOf=id=>STACK[id]||(IT[id]&&IT[id].f?100:50);
 R('r_iron_ingot','Iron Ingot','smelter',2,'iron_ore:1','iron_ingot:1');
 R('r_copper_ingot','Copper Ingot','smelter',2,'copper_ore:1','copper_ingot:1');
 R('r_pure_alu','Pure Aluminum (alt)','smelter',2,'alu_scrap:2','alu_ingot:1',1);

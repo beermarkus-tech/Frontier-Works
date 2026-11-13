@@ -147,6 +147,9 @@ Hand mining gives +5 ore from a node.
   (tap again to take it off, refunded). Badge above the tile in the efficiency-number font: items/min on belts (counted on that tile, 30 s average),
   m³/min on pipes (the network's flow). White = flowing, amber = at the line's limit, grey = idle. The belt's panel shows flow, maximum and % used.
   Stays on a belt when it's upgraded, refunded when the belt is dismantled. Saved as `fm` on the tile.
+- **Stack sizes and input buffers** (Session 39m, agreed with Markus): every item has a stack size (`STACK` in data.js: 200 bolts/wire, 100 raw
+  materials, ingots, basic parts and fluids (m³), 50 intermediate parts, 20 advanced parts, 10 Quantum Core). A machine holds one stack of each
+  input (at least one cycle's worth). The panel shows "x / stack" per input. Output buffers unchanged (twice a cycle, min 10).
 - **On/off per building** (Session 37e): machines, drills, pumps and generators have ⏻ Turn off / ▶ Turn on in their panel (`e.off`, saved).
   Off: no new cycles (a started one pauses), no extraction or burning, no power drawn or supplied; finished items still leave. Shown dimmed with a
   power symbol in 2D; status "Switched off"; efficiency pauses.

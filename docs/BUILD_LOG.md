@@ -2126,3 +2126,26 @@ Track 2's bass drum could be more distinct, hats and clap still not audible; and
 - Measured with an A-weighted spectrum (how loud each band sounds to the ear), previous → now: kick 9 % → 54 %, bass/pads 83 % → 18 %,
   clap 6 % → 10 %, hats 1 % → 13 %. New one-minute WAV sent.
 - `npm test` 96 PASS / 0 FAIL.
+
+---
+
+## Session 39m — 2026-11-13 (Claude Code, cloud session) · Build 95
+
+### What Markus asked
+Bigger machine input buffers (4 is too small); then: give items stack sizes and let each machine hold one stack of each input; list the
+stack sizes in chat.
+
+### What changed
+- New `STACK` table + `stackOf(id)` in `js/data.js` (the game had no stack sizes before): 200 bolts, wire; 100 ores, ingots, Iron Plate/Rod,
+  Cable, Concrete, Copper Sheet, Silica, Petroleum Coke, Polymer Resin, Aluminum Scrap, Plastic, Rubber and all fluids (m³); 50 Steel Beam/Pipe,
+  Quartz Crystal, Aluminum Casing, Braced Plate, Truss Frame, Rotor, Cased Girder, Stator, Circuit Board, Alloy Panel, Heat Sink, Battery,
+  Uranium Cell, Nuclear Waste; 20 Motor, Resonator, Heavy Truss, Compute Module, Data Bus, Coolant Block, Control Chip, Turbine Core, Fuel Rod;
+  10 Quantum Core.
+- `capIn(need,item)` = max(one cycle, one stack) (was max(2 cycles, 4)). Output buffers unchanged.
+- Machine panel: input buffer lists every input as "x / stack".
+- Build number **95**.
+
+### Verified
+- `npm test` 97 PASS / 0 FAIL. New check: a smelter takes 100 iron ore; Heavy Truss bolts buffer 200; every item has a stack size and no recipe
+  needs more than one stack per cycle.
+- `npm run playthrough`: unchanged.
