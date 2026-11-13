@@ -366,6 +366,12 @@ const server=require('./serve.js');
   PL.locked=lk;return{water0:a0.raw.water||0,water1:a1.raw.water||0,usedW:a1.used.water||0,leftW:a1.by.water||0,acid0:acidM(u0),acid1:acidM(u1),usedA:u1.used.acid||0};});
  check(`planner uses byproducts in the same factory: water ${Math.round(bp.water0)}→${Math.round(bp.water1)}/min (${Math.round(bp.usedW)} reused, ${Math.round(bp.leftW)} left over), acid machines ${bp.acid0.toFixed(2)}→${bp.acid1.toFixed(2)} (${bp.usedA.toFixed(1)}/min reused)`,
   bp.usedW>0&&Math.abs(bp.water0-bp.water1-bp.usedW)<0.01&&bp.leftW<0.01&&bp.usedA>0&&bp.acid1<bp.acid0);
+ // byproduct-only items (Heavy Oil Residue): Markus's plan 100 plastic + 100 rubber + 450 coke = 300 crude, 5/5/3.75 refineries, no leftovers
+ const oil=await p.evaluate(()=>{const lk=PL.locked;PL.locked=true;const o=plRevMulti([{item:'plastic',rate:100},{item:'rubber',rate:100},{item:'petro_coke',rate:450}],{});
+  const n=it=>{const r=o.rows.find(x=>x.item===it);return r?Math.round(r.n*100)/100:0;},c=plRevMulti([{item:'petro_coke',rate:120}],{});PL.locked=lk;
+  return{crude:Math.round(o.raw.crude||0),plastic:n('plastic'),rubber:n('rubber'),coke:n('petro_coke'),left:Object.keys(o.by).length,resRow:o.rows.some(x=>x.item==='heavy_residue'),cokeOnly:Math.round(c.raw.crude||0)};});
+ check(`planner: 100 plastic + 100 rubber + 450 coke = ${oil.crude} crude, refineries ${oil.plastic}/${oil.rubber}/${oil.coke}, ${oil.left} leftovers; coke alone ${oil.cokeOnly} crude`,
+  oil.crude===300&&oil.plastic===5&&oil.rubber===5&&oil.coke===3.75&&oil.left===0&&!oil.resRow&&oil.cokeOnly===60);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

@@ -1530,3 +1530,26 @@ The planner should use byproducts of production steps in the same factory as res
 ### Verified
 - `npm test` all PASS. New check: 60 Aluminum Scrap/min needs 40 instead of 60 water/min (20 reused, 0 left over); 10 Uranium Cells/min need
   fewer acid machines (0.32 → 0.24) with 4 acid/min reused. All older planner checks unchanged.
+
+---
+
+## Session 37d — 2026-11-13 (Claude Code, cloud session) · Build 63
+
+### What Markus reported
+Plan "100 Plastic + 100 Rubber + 450 Petroleum Coke" should need 300 crude and leave no residue, but the planner dropped the plastic
+refineries and showed a wrong loop with Heavy Oil Residue left over.
+
+### Cause
+Heavy Oil Residue has no recipe of its own (only a byproduct of Plastic and Rubber). For the coke's residue the planner picked the Plastic
+recipe "to make residue"; with byproduct reuse (Build 62) that step's plastic then replaced the real plastic machines.
+
+### Fix
+- `plRevOnce` only uses a recipe for an item if the item is its main output (or the player picked it explicitly). Byproduct-only items are
+  covered from the plan's byproducts; `plRevMulti` adds a fallback step for them only if byproducts don't cover the need (up to 3 rounds),
+  choosing the recipe that makes the most of that item per second (Rubber for residue).
+- Build number **63**.
+
+### Verified
+- Markus's plan: 5 plastic + 5 rubber + 3.75 coke refineries, 300 crude/min, 150 residue reused, nothing left over (new check).
+- Coke alone (120/min): 2 rubber refineries for residue, 60 crude (was 120 via plastic).
+- `npm test` all PASS, older planner checks unchanged.

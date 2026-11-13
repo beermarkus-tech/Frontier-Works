@@ -104,14 +104,21 @@ function plRev(item,rate,pick){return plRevMulti([{item,rate}],pick);}
 /* Byproducts are used inside the same factory (Session 37c): an item that some step makes as a byproduct covers demand for it (as an input,
    raw resource or end product) before more machines or mining are planned. Using it changes machine counts and so the byproduct amount,
    so the plan is recalculated until it settles. out.by = byproducts left over, out.used = byproducts used inside the factory. */
-function plRevMulti(targets,pick){let credit={},out=null;
- for(let k=0;k<40;k++){out=plRevOnce(targets,pick,credit);const nb=out.byAll;let diff=0;for(const x of new Set([...Object.keys(nb),...Object.keys(credit)]))diff=Math.max(diff,Math.abs((nb[x]||0)-(credit[x]||0)));
-  if(diff<1e-7)break;credit=nb;}
+/* Items that no recipe makes as its main output (e.g. Heavy Oil Residue) are "byproduct-only": they're taken from the plan's byproducts first,
+   and only if those don't cover the need is a recipe that makes them as a byproduct added for the rest (Session 37d; before, the planner
+   picked the Plastic recipe "to make residue" and its plastic then wrongly replaced the real plastic machines). */
+function plRevMulti(targets,pick){let credit={},out=null,fb=new Set();
+ for(let round=0;round<3;round++){
+  for(let k=0;k<40;k++){out=plRevOnce(targets,pick,credit,fb);const nb=out.byAll;let diff=0;for(const x of new Set([...Object.keys(nb),...Object.keys(credit)]))diff=Math.max(diff,Math.abs((nb[x]||0)-(credit[x]||0)));
+   if(diff<1e-7)break;credit=nb;}
+  const more=Object.keys(out.none).filter(k=>!fb.has(k)&&plProducers(k).length);if(!more.length)break;for(const k of more)fb.add(k);}
  return out;}
-function plRevOnce(targets,pick,credit){
+function plRevOnce(targets,pick,credit,fb){
  const order=[],state={},rec={},avail=Object.assign({},credit||{}),used={};
+ const pickFor=it=>{const r=plPick(it,pick);if(!r)return null;if(Object.keys(r.o)[0]===it||pick[it]===r.id)return r;
+  if(fb&&fb.has(it))return plProducers(it).sort((a,b)=>b.o[it]/b.t-a.o[it]/a.t)[0];return null;};   // fallback: the recipe that makes the most of it
  const take=(k,v)=>{const u=Math.min(v,avail[k]||0);if(u>PL_EPS){avail[k]-=u;used[k]=(used[k]||0)+u;return v-u;}return v;};
- const visit=it=>{if(state[it]||PL_RAW.has(it))return;state[it]=1;const r=plPick(it,pick);if(r){rec[it]=r;for(const k in r.i)visit(k);}order.push(it);};
+ const visit=it=>{if(state[it]||PL_RAW.has(it))return;state[it]=1;const r=pickFor(it);if(r){rec[it]=r;for(const k in r.i)visit(k);}order.push(it);};
  for(const t of targets)visit(t.item);
  const dem={},done=new Set(),out={rows:[],raw:{},by:{},none:{},power:0,mach:{},goal:{}};
  for(const t of targets){dem[t.item]=(dem[t.item]||0)+t.rate;out.goal[t.item]=(out.goal[t.item]||0)+t.rate;}
