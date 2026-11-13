@@ -1553,3 +1553,21 @@ recipe "to make residue"; with byproduct reuse (Build 62) that step's plastic th
 - Markus's plan: 5 plastic + 5 rubber + 3.75 coke refineries, 300 crude/min, 150 residue reused, nothing left over (new check).
 - Coke alone (120/min): 2 rubber refineries for residue, 60 crude (was 120 via plastic).
 - `npm test` all PASS, older planner checks unchanged.
+
+---
+
+## Session 37e — 2026-11-13 (Claude Code, cloud session) · Build 64
+
+### What Markus asked
+An on/off switch inside each machine's panel.
+
+### What was built
+- ⏻ Turn off / ▶ Turn on in the panel of machines, drills, pumps and generators (`machOff`; state `e.off`, already in `SKEYS`).
+- Off: a machine starts no new cycle (a running one pauses), draws no power, still pushes out finished items; drills/pumps stop extracting;
+  generators give no capacity and burn nothing (`genCan`). Efficiency tracking pauses. Status "Switched off" (grey).
+- 2D: switched-off buildings are dimmed with a power symbol.
+- Build number **64**.
+
+### Verified
+- `npm test` 78/78. New check: a fed, powered smelter runs; Turn off stops it (no progress, no demand, status), stays off through save/load,
+  Turn on resumes; a generator switched off gives 0 MW.

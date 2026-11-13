@@ -358,7 +358,7 @@ function updNets(dt){
 
 /* ================= SIMULATION ================= */
 function drawMW(e){const d=B[e.d];return e.want?d.pw*Math.pow(e.clock||1,1.6):0;}
-function genCan(g){const d=B[g.d];if(d.water&&g.water<1)return false;if(g.d==='reactor'&&(g.outb.waste||0)>=50)return false;if(g.energy>0)return true;for(const f of d.fuels)if((g.fuel[f]||0)>0)return true;return false;}
+function genCan(g){const d=B[g.d];if(g.off)return false;if(d.water&&g.water<1)return false;if(g.d==='reactor'&&(g.outb.waste||0)>=50)return false;if(g.energy>0)return true;for(const f of d.fuels)if((g.fuel[f]||0)>0)return true;return false;}
 function powerStep(dt){
  for(const g of grids){
   let dem=0;for(const c of g.cons)dem+=drawMW(c);
@@ -429,6 +429,7 @@ function updBuilding(e,dt){
  switch(e.k){
   case 'mach':{
    const r=e.r&&RC[e.r];e.want=false;if(!r){effTrack(e,dt,'recipe');return;}
+   if(e.off){for(const k in e.outb)if(e.outb[k]>0){if(pushOut(e,k))e.outb[k]--;}break;}   // switched off (Session 37e): no new cycles, no power; finished items still leave
    if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];}e.run=true;e.prog=0;}
    if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t;if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];}e.run=false;e.prog=0;
      if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];}e.run=true;}}}}
@@ -438,7 +439,8 @@ function updBuilding(e,dt){
   case 'drill':case 'pump':{
    const d=B[e.d];let item=null,rate=0;
    if(d.water){item='water';rate=d.rate;}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
-   e.item=item;e.want=!!item&&e.buf<10;
+   e.item=item;e.want=!!item&&e.buf<10&&!e.off;
+   if(e.off){if(item&&e.buf>0&&pushOut(e,item))e.buf--;break;}
    if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;}}
    if(item)for(let a=0;a<2&&e.buf>0;a++){if(pushOut(e,item))e.buf--;else break;}
    effTrack(e,dt,!item?'none':e.want&&e.pw>0?'work':e.buf>=10?'out':'power');

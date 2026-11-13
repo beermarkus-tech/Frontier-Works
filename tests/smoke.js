@@ -372,6 +372,18 @@ const server=require('./serve.js');
   return{crude:Math.round(o.raw.crude||0),plastic:n('plastic'),rubber:n('rubber'),coke:n('petro_coke'),left:Object.keys(o.by).length,resRow:o.rows.some(x=>x.item==='heavy_residue'),cokeOnly:Math.round(c.raw.crude||0)};});
  check(`planner: 100 plastic + 100 rubber + 450 coke = ${oil.crude} crude, refineries ${oil.plastic}/${oil.rubber}/${oil.coke}, ${oil.left} leftovers; coke alone ${oil.cokeOnly} crude`,
   oil.crude===300&&oil.plastic===5&&oil.rubber===5&&oil.coke===3.75&&oil.left===0&&!oil.resRow&&oil.cokeOnly===60);
+ // on/off in the machine panel: a fed, powered smelter stops (no output, no power demand), stays off through save/load, runs again when on; generator off = no capacity
+ const mo=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<6&&ok;j++)for(let i=-1;i<10&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  P('smelter',X,Y,0);P('belt1',X+2,Y,0);P('incin',X+3,Y,0);P('burner',X,Y+2,0);let sm=fw.entAt(X,Y),g=fw.entAt(X,Y+2);sm.r='r_iron_ingot';
+  const act=n=>{let moved=0;for(let i=0;i<n;i++){const p0=sm.prog,r0=sm.run;g.fuel={coal:50};sm.inb={iron_ore:20};tick(0.05);if(sm.prog!==p0||sm.run!==r0)moved++;}return moved;};
+  act(40);out.runs=act(60)>20;openPanel('ent',sm.id);out.btn=!!document.querySelector('#pbody [data-act="machOff"]');ACT.machOff();act(5);
+  out.stopped=act(60)===0&&!sm.want&&bStatus(sm)[1]==='Switched off'&&sm.grid&&sm.grid.dem===0;ACT.closePanel();
+  const sv=serialize();load(sv);sm=fw.entAt(X,Y);g=fw.entAt(X,Y+2);out.saved=sm.off===true;
+  openPanel('ent',sm.id);ACT.machOff();ACT.closePanel();act(10);out.again=act(60)>20;
+  g.off=true;act(10);out.genOff=g.grid.cap===0&&bStatus(g)[1]==='Switched off';
+  for(let j=-1;j<6;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
+ check(`machine on/off switch: ${Object.entries(mo).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mo).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

@@ -178,6 +178,7 @@ function paintB(g,id,P,u){
 }
 function bStatus(e){
  if(e.k==='dpad'){const tg=padTarget(e);if(!tg)return null;if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.dr.st)return['#4fe08a',e.dr.st===1?'Drone flying out':'Drone returning'];if(!padCount(e))return['#ffd34a','Waiting for items'];if(padCount(tg)>=B[tg.d].cap)return['#ffa53a','Destination full'];return['#4fe08a','Loading'];}
+ if(e.off&&(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen'))return['#8a96a0','Switched off'];
  if(e.k==='mach'){if(!e.r)return['#8a96a0','No recipe'];if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.run)return['#4fe08a','Working'];
   const r=RC[e.r];for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return['#ffa53a','Output full'];return['#ffd34a','Waiting for input'];}
  if(e.k==='drill'||e.k==='pump'){if(!e.item)return['#8a96a0','Nothing to extract'];if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.buf>=10)return['#ffa53a','Output blocked'];return['#4fe08a','Extracting'];}
@@ -215,6 +216,8 @@ function drawLive(e,X,Y,s){
  // badge + status
  let icon=null;if(e.k==='mach'&&e.r)icon=Object.keys(RC[e.r].o)[0];else if((e.k==='drill'||e.k==='pump')&&e.item)icon=e.item;else if(e.k==='storage'){for(const k in e.store){icon=k;break;}}
  if(icon&&s>9){const r=Math.min(s*0.32,P*0.16),bx=X+s*0.42,by=Y+P-s*0.42;ctx.fillStyle='rgba(10,14,18,0.85)';ctx.beginPath();ctx.arc(bx,by,r*1.25,0,7);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();drawItem(icon,bx,by,r*2.1);}
+ if(e.off&&(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')){ctx.fillStyle='rgba(8,10,14,0.45)';rr(X+s*0.06,Y+s*0.06,P-s*0.12,P-s*0.12,s*0.15);ctx.fill();
+  if(s>9){const cx=X+P/2,cy=Y+P/2,r=Math.min(s*0.32,P*0.16);ctx.strokeStyle='#d8dee4';ctx.lineWidth=Math.max(1.5,r*0.28);ctx.lineCap='round';ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI*0.3,Math.PI*1.3);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy-r*1.15);ctx.lineTo(cx,cy-r*0.25);ctx.stroke();ctx.lineCap='butt';}}
  effRing(e,X,Y,s);clockBadge(e,X,Y,s);const st=bStatus(e);if(st&&s>7){const lx=X+P-s*0.36,ly=Y+s*0.36,lr=Math.max(1.6,s*0.09);glow(lx,ly,lr*3,st[0],0.45);ctx.fillStyle=st[0];ctx.beginPath();ctx.arc(lx,ly,lr,0,7);ctx.fill();}
  let pg=null;if(e.k==='mach'&&e.run)pg=e.prog;else if(e.k==='storage'){let t=0;for(const k in e.store)t+=e.store[k];pg=t/B[e.d].cap;}
  if(pg!==null&&s>9){const bw=P-s*0.9,bx=X+s*0.62,by=Y+P-s*0.2;ctx.fillStyle='rgba(0,0,0,0.6)';rr(bx,by,bw,s*0.08,s*0.04);ctx.fill();ctx.fillStyle='#ffb547';rr(bx,by,bw*Math.min(1,pg),s*0.08,s*0.04);ctx.fill();}

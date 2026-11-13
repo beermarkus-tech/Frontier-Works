@@ -97,6 +97,7 @@ function entStatic(e){
   <button class="btn ${e.off?'pri':'warn'}" data-act="swToggle" data-v="${e.id}" style="margin-top:8px">${e.off?'▶ Turn on':'⏻ Turn off'}</button>`;
  if(isPN(e)){const ps=pnPeers(e),C=cen(e);h+=`<h4>Wires (${ps.length})</h4>`+ps.map(p=>{const P2=cen(p);return`<div class="row"><span>${B[p.d].n}${p.tx?' “'+p.tx+'”':''}</span><span>${Math.round(Math.hypot(P2.x-C.x,P2.y-C.y))} tiles <button class="btn chip" data-act="pnCut" data-v="${p.id}" title="Remove this wire">✕</button></span></div>`;}).join('')+
   `<button class="btn" data-act="pnWire">＋ Connect to…</button>`;}
+ if(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')h+=`<h4>&nbsp;</h4><button class="btn ${e.off?'pri':'warn'}" data-act="machOff">${e.off?'▶ Turn on':'⏻ Turn off'}</button>`;
  if(e.k!=='core')h+=`<h4>&nbsp;</h4><button class="btn" data-act="moveSel" title="Or long-press the building and drag it">✥ Move</button> <button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'&&e.k!=='pipe'&&!(e.k==='router'&&B[e.d].sub==='junc')?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button>`;
  return h;
 }
@@ -274,6 +275,7 @@ const ACT={
  netFlush:()=>{const e=ents.get(UI.panel.arg);if(e&&e.net){e.net.amt=0;e.net.fluid=null;e.net.conflict=null;toast('Network emptied');}},
  signSize:v=>{const e=ents.get(UI.panel.arg);if(!e||e.k!=='sign')return;const why=resizeSign(e,v);if(why)toast(why);renderPanel(true);},
  signColor:v=>{const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tc=+v;topoVer++;renderPanel(true);}},
+ machOff:()=>{const e=ents.get(UI.panel.arg);if(!e)return;e.off=!e.off;toast(`${B[e.d].n} ${e.off?'switched off':'switched on'}`);renderPanel(true);},
  swToggle:v=>{const e=ents.get(+v);if(!e||e.d!=='pswitch')return;e.off=!e.off;topoDirty=true;toast(`${e.tx||'Power Switch'} ${e.off?'off':'on'}`);renderPanel(true);},
  pnCut:v=>{const a=ents.get(UI.panel.arg),b=ents.get(+v);if(a&&b){pnUnlink(a,b);toast('Wire removed');}renderPanel(true);},
  pnWire:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.wireFrom=e.id;setTool(null);toast('Tap the pole, tower, switch or generator to connect to');updInfo();},
