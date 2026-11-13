@@ -1837,3 +1837,13 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
 - Done: `statsHtml` = factory cards, then Factory size, then Power. The Items/Factories tabs, the per-item table and the overall table (with its
   totals calculation) are removed. The global item rates (`stat`/`rates()`) stay; the planner, machines and tests still use them.
 - `npm test` 88 PASS / 0 FAIL (dashboard check confirms the old sections are gone and Factory size shows). Build number **77**.
+
+---
+
+## Session 38g — 2026-11-13 (Claude Code, cloud session) · Build 78
+
+- Markus: factory cards should collapse to their header; headers overflowed the card when name + info were too wide.
+- Built: ▾/▸ button at the start of each card header (`zoneFold`, remembered per device in `OPT.zCol`); a collapsed card shows only its header
+  (name, efficiency badge, buildings, MW). The header is now a wrapping flex row (`.zhead`): name and info move to a second line when needed.
+- Verified: `npm test` 88 PASS / 0 FAIL (dashboard check folds and unfolds a card). Phone screenshot with a long factory name and a collapsed card.
+  Build number **78**.

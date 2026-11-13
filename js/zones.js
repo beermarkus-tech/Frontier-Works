@@ -108,11 +108,16 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
  let h=`<div class="muted">Last ${ZS.hist.length} s. Counted where items cross a zone’s fence (belts, pipes, drones). Tap a name to show it on the map.</div>`;
  const ids=[...zs.map(z=>z.id),0];
  for(const z of ids){const d=get(z),M=zMachines(z);if(z===0&&!M.n&&!Object.keys(d.p).length&&!Object.keys(d.out).length)continue;
-  const zz=zoneById(z);h+=`<div class="card zcard" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="row"><b>${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:zName(z)}</b><span class="muted">${M.eff!=null?`<span class="zeff" style="border-color:${effCol(Math.round(M.eff*100))};color:${effCol(Math.round(M.eff*100))}" title="Average efficiency of its machines (bigger machines count more)">${Math.round(M.eff*100)}%</span> `:''}${M.n} buildings · ${fmt(M.mw)} MW</span></div>
-   <div class="plsub">Designed to make <span class="muted" style="text-transform:none;letter-spacing:0">· at full speed, after its own use (now)</span></div>${zDesign(M.design,d)}
+  const zz=zoneById(z),col=(OPT.zCol||[]).includes(z),eff=M.eff!=null?Math.round(M.eff*100):null;
+  h+=`<div class="card zcard${col?' zcol':''}" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="zhead">
+   <button class="btn chip ztog" data-act="zoneFold" data-v="${z}" title="${col?'Show details':'Hide details'}">${col?'▸':'▾'}</button>
+   ${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:`<b>${zName(z)}</b>`}
+   <span class="zinfo">${eff!=null?`<span class="zeff" style="border-color:${effCol(eff)};color:${effCol(eff)}" title="Average efficiency of its machines (bigger machines count more)">${eff}%</span>`:''}<span class="muted">${M.n} buildings · ${fmt(M.mw)} MW</span></span></div>`;
+  if(!col)h+=`<div class="plsub">Designed to make <span class="muted" style="text-transform:none;letter-spacing:0">· at full speed, after its own use (now)</span></div>${zDesign(M.design,d)}
    ${(f=>f?`<div class="plsub">Sends to other factories</div>${f}`:'')(flows(d.out,'→'))}${(f=>f?`<div class="plsub">Gets from other factories</div>${f}`:'')(flows(d.inn,'←'))}
    ${Object.keys(d.k).length?`<div class="plsub">Into your stock (Base Core)</div>${zList(d.k)}`:''}${Object.keys(d.s).length?`<div class="plsub">Into crates</div>${zList(d.s)}`:''}${Object.keys(d.b).length?`<div class="plsub">Burned</div>${zList(d.b,'plbad')}`:''}
-${Object.keys(M.short).length?`<div class="plsub">Short of (machines waiting)</div>${zList(M.short,'plbad')}`:''}</div>`;}
+   ${Object.keys(M.short).length?`<div class="plsub">Short of (machines waiting)</div>${zList(M.short,'plbad')}`:''}`;
+  h+=`</div>`;}
  return h;}
-Object.assign(ACT,{zoneShow:v=>{const z=zoneById(+v);if(!z||!z.lab)return;UI.hlZone={id:z.id,t:performance.now()};let sx=0,sy=0,n=0;for(const r of zoneRuns)if(r[3]===z.id){sx+=(r[0]+r[2]/2)*r[2];sy+=(r[1]+0.5)*r[2];n+=r[2];}
+Object.assign(ACT,{zoneFold:v=>{const z=+v,a=OPT.zCol||(OPT.zCol=[]),i=a.indexOf(z);if(i>=0)a.splice(i,1);else a.push(z);saveOpt();renderPanel(true);},zoneShow:v=>{const z=zoneById(+v);if(!z||!z.lab)return;UI.hlZone={id:z.id,t:performance.now()};let sx=0,sy=0,n=0;for(const r of zoneRuns)if(r[3]===z.id){sx+=(r[0]+r[2]/2)*r[2];sy+=(r[1]+0.5)*r[2];n+=r[2];}
  if(n){camT.x=sx/n;camT.y=sy/n;if(V3.on){C3.x=camT.x;C3.y=camT.y;}}autoClose();}});
