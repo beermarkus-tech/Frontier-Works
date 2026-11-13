@@ -2252,3 +2252,11 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Verified:** screenshot of the end stop. New smoke check: four Rotate taps never point the belt at the junction. `npm test` all PASS.
 
 **Known issues:** the 3D view has no end stop yet; only 2D shows it.
+
+## Session 39u — 2026-11-13 (Claude Code, cloud session) · Build 103
+
+**Asked:** the incinerator animation should play only while it is burning something.
+
+**Built:** `accept()` stamps `e.burnT` when an incinerator takes an item or a unit of fluid. `isActive()` counts an incinerator as active for 1.5 s after its last burn, so occasional items still give a steady fire that fades out smoothly. The 2D fire glow now scales with activity; before, it pulsed all the time. The 3D glow and the smoke in 2D and 3D already followed `isActive`, so all of them now stop when it is idle. `burnT` is not saved (a freshly loaded incinerator starts dark).
+
+**Verified:** new smoke check (lit while fed, dark 5 s after the last item). `npm test` all PASS.

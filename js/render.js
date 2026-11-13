@@ -187,7 +187,7 @@ function bStatus(e){
  return null;
 }
 /* live overlays (animation on top of sprites) */
-function isActive(e){if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;return e.k==='core';}
+function isActive(e){if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;if(e.k==='incin')return e.burnT!=null&&S.t-e.burnT<1.5;return e.k==='core';}   /* incinerator: lit only for 1.5 s after it burns something (Session 39u) */
 const SMOKE={smelter:[0.74,0.28,0],foundry:[0.8,0.2,0],burner:[0.72,0.28,0],incin:[0.5,0.5,0],steam:[0.8,0.22,1],reactor:[0.4,0.46,2],refinery:[0.7,0.45,1]};
 function glow(x,y,r,c,a){const gr=ctx.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,rgba(c,a));gr.addColorStop(1,rgba(c,0));ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();}
 function blades(x,y,r,n,ang,c,wd){ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.fillStyle=c;for(let k=0;k<n;k++){ctx.rotate(Math.PI*2/n);ctx.beginPath();ctx.moveTo(0,-wd);ctx.quadraticCurveTo(r*0.6,-wd*2.2,r,0);ctx.quadraticCurveTo(r*0.5,wd*0.6,0,wd);ctx.fill();}ctx.restore();ctx.fillStyle='#d8dde2';ctx.beginPath();ctx.arc(x,y,r*0.22,0,7);ctx.fill();}
@@ -199,7 +199,7 @@ function drawLive(e,X,Y,s){
   case 'smelter':glow(X+P*0.5,Y+P*0.67,P*0.36,'#ff7a1a',act*(0.55+0.2*Math.sin(animT*13+e.id)));ctx.fillStyle=rgba('#ffb040',act*0.9);rr(X+P*0.31,Y+P*0.6,P*0.38,P*0.14,s*0.08);ctx.fill();break;
   case 'foundry':for(const fx of [0.36,0.64]){glow(X+P*fx,Y+P*0.42,s*0.42,'#ff8a20',act*(0.75+0.2*Math.sin(animT*9+fx*9)));}break;
   case 'burner':glow(X+P*0.5,Y+P*0.63,P*0.34,'#ff7020',act*(0.6+0.25*Math.sin(animT*11+e.id)));break;
-  case 'incin':glow(X+P*0.5,Y+P*0.5,P*0.4,'#ff5a1a',0.35+0.2*Math.sin(animT*8));break;
+  case 'incin':glow(X+P*0.5,Y+P*0.5,P*0.4,'#ff5a1a',act*(0.35+0.2*Math.sin(animT*8)));break;
   case 'press':{const k=act*Math.abs(Math.sin(a*4)),sz=P*(0.3-0.07*k);ctx.fillStyle='#8a96a2';rr(X+P/2-sz/2,Y+P*0.53-sz/2,sz,sz,s*0.06);ctx.fill();ctx.fillStyle='rgba(255,255,255,0.25)';rr(X+P/2-sz/2,Y+P*0.53-sz/2,sz,sz*0.35,s*0.06);ctx.fill();break;}
   case 'assembler':case 'fabricator':{const pts=id==='assembler'?[[0.5,0.45]]:[[0.3,0.3],[0.7,0.3],[0.3,0.76],[0.7,0.76]];
    pts.forEach(([px,py],k)=>{const an=Math.sin(a*3+k*1.7)*1.2+k*1.57,L=s*0.62;const x=X+P*px,y=Y+P*py,ex=x+Math.cos(an)*L,ey=y+Math.sin(an)*L;ctx.strokeStyle='#f2c230';ctx.lineCap='round';ctx.lineWidth=s*0.12;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(ex,ey);ctx.stroke();ctx.fillStyle='#3a3a3a';ctx.beginPath();ctx.arc(ex,ey,s*0.09,0,7);ctx.fill();ctx.lineCap='butt';});

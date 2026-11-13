@@ -259,7 +259,7 @@ function accept(e,item,dir,carry){
   case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;zStat('k',e,item,1);return true;
-  case 'incin':stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
+  case 'incin':e.burnT=S.t;stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
  }
  return false;
 }
