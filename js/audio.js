@@ -11,6 +11,9 @@ function auStart(){if(AU.ctx){if(AU.ctx.state==='suspended')AU.ctx.resume().catc
   const n=c.createBuffer(1,c.sampleRate,c.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;AU.noise=n;auApply();return true;}catch(e){AU.ctx=null;return false;}}
 function auApply(){if(!AU.ctx)return;const t=AU.ctx.currentTime;AU.master.gain.setTargetAtTime(OPT.mute?0:0.9,t,0.03);for(const k in AU.bus)AU.bus[k].gain.setTargetAtTime(OPT.vol[k],t,0.03);}
 for(const ev of ['pointerdown','keydown','touchend'])addEventListener(ev,()=>auStart(),{passive:true});
+/* coming back to the app (or after a phone call / screen lock): resume the audio by itself, and keep trying every 2 s while it isn't running */
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&AU.ctx&&AU.ctx.state!=='running')AU.ctx.resume().catch(()=>{});});
+setInterval(()=>{if(AU.ctx&&!document.hidden&&AU.ctx.state!=='running'&&!OPT.mute)AU.ctx.resume().catch(()=>{});},2000);
 /* building blocks: an envelope-shaped oscillator or filtered noise burst */
 function auOsc(type,f0,f1,t0,dur,vol,q,bus){   /* q: optional lowpass cutoff (Hz) */const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f0,t0);if(f1&&f1!==f0)o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t0+dur);
  g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+Math.min(0.012,dur*0.2));g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
@@ -88,7 +91,7 @@ setInterval(()=>{try{mvUpdate();}catch(e){}},150);
 /* ---------- Music (Session 39f) ----------
    Generative, original: slow pads, a soft plucked arpeggio with echo, a quiet bass and now and then a metallic swell with a bell ring.
    ~80 BPM, D minor family. Sections of 32–64 beats; the progression, arpeggio pattern and which layers play change per section; after a few
-   minutes a silent break (25–60 s). Scheduled ~0.6 s ahead every 100 ms on the 'music' bus, through a soft reverb. Stops in the background. */
+   minutes the other track follows after a ~3 s pause (Session 39n; was a 25–60 s silence). Scheduled ~0.6 s ahead every 100 ms on the 'music' bus, through a soft reverb. Stops in the background. */
 const MU={on:false,t:0,step:0,sec:null,rest:0,played:0,rev:null,dly:null,track:0};
 const MU_BPM=80,MU_PROG=[[[50,57,60,65],[46,53,57,62],[41,48,53,57],[48,55,58,64]],[[50,57,60,65],[45,52,57,60],[46,53,58,62],[43,50,55,58]],
  [[50,53,57,62],[55,58,62,65],[46,50,53,58],[45,49,52,57]],[[41,48,52,57],[43,50,53,58],[50,57,60,65],[45,52,55,60]]];
@@ -104,12 +107,12 @@ function muNote(type,freqs,t,a,hold,r,vol,cut,echo){const c=AU.ctx,f=c.createBiq
  f.connect(g);g.connect(AU.bus.music);const sg=c.createGain();sg.gain.value=0.6;g.connect(sg);sg.connect(MU.rev);if(echo){const eg=c.createGain();eg.gain.value=echo;g.connect(eg);eg.connect(MU.dly);}}
 function muSection(){const r=Math.random;MU.sec={prog:MU_PROG[(r()*MU_PROG.length)|0],len:[32,48,64][(r()*3)|0],start:MU.step,arp:r()<0.75,bass:r()<0.8,
  pat:[[0,1,2,3,2,1,0,1],[0,2,1,3,0,2,3,1],[0,1,2,3,4,3,2,1],[2,1,0,1,2,3,2,3]][(r()*4)|0],oct:r()<0.5?12:24};}
-/* Two tracks (Session 39h): 0 = "Drift" (calm, 80 BPM, pads + arpeggio), 1 = "Pulse" (96 BPM, soft beat + bass line). After 3–5 minutes of a
-   track a 25–60 s break, then the other track. */
+/* Two tracks (Session 39h): 0 = "Drift" (calm, 80 BPM, pads + arpeggio), 1 = "Pulse" (110 BPM, beat + bass line). After 2–3 minutes of a
+   track a ~3 s pause, then the other track, forever. */
 const muBpm=()=>MU.track?110:MU_BPM,muB=()=>60/muBpm()/2;
 function muSwitch(){MU.track=1-MU.track;MU.sec=null;MU.step=0;if(MU.dly)MU.dly.delayTime.setValueAtTime(60/muBpm()*0.75,AU.ctx.currentTime);}
 function muStep(t){const b=muB();   /* one step = an eighth note */
- if(MU.rest>0){MU.rest--;if(MU.rest===0)muSwitch();return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>180+Math.random()*120){MU.played=0;MU.rest=Math.max(1,Math.round((25+Math.random()*35)/b));MU.sec=null;return;}MU.track?muSection2():muSection();}
+ if(MU.rest>0){MU.rest--;if(MU.rest===0)muSwitch();return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>120+Math.random()*60){MU.played=0;MU.rest=Math.max(1,Math.round((2.5+Math.random()*1.5)/b));MU.sec=null;return;}   /* Session 39n: 2–3 min per track, then a ~3 s pause and the other track: loops forever */MU.track?muSection2():muSection();}
  if(MU.track)return muPlay2(t,b);
  const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16;
  if(pos===0){muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.997,f*1.003]),t,1.6,b*16-2.2,2.6,0.045,900);

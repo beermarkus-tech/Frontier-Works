@@ -2149,3 +2149,24 @@ stack sizes in chat.
 - `npm test` 97 PASS / 0 FAIL. New check: a smelter takes 100 iron ore; Heavy Truss bolts buffer 200; every item has a stack size and no recipe
   needs more than one stack per cycle.
 - `npm run playthrough`: unchanged.
+
+---
+
+## Session 39n — 2026-11-13 (Claude Code, cloud session) · Build 96
+
+### What Markus asked
+The music seems to stop after a while; it should loop forever through the tracks. (He also asked that recipes stay unchanged: confirmed,
+Build 95 only changed input buffer sizes, no recipe.)
+
+### Findings
+- A 40-minute fast-forward simulation showed the composer itself never stops; but after each 3–5 min run there was a 25–60 s silence, and
+  after locking the screen or switching apps the browser suspends audio, which the game only resumed on the next tap.
+
+### What changed (`js/audio.js`)
+- Each track plays 2–3 minutes, then a ~3 s pause and the other track, endlessly (no long silences).
+- Audio resumes by itself when the game becomes visible again, and retries every 2 s while it isn't running (unless muted).
+- Build number **96**.
+
+### Verified
+- Simulation: notes in every one of 40 minutes, alternating tracks. New permanent check: 20 simulated minutes, music in every minute, both tracks.
+- `npm test` 97 PASS / 0 FAIL.

@@ -531,6 +531,9 @@ const server=require('./serve.js');
   try{const c=AU.ctx,t=c.currentTime+0.1;Object.assign(MU,{track:0,sec:null,step:0,rest:0,played:1000});muStep(t);const rested=MU.rest>0;let n=0;while(MU.rest>0&&n<2000){muStep(t);MU.step++;n++;}
    out.switches=rested&&MU.track===1;for(let i=0;i<200;i++){muStep(t+i*0.02);MU.step++;}out.track2=MU.track===1&&!!MU.sec&&MU.sec.bp!=null;
    Object.assign(MU,{played:1000,sec:null});muStep(t);while(MU.rest>0){muStep(t);MU.step++;}out.back=MU.track===0;}catch(e){out.switches=e.message;}
+  {const per={},tr=new Set();let T=0;const keep={muNote,auNoise,auOsc};muNote=()=>{per[Math.floor(T/60)]=1;};auNoise=()=>{};auOsc=()=>{};
+   try{Object.assign(MU,{track:0,sec:null,step:0,rest:0,played:0});while(T<60*20){const b=muB();muStep(T);MU.step++;MU.played+=b;T+=b;tr.add(MU.track);}}finally{muNote=keep.muNote;auNoise=keep.auNoise;auOsc=keep.auOsc;}
+   out.loops20min=Object.keys(per).length>=20&&tr.size===2;Object.assign(MU,{track:0,sec:null,step:0,rest:0,played:0});}
   openPanel('menu');out.menu=!document.getElementById('pbody').textContent.includes('coming');ACT.closePanel();return out;});
  check(`music (2 tracks): ${Object.entries(mu).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mu).every(v=>v===true));
  // Markus's crossing grid (Session 39j): four input columns with a splitter per row feed a fabricator; its output used to leak into the input
