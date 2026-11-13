@@ -40,7 +40,7 @@ function sfx(name){if(OPT.mute||!(OPT.vol.sfx>0))return;if(!AU.ctx||AU.ctx.state
 /* Menu controls */
 function audioMenu(){const sl=(k,lbl)=>`<div class="row"><span>${lbl}</span><span><input type="range" min="0" max="100" step="5" value="${Math.round(OPT.vol[k]*100)}" data-act="auVol" data-v="${k}" class="auvol"></span></div>`;
  return`<h4>Sound</h4><div class="chips" style="margin-bottom:6px"><button class="btn chip ${OPT.mute?'':'on'}" data-act="auMute" data-v="0">🔊 On</button><button class="btn chip ${OPT.mute?'on':''}" data-act="auMute" data-v="1">🔇 Muted</button></div>
-  ${sl('sfx','Effects')}${sl('mach','Machines')}${sl('music','Music <span class="muted">(coming)</span>')}`;}
+  ${sl('sfx','Effects')}${sl('mach','Machines')}${sl('music','Music')}`;}
 Object.assign(ACT,{auMute:v=>{OPT.mute=v==='1';saveOpt();auStart();auApply();renderPanel(true);if(!OPT.mute)sfx('click');}});
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='auVol'){OPT.vol[el.dataset.v]=(+el.value)/100;saveOpt();auStart();auApply();}});
 document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='auVol'&&el.dataset.v==='sfx')sfx('place');});
@@ -63,13 +63,14 @@ function mvBuild(){const c=AU.ctx,bus=AU.bus.mach,mk=k=>{const g=c.createGain();
  {const g=mk('refinery');loopNoise(g,'lowpass',260,0.9,0.3);tone(g,'sine',41,0.18);}
  {const g=mk('drill');const n=loopNoise(g,'bandpass',190,1.4,0.6);lfo(n.gain,9,0.3);tone(g,'square',62,0.05);}
  {const g=mk('gen');tone(g,'sine',50,0.32);tone(g,'sine',100,0.12);tone(g,'triangle',150,0.03);loopNoise(g,'bandpass',900,0.8,0.05);}
- {const g=mk('belt');const n=loopNoise(g,'highpass',1600,0.7,0.25);lfo(n.gain,13,0.12);}
+ mk('belt');   /* belts: no steady bed (the hiss sounded like a whoosh), only the rattle clicks below */
  MV.on=true;}
 /* rhythmic parts, scheduled about 0.25 s ahead, only while their kind is audible */
 const MV_EVT={
  press:(t,l)=>{auOsc('sine',95,48,t,0.22,0.5*l,0,'mach');auNoise(t,0.06,0.25*l,'bandpass',900,500,1.2,'mach');auNoise(t+0.18,0.05,0.12*l,'highpass',3000,3000,0.8,'mach');return 1.15+Math.random()*0.15;},
  furnace:(t,l)=>{auNoise(t,0.02,0.12*l,'highpass',2500+Math.random()*2000,3000,0.8,'mach');return 0.08+Math.random()*0.35;},
  refinery:(t,l)=>{const f=180+Math.random()*420;auOsc('sine',f,f*1.6,t,0.07,0.09*l,0,'mach');return 0.12+Math.random()*0.4;},
+ belt:(t,l)=>{const f=2200+Math.random()*1800;auNoise(t,0.012,(0.5+Math.random()*0.5)*0.5*l,'bandpass',f,f,2.5,'mach');if(Math.random()<0.15)auOsc('sine',220,150,t,0.03,0.25*l,0,'mach');return 0.05+Math.random()*0.07;},
  assembler:(t,l)=>{auOsc('sine',120,80,t,0.18,0.22*l,0,'mach');auNoise(t,0.07,0.08*l,'lowpass',900,400,0.8,'mach');return 1.6+Math.random()*1.4;}};   /* occasional soft set-down clunk */
 const MV_BASE={furnace:0.45,press:0.4,assembler:0.9,refinery:0.75,drill:1.0,gen:0.4,belt:0.3};   /* balanced from an offline render so each kind is about equally present */
 function mvUpdate(){if(!AU.ctx||AU.ctx.state!=='running'||!S||!ents)return;if(!MV.on)mvBuild();
@@ -77,10 +78,41 @@ function mvUpdate(){if(!AU.ctx||AU.ctx.state!=='running'||!S||!ents)return;if(!M
  if(!quiet){const v3=typeof V3!=='undefined'&&V3.on,cx=v3?C3.x:cam.x,cy=v3?C3.y:cam.y,
    zoom=v3?Math.max(0.12,Math.min(1,14/(C3.dist||30))):Math.max(0.12,Math.min(1,cam.z/1.6)),R=v3?Math.max(10,(C3.dist||30)*0.8):Math.max(10,innerWidth/(TS*cam.z)/2);
   for(const e of ents.values()){const dx=e.x+e.w/2-cx,dy=e.y+e.h/2-cy;if(dx>R||dx<-R||dy>R||dy<-R)continue;let k=null,act=false;
-   if(e.k==='belt'){if(!e.item)continue;k='belt';act=true;}else{k=mvKind(e);if(!k)continue;act=mvActive(e);}if(!act)continue;
+   if(e.k==='belt'){k='belt';act=true;}   /* belts rattle whether they carry items or not */else{k=mvKind(e);if(!k)continue;act=mvActive(e);}if(!act)continue;
    const d=Math.hypot(dx,dy)/R,w=Math.max(0,1-d*d)*(k==='belt'?0.08:1);sum[k]=(sum[k]||0)+w;}
   MV.zoom=zoom;}
  const t=AU.ctx.currentTime;
  for(const k in MV.v){const lvl=quiet?0:(1-Math.exp(-(sum[k]||0)*0.9))*(MV.zoom||1);   /* zoom = overall volume: far out is always softer, however many machines are visible */MV.lvl[k]=lvl;MV.v[k].gain.setTargetAtTime(lvl*MV_BASE[k],t,0.35);
   const ev=MV_EVT[k];if(ev&&lvl>0.03){if(!MV.next[k]||MV.next[k]<t)MV.next[k]=t+0.05;while(MV.next[k]<t+0.3)MV.next[k]+=ev(MV.next[k],lvl*MV_BASE[k]*2)||0.5;}}}
 setInterval(()=>{try{mvUpdate();}catch(e){}},150);
+/* ---------- Music (Session 39f) ----------
+   Generative, original: slow pads, a soft plucked arpeggio with echo, a quiet bass and now and then a metallic swell with a bell ring.
+   ~80 BPM, D minor family. Sections of 32–64 beats; the progression, arpeggio pattern and which layers play change per section; after a few
+   minutes a silent break (25–60 s). Scheduled ~0.6 s ahead every 100 ms on the 'music' bus, through a soft reverb. Stops in the background. */
+const MU={on:false,t:0,step:0,sec:null,rest:0,played:0,rev:null,dly:null};
+const MU_BPM=80,MU_PROG=[[[50,57,60,65],[46,53,57,62],[41,48,53,57],[48,55,58,64]],[[50,57,60,65],[45,52,57,60],[46,53,58,62],[43,50,55,58]],
+ [[50,53,57,62],[55,58,62,65],[46,50,53,58],[45,49,52,57]],[[41,48,52,57],[43,50,53,58],[50,57,60,65],[45,52,55,60]]];
+const mf=m=>440*Math.pow(2,(m-69)/12);
+function muInit(){const c=AU.ctx;if(MU.rev)return;const len=c.sampleRate*3.2,ir=c.createBuffer(2,len,c.sampleRate);for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6);}
+ const cv=c.createConvolver();cv.buffer=ir;const rg=c.createGain();rg.gain.value=0.55;cv.connect(rg);rg.connect(AU.bus.music);MU.rev=cv;
+ const dl=c.createDelay(1.5);dl.delayTime.value=60/MU_BPM*0.75;const fb=c.createGain();fb.gain.value=0.38;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2200;
+ dl.connect(lp);lp.connect(fb);fb.connect(dl);lp.connect(AU.bus.music);lp.connect(cv);MU.dly=dl;}
+/* one voice: oscillators → lowpass → envelope → dry + reverb (+ echo) */
+function muNote(type,freqs,t,a,hold,r,vol,cut,echo){const c=AU.ctx,f=c.createBiquadFilter(),g=c.createGain();f.type='lowpass';f.frequency.value=cut;f.Q.value=0.5;
+ g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+a);g.gain.setValueAtTime(vol,t+a+hold);g.gain.exponentialRampToValueAtTime(0.0001,t+a+hold+r);
+ for(const fr of freqs){const o=c.createOscillator();o.type=type;o.frequency.value=fr;o.connect(f);o.start(t);o.stop(t+a+hold+r+0.1);}
+ f.connect(g);g.connect(AU.bus.music);const sg=c.createGain();sg.gain.value=0.6;g.connect(sg);sg.connect(MU.rev);if(echo){const eg=c.createGain();eg.gain.value=echo;g.connect(eg);eg.connect(MU.dly);}}
+function muSection(){const r=Math.random;MU.sec={prog:MU_PROG[(r()*MU_PROG.length)|0],len:[32,48,64][(r()*3)|0],start:MU.step,arp:r()<0.75,bass:r()<0.8,
+ pat:[[0,1,2,3,2,1,0,1],[0,2,1,3,0,2,3,1],[0,1,2,3,4,3,2,1],[2,1,0,1,2,3,2,3]][(r()*4)|0],oct:r()<0.5?12:24};}
+function muStep(t){const b=60/MU_BPM/2;   /* one step = an eighth note */
+ if(MU.rest>0){MU.rest--;return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>180+Math.random()*120){MU.played=0;MU.rest=Math.round((25+Math.random()*35)/b);MU.sec=null;return;}muSection();}
+ const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16;
+ if(pos===0){muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.997,f*1.003]),t,1.6,b*16-2.2,2.6,0.045,900);
+  if(s.bass)muNote('triangle',[mf(ch[0]-12)],t,0.05,b*6,1.2,0.2,500);}
+ if(s.bass&&pos===8)muNote('triangle',[mf(ch[0]-12)],t,0.05,b*4,1,0.15,500);
+ if(s.arp&&i>=16){const nts=[...ch,ch[1]+12],m=nts[s.pat[pos%8]%nts.length]+s.oct;muNote('triangle',[mf(m)],t,0.005,0.02,0.55,0.09,2600,0.45);}
+ if(pos===0&&bar%4===2&&Math.random()<0.5){auNoise(t,3.5,0.09,'bandpass',180,900,1.5,'music');const f0=mf(ch[0]+24);muNote('sine',[f0,f0*2.76],t+0.4,0.01,0.05,4,0.065,4000,0.3);}}
+function muTick(){if(!AU.ctx||AU.ctx.state!=='running')return;const play=!OPT.mute&&OPT.vol.music>0&&!document.hidden;const c=AU.ctx;
+ if(!play){MU.on=false;return;}muInit();if(!MU.on){MU.on=true;MU.t=c.currentTime+0.3;}const b=60/MU_BPM/2;
+ while(MU.t<c.currentTime+0.6){muStep(MU.t);MU.step++;MU.played+=b;MU.t+=b;}}
+setInterval(()=>{try{muTick();}catch(e){}},100);

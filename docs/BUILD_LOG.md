@@ -1969,3 +1969,28 @@ Next sound step: machine sounds.
   occasional soft low "set-down clunk" every 1.6–3 s instead of the ticks. Base level 1.4 → 0.9 (similar loudness to the other kinds in an
   offline render). New demo WAV sent.
 - `npm test` 92 PASS / 0 FAIL. Build number **87**.
+
+---
+
+## Session 39f — 2026-11-13 (Claude Code, cloud session) · Build 88
+
+### What Markus asked
+Belts: keep the rattle but remove the whoosh, and let them rattle even without items. Then the music (step 3).
+
+### What was built (`js/audio.js`)
+- Belts: the steady high-passed noise bed (the "whoosh") is gone; the rattle is now only short random clicks (2.2–4 kHz, every 50–120 ms)
+  with an occasional low clack. Every belt near the centre counts, loaded or not.
+- Music: generative and original. Eighth-note scheduler (~80 BPM, 0.6 s look-ahead every 100 ms) on the Music bus, through a generated
+  3.2 s reverb and a dotted-eighth echo. Layers: detuned sawtooth pad chords (lowpass 900 Hz, slow attack/release), triangle bass on beats 1 and 3,
+  plucked triangle arpeggio (from bar 2 of a section, with echo), and sometimes a low filtered-noise swell with a bell (1 : 2.76 partials).
+  Four chord progressions in the D-minor family; each section (32/48/64 beats) picks a progression, arpeggio pattern, octave and whether arpeggio and
+  bass play. After 3–5 minutes of music a 25–60 s silence. Stops when muted, at Music 0 % or in the background.
+- Music slider no longer says "coming". Levels doubled after the first render (it was ~5× quieter than the effects).
+- Build number **88**.
+
+### Verified
+- `npm test` 93 PASS / 0 FAIL. New check: music schedules steps after a tap; muted / 0 % stop it; 80 steps of every layer play without error.
+- One-minute offline render (stereo, steady level) sent to Markus as a WAV (volume-normalised for listening).
+
+### Next up
+- Tune music/sounds after Markus listens (tempo, darker/brighter, more or less melody).
