@@ -1789,3 +1789,22 @@ Part 2: the Factories dashboard on top of the zones.
 ### Known issues
 - Numbers need about a minute to settle after changes (60 s window), like the Items view.
 - Zone names show in 2D only.
+
+---
+
+## Session 38c — 2026-11-13 (Claude Code, cloud session) · Build 74
+
+### What Markus asked
+Remove Makes and Uses from the factory cards; replace "Could make more" with what the factory is designed to produce.
+
+### What was built
+- "Designed to make": per item, every machine's full rate at its clock (and drills/pumps), minus what the zone's own machines consume at full
+  speed; only positive items (the factory's real products). Switched-off buildings don't count. Next to each: "(now x)" = made − used inside
+  over the last minute, green ≥ 95 %, yellow ≥ 60 %, red below.
+- Makes, Uses and Could make more removed from the cards (the overall table keeps its Spare column).
+- Phone ghost-tap check: waits for the start-up screen to disappear (it caught the first tap on a slow run).
+- Build number **74**.
+
+### Verified
+- `npm test` 88 PASS / 0 FAIL. Dashboard check: "Designed to make" shown, old sections gone, a smelter zone designs 30 ingots/min and no ore.
+- Screenshot: Smelting "Iron Ingot 45/min (now 45)", Pressing "Iron Plate 20/min (now 18)".

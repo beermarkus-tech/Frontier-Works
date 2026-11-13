@@ -483,7 +483,8 @@ const server=require('./serve.js');
   ZS.hist=[];ZS.cur={};for(let t=0;t<20*70;t++){c.store={iron_ore:999};g1.fuel={coal:50};g2.fuel={coal:50};tick(0.05);}
   const R=zRates();out.made=(R['p|'+A+'|iron_ingot']||0)>20;out.usedB=(R['c|'+Bz+'|iron_ingot']||0)>20;out.cross=(R['x|'+A+'|'+Bz+'|iron_ingot']||0)>20&&!R['x|'+A+'|0|iron_ingot'];   // across the gap between the fences: counted as Smelting → Pressing
   out.burned=(R['b|'+Bz+'|iron_plate']||0)>0||(R['x|'+Bz+'|0|iron_plate']||0)>0;
-  UI.statTab='zones';openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=txt.includes('Smelting')&&txt.includes('Pressing')&&txt.includes('All factories together')&&txt.includes('Sends to other factories');
+  UI.statTab='zones';openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=txt.includes('Smelting')&&txt.includes('Pressing')&&txt.includes('All factories together')&&txt.includes('Sends to other factories')&&txt.includes('Designed to make')&&!txt.includes('MakesUses')&&!/\bMakes\b/.test(txt)&&!txt.includes('Could make more');
+  const M=zMachines(A);out.design=Math.abs((M.design.iron_ingot||0)-30)<0.5&&!(M.design.iron_ore>0);
   ACT.zoneShow(String(Bz));out.show=UI.hlZone&&UI.hlZone.id===Bz;UI.statTab='items';if(UI.panel)ACT.closePanel();
   for(const id of [A,Bz]){for(let i=0;i<zoneMap.length;i++)if(zoneMap[i]===id)zoneMap[i]=0;}zoneSave();zoneRebuild();
   for(let j=-2;j<8;j++)for(let i=-2;i<18;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
@@ -578,7 +579,7 @@ const server=require('./serve.js');
  await ctx.setOffline(false);
  // phone (portrait, touch): tapping a machine opens the bottom panel under the finger; the browser's follow-up click must not pick a recipe
  {const pc=await b.newContext({viewport:{width:412,height:915},hasTouch:true,isMobile:true,deviceScaleFactor:2.6});const pp=await pc.newPage();
-  await pp.goto('http://localhost:8099/');await pp.waitForFunction(()=>typeof ents!=='undefined'&&ents.size>0,null,{timeout:30000});await pp.waitForTimeout(800);   // a new game opens the Menu by itself shortly after start
+  await pp.goto('http://localhost:8099/');await pp.waitForFunction(()=>typeof ents!=='undefined'&&ents.size>0,null,{timeout:30000});await pp.waitForFunction(()=>!document.getElementById('loading'),null,{timeout:15000});await pp.waitForTimeout(400);   // start-up screen gone (it caught the first tap on slow runs); a new game opens the Menu by itself
   const i=await pp.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=6;r<80&&X==null;r++)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(!canPlace('press',x,y)){X=x;Y=y;break;}}
    fw.placeEnt('press',X,Y,0,true);S.ur.push('r_iron_rod','r_bolts','r_wire');fw.entAt(X,Y).r='r_wire';if(UI.panel)ACT.closePanel();cam.z=camT.z=2;return{X,Y};});
   const got=[];for(const fy of [0.42,0.5,0.58]){await pp.evaluate(([i,fy])=>{if(UI.panel)ACT.closePanel();const s=TS*cam.z;cam.x=camT.x=i.X+1;cam.y=camT.y=i.Y+1-(fy*innerHeight-innerHeight/2)/s;},[i,fy]);await pp.waitForTimeout(250);
