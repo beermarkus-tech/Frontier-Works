@@ -239,7 +239,7 @@ function accept(e,item,dir,carry){
   case 'router':{
    if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc')return false;   // a Pipe Junction is a network piece
    const sub=B[e.d].sub;
-   if(sub==='split'||sub==='sort'){if(dir!==e.dir||e.item)return false;}
+   if(sub==='split'||sub==='sort'||sub==='logic'){if(dir!==e.dir||e.item)return false;}
    else if(sub==='merge'){
     if(dir===((e.dir+2)&3))return false;
     if(e.item){e.req[dir]=tickNo;return false;}
@@ -403,8 +403,20 @@ function updBelt(e,dt){
  if(!e.item)return;e.prog+=e.spd*dt;
  if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]),ov=e.prog-1;accT=S.t-ov/e.spd;const it0=e.item,ok=t&&t!==e&&accept(t,e.item,e.dir,ov);accT=null;if(ok){zMove(e,e.oz,t,it0,e.dir);e.item=null;e.prog=0;e.freeAt=S.t-ov/e.spd;}else e.prog=1;}   // freeAt: the exact moment the tile became free
 }
+/* Logic Splitter (Session 39r): rules per output e.lr = {l,f,r} (left, front, right), each a list of item ids and/or 'any' (every item),
+   'rest' (items no output names specifically), 'over' (overflow: only when every normal choice is full or blocked); an empty list = blocked.
+   An item is offered in turn to the outputs whose rules want it; if none can take it, to the overflow outputs; otherwise it waits. */
+function lsRules(e){return e.lr||{l:['any'],f:['any'],r:['any']};}
+function lsOuts(e,it){const L=lsRules(e),D=e.dir,dirOf={l:(D+3)&3,f:D,r:(D+1)&3},named=new Set(),prim=[],over=[];
+ for(const k of 'lfr')for(const x of L[k]||[])if(IT[x])named.add(x);
+ for(const k of 'lfr'){const R=L[k]||[];if(R.includes('any')||R.includes(it)||(R.includes('rest')&&!named.has(it)))prim.push(dirOf[k]);else if(R.includes('over'))over.push(dirOf[k]);}
+ return[prim,over];}
 function updRouter(e){
  if(!e.item)return;const sub=B[e.d].sub,D=e.dir;let outs;
+ if(sub==='logic'){const [prim,over]=lsOuts(e,e.item);for(const [list,key] of [[prim,'rr'],[over,'ro']]){const n=list.length;
+   for(let k=0;k<n;k++){const i=((e[key]||0)+k)%n,o=list[i],t=entAt(e.x+DX[o],e.y+DY[o]);if(!t)continue;if(t.k==='cross'&&!passOK(t,e.item,o))continue;
+    const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);e.item=null;e[key]=(i+1)%n;return;}}}
+  return;}
  if(sub==='split')outs=[D,(D+1)&3,(D+3)&3];
  else if(sub==='sort')outs=!e.filter?[D,(D+1)&3,(D+3)&3]:(e.item===e.filter?[D]:[(D+1)&3,(D+3)&3]);
  else if(sub==='merge')outs=[D];

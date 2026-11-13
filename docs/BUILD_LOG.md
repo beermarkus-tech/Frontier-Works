@@ -2202,3 +2202,25 @@ Build 95 only changed input buffer sizes, no recipe.)
   so they all react more slowly to changes now.
 - Test adjusted: "crossing in front of a machine" resets the efficiency after its deliberate pause (the 5-min window still contained it).
 - Verified: `npm test` 97 PASS / 0 FAIL; phone screenshot of the panel. Build number **99**.
+
+---
+
+## Session 39r — 2026-11-13 (Claude Code, cloud session) · Build 100
+
+### What Markus asked
+A programmable splitter like the one in a well-known factory game: overflow per direction, specific items per direction, blocking a direction.
+
+### What was built (own name and design: "Logic Splitter")
+- `D('lsplit')`: router `sub:'logic'`, Logistics tab, unlocks with "Structural Works" (same goal as the Sorting Splitter), 2 Braced Plate + 10 Cable.
+- Rules `e.lr = {l,f,r}` (saved via `SKEYS`): item ids, `any`, `rest` (= "Any other": items no output names), `over` (overflow). Empty = blocked.
+  Default: Any on all three. `lsOuts(e,item)` → normal outputs (any / named / rest) and overflow outputs; `updRouter` offers the item round-robin to
+  the normal ones, then to the overflow ones; otherwise it waits. Accepts only from the back, like a splitter.
+- Panel: per output removable rule chips, + Any / + Any other / + Overflow / Block, and an item picker (select). Adding an item removes "Any".
+- 2D: arrows for open outputs, amber arrow for overflow-only, red square for blocked, ring in the centre. 3D: splitter model in its colour.
+- Build number **100**.
+
+### Verified
+- New check: front = Iron Plate, left = Any other, right = Overflow with alternating plates/copper: plates only front, copper only left, nothing
+  right; front backs up → plates overflow right; left blocked → copper goes to the overflow; panel shows the rules; adding works; rules survive
+  save/load; unlock listed.
+- `npm test` 98 PASS / 0 FAIL. Tablet screenshot of the panel.

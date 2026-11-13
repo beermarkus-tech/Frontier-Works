@@ -154,6 +154,10 @@ Hand mining gives +5 ore from a node.
 - **On/off per building** (Session 37e): machines, drills, pumps and generators have ⏻ Turn off / ▶ Turn on in their panel (`e.off`, saved).
   Off: no new cycles (a started one pauses), no extraction or burning, no power drawn or supplied; finished items still leave. Shown dimmed with a
   power symbol in 2D; status "Switched off"; efficiency pauses.
+- **Logic Splitter** (Session 39r, Tier 2 "Structural Works" with the Sorting Splitter, 2 Braced Plate + 10 Cable): rules per output (left,
+  front, right): specific items, Any, Any other (items no output names), Overflow (only when every normal choice is full or blocked); no rules =
+  blocked. Items take turns among the outputs that want them, then overflow outputs; otherwise they wait. Default: Any on all three (= Splitter).
+  2D: arrows per output, red square = blocked, amber arrow = overflow-only. Own design, inspired by programmable splitters in factory games.
 - **Eraser** (Session 36d, dock button next to Dismantle, key C): swipe over belts, splitters, mergers, crossings and pipes to empty them; tap a
   machine, drill, pump or generator to empty its buffers (recipe stays). Buildings stay. Items go back to the item stock; fluids drain away (a pipe
   empties its whole network). Crates, tanks, Drone Pads and the Core are storage and are left alone.

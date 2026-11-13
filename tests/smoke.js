@@ -561,6 +561,20 @@ const server=require('./serve.js');
   e.inb={iron_ore:30};S.inv.iron_ore=500;openPanel('ent',e.id);const fbtn=!!document.querySelector('#pbody [data-act="fillInb"]');ACT.fillInb();const filled=fbtn&&e.inb.iron_ore===100&&S.inv.iron_ore===430;
   S.inv.iron_ore=0;e.inb={iron_ore:10};renderPanel(true);const noBtn=!document.querySelector('#pbody [data-act="fillInb"]');ACT.closePanel();removeEnt(e,false,true);let ok=true;for(const id in IT)if(!(stackOf(id)>0))ok='missing '+id;for(const r of Object.values(RC))for(const k in r.i)if(r.i[k]>stackOf(k))ok=r.id+' needs '+r.i[k]+' '+k;return{n,big:capIn(100,'bolts'),ok,filled,noBtn};});
  check(`machine input buffer = one stack, ⬆ Fill from stock tops it up (${ib.filled}, hidden with empty stock ${ib.noBtn}): holds ${ib.n} iron ore (stack 100); bolts for a Heavy Truss ${ib.big} (stack 200); every item has a stack size ≥ its largest need per cycle (${ib.ok})`,ib.n===100&&ib.big===200&&ib.ok===true&&ib.filled&&ib.noBtn);
+ // Logic Splitter: front = Iron Plate, left = Any other, right = Overflow; then front backs up (plates overflow right); then left blocked
+ const ls=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-5;j<6&&ok;j++)for(let i=-1;i<9&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('belt3',X+1,Y,0),P('lsplit',X+2,Y,0),P('belt3',X+3,Y,0),P('belt3',X+4,Y,0),P('incin',X+5,Y,0),P('belt3',X+2,Y-1,3),P('belt3',X+2,Y-2,3),P('incin',X+2,Y-4,0),P('belt3',X+2,Y+1,1),P('belt3',X+2,Y+2,1),P('incin',X+2,Y+3,0)];
+  const L=fw.entAt(X+2,Y),inp=fw.entAt(X+1,Y),fr=fw.entAt(X+3,Y),le=fw.entAt(X+2,Y-1),ri=fw.entAt(X+2,Y+1);L.lr={f:['iron_plate'],l:['rest'],r:['over']};
+  const cnt=new Map(),orig=accept;accept=function(e,it){const ok=orig.apply(this,arguments);if(ok&&(e===fr||e===le||e===ri)){const k=(e===fr?'f':e===le?'l':'r')+':'+it;cnt.set(k,(cnt.get(k)||0)+1);}return ok;};
+  let n=0;const run=s=>{for(let t=0;t<20*s;t++){if(!inp.item){inp.item=n++%2?'copper_ingot':'iron_plate';inp.prog=0;}tick(0.05);}};
+  try{run(30);const c1=Object.fromEntries(cnt);out.sorted=(c1['f:iron_plate']||0)>20&&(c1['l:copper_ingot']||0)>20&&!c1['f:copper_ingot']&&!c1['l:iron_plate']&&!c1['r:iron_plate']&&!c1['r:copper_ingot'];
+   removeEnt(fw.entAt(X+5,Y),false,true);cnt.clear();run(30);const c2=Object.fromEntries(cnt);out.overflow=(c2['r:iron_plate']||0)>10&&!c2['r:copper_ingot'];
+   L.lr={f:['iron_plate'],l:[],r:['over']};cnt.clear();run(20);const c3=Object.fromEntries(cnt);out.blocked=!c3['l:copper_ingot']&&(c3['r:copper_ingot']||0)>5;}finally{accept=orig;}
+  openPanel('ent',L.id);const t=document.getElementById('pbody').textContent;out.panel=t.includes('Front output')&&t.includes('Overflow')&&t.includes('Blocked');ACT.lsAdd('l|any');out.add=L.lr.l.includes('any');ACT.closePanel();
+  const sv=serialize();load(sv);const L2=fw.entAt(X+2,Y);out.saved=L2.lr&&L2.lr.f[0]==='iron_plate'&&L2.lr.r[0]==='over';out.unlock=MS.some(m=>m.b.includes('lsplit'));out.ok=r.every(v=>v==='');
+  for(let j=-5;j<6;j++)for(let i=-1;i<9;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
+ check(`Logic Splitter: ${Object.entries(ls).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(ls).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

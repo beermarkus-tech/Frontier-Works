@@ -448,6 +448,8 @@ function drawRouter(g,e,X,Y,s){const d=B[e.d],sub=d.sub,fl=d.fl;
  g.fillStyle='rgba(255,255,255,0.92)';
  if(e.k==='cross'){g.fillStyle='rgba(20,24,28,0.8)';g.fillRect(X+s*0.18,Y+s*0.4,s*0.64,s*0.2);g.fillRect(X+s*0.4,Y+s*0.18,s*0.2,s*0.64);}
  else if(sub==='split'||sub==='sort'){arrow(e.dir);arrow((e.dir+1)&3);arrow((e.dir+3)&3);}
+ else if(sub==='logic'){const L=lsRules(e),D=e.dir||0;for(const [k,o] of [['l',(D+3)&3],['f',D],['r',(D+1)&3]]){const R=L[k]||[];if(!R.length){g.fillStyle='rgba(255,90,70,0.95)';g.fillRect(X+s/2+DX[o]*s*0.3-s*0.06,Y+s/2+DY[o]*s*0.3-s*0.06,s*0.12,s*0.12);g.fillStyle='rgba(255,255,255,0.92)';}else{if(R.includes('over')&&R.length===1)g.fillStyle='rgba(255,200,90,0.95)';arrow(o);g.fillStyle='rgba(255,255,255,0.92)';}}
+  g.strokeStyle='rgba(255,255,255,0.75)';g.lineWidth=Math.max(1,s*0.04);g.beginPath();g.arc(X+s/2,Y+s/2,s*0.12,0,7);g.stroke();}
  else if(sub==='merge'){arrow(e.dir);arrow((e.dir+1)&3,1);arrow((e.dir+3)&3,1);arrow((e.dir+2)&3,1);}
  else if(sub==='junc'){g.fillStyle='rgba(20,24,28,0.8)';g.beginPath();g.arc(X+s/2,Y+s/2,s*0.2,0,7);g.fill();}
  if(fl&&e.item){g.fillStyle=IT[e.item].c;g.beginPath();g.arc(X+s/2,Y+s/2,s*0.14,0,7);g.fill();}

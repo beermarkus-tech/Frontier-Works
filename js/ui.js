@@ -84,6 +84,13 @@ function entStatic(e){
  if(e.k==='mach'||e.k==='drill'||e.k==='pump'){
   const mx=S.oc?250:100;h+=`<h4>Clock speed</h4><div class="clockv" id="clockv">${Math.round(e.clock*100)}%</div><input type="range" min="10" max="${mx}" step="1" value="${Math.round(e.clock*100)}" data-act="clock"><div class="chips clockbtns">${[-10,-1,1,10].map(v=>`<button class="btn chip" data-act="clockStep" data-v="${v}">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div>${S.oc?'':'<div class="muted">Overclocking above 100% unlocks with “Steelworks”.</div>'}<div class="muted">Power use scales with clock^1.6.</div>`;
  }
+ if(e.k==='router'&&d.sub==='logic'){const L=lsRules(e),items=Object.keys(IT).filter(k=>!IT[k].f&&(S.ub.length>0)),lbl={any:'Any',rest:'Any other',over:'Overflow'};
+  h+=`<div class="muted">Each item goes to an output whose rules want it (taking turns). <b>Any other</b> = items no output names. <b>Overflow</b> = only when the others are full or blocked. No rules = blocked.</div>`;
+  for(const [k,name] of [['l','Left'],['f','Front'],['r','Right']]){const R=L[k]||[];
+   h+=`<h4>${name} output</h4><div class="chips">${R.length?R.map(x=>`<button class="btn chip on" data-act="lsDel" data-v="${k}|${x}" title="Remove">${lbl[x]||nm(x)} ✕</button>`).join(''):'<span class="plbad" style="padding:4px 2px">Blocked</span>'}</div>
+    <div class="chips" style="margin-top:4px">${['any','rest','over'].filter(x=>!R.includes(x)).map(x=>`<button class="btn chip" data-act="lsAdd" data-v="${k}|${x}">+ ${lbl[x]}</button>`).join('')}${R.length?`<button class="btn chip" data-act="lsBlock" data-v="${k}">Block</button>`:''}</div>
+    <select class="wide lssel" data-ls="${k}"><option value="">+ Add an item…</option>${items.filter(x=>!R.includes(x)).sort((a,b)=>IT[a].n.localeCompare(IT[b].n)).map(x=>`<option value="${x}">${IT[x].n}</option>`).join('')}</select>`;}
+ }
  if(e.k==='router'&&d.sub==='sort'){
   const items=Object.keys(IT).filter(k=>!IT[k].f);
   h+=`<h4>Filter (goes out the front)</h4><div class="chips"><button class="btn chip ${!e.filter?'on':''}" data-act="filter" data-v="">None (split all)</button>${items.map(k=>`<button class="btn chip ${e.filter===k?'on':''}" data-act="filter" data-v="${k}">${nm(k)}</button>`).join('')}</div>`;
@@ -267,6 +274,9 @@ const ACT={
  closePanel,
  openMs:()=>openPanel('ms'),openInv:()=>openPanel('inv'),openStats:()=>openPanel('stats'),openMenu:()=>openPanel('menu'),openCodex:()=>openPanel('codex'),
  setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v){UI.recOpen=UI.recOpen===e.id?null:e.id;renderPanel(true);return;}UI.recOpen=null;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;renderPanel(true);},
+ lsAdd:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));if(x==='any')L[k]=L[k].filter(y=>y==='over');if(!L[k].includes(x))L[k].push(x);renderPanel(true);},
+ lsDel:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[k]=L[k].filter(y=>y!==x);renderPanel(true);},
+ lsBlock:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[v]=[];renderPanel(true);},
  filter:v=>{const e=ents.get(UI.panel.arg);if(e){e.filter=v||null;renderPanel(true);}},
  collectAll:()=>{let n=0,c=0;for(const e of ents.values())if(e.k==='storage'){let any=false;for(const k in e.store){give(k,e.store[k]);n+=e.store[k];any=true;}if(any)c++;e.store={};}toast(n?`Moved ${fmt(n)} items from ${c} crate${c>1?'s':''} into the stock`:'The crates are empty');renderPanel(true);buildTools();},
  padLink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.linkFrom=e.id;setTool(null);toast('Tap the Drone Pad the drone should fly to');updInfo();},
@@ -324,3 +334,5 @@ document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset.act==='s
 document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.act==='clock')renderPanel(true);});
 
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='swName'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.d==='pswitch')e.tx=el.value.slice(0,30);}});
+
+document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset&&el.dataset.ls&&el.value&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&B[e.d].sub==='logic'){const L=e.lr=JSON.parse(JSON.stringify(lsRules(e))),k=el.dataset.ls;if(!L[k].includes(el.value))L[k].push(el.value);L[k]=L[k].filter(y=>y!=='any');renderPanel(true);}}});
