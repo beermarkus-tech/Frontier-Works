@@ -244,10 +244,10 @@ function accept(e,item,dir,carry){
     if(e.lastIn===dir){for(let od=0;od<4;od++)if(od!==dir&&e.req[od]>=tickNo-1){e.req[dir]=tickNo;e.lastIn=-1;return false;}}
     e.lastIn=dir;
    } else if(e.item)return false;
-   e.item=item;e.inDir=dir;return true;}
+   e.item=item;e.inDir=dir;e.inT=accT!=null?accT:S.t;return true;}
   case 'cross':
-   if(dir===0||dir===2){if(e.hs)return false;e.hs=item;e.hd=dir;return true;}
-   if(e.vs)return false;e.vs=item;e.vd=dir;return true;
+   if(dir===0||dir===2){if(e.hs)return false;e.hs=item;e.hd=dir;e.hT=accT!=null?accT:S.t;return true;}
+   if(e.vs)return false;e.vs=item;e.vd=dir;e.vT=accT!=null?accT:S.t;return true;
   case 'mach':{
    if(!e.r)return false;const r=RC[e.r];const need=r.i[item];if(!need)return false;
    if((e.inb[item]||0)>=capIn(need))return false;e.inb[item]=(e.inb[item]||0)+1;return true;}
@@ -273,6 +273,12 @@ function passOK(t,item,d){const fl=IT[item].f;
  if(t.k==='gen')return has(B[t.d].fuels,item)||(item==='water'&&!!B[t.d].water);
  if(t.k==='tank')return fl;
  return t.k==='storage'||t.k==='core'?!fl:t.k==='incin';}
+/* Sub-tick timing (Sessions 37i/37j): accT = the moment the item being handed over reached the tile edge (set by belts, splitters, crossings
+   while they call accept). Splitters/crossings keep it (e.inT, e.hT, e.vT) and act like a belt piece of zero length; a belt tile receiving an
+   item starts it with the progress it would have made since max(that moment, the moment the tile became free). Without this every handoff
+   lost part of a tick and lines through several splitters dropped from 270 to ~223/min. */
+let accT=null;
+function beltCarry(t,from){if(t.k!=='belt')return 0;if(t.freeAt!=null)from=Math.max(from,t.freeAt);const el=S.t-from;return el>=0&&el<0.1?Math.min(0.95,el*t.spd):0;}
 function pushOut(e,item){
  const n=e.ports.length;
  for(let k=0;k<n;k++){const idx=(e.rr+k)%n,p=e.ports[idx];const t=entAt(p.x,p.y);if(!t)continue;
@@ -280,7 +286,7 @@ function pushOut(e,item){
   else if(t.k!=='router')continue;
   // a building's item starts with the progress it would have made since the belt tile became free (Session 37i): without this, every item
   // waited for a whole tick and a Mk3 belt fed by a drill or machine carried 240/min instead of 270
-  let c=0;if(t.k==='belt'&&t.freeAt!=null){const el=S.t-t.freeAt;if(el>=0&&el<0.1)c=Math.min(0.95,el*t.spd);}
+  const c=t.k==='belt'&&t.freeAt!=null?beltCarry(t,t.freeAt):0;
   if(accept(t,item,p.d,c)){e.rr=(idx+1)%n;return true;}}
  return false;
 }
@@ -391,7 +397,7 @@ function burn(g,mj){const d=B[g.d];
 function updBelt(e,dt){
  if(e.k==='pipe')return;
  if(!e.item)return;e.prog+=e.spd*dt;
- if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]),ov=e.prog-1;if(t&&t!==e&&accept(t,e.item,e.dir,ov)){e.item=null;e.prog=0;e.freeAt=S.t-ov/e.spd;}else e.prog=1;}   // freeAt: the exact moment the tile became free
+ if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]),ov=e.prog-1;accT=S.t-ov/e.spd;const ok=t&&t!==e&&accept(t,e.item,e.dir,ov);accT=null;if(ok){e.item=null;e.prog=0;e.freeAt=S.t-ov/e.spd;}else e.prog=1;}   // freeAt: the exact moment the tile became free
 }
 function updRouter(e){
  if(!e.item)return;const sub=B[e.d].sub,D=e.dir;let outs;
@@ -400,13 +406,14 @@ function updRouter(e){
  else if(sub==='merge')outs=[D];
  else outs=[0,1,2,3].filter(o=>o!==((e.inDir+2)&3));
  for(let k=0;k<outs.length;k++){const o=outs[(e.rr+k)%outs.length];const t=entAt(e.x+DX[o],e.y+DY[o]);
-  if(t&&accept(t,e.item,o,0)){e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
+  if(!t)continue;const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
 }
 function updCross(e){
  // an item heading into a belt/pipe that points back at the crossing can never move (old saves could jam like this): return it to the stock
  const stuck=(t,d)=>t&&isLine(t.k)&&t.dir===((d+2)&3);
- if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(t&&accept(t,e.hs,e.hd,0))e.hs=null;else if(stuck(t,e.hd)){give(e.hs,1);e.hs=null;}}
- if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(t&&accept(t,e.vs,e.vd,0))e.vs=null;else if(stuck(t,e.vd)){give(e.vs,1);e.vs=null;}}
+ const pass=(item,d,T)=>{const t=entAt(e.x+DX[d],e.y+DY[d]);if(!t)return false;const T0=T!=null?T:S.t;accT=T0;const ok=accept(t,item,d,beltCarry(t,T0));accT=null;return ok;};
+ if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(pass(e.hs,e.hd,e.hT))e.hs=null;else if(stuck(t,e.hd)){give(e.hs,1);e.hs=null;}}
+ if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(pass(e.vs,e.vd,e.vT))e.vs=null;else if(stuck(t,e.vd)){give(e.vs,1);e.vs=null;}}
 }
 function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}
 /* Efficiency: running average over the last EFF_T seconds of "working" vs. why not (e._ef 0..1, e._efw {reason: share}).
@@ -469,9 +476,9 @@ function tick(dt){
  tickNo++;S.t+=dt;
  if(tickNo%20===0)for(const e of meters){const a=e.fa;if(a)while(a.length&&S.t-a[0]>300)a.shift();}   // Flow Meters: arrival times of the last 30 items, at most 5 min back
  powerStep(dt);
- for(const e of routers)updRouter(e);
- for(const e of crosses)updCross(e);
  for(const e of beltOrder)updBelt(e,dt);
+ for(const e of routers)updRouter(e);   // after the belts (Session 37j): the tile in front has already moved on this tick, so a
+ for(const e of crosses)updCross(e);    // splitter never waits a whole tick (Mk5 through splitters: 684 → 780/min)
  for(const e of buildings)updBuilding(e,dt);
  updNets(dt);
  stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}

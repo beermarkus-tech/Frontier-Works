@@ -433,6 +433,14 @@ const server=require('./serve.js');
   for(let j=0;j<2;j++)for(let i=0;i<8;i++){const e=fw.entAt(n.x+i,n.y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
  check(`belts fed by a building reach their rate (Mk2 ${Math.round(bl.belt2*100)}%, Mk3 ${Math.round(bl.belt3*100)}%, Mk5 ${Math.round(bl.belt5*100)}%); blocked drill says Output full (${bl.noFalsePower})`,
   bl.belt2>0.97&&bl.belt3>0.97&&bl.belt5>0.97&&bl.noFalsePower);
+ // a line through 5 splitters and a crossing keeps the belt's full rate (Markus's machine row: was 223–240 of 270; Mk5 was 600 of 780)
+ const sp=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};
+  for(const id of ['belt3','belt5']){let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-1;i<26&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+   P('storage',X,Y,0);let x=X+2;P(id,x++,Y,0);for(let k=0;k<5;k++){P('splitter',x++,Y,0);P(id,x++,Y,0);P(id,x++,Y,0);}P('crossing',x++,Y,0);P(id,x++,Y,0);const m=x;P(id,x++,Y,0);P(id,x++,Y,0);P('incin',x,Y,0);
+   const c=fw.entAt(X,Y),mb=fw.entAt(m,Y);for(let t=0;t<20*15;t++){c.store={iron_plate:999};tick(0.05);}let cnt=0;const orig=accept;accept=function(e){const ok=orig.apply(this,arguments);if(ok&&e===mb)cnt++;return ok;};
+   try{for(let t=0;t<20*30;t++){c.store={iron_plate:999};tick(0.05);}}finally{accept=orig;}out[id]=cnt*2/(B[id].spd*60);
+   for(let j=-1;j<3;j++)for(let i=-1;i<26;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}}return out;});
+ check(`a line through 5 splitters + a crossing keeps the full rate (Mk3 ${Math.round(sp.belt3*100)}%, Mk5 ${Math.round(sp.belt5*100)}%)`,sp.belt3>0.97&&sp.belt3<1.02&&sp.belt5>0.97&&sp.belt5<1.02);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

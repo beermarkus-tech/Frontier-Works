@@ -1661,3 +1661,29 @@ Two Drill Mk2 at 225 % on normal nodes should give 270/min onto Mk3 belts (270/m
 - Reproduction of Markus's setup: meter 270/min, drill buffer empty, no "No power".
 - `npm test` 83 PASS / 0 FAIL. New check: crate-fed Mk2/Mk3/Mk5 reach ≥ 97 % of their rate; a belt-blocked drill shows "Output full", no power warning.
 - `npm run playthrough`: unchanged (measurement noise only).
+
+---
+
+## Session 37j — 2026-11-13 (Claude Code, cloud session) · Build 69
+
+### What Markus reported (with screenshot)
+A plain belt from a drill to a crate now carries 270/min, but a Mk3 line along a row of machines (feeding them through splitters) carries only
+223–240/min, and the last machines starve.
+
+### Causes
+1. Splitters and crossings handed items to the next belt starting at progress 0 (same mistake as buildings before Build 68), losing part of a
+   tick at every splitter.
+2. Splitters/crossings were updated before the belts each tick, so a splitter often found the tile in front still occupied (it moves on later in
+   the same tick) and waited a whole tick. Visible at Mk5: 684 of 780 through splitters.
+
+### Fixes
+- `accT` / `beltCarry()` in `js/sim.js`: the moment an item reached a tile edge travels with it through splitters (`e.inT`) and crossings
+  (`e.hT/e.vT`), which act like a belt piece of zero length; the receiving belt tile starts the item with the progress it would have made since
+  max(that moment, the moment the tile became free). Buildings (`pushOut`) use the same helper.
+- Tick order: belts first, then splitters and crossings.
+- Build number **69**.
+
+### Verified
+- Counted items per minute (not just the meter) on a line with 5 splitters + a crossing: Mk3 270 of 270, Mk4 480, Mk5 780 (old code: 240, 400, 600).
+- `npm test` 84 PASS / 0 FAIL (splitter feeding, curves, crossing, merger checks unchanged). New check: the 5-splitter line at 100 % for Mk3 and Mk5.
+- `npm run playthrough`: unchanged (measurement noise only).
