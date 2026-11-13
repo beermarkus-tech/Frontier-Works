@@ -466,10 +466,11 @@ function v3Zones(){if(V3.zv===zoneVer)return;V3.zv=zoneVer;
  rm.instanceMatrix.needsUpdate=true;if(rm.instanceColor)rm.instanceColor.needsUpdate=true;pm.instanceMatrix.needsUpdate=true;}
 /* zone name tags in 3D (Session 38j): one sprite per zone above its top-left corner, redrawn when name/colour change */
 function v3ZoneLabels(){V3.zl=V3.zl||new Map();const seen=new Set();
- for(const z of zones()){if(!z.lab)continue;seen.add(z.id);let o=V3.zl.get(z.id);const key=z.name+'|'+z.c;
+ for(const z of zones()){if(!z.lab)continue;seen.add(z.id);let o=V3.zl.get(z.id);const pc=z.eff!=null?Math.round(z.eff*100):null,key=z.name+'|'+z.c+'|'+pc;
   if(!o){const c=document.createElement('canvas');c.width=512;c.height=96;const tex=new T3.CanvasTexture(c);const sp=new T3.Sprite(new T3.SpriteMaterial({map:tex,depthWrite:false,depthTest:false}));sp.renderOrder=6;V3.scene.add(sp);o={c,tex,sp,key:''};V3.zl.set(z.id,o);}   // always on top: buildings never hide a zone name
-  if(o.key!==key){o.key=key;const g=o.c.getContext('2d');g.clearRect(0,0,512,96);g.font='700 44px Inter,system-ui,sans-serif';const w=Math.min(500,g.measureText(z.name).width+48);
-   g.fillStyle='rgba(10,14,18,0.85)';rrg(g,(512-w)/2,10,w,76,38);g.fill();g.lineWidth=6;g.strokeStyle=zoneCol(z);g.stroke();g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(z.name,256,50);o.tex.needsUpdate=true;}
+  if(o.key!==key){o.key=key;const g=o.c.getContext('2d');g.clearRect(0,0,512,96);g.font='700 44px Inter,system-ui,sans-serif';const ptxt=pc!=null?pc+'%':'',nw=g.measureText(z.name).width,pw=pc!=null?g.measureText(ptxt).width+24:0,w=Math.min(500,nw+pw+48),x0=(512-w)/2;
+   g.fillStyle='rgba(10,14,18,0.85)';rrg(g,x0,10,w,76,38);g.fill();g.lineWidth=6;g.strokeStyle=zoneCol(z);g.stroke();g.textBaseline='middle';g.textAlign='left';g.fillStyle='#fff';g.fillText(z.name,x0+24,50);
+   if(pc!=null){g.fillStyle=effCol(pc);g.fillText(ptxt,x0+24+nw+24,50);}o.tex.needsUpdate=true;}
   o.sp.position.set(z.lab.x+1.2,1.3,z.lab.y);o.sp.scale.set(4,0.75,1);}
  for(const [k,o] of V3.zl)if(!seen.has(k)){V3.scene.remove(o.sp);o.tex.dispose();o.sp.material.dispose();V3.zl.delete(k);}}
 function v3Meters(){V3.fm=V3.fm||new Map();const seen=new Set();

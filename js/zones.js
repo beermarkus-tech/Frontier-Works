@@ -59,8 +59,9 @@ function drawZoneFence(sx,sy,s){if(!zoneEdges.length&&!zonePrev)return;const W=c
   ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(X0,Y0);ctx.lineTo(X1,Y1);ctx.stroke();
   if(s>=10){const p=Math.max(2,s*0.11);ctx.fillStyle='#3a3226';ctx.fillRect(X0-p/2,Y0-p/2,p,p);}}
  for(const z of zones()){if(!z.lab)continue;const X=sx(z.lab.x),Y=sy(z.lab.y);if(X>W||Y>H+40||X<-400||Y<-40)continue;const fs=Math.round(11*DPR);ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
-  const w=ctx.measureText(z.name).width+fs*1.2,h=fs*1.6,x=X+2,y=Y-h-2;ctx.fillStyle='rgba(10,14,18,0.82)';rr(x,y,w,h,h/2);ctx.fill();ctx.strokeStyle=zoneCol(z);ctx.lineWidth=Math.max(1,fs*0.12);ctx.stroke();
-  ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.fillText(z.name,x+fs*0.6,y+h/2+0.5);}
+  const pc=z.eff!=null?Math.round(z.eff*100):null,ptxt=pc!=null?pc+'%':'',nw=ctx.measureText(z.name).width,pw=pc!=null?ctx.measureText(ptxt).width+fs*0.7:0;
+  const w=nw+pw+fs*1.2,h=fs*1.6,x=X+2,y=Y-h-2;ctx.fillStyle='rgba(10,14,18,0.82)';rr(x,y,w,h,h/2);ctx.fill();ctx.strokeStyle=zoneCol(z);ctx.lineWidth=Math.max(1,fs*0.12);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.fillText(z.name,x+fs*0.6,y+h/2+0.5);if(pc!=null){ctx.fillStyle=effCol(pc);ctx.fillText(ptxt,x+fs*0.6+nw+fs*0.7,y+h/2+0.5);}}
  if(zonePrev){const p=zonePrev,r=p.r,X=sx(r.x0),Y=sy(r.y0),w=(r.x1-r.x0+1)*s,h=(r.y1-r.y0+1)*s,col=p.why?'#ff5a46':p.cut?'#ff9a5a':p.id?zoneCol(zoneById(p.id)):'#6ef08a';
   ctx.fillStyle=col;ctx.globalAlpha=0.15;ctx.fillRect(X,Y,w,h);ctx.globalAlpha=1;ctx.strokeStyle=col;ctx.lineWidth=2*DPR;ctx.setLineDash([6*DPR,4*DPR]);ctx.strokeRect(X,Y,w,h);ctx.setLineDash([]);}}
 /* ---------- Factory dashboard (Session 38b) ----------
@@ -84,7 +85,11 @@ function zTick(dt){ZS.acc+=dt;if(ZS.acc<1)return;ZS.acc-=1;
  for(const n of nets){if(!n.zi&&!n.zo)continue;const zi=n.zi||{},zo=n.zo||{},ex=[],im=[];let E=0,I=0;
   for(const z of new Set([...Object.keys(zi),...Object.keys(zo)])){const d=(zi[z]||0)-(zo[z]||0);if(d>0){ex.push([z,d]);E+=d;}else if(d<0){im.push([z,-d]);I+=-d;}}
   if(E&&I&&n.fluid){const T=Math.min(E,I);for(const [a,ea] of ex)for(const [b,ib] of im)zc('x|'+a+'|'+b+'|'+n.fluid,T*(ea/E)*(ib/I));}n.zi=n.zo=null;}
- ZS.hist.push(ZS.cur);ZS.cur={};if(ZS.hist.length>60)ZS.hist.shift();}
+ ZS.hist.push(ZS.cur);ZS.cur={};if(ZS.hist.length>60)ZS.hist.shift();zEffAll();}
+/* efficiency per zone for the fence labels (Session 38k): power-weighted average of its machines/drills/pumps, like the dashboard badge */
+function zEffAll(){if(!zoneMap)return;const w={},f={};for(const e of ents.values()){if(e.off||!(e._efT>=3)||!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))continue;const z=zOf(e);if(!z)continue;
+  const k=Math.max(1,(B[e.d].pw||0)*Math.pow(e.clock||1,1.6));w[z]=(w[z]||0)+k;f[z]=(f[z]||0)+k*(e._ef||0);}
+ for(const z of zones())z.eff=w[z.id]?f[z.id]/w[z.id]:null;}
 function zRates(){const out={};for(const h of ZS.hist)for(const k in h)out[k]=(out[k]||0)+h[k];const m=60/Math.max(1,ZS.hist.length);for(const k in out)out[k]*=m;return out;}
 /* spare capacity (machines held up by full output) and shortages (machines waiting for an input), from the efficiency measurements */
 function zMachines(z){const spare={},short={},design={};let mw=0,n=0,ew=0,ef=0;const dz=(k,v)=>{design[k]=(design[k]||0)+v;};

@@ -486,6 +486,7 @@ const server=require('./serve.js');
   openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=!txt.includes('Counted where items cross')&&txt.includes('Smelting')&&txt.includes('Pressing')&&!txt.includes('All factories together')&&!txt.includes('Items per minute')&&txt.includes('Factory size')&&txt.includes('Sends to other factories')&&txt.includes('Designed to make')&&!txt.includes('MakesUses')&&!/\bMakes\b/.test(txt)&&!txt.includes('Could make more');
   out.noEmpty=(txt.match(/Gets from other factories/g)||[]).length===1&&(txt.match(/Sends to other factories/g)||[]).length===1;   // Smelting only sends, Pressing only gets
   out.effBadge=document.querySelectorAll('#pbody .zeff').length>=2;
+  {const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};cam.x=camT.x=X+4;cam.y=camT.y=Y;cam.z=camT.z=1.5;render();ctx.fillText=f;const za=zoneById(A);out.labelEff=za.eff!=null&&seen.includes(Math.round(za.eff*100)+'%');}
   const M=zMachines(A);out.design=Math.abs((M.design.iron_ingot||0)-30)<0.5&&!(M.design.iron_ore>0);out.eff=M.eff!=null&&Math.abs(M.eff-sm._ef)<0.01;
   ACT.zoneFold(String(A));const t2=document.getElementById('pbody').textContent;out.fold=(OPT.zCol||[]).includes(A)&&(t2.match(/buildings/g)||[]).length===(txt.match(/buildings/g)||[]).length-1&&(t2.match(/Designed to make/g)||[]).length===(txt.match(/Designed to make/g)||[]).length-1&&t2.includes('Smelting');
   ACT.zoneFold(String(A));out.unfold=!(OPT.zCol||[]).includes(A);

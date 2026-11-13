@@ -1875,3 +1875,13 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
 - Verified: `npm test` 90 PASS / 0 FAIL (new check: every zone has a 3D tag and a rename updates it). 3D screenshot (first try: a chimney cut
   through a tag, so tags now draw on top). Build number **81**.
 - Closes the known issue "zone names only in 2D".
+
+---
+
+## Session 38k — 2026-11-13 (Claude Code, cloud session) · Build 82
+
+- Markus: add the factory's overall efficiency to its fence label in 2D and 3D.
+- Built: `zEffAll()` (once per second, one pass over all buildings) stores `z.eff` per zone with the same rule as the dashboard badge
+  (power-weighted average of machines with a recipe, drills and pumps; switched-off ones and those measured < 3 s left out). 2D and 3D name tags
+  show "Name 87%" with the percentage in the ring colours; zones without measured machines show just the name.
+- Verified: `npm test` 90 PASS / 0 FAIL (dashboard check: the 2D label draws the zone's percentage). Screenshots in 2D and 3D. Build number **82**.
