@@ -1510,3 +1510,23 @@ verified in the game that a belt and a pipe pass through one Crossing and that t
 - `npm test` 75/75. New check: two new plans (target Iron Rod with a tick, Power 90 MW) show as tabs; switching restores each plan's mode,
   numbers and ticks; "Plan this node" adds a tab for copper; storage holds the list; delete removes one; old format converts.
 - Tablet screenshot of the tabs in the left-pinned planner.
+
+---
+
+## Session 37c — 2026-11-13 (Claude Code, cloud session) · Build 62
+
+### What Markus asked
+The planner should use byproducts of production steps in the same factory as resources.
+
+### What was built
+- `plRevMulti` (used by "For a target" and the Power tab's fuel chain) now runs `plRevOnce` repeatedly with a byproduct "credit": demand for an
+  item (as input, raw resource, "bring in", or end product) is covered first by byproducts made elsewhere in the plan; then machines/mining
+  for the rest. Since that changes machine counts and byproduct amounts, it repeats until the numbers settle (≤ 40 rounds, stops at < 1e-7).
+- Results: `out.used` (byproducts used inside), `out.by` (left over). UI: "♻ x/min more comes from byproducts of this factory" on machine cards,
+  a "Byproducts used here" card, and "Byproducts left over" (renamed).
+- Real cases in the data: Aluminum Scrap's water back into Alumina; Uranium Cell's acid back into the cells; Battery's water.
+- Build number **62**.
+
+### Verified
+- `npm test` all PASS. New check: 60 Aluminum Scrap/min needs 40 instead of 60 water/min (20 reused, 0 left over); 10 Uranium Cells/min need
+  fewer acid machines (0.32 → 0.24) with 4 acid/min reused. All older planner checks unchanged.

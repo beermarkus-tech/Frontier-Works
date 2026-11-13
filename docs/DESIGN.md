@@ -190,6 +190,9 @@ Hand mining gives +5 ore from a node.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
+- **Byproducts used inside the plan** (Session 37c): in "For a target" (and the Power tab's fuel chain), a byproduct of one step covers demand for
+  that item elsewhere in the same plan (input, raw resource or end product) before more machines or mining are planned. Shown as "♻ … comes from
+  byproducts" on the card and in "Byproducts used here"; only the rest is listed as "Byproducts left over".
 - **Several plans** (Session 37b): the planner has plan tabs (blue) above the mode buttons. Each plan keeps its own mode, settings and ticks;
   tabs are named after what they make unless renamed (✎). ＋ New plan, ✕ Delete this plan (asks), up to 12. "Plan this node" and "Plan the power"
   open their own new tab (or reuse an untouched one). Stored per device.

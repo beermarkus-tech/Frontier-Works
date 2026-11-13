@@ -101,20 +101,31 @@ function plTargets(){const s=new Set();for(const r of RL)if(plRecOk(r))for(const
 /* Reverse planner for one or more end products [{item,rate}]: shared parts are summed (e.g. Steel Ingot for both Steel Beam and Steel Pipe).
    Items are processed consumers-first (reverse DFS post-order over all targets), so every demand is complete before its producer is sized. */
 function plRev(item,rate,pick){return plRevMulti([{item,rate}],pick);}
-function plRevMulti(targets,pick){
- const order=[],state={},rec={};
+/* Byproducts are used inside the same factory (Session 37c): an item that some step makes as a byproduct covers demand for it (as an input,
+   raw resource or end product) before more machines or mining are planned. Using it changes machine counts and so the byproduct amount,
+   so the plan is recalculated until it settles. out.by = byproducts left over, out.used = byproducts used inside the factory. */
+function plRevMulti(targets,pick){let credit={},out=null;
+ for(let k=0;k<40;k++){out=plRevOnce(targets,pick,credit);const nb=out.byAll;let diff=0;for(const x of new Set([...Object.keys(nb),...Object.keys(credit)]))diff=Math.max(diff,Math.abs((nb[x]||0)-(credit[x]||0)));
+  if(diff<1e-7)break;credit=nb;}
+ return out;}
+function plRevOnce(targets,pick,credit){
+ const order=[],state={},rec={},avail=Object.assign({},credit||{}),used={};
+ const take=(k,v)=>{const u=Math.min(v,avail[k]||0);if(u>PL_EPS){avail[k]-=u;used[k]=(used[k]||0)+u;return v-u;}return v;};
  const visit=it=>{if(state[it]||PL_RAW.has(it))return;state[it]=1;const r=plPick(it,pick);if(r){rec[it]=r;for(const k in r.i)visit(k);}order.push(it);};
  for(const t of targets)visit(t.item);
  const dem={},done=new Set(),out={rows:[],raw:{},by:{},none:{},power:0,mach:{},goal:{}};
  for(const t of targets){dem[t.item]=(dem[t.item]||0)+t.rate;out.goal[t.item]=(out.goal[t.item]||0)+t.rate;}
- const add=(o,k,v)=>{o[k]=(o[k]||0)+v;};
- for(let i=order.length-1;i>=0;i--){const it=order[i],need=dem[it]||0;done.add(it);if(need<=PL_EPS)continue;const r=rec[it];
+ const add=(o,k,v)=>{o[k]=(o[k]||0)+v;};const byAll={};
+ for(let i=order.length-1;i>=0;i--){const it=order[i];done.add(it);const need=take(it,dem[it]||0);if(need<=PL_EPS)continue;const r=rec[it];
   if(!r){add(out.none,it,need);continue;}
   const n=need/plPerMin(r,r.o[it]);out.rows.push({item:it,r,n,rate:need});out.power+=plPower(B[r.m].pw,n);add(out.mach,r.m,Math.ceil(n-PL_EPS));
   for(const k in r.i){const v=n*plPerMin(r,r.i[k]);if(PL_RAW.has(k))add(out.raw,k,v);else if(done.has(k))add(out.none,k,v);else add(dem,k,v);}
-  for(const k in r.o)if(k!==it)add(out.by,k,n*plPerMin(r,r.o[k]));
+  for(const k in r.o)if(k!==it)add(byAll,k,n*plPerMin(r,r.o[k]));
  }
- return out;
+ for(const k of Object.keys(out.raw)){out.raw[k]=take(k,out.raw[k]);if(out.raw[k]<=PL_EPS)delete out.raw[k];}
+ for(const k of Object.keys(out.none)){out.none[k]=take(k,out.none[k]);if(out.none[k]<=PL_EPS)delete out.none[k];}
+ for(const k in byAll){const left=byAll[k]-(used[k]||0);if(left>PL_EPS)out.by[k]=left;}
+ out.used=used;out.byAll=byAll;return out;
 }
 
 /* ---------- UI ---------- */
@@ -190,14 +201,17 @@ function plRevHtml(){
   const ps=plProducers(row.item);
   const g=o.goal[row.item],tk='m:'+row.item;h+=`<div class="card ${plDone(tk)?'pldone':''}"><div class="row"><b>${plTickBtn(tk)} ${nm(row.item)}${g?' <span class="plgoal">🎯 end product</span>':''}</b><span>${fmt(row.rate)}/min</span></div>${g&&row.rate-g>PL_EPS?`<div class="muted">${fmt(g)} as end product + ${fmt(row.rate-g)} used by other steps</div>`:''}`;
   if(ps.length>1)h+=plSel(`r.pick.${row.item}`,plRecOpts(ps),row.r.id,'wide');else h+=`<div class="muted">${row.r.n}</div>`;
+  if(o.used&&o.used[row.item]>PL_EPS)h+=`<div class="plok" style="margin-top:2px">♻ ${fmt(o.used[row.item])}/min more comes from byproducts of this factory</div>`;
   h+=plCount(row.n,row.r.m)+plIO(row.r,row.n)+`</div>`;
  }
  const rk=Object.keys(o.raw);
  h+=`<h4>Raw resources</h4><div class="card">`+(rk.length?rk.map(k=>{
   const res=PL_RES.find(x=>plResItem(x)===k),ex=plExtractors(res),best=ex.filter(id=>ub(id)).pop()||ex[0],per=B[best].rate*60;
   return plRate(k,o.raw[k])+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(o.raw[k]/per)} × ${B[best].n} on ${k==='water'?'water':'normal nodes'}${S.gen===2&&res!=='water'?` · found mostly in ${plWhere(res)}`:''}</div>`;}).join(''):'<div class="muted">none</div>')+`</div>`;
+ const uk=Object.keys(o.used||{}).filter(k=>o.used[k]>PL_EPS);
+ if(uk.length)h+=`<h4>Byproducts used here</h4><div class="card"><div class="muted">These come out of one step and go straight into another, so they don't need extra machines or mining.</div>${uk.map(k=>plRate(k,o.used[k],'plok')).join('')}</div>`;
  const bk=Object.keys(o.by),nk=Object.keys(o.none);
- if(bk.length)h+=`<h4>Byproducts</h4><div class="card"><div class="muted">These come out too. Belt them on, recycle them or burn them in an Incinerator.</div>${bk.map(k=>plRate(k,o.by[k])).join('')}</div>`;
+ if(bk.length)h+=`<h4>Byproducts left over</h4><div class="card"><div class="muted">These come out too. Belt them on, recycle them or burn them in an Incinerator.</div>${bk.map(k=>plRate(k,o.by[k])).join('')}</div>`;
  if(nk.length)h+=`<h4>Bring in from elsewhere</h4><div class="card"><div class="muted">No ${PL.locked?'':'unlocked '}recipe makes these here.</div>${nk.map(k=>plRate(k,o.none[k],'plbad')).join('')}</div>`;
  const ex=plExtract(o.raw),tp=o.power+ex.power;
  h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(o.mach)||'—')+plRow('Machines power',fmt(o.power)+' MW')+plRow('Drills & pumps (estimate)',fmt(ex.power)+' MW')+plRow('<b>Total power</b>',`<b>${fmt(tp)} MW</b>`)+plPlantLine(tp)+`</div>`;

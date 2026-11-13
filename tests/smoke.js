@@ -360,6 +360,12 @@ const server=require('./serve.js');
   out.convert=plNorm({mode:'rev',rev:{targets:[{item:'wire',rate:5}],pick:{}}}).rev.targets[0].item==='wire';
   PLS.list.splice(n0);PLS.cur=0;PL=PLS.list[0];plSave();ACT.closePanel();return out;});
  check(`several plans as tabs: ${Object.entries(mp).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mp).every(Boolean));
+ // planner reuses byproducts inside the factory: aluminium scrap's water goes back into alumina; uranium cells' acid back into the cells
+ const bp=await p.evaluate(()=>{const lk=PL.locked;PL.locked=true;const T=[{item:'alu_scrap',rate:60}],a0=plRevOnce(T,{},{}),a1=plRevMulti(T,{});
+  const U=[{item:'uranium_cell',rate:10}],u0=plRevOnce(U,{},{}),u1=plRevMulti(U,{});const acidM=o=>o.rows.filter(r=>r.item==='acid').reduce((s,r)=>s+r.n,0);
+  PL.locked=lk;return{water0:a0.raw.water||0,water1:a1.raw.water||0,usedW:a1.used.water||0,leftW:a1.by.water||0,acid0:acidM(u0),acid1:acidM(u1),usedA:u1.used.acid||0};});
+ check(`planner uses byproducts in the same factory: water ${Math.round(bp.water0)}→${Math.round(bp.water1)}/min (${Math.round(bp.usedW)} reused, ${Math.round(bp.leftW)} left over), acid machines ${bp.acid0.toFixed(2)}→${bp.acid1.toFixed(2)} (${bp.usedA.toFixed(1)}/min reused)`,
+  bp.usedW>0&&Math.abs(bp.water0-bp.water1-bp.usedW)<0.01&&bp.leftW<0.01&&bp.usedA>0&&bp.acid1<bp.acid0);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
