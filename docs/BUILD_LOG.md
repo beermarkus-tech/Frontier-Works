@@ -1593,3 +1593,27 @@ got almost everything (test: 78 vs 5 crude).
 ### Verified
 - New check: two refineries on one network with short supply get 39 vs 44 crude (old code: 5 vs 78).
 - `npm test` 79/79 (pipe throughput still 300 m³/min on Mk1); `npm run playthrough` unchanged apart from measurement noise.
+
+---
+
+## Session 37g — 2026-11-13 (Claude Code, cloud session) · Build 66
+
+### What Markus asked
+1. Fluid-mixing warnings appear although the refinery has a separate pipe for the other fluid.
+2. The Flow Meter should average over a longer time, especially for belts with only 1–2 items per minute.
+
+### Cause and fix (1)
+- Each pipe network attached to a building checked that building's fluid outputs on its own: a refinery's crude input network saw the heavy
+  residue output and flagged "mixing", although the residue had its own pipe (the fluids never actually mixed; only the warning was wrong).
+- `fluidHome(b,k,net)`: a mismatch only raises the warning if none of the building's other networks holds that fluid or is empty.
+  Same for pumps and tanks.
+
+### Fix (2)
+- Belts with a meter remember the arrival times of the last 30 items, at most 5 minutes back (`e.fa`). Rate = items ÷ time between first and
+  last arrival; the wait since the last item only counts once it's longer than the usual gap, so a belt that stops drops gradually.
+  Busy belts react within ~30 s; 1–2 items/min settle over a few minutes. Pipes unchanged (network flow).
+- Build number **66**.
+
+### Verified
+- `npm test` 81 PASS, 0 FAIL. New checks: refinery with crude in and residue out on separate pipes: no warning, residue flows; with only the
+  crude pipe the warning still shows. Slow belt (1 item every 30 s) reads 2.00/min, 0.67/min three minutes after items stop. Full Mk1 still 60/min.

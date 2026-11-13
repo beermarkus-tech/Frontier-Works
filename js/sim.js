@@ -120,7 +120,7 @@ function placeEnt(id,x,y,dir,free){
  const e={id:nextId++,d:id,k:d.k,x,y,w:d.w,h:d.w,dir:dir||0};
  initEnt(e,d);
  if(carry&&isLine(e.k)&&IT[carry].f===(e.k==='pipe'))e.item=carry;
- if(cfm&&afford(B.fmeter.cost)){pay(B.fmeter.cost);e.fm=1;e.fh=[];}   // the meter stays on an upgraded belt
+ if(cfm&&afford(B.fmeter.cost)){pay(B.fmeter.cost);e.fm=1;e.fa=[];}   // the meter stays on an upgraded belt
  ents.set(e.id,e);e.born=animT;
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(y+j)*MW+x+i]=e.id;
  if(isPN(e)&&S.pw2)pnAuto(e);
@@ -172,12 +172,14 @@ function eraseEnt(e){if(!e||!ERASE_K.includes(e.k))return 0;let n=0;const back=(
  if(e.k==='drill'||e.k==='pump'){if(e.buf>0&&e.node){back(NODE_T[e.node.t][0],e.buf);if(IT[NODE_T[e.node.t][0]]&&IT[NODE_T[e.node.t][0]].f)n+=Math.floor(e.buf);}e.buf=0;e.prog=0;return n;}
  if(e.k==='gen'){for(const k in e.outb)back(k,e.outb[k]);e.outb={};return n;}
  return n;}
-/* Flow Meter (Session 36f): a marker on a belt/pipe tile (e.fm, saved). Belts count arriving items per second (e.fc → e.fh, 30 s window);
-   pipes show their network's flow. fmRate → [per minute, max per minute]. */
+/* Flow Meter (Session 36f): a marker on a belt/pipe tile (e.fm, saved). Belts remember when the last 30 items arrived (at most 5 min back,
+   e.fa) and the rate is the time between them (Session 37g: busy belts react within ~30 s, 1–2 items/min settle over several minutes,
+   and a belt that stops drops gradually); pipes show their network's flow. fmRate → [per minute, max per minute]. */
 function fmRate(e){if(e.k==='pipe'){const n=e.net;return[n?Math.max(n.inR,n.outR):0,(n?n.rate:e.spd)*60];}
- const h=e.fh||[];return[h.length?h.reduce((a,b)=>a+b,0)/h.length*60:0,e.spd*60];}
-function toggleMeter(e){if(!e||!isLine(e.k))return 'Put it on a belt or pipe';if(e.fm){e.fm=0;e.fh=null;refund(B.fmeter.cost);topoDirty=true;return 'off';}
- if(!afford(B.fmeter.cost))return 'Not enough materials';pay(B.fmeter.cost);e.fm=1;e.fh=[];e.fc=0;topoDirty=true;return 'on';}
+ const a=e.fa||[],n=a.length;if(n<2)return[0,e.spd*60];const span=Math.max(0.5,a[n-1]-a[0]),gap=span/(n-1),extra=Math.max(0,S.t-a[n-1]-gap);
+ return[60*(n-1)/(span+extra),e.spd*60];}   // the wait since the last item only counts once it's longer than the usual gap
+function toggleMeter(e){if(!e||!isLine(e.k))return 'Put it on a belt or pipe';if(e.fm){e.fm=0;e.fa=null;refund(B.fmeter.cost);topoDirty=true;return 'off';}
+ if(!afford(B.fmeter.cost))return 'Not enough materials';pay(B.fmeter.cost);e.fm=1;e.fa=[];topoDirty=true;return 'on';}
 /* ---------- Power wires (Session 36h) ----------
    Wires are saved per node (pole, tower, switch, generator) as e.pl=[[x,y],…] (corners of linked nodes), kept on both ends.
    A new node wires itself only to the nearest node in range (a tidy tree instead of a web); the pole panel can add/remove wires by hand.
@@ -231,7 +233,7 @@ function accept(e,item,dir,carry){
   case 'pipe':return false;   // pipes are part of a fluid network (updNets), they don't pass single items
   case 'belt':
    if(e.item||fl!==(e.k==='pipe'))return false; if(((dir+2)&3)===e.dir)return false;
-   e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;if(e.fm)e.fc=(e.fc||0)+1;return true;
+   e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;if(e.fm){const a=e.fa||(e.fa=[]);a.push(S.t);if(a.length>30)a.shift();}return true;
   case 'router':{
    if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc')return false;   // a Pipe Junction is a network piece
    const sub=B[e.d].sub;
@@ -341,13 +343,16 @@ function buildNets(){
   const n={tiles,fluid,cap:tiles.length*PIPE_CAP,amt:0,rate:isFinite(rate)?rate:5,att:[...att],bi:0,bo:0,inR:0,outR:0,_fl:0,conflict:null};n.amt=Math.min(n.cap,amt);n._fl=n.cap?n.amt/n.cap:0;
   for(const t of tiles)t.net=n;nets.push(n);}
 }
+/* A mismatch is only a real conflict if none of the building's networks can take that fluid (Session 37g): a refinery with a fuel pipe and a
+   resin pipe used to raise the mixing warning on both, although each fluid had its own pipe. */
+function fluidHome(b,k,except){for(const m of nets)if(m!==except&&(!m.fluid||m.fluid===k)&&m.att.includes(b))return true;return false;}
 function updNets(dt){
  for(const n of nets){const lim=n.rate;n.bi=Math.min(lim,n.bi+lim*dt);n.bo=Math.min(lim,n.bo+lim*dt);let got=0,sent=0;
   const take=(fluid,avail)=>{if(n.fluid&&n.fluid!==fluid)return 0;const m=Math.min(avail,Math.floor(n.cap-n.amt),Math.floor(n.bi));if(m<=0)return 0;n.fluid=fluid;n.amt+=m;n.bi-=m;got+=m;return m;};
   for(const b of n.att){
-   if(b.k==='pump'){if(b.item&&b.buf>0){if(n.fluid&&n.fluid!==b.item){n.conflict={fluid:b.item,b,t:tickNo};continue;}b.buf-=take(b.item,b.buf);}}
-   else if(b.k==='mach'){for(const k in b.outb)if(IT[k].f&&b.outb[k]>0){if(n.fluid&&n.fluid!==k){n.conflict={fluid:k,b,t:tickNo};continue;}b.outb[k]-=take(k,b.outb[k]);}}
-   else if(b.k==='tank'&&b.ft&&b.amt>0&&n.amt<n.cap*0.5){if(n.fluid&&n.fluid!==b.ft){n.conflict={fluid:b.ft,b,t:tickNo};continue;}b.amt-=take(b.ft,b.amt);if(!b.amt)b.ft=null;}}
+   if(b.k==='pump'){if(b.item&&b.buf>0){if(n.fluid&&n.fluid!==b.item){if(!fluidHome(b,b.item,n))n.conflict={fluid:b.item,b,t:tickNo};continue;}b.buf-=take(b.item,b.buf);}}
+   else if(b.k==='mach'){for(const k in b.outb)if(IT[k].f&&b.outb[k]>0){if(n.fluid&&n.fluid!==k){if(!fluidHome(b,k,n))n.conflict={fluid:k,b,t:tickNo};continue;}b.outb[k]-=take(k,b.outb[k]);}}
+   else if(b.k==='tank'&&b.ft&&b.amt>0&&n.amt<n.cap*0.5){if(n.fluid&&n.fluid!==b.ft){if(!fluidHome(b,b.ft,n))n.conflict={fluid:b.ft,b,t:tickNo};continue;}b.amt-=take(b.ft,b.amt);if(!b.amt)b.ft=null;}}
   if(n.fluid&&n.amt>=1){
    // fair share (Session 37f): one unit at a time, in turn, to every building that can take it; the starting point moves by one each tick.
    // Before, each building in turn was filled as far as it could take, and the start could land on the same building every tick, so when
@@ -459,7 +464,7 @@ function updBuilding(e,dt){
 function tick(dt){
  if(topoDirty)rebuildTopo();
  tickNo++;S.t+=dt;
- if(tickNo%20===0)for(const e of meters){(e.fh||(e.fh=[])).push(e.fc||0);e.fc=0;if(e.fh.length>30)e.fh.shift();}   // Flow Meters: items per second, last 30 s
+ if(tickNo%20===0)for(const e of meters){const a=e.fa;if(a)while(a.length&&S.t-a[0]>300)a.shift();}   // Flow Meters: arrival times of the last 30 items, at most 5 min back
  powerStep(dt);
  for(const e of routers)updRouter(e);
  for(const e of crosses)updCross(e);

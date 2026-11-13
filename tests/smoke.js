@@ -395,6 +395,25 @@ const server=require('./serve.js');
   for(let j=-2;j<8;j++)for(let i=-1;i<14;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),a:cnt[A.id]||0,b:cnt[Bq.id]||0};});
  check(`pipe network shares short supply fairly between two refineries (${fs_.a} vs ${fs_.b} crude)`,fs_.ok&&fs_.a+fs_.b>40&&Math.abs(fs_.a-fs_.b)<=Math.max(4,(fs_.a+fs_.b)*0.15));
+ // refinery with crude in one pipe and heavy residue out another: no false "mixing" warning; with only the crude pipe it still warns
+ const fx=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<8&&ok;j++)for(let i=-3;i<10&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('refinery',X,Y,0),P('junction',X+3,Y,0),P('pipe1',X+4,Y,0),P('pipe1',X+5,Y,0),P('junction',X-1,Y+2,0),P('pipe1',X-2,Y+2,0),P('pipe1',X-3,Y+2,0)];tick(0.05);
+  const ref=fw.entAt(X,Y),nc=fw.entAt(X+4,Y).net,nr=fw.entAt(X-2,Y+2).net;ref.r='r_plastic';nc.fluid='crude';nc.amt=nc.cap;nr.fluid='heavy_residue';nr.amt=1;
+  for(let i=0;i<40;i++){ref.outb={heavy_residue:2};nc.amt=nc.cap;tick(0.05);}
+  const out={ok:r.every(v=>v===''),two:nc!==nr,noWarn:!nc.conflict&&!nr.conflict,residueOut:nr.amt>5,crudeIn:(ref.inb.crude||0)>0||ref.run};
+  removeEnt(fw.entAt(X-1,Y+2),false,true);tick(0.05);const n2=fw.entAt(X+4,Y).net;n2.conflict=null;n2.fluid='crude';n2.amt=n2.cap;for(let i=0;i<10;i++){ref.outb={heavy_residue:2};tick(0.05);}
+  out.stillWarns=!!n2.conflict&&n2.conflict.fluid==='heavy_residue';
+  for(let j=-1;j<8;j++)for(let i=-3;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
+ check(`refinery with a pipe per fluid gives no mixing warning (${Object.entries(fx).map(([k,v])=>k+'='+v).join(' ')})`,Object.values(fx).every(Boolean));
+ // Flow Meter on a slow belt: one item every 30 s reads ≈ 2/min after a few minutes, and drops when items stop
+ const slow=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-1;i<8&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  for(let i=0;i<4;i++)P('belt1',X+i,Y,0);P('incin',X+4,Y,0);const mb=fw.entAt(X+2,Y);S.inv.iron_plate+=5;S.inv.wire=(S.inv.wire||0)+5;toggleMeter(mb);const first=fw.entAt(X,Y);
+  for(let t=0;t<20*360;t++){if(t%600===0&&!first.item)first.item='iron_plate';tick(0.05);}const r1=fmRate(mb)[0];
+  for(let t=0;t<20*180;t++)tick(0.05);const r2=fmRate(mb)[0];
+  for(let i=-1;i<8;i++)for(let j=-1;j<3;j++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{r1,r2};});
+ check(`Flow Meter on a slow belt: 1 item every 30 s reads ${slow.r1.toFixed(2)}/min; 3 min after items stop ${slow.r2.toFixed(2)}/min`,slow.r1>1.85&&slow.r1<2.15&&slow.r2<slow.r1*0.75);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
