@@ -121,16 +121,20 @@ const server=require('./serve.js');
  check(`crossing in front of a machine: input survives a pause (${Math.round(xj.a*100)}%), output through a crossing works (${Math.round(xj.b*100)}%)`,xj.ok&&xj.a>0.8&&xj.b>0.8);
  // a belt line can bend away from a building beside it; the bent belt takes no output from that building (Session 39v)
  const bend=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
-  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<4&&ok;j++)for(let i=-1;i<5&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<8&&ok;j++)for(let i=-1;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
   const r=[P('storage',X,Y,0),P('belt1',X+2,Y,0),P('belt1',X+2,Y+1,3)];tick(0.05);const a=fw.entAt(X+2,Y),cr=fw.entAt(X,Y);cr.ports=[{x:X+2,y:Y,d:0}];
   const bent=a.cin===3,blocked=!pushOut(cr,'iron_plate');a.item=null;removeEnt(fw.entAt(X+2,Y+1),false,true);tick(0.05);cr.ports=[{x:X+2,y:Y,d:0}];
   const straight=a.cin==null,fed=pushOut(cr,'iron_plate');a.item=null;
   /* screenshot case: pipe junction behind, merger feeding from the side → the belt bends */
   S.ub.push('junction','merger');P('belt1',X+2,Y+3,2);P('junction',X+3,Y+3,0);P('merger',X+2,Y+4,3);tick(0.05);const jb=fw.entAt(X+2,Y+3),jbend=jb.cin===3;
-  for(let j=-1;j<6;j++)for(let i=-1;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
-  return{ok:r.every(v=>v===''),bent,blocked,straight,fed,jbend};});
+  /* belt from one side, crossing with a splitter behind it on the other: the belt wins (Session 39ag screenshot) */
+  P('belt1',X+1,Y+5,3);P('belt1',X+1,Y+6,3);P('belt1',X,Y+6,0);P('crossing',X+2,Y+6,0);P('splitter',X+3,Y+6,2);P('belt1',X+4,Y+6,2);tick(0.05);const tb=fw.entAt(X+1,Y+6);
+  const tbend=!!tb&&tb.cin===0;
+  for(let j=-1;j<8;j++)for(let i=-1;i<6;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),bent,blocked,straight,fed,jbend,tbend};});
  check('a belt beside a building bends towards its side feeder (and takes no output from that building); without the feeder it stays straight and takes it',bend.ok&&bend.bent&&bend.blocked&&bend.straight&&bend.fed);
  check('a belt with a pipe junction behind it still bends towards a merger feeding it from the side',bend.jbend);
+ check('a belt fed by a belt on one side and a crossing on the other bends towards the belt',bend.tbend);
  // splitter → crossing → belt turning away: the belt bends and items flow through (Session 39y screenshot)
  const sxb=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
   for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-5;j<3&&ok;j++)for(let i=-2;i<5&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}

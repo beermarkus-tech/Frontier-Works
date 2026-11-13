@@ -2394,3 +2394,13 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Built:** `r_wet_alumina` "Wet Alumina (alt)" in the Refinery, 6 s (120/min alumina, same speed as the normal recipe), unlocked with the normal one in "Lightweight Alloys". Own name instead of the requested "Sloppy Alumina" (a commercial game's recipe name; CLAUDE.md original-names rule). Markus can choose another original name.
 
 **Verified:** `npm test` all PASS (includes the dead-end audit).
+
+## Session 39ag — 2026-11-13 (Claude Code, cloud session) · Build 115
+
+**Asked:** (screenshot) a belt fed from the left by a blue belt couldn't bend that way. It "snapped to the crossing" on its right side instead, which has a splitter beyond it.
+
+**Found:** since 39y, a crossing with a splitter or merger behind it counts as a side feeder. The tile therefore had two side feeders (the belt and the crossing), and with two feeders a belt stays straight.
+
+**Built:** with two side feeders, if exactly one of them is a real belt, the belt bends towards it. Items from the other side are then refused (`passOK` only lets crossings pass into the bend), so the splitter beyond the crossing doesn't push into this belt.
+
+**Verified:** new smoke check (belt on one side, crossing + splitter on the other, so the belt bends towards the belt). `npm test` all PASS.
