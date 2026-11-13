@@ -163,6 +163,16 @@ const server=require('./serve.js');
   for(let j=-2;j<4;j++)for(let i=-3;i<4;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),left,right,warn,gone};});
  check('Logic Splitter panel warns when an output belt points into the splitter (and stops warning once it is turned)',lsw.ok&&lsw.left&&lsw.right===0&&lsw.warn&&lsw.gone);
+ // Logic Splitter: an item named left + right shares evenly even when other items pass out the front in between (Session 39ac)
+ const lsm=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-4;j<4&&ok;j++)for(let i=-4;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  S.ub.push('lsplit');const r=[P('belt3',X,Y+1,3),P('lsplit',X,Y,3),P('belt3',X-1,Y,2),P('storage',X-3,Y,0),P('belt3',X+1,Y,0),P('storage',X+2,Y,0),P('belt3',X,Y-1,3),P('storage',X,Y-3,0)];
+  const ls=fw.entAt(X,Y);ls.lr={l:['circuit_board'],f:['rest'],r:['circuit_board']};tick(0.05);const src=fw.entAt(X,Y+1);let n=0;
+  for(let k=0;k<600;k++){if(!src.item){src.item=(n++%2)?'circuit_board':'wire';src.prog=0;}tick(0.05);}
+  const L=fw.entAt(X-3,Y).store.circuit_board||0,R=fw.entAt(X+2,Y).store.circuit_board||0,F=fw.entAt(X,Y-3).store.wire||0;
+  for(let j=-4;j<4;j++)for(let i=-4;i<6;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),L,R,F};});
+ check(`Logic Splitter shares an item left/right evenly while other items go out the front (${lsm.L}/${lsm.R}, front ${lsm.F})`,lsm.ok&&lsm.L>=20&&Math.abs(lsm.L-lsm.R)<=2&&lsm.F>=40);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

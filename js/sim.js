@@ -420,9 +420,10 @@ function lsOuts(e,it){const L=lsRules(e),D=e.dir,dirOf={l:(D+3)&3,f:D,r:(D+1)&3}
  return[prim,over];}
 function updRouter(e){
  if(!e.item)return;const sub=B[e.d].sub,D=e.dir;let outs;
- if(sub==='logic'){const [prim,over]=lsOuts(e,e.item);for(const [list,key] of [[prim,'rr'],[over,'ro']]){const n=list.length;
+ if(sub==='logic'){const [prim,over]=lsOuts(e,e.item);const T=e.rrI||(e.rrI={}),tk=T[e.item]||(T[e.item]={});   /* turn counters per item (Session 39ac: a shared counter was reset by front-only items, so circuit boards always went left) */
+  for(const [list,key] of [[prim,'rr'],[over,'ro']]){const n=list.length;e[key]=tk[key]||0;
    for(let k=0;k<n;k++){const i=((e[key]||0)+k)%n,o=list[i],t=entAt(e.x+DX[o],e.y+DY[o]);if(!t)continue;if(t.k==='cross'&&!passOK(t,e.item,o))continue;
-    const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);e.item=null;e[key]=(i+1)%n;return;}}}
+    const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);tk[key]=(i+1)%n;e.item=null;e[key]=tk[key];return;}}}
   return;}
  if(sub==='split')outs=[D,(D+1)&3,(D+3)&3];
  else if(sub==='sort')outs=!e.filter?[D,(D+1)&3,(D+3)&3]:(e.item===e.filter?[D]:[(D+1)&3,(D+3)&3]);

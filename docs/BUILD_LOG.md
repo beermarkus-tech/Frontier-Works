@@ -2346,3 +2346,17 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 - **Splitter / Sorting Splitter:** an "Outputs" section appears only when there's a problem.
 
 **Verified:** new smoke check (backwards belt refuses items, panel warns, warning goes once the belt is turned). `npm test` all PASS.
+
+## Session 39ac — 2026-11-13 (Claude Code, cloud session) · Build 111
+
+**Asked:**
+1. Circuit Board and Compute Module now look almost identical.
+2. The Logic Splitter (Circuit Board left + right, Any other front) sends circuit boards only left. If another item is added to left and right, circuit boards split again. Any other single item splits evenly.
+
+**Found (splitter):** the Logic Splitter had one turn counter (`e.rr`) for all items. An item with only one output (the "Any other" items going front) reset it to 0. On a mixed belt, every circuit board therefore started at the first output, which is left. Reproduced: 119 left / 0 right. The 39ab "belt points the wrong way" guess was wrong for this case; the panel warning stays as a general diagnostic.
+
+**Built:**
+- **Splitter:** turn counters per item (`e.rrI[item].rr/.ro`, not saved; they just restart after a load). Same test now gives 60 / 59, with wire 120 out the front.
+- **Icons:** Compute Module gets its own shape, `'module'`: a boxy dark-green unit with a grey cooling-fin block on top and gold pins along the bottom. In 3D it's a thicker block.
+
+**Verified:** icons rendered side by side. New smoke check (mixed belt, circuit board left/right within 2, front gets the rest). `npm test` all PASS.

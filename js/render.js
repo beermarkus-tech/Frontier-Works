@@ -345,7 +345,7 @@ setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium quartz');s
 setS('ingot','iron_ingot copper_ingot steel_ingot alu_ingot alu_casing');setS('plate','iron_plate copper_sheet alloy_panel braced_plate plastic heat_sink');
 setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete rubber coolant_block');setS('girder','cased_girder');
 setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell fuel_rod battery');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
-setS('gear','rotor motor stator turbine_core');setS('chip','circuit_board compute_module control_chip');setS('bus','data_bus');setS('orb','quantum_core');
+setS('gear','rotor motor stator turbine_core');setS('chip','circuit_board control_chip');setS('module','compute_module');setS('bus','data_bus');setS('orb','quantum_core');
 const ISPR=new Map();
 function itemSprite(id,px){const b=Math.max(6,Math.min(96,Math.round(bkt(px)))),key=id+'|'+b;let c=ISPR.get(key);if(c)return c;
  c=document.createElement('canvas');c.width=c.height=Math.ceil(b*1.3);const g=c.getContext('2d');g.translate(c.width/2,c.height/2);paintItem(g,id,b);c.b=b;ISPR.set(key,c);if(ISPR.size>800)ISPR.delete(ISPR.keys().next().value);return c;}
@@ -398,6 +398,12 @@ function paintItem(g,id,R){
   case 'frame':g.lineWidth=R*0.14;g.strokeStyle=out;rrg(g,-R*0.34,-R*0.34,R*0.68,R*0.68,R*0.04);g.stroke();g.beginPath();g.moveTo(-R*0.34,R*0.34);g.lineTo(R*0.34,-R*0.34);g.stroke();g.lineWidth=R*0.09;g.strokeStyle=col;rrg(g,-R*0.34,-R*0.34,R*0.68,R*0.68,R*0.04);g.stroke();g.beginPath();g.moveTo(-R*0.34,R*0.34);g.lineTo(R*0.34,-R*0.34);g.stroke();break;
   case 'gear':g.beginPath();for(let k=0;k<16;k++){const a=k/16*Math.PI*2,rr=k%2?R*0.32:R*0.44;g.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}g.closePath();g.fillStyle=rad(R*0.44);g.fill();fin();g.fillStyle='rgba(0,0,0,0.55)';g.beginPath();g.arc(0,0,R*0.12,0,7);g.fill();break;
   case 'chip':g.strokeStyle='#c9b46a';g.lineWidth=R*0.05;for(let k=-1;k<=1;k++){g.beginPath();g.moveTo(-R*0.46,k*R*0.18);g.lineTo(R*0.46,k*R*0.18);g.moveTo(k*R*0.18,-R*0.46);g.lineTo(k*R*0.18,R*0.46);g.stroke();}rrg(g,-R*0.32,-R*0.32,R*0.64,R*0.64,R*0.06);g.fillStyle=lin(R*0.32);g.fill();fin();g.fillStyle='rgba(0,0,0,0.5)';g.fillRect(-R*0.13,-R*0.13,R*0.26,R*0.26);break;
+  case 'module':{   /* Compute Module: boxy unit with metal cooling fins on top, pins along the bottom (Session 39ac: looked like Circuit Board) */
+   g.fillStyle='#c9b46a';for(let k=0;k<6;k++)g.fillRect(-R*0.33+k*R*0.13,R*0.28,R*0.06,R*0.14);
+   rrg(g,-R*0.42,-R*0.34,R*0.84,R*0.64,R*0.07);g.fillStyle=lin(R*0.34);g.fill();fin();
+   rrg(g,-R*0.32,-R*0.42,R*0.64,R*0.5,R*0.04);g.fillStyle='#8e979f';g.fill();g.lineWidth=lw;g.strokeStyle=out;g.stroke();
+   g.fillStyle='#5a636c';for(let k=0;k<5;k++)g.fillRect(-R*0.26+k*R*0.12,-R*0.38,R*0.05,R*0.42);
+   g.fillStyle='rgba(255,255,255,0.3)';g.fillRect(-R*0.3,-R*0.41,R*0.6,Math.max(0.8,R*0.03));break;}
   case 'bus':{g.save();g.rotate(-0.5);   /* Data Bus: long plug-in strip with gold contact fingers (Session 39aa: looked like Compute Module) */
    rrg(g,-R*0.47,-R*0.19,R*0.94,R*0.32,R*0.05);g.fillStyle=lin(R*0.19);g.fill();fin();
    g.strokeStyle='rgba(255,255,255,0.35)';g.lineWidth=Math.max(0.6,R*0.025);g.beginPath();for(const y of [-0.11,-0.04,0.03]){g.moveTo(-R*0.4,R*y);g.lineTo(R*0.4,R*y);}g.stroke();
