@@ -196,6 +196,11 @@ Hand mining gives +5 ore from a node.
 - **Byproducts used inside the plan** (Session 37c): in "For a target" (and the Power tab's fuel chain), a byproduct of one step covers demand for
   that item elsewhere in the same plan (input, raw resource or end product) before more machines or mining are planned. Shown as "♻ … comes from
   byproducts" on the card and in "Byproducts used here"; only the rest is listed as "Byproducts left over".
+- **Factory zones** (Session 38, agreed with Markus: drawn boundaries instead of power switches, since pole circles reach into neighbouring
+  factories): Factory Zone tool in the Signs tab, free. Drag a rectangle: touching one zone extends it (any shape from rectangles), touching none
+  starts a new one, touching two is refused. Zones never overlap. Shown as a coloured fence (2D line with posts, 3D low fence), faint tint and a
+  name tag (2D). Tap a zone with the tool: name, colour, area, buildings inside, ✂ Cut area, Delete. Blocks nothing. Next: a Factories dashboard
+  that counts items crossing each fence (belts, pipes, drones) as exports/imports, plus production, use and spare capacity per zone.
 - **Several plans** (Session 37b): the planner has plan tabs (blue) above the mode buttons. Each plan keeps its own mode, settings and ticks;
   tabs are named after what they make unless renamed (✎). ＋ New plan, ✕ Delete this plan (asks), up to 12. "Plan this node" and "Plan the power"
   open their own new tab (or reuse an untouched one). Stored per device.

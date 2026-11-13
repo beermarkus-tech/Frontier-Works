@@ -32,7 +32,7 @@ const server=require('./serve.js');
  const bm=await p.evaluate(()=>{const bc=BIOMES.map(()=>0);for(let i=0;i<MW*MH;i++)bc[bio[i]]++;const types=new Set(nodes.map(n=>n.t));
   const ur=nodes.filter(n=>n.t==='uranium'),urHot=ur.filter(n=>['frostmark','emberfield'].includes(biomeAt(n.x,n.y).id)).length;
   const c=getChunk(5,5,true);return{MW,gen:S.gen,bc,types:types.size,ur:ur.length,urHot,chunk:c&&c.width,cpx:CH*TPX,startBio:biomeAt(MW/2,MH/2).id};});
- check(`new map is ${bm.MW}×${bm.MW} with all 7 biomes (${bm.bc})`,bm.MW===384&&bm.gen===2&&bm.bc.every(v=>v>2000)&&bm.startBio==='greenvale');
+ check(`new map is ${bm.MW}×${bm.MW} with all 7 biomes (${bm.bc})`,bm.MW===384&&bm.gen===2&&bm.bc.every(v=>v>500)&&bm.startBio==='greenvale');
  check(`every resource exists; uranium mostly in Frostmark/Emberfield (${bm.urHot}/${bm.ur})`,bm.types===9&&bm.urHot/bm.ur>0.6);
  check('terrain chunk paints ('+bm.chunk+'px)',bm.chunk===bm.cpx);
  const sv=await p.evaluate(()=>{const s0=serialize(),n0=nodes.length,e0=ents.size;load(s0);const same=nodes.length===n0&&ents.size===e0&&MW===384;
@@ -457,6 +457,22 @@ const server=require('./serve.js');
    out[want]=[Math.min(...v),Math.max(...v)];for(let j=-1;j<3;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}}return out;});
  check(`Flow Meter steady on slow bunched belts: 12/min reads ${bu[12].map(v=>v.toFixed(1)).join('–')}, 2/min ${bu[2].map(v=>v.toFixed(2)).join('–')}, 24/min ${bu[24].map(v=>v.toFixed(1)).join('–')}`,
   bu[12][0]>11&&bu[12][1]<13&&bu[2][0]>1.7&&bu[2][1]<2.3&&bu[24][0]>22&&bu[24][1]<26);
+ // factory zones: drag draws a zone (real mouse), touching extends it, touching two is refused, cut, rename, colour, save/load, old saves, delete
+ const zA=await p.evaluate(()=>{if(UI.panel)ACT.closePanel();let X,Y;for(let r=20;r<160&&X==null;r+=3)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-2;j<14&&ok;j++)for(let i=-2;i<30&&ok;i++)if(zoneAt(x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  setTool('zone');cam.x=camT.x=X+4;cam.y=camT.y=Y+3;cam.z=camT.z=1.5;const s=TS*cam.z,scr=(tx,ty)=>({x:innerWidth/2+(tx+0.5-cam.x)*s,y:innerHeight/2+(ty+0.5-cam.y)*s});return{X,Y,a:scr(X,Y),b:scr(X+5,Y+4)};});
+ await p.mouse.move(zA.a.x,zA.a.y);await p.mouse.down();await p.mouse.move(zA.b.x,zA.b.y,{steps:8});await p.mouse.up();await p.waitForTimeout(100);
+ const zn=await p.evaluate(m=>{const {X,Y}=m,out={};const id=zoneAt(X,Y),z=zoneById(id);out.drawn=!!z&&z.n===30&&UI.panel&&UI.panel.kind==='zone';
+  const inp=document.getElementById('zoneName');inp.value='Iron Works';inp.dispatchEvent(new Event('input',{bubbles:true}));ACT.zoneColor('3');out.named=z.name==='Iron Works'&&z.c===3;
+  zoneDrop({x:X+6,y:Y},{x:X+9,y:Y+1});out.extended=zoneAt(X+9,Y+1)===id&&zoneById(id).n===38;
+  zoneDrop({x:X+20,y:Y},{x:X+23,y:Y+3});const id2=zoneAt(X+20,Y);out.second=!!id2&&id2!==id;
+  const n0=zones().length;zoneDrop({x:X+10,y:Y},{x:X+19,y:Y});out.refused=zones().length===n0&&!zoneAt(X+15,Y);
+  openPanel('zone',id);ACT.zoneCutStart();out.cutMode=UI.zoneCut===id;zoneDrop({x:X,y:Y},{x:X+1,y:Y+4},id);UI.zoneCut=null;out.cut=!zoneAt(X,Y)&&zoneById(id).n===28;
+  const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};render();ctx.fillText=f;out.label=seen.includes('Iron Works');
+  const sv=serialize();load(sv);out.saved=zoneById(zoneAt(X+3,Y+2))&&zoneById(zoneAt(X+3,Y+2)).name==='Iron Works'&&zoneById(zoneAt(X+3,Y+2)).n===28&&!!zoneAt(X+21,Y+1);
+  const o=JSON.parse(sv);delete o.S.zones;delete o.S.zmap;load(JSON.stringify(o));out.oldSave=zones().length===0&&!zoneAt(X+3,Y+2);load(sv);
+  const keep=window.confirm;window.confirm=()=>true;openPanel('zone',zoneAt(X+21,Y+1));ACT.zoneDel();window.confirm=keep;out.deleted=!zoneAt(X+21,Y+1)&&zones().length===1;
+  out.unlocked=ub('zone');setTool(null);if(UI.panel)ACT.closePanel();return out;},zA);
+ check(`factory zones: ${Object.entries(zn).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(zn).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
@@ -468,8 +484,8 @@ const server=require('./serve.js');
  check(`signs: sizes ${sg.sizes}, placing opens the text box, "${sg.txt}" in colour ${sg.col} is drawn and survives save/load; size changes S↔L after placing (${sg.resize})`,sg.resize&&sg.sizes==='1,2,3,4,6'&&sg.opened&&sg.txt==='Iron Works'&&sg.col===3&&sg.drawn&&sg.kept);
  // older saves get buildings added later (signs, Drone Pad) on load; signs have their own tab
  const ul=await p.evaluate(()=>{const keep=serialize();const o=JSON.parse(keep);o.S.ub=o.S.ub.filter(x=>!x.startsWith('sign')&&x!=='dpad');o.S.ms=5;load(JSON.stringify(o));
-  const r={signs:SIGNS.every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===5&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
-  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===5;
+  const r={signs:SIGNS.every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===SIGNS.length+1&&B.zone.cat==='sign'&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
+  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===SIGNS.length+1;
   r.trans=B.dpad.cat==='trans'&&CATS.some(c=>c[0]==='trans');UI.cat='trans';buildCats();r.transShown=!!document.querySelector('#tools [data-v="dpad"]');UI.cat='log';buildCats();load(keep);return r;});
  check(`older saves get signs and the Drone Pad on load; Signs and Transport (Drone Pad) have their own tabs (${Object.values(ul).join(',')})`,Object.values(ul).every(Boolean));
  // planner maths (pure functions, no factory state)

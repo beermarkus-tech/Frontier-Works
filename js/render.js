@@ -161,6 +161,7 @@ function paintB(g,id,P,u){
   case 'turbine':box(i,i,W,W,u*0.18,col);{const gr=g.createLinearGradient(0,P*0.34,0,P*0.66);gr.addColorStop(0,'#d8dde2');gr.addColorStop(0.5,'#8a9198');gr.addColorStop(1,'#4a5056');g.fillStyle=gr;R(P*0.16,P*0.34,P*0.7,P*0.32,P*0.16);g.fill();g.strokeStyle='rgba(0,0,0,0.5)';g.lineWidth=lw;g.stroke();}hole(P*0.3,P*0.5,P*0.13);g.fillStyle='#2a2a2a';R(P*0.78,P*0.4,P*0.08,P*0.2,u*0.04);g.fill();break;
   case 'reactor':box(i,i,W,W,u*0.2,col);box(P*0.68,P*0.2,P*0.18,P*0.6,u*0.08,'#5a6a5a');circ(P*0.4,P*0.46,P*0.31,'#cfcabc',25);hole(P*0.4,P*0.46,P*0.21);
    g.fillStyle='#f2c230';g.beginPath();g.arc(P*0.77,P*0.72,u*0.13,0,7);g.fill();break;
+  case 'zone':{g.strokeStyle='#ffb547';g.lineWidth=W*0.08;g.setLineDash([W*0.14,W*0.08]);g.strokeRect(i+W*0.12,i+W*0.12,W*0.76,W*0.76);g.setLineDash([]);g.fillStyle='#3a3226';for(const [a,b] of [[0.12,0.12],[0.88,0.12],[0.12,0.88],[0.88,0.88]])g.fillRect(i+W*a-W*0.06,i+W*b-W*0.06,W*0.12,W*0.12);g.fillStyle='rgba(255,181,71,0.25)';g.fillRect(i+W*0.16,i+W*0.16,W*0.68,W*0.68);break;}
   case 'fmeter':{g.fillStyle='#2a3037';g.beginPath();g.arc(P/2,P/2,W*0.46,0,7);g.fill();g.fillStyle='#e8eef2';g.beginPath();g.arc(P/2,P/2,W*0.38,0,7);g.fill();
    g.strokeStyle='#ffb547';g.lineWidth=W*0.08;g.beginPath();g.arc(P/2,P/2,W*0.28,Math.PI*0.8,Math.PI*2.2);g.stroke();g.strokeStyle='#2a3037';g.lineWidth=W*0.07;g.lineCap='round';g.beginPath();g.moveTo(P/2,P/2);g.lineTo(P/2+W*0.2,P/2-W*0.17);g.stroke();g.lineCap='butt';break;}
   case 'sign1':case 'sign2':case 'sign3':case 'sign4':case 'sign5':{box(i,i,W,W,u*0.1,col);g.fillStyle='#3a3226';const lh=W*0.12;for(let k=0;k<3;k++)g.fillRect(i+W*0.18,i+W*(0.28+k*0.2),W*(k===2?0.4:0.64),lh);break;}   // toolbar icon only; placed signs are drawn live
@@ -480,6 +481,7 @@ function render(){
   if(s>12){ctx.fillStyle='rgba(10,14,18,0.75)';rr(X+s*0.18,Y+s*0.82,s*0.64,s*0.18,s*0.09);ctx.fill();ctx.fillStyle=['#e08a5a','#e8e8e8','#7fe08a'][n.p];for(let k=0;k<=n.p;k++){ctx.beginPath();ctx.arc(X+s*(0.5+(k-n.p/2)*0.17),Y+s*0.91,s*0.05,0,7);ctx.fill();}}}
  const vis=[];for(const e of ents.values()){if(e.x+e.w<x0||e.x>x1||e.y+e.h<y0||e.y>y1)continue;vis.push(e);}
  const lod=TS*cam.z<12||vis.length>6000;   // far out or very busy: simple blocks instead of detailed sprites
+ drawZoneTint(sx,sy,s);
  if(lod)drawLODCached(ox,oy,s,W,H,vis,sx,sy);
  if(!lod){drawLines(vis.filter(e=>isLine(e.k)),sx,sy,s);
  for(const e of vis)if(e.k==='router'||e.k==='cross')drawRouter(ctx,e,sx(e.x),sy(e.y),s);
@@ -493,7 +495,7 @@ function render(){
  for(const e of vis)if(!isLine(e.k)&&e.k!=='router'&&e.k!=='cross'&&e.k!=='pole')drawBuilding(e,sx(e.x),sy(e.y),s);
  }
  // drones (above buildings) and the selected pad's route
- drawDrones(sx,sy,s,lod);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
+ drawDrones(sx,sy,s,lod);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
  // particles
  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.t+=fdt;if(p.t>p.m){parts.splice(k,1);continue;}p.x+=p.vx*fdt;p.y+=p.vy*fdt;}
  for(const p of parts){if(p.x<x0-2||p.x>x1+2||p.y<y0-2||p.y>y1+2)continue;const f=p.t/p.m,al=(1-f)*(f<0.15?f/0.15:1);ctx.globalAlpha=al*(p.k?0.55:0.45);ctx.fillStyle=p.k?'#eef2f5':'#3a3a3c';ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),s*p.r*(1+f*1.8),0,7);ctx.fill();}
@@ -512,6 +514,7 @@ function render(){
   const bad=fake.filter(f=>{const why=canPlace(linePrev.id,f.x,f.y);return why&&!(why==='Blocked'&&entAt(f.x,f.y)&&entAt(f.x,f.y).k===B[linePrev.id].k);});
   drawLines(fake,sx,sy,s,0.7);for(const f of bad){ctx.fillStyle='rgba(255,70,50,0.45)';ctx.fillRect(sx(f.x),sy(f.y),s,s);}
   const n=fake.length,cost=B[linePrev.id].cost;const last=fake[n-1];const okA=afford(cost,n);ctx.font=`600 ${12*DPR}px Inter,system-ui,sans-serif`;const txt=`${n} × ${B[linePrev.id].n}`;const tw=ctx.measureText(txt).width;const lx=sx(last.x+0.5)-tw/2-8*DPR,ly=sy(last.y)-26*DPR;ctx.fillStyle=okA?'rgba(14,20,27,0.85)':'rgba(120,30,20,0.9)';rr(lx,ly,tw+16*DPR,20*DPR,8*DPR);ctx.fill();ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.fillText(txt,lx+8*DPR,ly+10*DPR);}
+ else if(hover&&(tool==='zone'||UI.zoneCut)&&!zonePrev){ctx.strokeStyle=UI.zoneCut?'#ff9a5a':'#6ef08a';ctx.lineWidth=2*DPR;rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();}
  else if(hover&&tool==='fmeter'){const e=entAt(hover.x,hover.y),ok=e&&isLine(e.k);ctx.strokeStyle=ok?'#6ef08a':'#ff5a46';ctx.lineWidth=2*DPR;rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();if(ok&&!e.fm)blit('fmeter',sx(hover.x)+s*0.25,sy(hover.y)+s*0.25,s*0.5,0.8);}
  else if(hover&&tool&&B[tool]){const d=B[tool],fp=footprint(tool,hover.x,hover.y),why=canPlace(tool,fp.x,fp.y),bad=why&&!(why==='Blocked'&&isLine(d.k)&&entAt(hover.x,hover.y)&&entAt(hover.x,hover.y).k===d.k);
   const X=sx(fp.x),Y=sy(fp.y),P=d.w*s;

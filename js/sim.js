@@ -83,7 +83,7 @@ function newGame(seed){
  ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  genMap(S.seed);
  placeEnt('core',MW/2-2,MH/2-2,0,true);
- topoDirty=true;setCam(S.cam);
+ topoDirty=true;setCam(S.cam);if(typeof zoneInit==='function')zoneInit();
 }
 const has=(arr,v)=>arr.indexOf(v)>=0;
 const ub=id=>has(S.ub,id), ur=id=>has(S.ur,id);

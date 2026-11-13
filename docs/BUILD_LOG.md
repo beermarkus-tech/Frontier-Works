@@ -1731,3 +1731,34 @@ irregular gaps (machines waiting, splitters sending elsewhere) swing it further.
 - Random gaps: 12/min now 11.3–11.9, 24/min 23.4–25.7; regular/bunched flows steady (12.1–12.2, 2.00, 24.2–24.4); busy Mk3 270.0.
 - `npm test` 86 PASS / 0 FAIL (new check: bunched slow belts steady).
 - Trade-off: a slow belt that stops falls more slowly (2/min reads ~1.3 three minutes after stopping).
+
+---
+
+## Session 38 — 2026-11-13 (Claude Code, cloud session) · Build 72
+
+### What Markus asked
+A dashboard per factory: what each produces and what's left over for other factories. Discussed first: power switches can't define factories
+reliably (pole circles reach into neighbours), so he chose drawn boundaries; items entering/leaving are counted where belts, pipes and drones
+cross the boundary. Part 1 (this build): the zone tool. Part 2 (next): the dashboard.
+
+### What was built
+- New file `js/zones.js` (in `index.html` after plan.js and in `sw.js` ASSETS).
+- Data: per-tile `zoneMap`, saved as run-length text in `S.zmap`; `S.zones` = [{id, name, c}]. Old saves: no zones.
+- Tool "Factory Zone" (`D('zone')`, Signs tab, free, start unlocked). Drag a rectangle (2D and 3D): touching one zone extends it, none starts
+  "Factory N" (panel opens with the name field focused), two is refused with a toast naming them. Tap a zone: panel with name, colour (8),
+  area, buildings inside, ✂ Cut area (drag to remove tiles), Delete (asks). A zone cut to nothing disappears.
+- Look: 2D faint tint (row runs under everything), fence line with posts on outline edges, name tag at the top-left; drag preview dashed
+  (green new, zone colour extend, red refused, orange cut). 3D: low coloured fence (instanced rails + posts, rebuilt when `zoneVer` changes).
+- Build number **72**.
+
+### Tests
+- New check: real mouse drag draws a 6×5 zone and opens its panel; rename + colour; extending by touching; a second zone; a rectangle touching
+  both is refused; cut mode removes tiles; name tag drawn; save/load keeps everything; an old save without zones loads with none; delete.
+- Adjusted: the Signs tab now holds 6 cards; the biome check now requires > 500 tiles per biome (a random map once had a 1,658-tile biome).
+- `npm test` 87 PASS / 0 FAIL. Screenshots of an L-shaped zone and a second zone in 2D and 3D.
+
+### Known issues / next up
+- Zone names only show in 2D (3D shows the fence).
+- Next: Factories dashboard (Stats tab): per zone imports/exports counted at the fence (belts, pipes, drones), made/used inside, spare capacity
+  (machines blocked by output), shortages; overall per-item table (produced, moved between factories, left over: core, crates, incinerators,
+  backing up); tap a card to highlight the zone.

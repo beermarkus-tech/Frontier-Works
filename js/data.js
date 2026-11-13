@@ -113,6 +113,7 @@ D('sign3',{n:'Sign L',k:'sign',w:3,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plat
 D('sign4',{n:'Sign XL',k:'sign',w:4,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:6},desc:'A 4×4 label for whole areas, readable from far out.'});
 D('sign5',{n:'Sign XXL',k:'sign',w:6,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:9},desc:'A 6×6 label for a whole district, readable even at the farthest zoom.'});
 const SIGNS=['sign1','sign2','sign3','sign4','sign5'];
+D('zone',{n:'Factory Zone',k:'zonetool',cat:'sign',col:'#ffb547',cost:{},ow:1,desc:'Drag over the map to mark one factory’s area. Touching an existing zone makes it bigger. Belts and pipes pass through the fence.'});
 const SIGN_COL=['#e9e2cf','#ffd34a','#4fc3a1','#6fa8ff','#ff7a6a','#b48cff'];   // board colours to pick from
 D('drill1',{n:'Drill Mk1',k:'drill',w:2,rate:1,pw:5,cat:'ext',col:'#6b7f3a',cost:{iron_plate:10,concrete:10},desc:'Place over an ore node. 60/min on a normal node.'});
 D('drill2',{n:'Drill Mk2',k:'drill',w:2,rate:2,pw:12,cat:'ext',col:'#8a9a2a',cost:{braced_plate:8,truss_frame:2,concrete:20},desc:'120/min on a normal node.'});
@@ -149,7 +150,7 @@ const MS=[
 {n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:[],win:1},
 ];
 MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
-const START_B=[...SIGNS,'belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
+const START_B=[...SIGNS,'zone','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
 const START_R=['r_iron_ingot','r_copper_ingot','r_iron_plate','r_iron_rod','r_bolts','r_wire','r_cable','r_concrete'];
 const START_INV={coal:40,iron_plate:120,iron_rod:80,wire:120,cable:60,concrete:60,bolts:200};
 /* Biomes (new maps only; old 128×128 maps are all Greenvale). Index = value in bio[].
