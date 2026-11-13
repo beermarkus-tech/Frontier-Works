@@ -2324,3 +2324,13 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Result (same test):** slow side 53 on every side, fast sides 107–108 each, total 268 (no throughput lost). 53 rather than 60 is the cost of waiting for a turn.
 
 **Verified:** new smoke check (slow side ≥ 24 per 30 s, fast sides within 3 of each other, total ≥ 130). `npm test` all PASS.
+
+## Session 39aa — 2026-11-13 (Claude Code, cloud session) · Build 109
+
+**Asked:** Data Bus and Compute Module look almost identical.
+
+**Built:** Data Bus gets its own item shape, `'bus'`: a long, tilted plug-in strip with trace lines and seven gold contact fingers (`itemSprite` in `js/render.js`). Before, it used the square `'chip'` shape in a slightly lighter green. In 3D it is a long, thin slab (`bus` in the 3D item pool) instead of the square chip slab. Colour unchanged.
+
+**Verified:** rendered icons side by side at 96 px and 24 px. `npm test` all PASS.
+
+**Open:** Compute Module and Circuit Board are also both green square chips (dark vs. mid green). Offered to change one if Markus finds them confusing.
