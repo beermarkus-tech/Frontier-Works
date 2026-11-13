@@ -1864,3 +1864,14 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
 - Done: the "Last 60 s. Counted where…" text is gone. The collapse state lives in `OPT.zCol` (per-device settings, `frontierworks_opts`, like the
   panel pin); new check reloads the page and confirms a collapsed card stays collapsed. Note: it's per device, not part of the game save/cloud sync.
 - `npm test` 89 PASS / 0 FAIL. Build number **80**.
+
+---
+
+## Session 38j — 2026-11-13 (Claude Code, cloud session) · Build 81
+
+- Markus: show zone names in 3D too; remove the "Phones stay smooth to about 10,000 objects…" note in Factory size.
+- Built: `v3ZoneLabels()` in `js/view3d.js`: one name sprite per zone above its top-left corner, in the zone colour, redrawn on rename/recolour,
+  drawn on top (no depth test) so buildings never hide it. The note is removed from `factoryHtml`.
+- Verified: `npm test` 90 PASS / 0 FAIL (new check: every zone has a 3D tag and a rename updates it). 3D screenshot (first try: a chimney cut
+  through a tag, so tags now draw on top). Build number **81**.
+- Closes the known issue "zone names only in 2D".

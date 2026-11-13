@@ -464,6 +464,14 @@ function v3Zones(){if(V3.zv===zoneVer)return;V3.zv=zoneVer;
  zoneEdges.forEach(([x0,y0,x1,y1,v],i)=>{const hor=y0===y1;rm.setMatrixAt(i,T.m.compose(T.v.set((x0+x1)/2,0.32,(y0+y1)/2),T.q,T.s.set(hor?1:0.06,0.08,hor?0.06:1)));rm.setColorAt(i,T.c.set(zoneCol(zoneById(v))));
   pm.setMatrixAt(i,T.m.compose(T.v.set(x0,0.22,y0),T.q,T.s.set(0.1,0.44,0.1)));});
  rm.instanceMatrix.needsUpdate=true;if(rm.instanceColor)rm.instanceColor.needsUpdate=true;pm.instanceMatrix.needsUpdate=true;}
+/* zone name tags in 3D (Session 38j): one sprite per zone above its top-left corner, redrawn when name/colour change */
+function v3ZoneLabels(){V3.zl=V3.zl||new Map();const seen=new Set();
+ for(const z of zones()){if(!z.lab)continue;seen.add(z.id);let o=V3.zl.get(z.id);const key=z.name+'|'+z.c;
+  if(!o){const c=document.createElement('canvas');c.width=512;c.height=96;const tex=new T3.CanvasTexture(c);const sp=new T3.Sprite(new T3.SpriteMaterial({map:tex,depthWrite:false,depthTest:false}));sp.renderOrder=6;V3.scene.add(sp);o={c,tex,sp,key:''};V3.zl.set(z.id,o);}   // always on top: buildings never hide a zone name
+  if(o.key!==key){o.key=key;const g=o.c.getContext('2d');g.clearRect(0,0,512,96);g.font='700 44px Inter,system-ui,sans-serif';const w=Math.min(500,g.measureText(z.name).width+48);
+   g.fillStyle='rgba(10,14,18,0.85)';rrg(g,(512-w)/2,10,w,76,38);g.fill();g.lineWidth=6;g.strokeStyle=zoneCol(z);g.stroke();g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(z.name,256,50);o.tex.needsUpdate=true;}
+  o.sp.position.set(z.lab.x+1.2,1.3,z.lab.y);o.sp.scale.set(4,0.75,1);}
+ for(const [k,o] of V3.zl)if(!seen.has(k)){V3.scene.remove(o.sp);o.tex.dispose();o.sp.material.dispose();V3.zl.delete(k);}}
 function v3Meters(){V3.fm=V3.fm||new Map();const seen=new Set();
  for(const e of meters){if(!ents.has(e.id))continue;seen.add(e.id);let o=V3.fm.get(e.id);
   if(!o){const c=document.createElement('canvas');c.width=256;c.height=72;const tex=new T3.CanvasTexture(c);const sp=new T3.Sprite(new T3.SpriteMaterial({map:tex,depthWrite:false,depthTest:false}));sp.renderOrder=5;
@@ -606,7 +614,7 @@ function render3D(el){
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
- v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Signs();v3Meters();v3Zones();v3Overlay(t);
+ v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Signs();v3Meters();v3Zones();v3ZoneLabels();v3Overlay(t);
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}

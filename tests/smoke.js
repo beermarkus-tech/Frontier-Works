@@ -560,6 +560,9 @@ const server=require('./serve.js');
  check('3D: dragging lays a belt line',await p.evaluate(s=>{let n=0;for(let i=0;i<7;i++){const e=window.__fw.entAt(s.x+i,s.y+3);if(e&&e.d==='belt1'&&e.dir===0)n++;}return n===7;},spot));
  const r3=await p.evaluate(()=>{const V=window.__fw.V3;return{calls:V.r.info.render.calls,ok:!!V.cv&&V.cv.style.display==='block'};});
  check('3D: renders ('+r3.calls+' draw calls)',r3.ok&&r3.calls>10);
+ const zl=await p.evaluate(async()=>{const V=window.__fw.V3;if(!zones().length){const c=[...ents.values()].find(e=>e.k==='core');zoneDrop({x:c.x+8,y:c.y},{x:c.x+12,y:c.y+3});}
+  const z=zones()[0];z.name='Label Test';zoneVer++;await new Promise(r=>setTimeout(r,300));const o=V.zl&&V.zl.get(z.id);return{n:V.zl?V.zl.size:0,want:zones().length,key:o&&o.key};});
+ check(`3D shows factory zone names (${zl.n} of ${zl.want} zones, renamed tag "${zl.key}")`,zl.n===zl.want&&zl.want>0&&String(zl.key).startsWith('Label Test'));
  const lk=await p.evaluate(async()=>{const V=window.__fw.V3,w=()=>new Promise(r=>setTimeout(r,250));const def=V.look==='nice';ACT.look3('classic');await w();
   const cl=!V.scene.environment&&!V.mat.map&&!V.aoP.mesh.visible&&JSON.parse(localStorage.getItem('frontierworks_view')).look==='classic';
   ACT.look3('nice');await w();const ni=V.r.toneMapping===0&&!!V.scene.environment&&!!V.mat.map&&!!V.M.smelter.geo.attributes.uv&&V.aoP.mesh.visible&&V.aoP.mesh.count>0;return{def,cl,ni};});
