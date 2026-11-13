@@ -448,6 +448,15 @@ const server=require('./serve.js');
   for(let t=0;t<20*70;t++){c.store={iron_plate:999};tick(0.05);}const v=[];for(let s=0;s<60;s++){for(let t=0;t<20;t++){c.store={iron_plate:999};tick(0.05);}v.push(fmRate(mb)[0]);}
   for(let j=-1;j<3;j++)for(let i=-1;i<12;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{min:Math.min(...v),max:Math.max(...v)};});
  check(`Flow Meter is steady on a busy belt: ${st.min.toFixed(1)}–${st.max.toFixed(1)}/min over a minute (Mk3 270)`,st.min>267&&st.max<273);
+ // Flow Meter on slow, bunched belts (2 items together every 10 s = 12/min; 1 item every 30 s = 2/min): steady while running
+ const bu=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};
+  for(const [per,every,want] of [[2,200,12],[1,600,2],[3,150,24]]){let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-1;i<10&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+   for(let i=0;i<6;i++)P('belt1',X+i,Y,0);P('incin',X+6,Y,0);const mb=fw.entAt(X+4,Y);S.inv.iron_plate+=5;S.inv.wire=(S.inv.wire||0)+5;toggleMeter(mb);
+   let q=0;const step=t=>{if(t%every===0)q+=per;const f=fw.entAt(X,Y);if(q>0&&!f.item){f.item='iron_plate';f.prog=0;q--;}tick(0.05);};
+   for(let t=0;t<20*240;t++)step(t);const v=[];for(let t=20*240;t<20*360;t++){step(t);if(t%20===0)v.push(fmRate(mb)[0]);}
+   out[want]=[Math.min(...v),Math.max(...v)];for(let j=-1;j<3;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}}return out;});
+ check(`Flow Meter steady on slow bunched belts: 12/min reads ${bu[12].map(v=>v.toFixed(1)).join('–')}, 2/min ${bu[2].map(v=>v.toFixed(2)).join('–')}, 24/min ${bu[24].map(v=>v.toFixed(1)).join('–')}`,
+  bu[12][0]>11&&bu[12][1]<13&&bu[2][0]>1.7&&bu[2][1]<2.3&&bu[24][0]>22&&bu[24][1]<26);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

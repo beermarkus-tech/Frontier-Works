@@ -173,12 +173,14 @@ function eraseEnt(e){if(!e||!ERASE_K.includes(e.k))return 0;let n=0;const back=(
  if(e.k==='gen'){for(const k in e.outb)back(k,e.outb[k]);e.outb={};return n;}
  return n;}
 /* Flow Meter (Session 36f): a marker on a belt/pipe tile (e.fm, saved). Belts remember item arrival times (e.fa): always the last 60 s, and on
-   slow belts back to the last 30 items (max 5 min); the rate is the time between them (Session 37k: busy belts average over 60 s, 1–2 items/min over several minutes,
+   slow belts back to the last 60 items (max 10 min, Session 37l), and the shown value (e.fr) glides towards the measurement; the rate is the time between them (Session 37k: busy belts average over 60 s, 1–2 items/min over several minutes,
    and a belt that stops drops gradually); pipes show their network's flow. fmRate → [per minute, max per minute]. */
-function fmRate(e){if(e.k==='pipe'){const n=e.net;return[n?Math.max(n.inR,n.outR):0,(n?n.rate:e.spd)*60];}
- const a=e.fa||[],n=a.length;if(n<2)return[0,e.spd*60];const span=Math.max(0.5,a[n-1]-a[0]),gap=span/(n-1),extra=Math.max(0,S.t-a[n-1]-gap);
- return[60*(n-1)/(span+extra),e.spd*60];}   // the wait since the last item only counts once it's longer than the usual gap
-function toggleMeter(e){if(!e||!isLine(e.k))return 'Put it on a belt or pipe';if(e.fm){e.fm=0;e.fa=null;refund(B.fmeter.cost);topoDirty=true;return 'off';}
+function fmRate(e){if(e.k==='pipe'){const n=e.net;return[n?Math.max(n.inR,n.outR):0,(n?n.rate:e.spd)*60];}return[e.fr!=null?e.fr:fmRaw(e),e.spd*60];}
+function fmRaw(e){
+ const a=e.fa||[],n=a.length;if(n<2)return 0;const span=Math.max(0.5,a[n-1]-a[0]),gap=Math.max(span/(n-1),e.fg||0),extra=Math.max(0,S.t-a[n-1]-gap);
+
+ return 60*(n-1)/(span+extra);}   // the wait since the last item only counts once it's longer than the longest recent gap (items often come in bunches)
+function toggleMeter(e){if(!e||!isLine(e.k))return 'Put it on a belt or pipe';if(e.fm){e.fm=0;e.fa=null;e.fr=null;refund(B.fmeter.cost);topoDirty=true;return 'off';}
  if(!afford(B.fmeter.cost))return 'Not enough materials';pay(B.fmeter.cost);e.fm=1;e.fa=[];topoDirty=true;return 'on';}
 /* ---------- Power wires (Session 36h) ----------
    Wires are saved per node (pole, tower, switch, generator) as e.pl=[[x,y],…] (corners of linked nodes), kept on both ends.
@@ -474,7 +476,8 @@ function updBuilding(e,dt){
 function tick(dt){
  if(topoDirty)rebuildTopo();
  tickNo++;S.t+=dt;
- if(tickNo%20===0)for(const e of meters){const a=e.fa;if(a)while(a.length&&(S.t-a[0]>300||(a.length>30&&S.t-a[0]>60)))a.shift();}   // Flow Meters: at least the last 60 s; slow belts: the last 30 items, at most 5 min
+ if(tickNo%20===0)for(const e of meters){const a=e.fa;if(!a)continue;while(a.length&&(S.t-a[0]>600||(a.length>60&&S.t-a[0]>60)))a.shift();let g=0;for(let i=1;i<a.length;i++)g=Math.max(g,a[i]-a[i-1]);e.fg=g;
+  const raw=fmRaw(e);e.fr=e.fr==null?raw:e.fr+(raw-e.fr)*0.12;}   // shown value glides (~8 s) instead of stepping when items enter/leave the window   // Flow Meters: at least the last 60 s; slow belts: the last 30 items, at most 5 min
  powerStep(dt);
  for(const e of beltOrder)updBelt(e,dt);
  for(const e of routers)updRouter(e);   // after the belts (Session 37j): the tile in front has already moved on this tick, so a

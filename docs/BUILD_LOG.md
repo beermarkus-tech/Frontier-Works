@@ -1708,3 +1708,26 @@ The Flow Meter still jumps up and down quickly.
 
 ### Verified
 - `npm test` 85 PASS / 0 FAIL, twice. New check: on a full Mk3 line, read every second for a minute, the meter stays at 270.0–270.1/min.
+
+---
+
+## Session 37l — 2026-11-13 (Claude Code, cloud session) · Build 71
+
+### What Markus asked
+The Flow Meter still jumps on belts carrying few items (2–24/min).
+
+### Cause
+At low rates a 60 s window holds only a handful of items: each item entering or leaving the window moves the value in a visible step, and
+irregular gaps (machines waiting, splitters sending elsewhere) swing it further. Simulated with random gaps: 12/min read 10.8–15.5,
+24/min 19.9–26.6 (same before and after Build 70; a first attempt using the longest recent gap for the "stopping" decay didn't help).
+
+### Fix
+- Window: at least 60 s, and on slow belts back to the last 60 items (max 10 min).
+- The shown value (`e.fr`) glides towards the measurement once per second (12 %/s, ~8 s), so it no longer steps.
+- The "belt stopping" decay only starts once the wait exceeds the longest gap seen recently (bunched items don't make it dip).
+- Build number **71**.
+
+### Verified
+- Random gaps: 12/min now 11.3–11.9, 24/min 23.4–25.7; regular/bunched flows steady (12.1–12.2, 2.00, 24.2–24.4); busy Mk3 270.0.
+- `npm test` 86 PASS / 0 FAIL (new check: bunched slow belts steady).
+- Trade-off: a slow belt that stops falls more slowly (2/min reads ~1.3 three minutes after stopping).
