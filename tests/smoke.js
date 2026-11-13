@@ -526,8 +526,11 @@ const server=require('./serve.js');
  const mu=await p.evaluate(async()=>{const out={};auStart();OPT.mute=false;OPT.vol.music=0.5;const s0=MU.step;await new Promise(r=>setTimeout(r,1200));out.plays=MU.on&&MU.step>s0;
   OPT.mute=true;await new Promise(r=>setTimeout(r,300));out.mutedStops=!MU.on;OPT.mute=false;OPT.vol.music=0;await new Promise(r=>setTimeout(r,300));out.zeroStops=!MU.on;OPT.vol.music=0.5;
   let err='';try{const c=AU.ctx,t=c.currentTime+0.1;muInit();Object.assign(MU,{sec:null,step:0,rest:0,played:0});for(let i=0;i<80;i++){muStep(t+i*0.1);MU.step++;}}catch(e){err=e.message;}out.steps=err===''?true:err;
+  try{const c=AU.ctx,t=c.currentTime+0.1;Object.assign(MU,{track:0,sec:null,step:0,rest:0,played:1000});muStep(t);const rested=MU.rest>0;let n=0;while(MU.rest>0&&n<2000){muStep(t);MU.step++;n++;}
+   out.switches=rested&&MU.track===1;for(let i=0;i<200;i++){muStep(t+i*0.02);MU.step++;}out.track2=MU.track===1&&!!MU.sec&&MU.sec.bp!=null;
+   Object.assign(MU,{played:1000,sec:null});muStep(t);while(MU.rest>0){muStep(t);MU.step++;}out.back=MU.track===0;}catch(e){out.switches=e.message;}
   openPanel('menu');out.menu=!document.getElementById('pbody').textContent.includes('coming');ACT.closePanel();return out;});
- check(`music: ${Object.entries(mu).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mu).every(v=>v===true));
+ check(`music (2 tracks): ${Object.entries(mu).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mu).every(v=>v===true));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

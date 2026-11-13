@@ -2014,3 +2014,24 @@ Belts: keep the rattle but remove the whoosh, and let them rattle even without i
 - Phone-size check found the overflowing row ("Buildings 9 × Fabricator, 1 × Blender, 22 × Assembler…"); after the fix no row in any planner tab
   is wider than the panel (new permanent check). Screenshot of the target summary on a phone.
 - `npm test` 94 PASS / 0 FAIL.
+
+---
+
+## Session 39h — 2026-11-13 (Claude Code, cloud session) · Build 90
+
+### What Markus asked
+He likes the music; a second track with a slight beat, switching every couple of minutes.
+
+### What was built (`js/audio.js`)
+- Track 2 "Pulse" (`muSection2` / `muPlay2`): 96 BPM; three A-minor-family progressions; from bar 2 a soft sine kick (110 → 42 Hz) on beats 1 and 3,
+  a soft band-passed clap on 2 and 4, high-passed hats on the off-beats (optional per section), a pulsing low-passed sawtooth bass line (three
+  patterns), lighter pads, the plucked arpeggio in some sections, and now and then a short metallic clank (bell partials) late in the bar.
+- Alternation: after 3–5 minutes of a track a 25–60 s break, then `muSwitch()` flips to the other track (resets the section, sets the echo
+  time to the new tempo). Track 1 = the first track unchanged ("Drift").
+- Levels balanced from offline renders (Pulse first came out at about half the loudness of Drift).
+- Build number **90**.
+
+### Verified
+- `npm test` 94 PASS / 0 FAIL. Music check extended: a finished run rests and then switches to Pulse, Pulse plays 200 steps without error,
+  the next run switches back.
+- One-minute render of Pulse sent to Markus.

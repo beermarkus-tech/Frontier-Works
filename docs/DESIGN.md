@@ -204,6 +204,8 @@ Hand mining gives +5 ore from a node.
   Belts rattle (clicks only) whether loaded or not (Session 39f).
   Step 3 (Session 39f): generative background music: ~80 BPM, minor key; slow pad chords, plucked arpeggio with echo, quiet bass, occasional
   metallic swell with a bell ring; sections of 32–64 beats change progression, pattern and layers; a silent break of 25–60 s every 3–5 min.
+  Second track "Pulse" (Session 39h): 96 BPM, A-minor family, soft kick on 1 and 3, ticking hats, soft clap on 2 and 4, pulsing filtered
+  bass line, light pads, occasional arpeggio and metallic clank. The tracks alternate: after each 3–5 min run and its break, the other one plays.
 - **Factory zones** (Session 38, agreed with Markus: drawn boundaries instead of power switches, since pole circles reach into neighbouring
   factories): Factory Zone tool in the Signs tab, free. Drag a rectangle: touching one zone extends it (any shape from rectangles), touching none
   starts a new one, touching two is refused. Zones never overlap. Shown as a coloured fence (2D line with posts, 3D low fence), faint tint and a

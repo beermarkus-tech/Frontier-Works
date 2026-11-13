@@ -89,7 +89,7 @@ setInterval(()=>{try{mvUpdate();}catch(e){}},150);
    Generative, original: slow pads, a soft plucked arpeggio with echo, a quiet bass and now and then a metallic swell with a bell ring.
    ~80 BPM, D minor family. Sections of 32–64 beats; the progression, arpeggio pattern and which layers play change per section; after a few
    minutes a silent break (25–60 s). Scheduled ~0.6 s ahead every 100 ms on the 'music' bus, through a soft reverb. Stops in the background. */
-const MU={on:false,t:0,step:0,sec:null,rest:0,played:0,rev:null,dly:null};
+const MU={on:false,t:0,step:0,sec:null,rest:0,played:0,rev:null,dly:null,track:0};
 const MU_BPM=80,MU_PROG=[[[50,57,60,65],[46,53,57,62],[41,48,53,57],[48,55,58,64]],[[50,57,60,65],[45,52,57,60],[46,53,58,62],[43,50,55,58]],
  [[50,53,57,62],[55,58,62,65],[46,50,53,58],[45,49,52,57]],[[41,48,52,57],[43,50,53,58],[50,57,60,65],[45,52,55,60]]];
 const mf=m=>440*Math.pow(2,(m-69)/12);
@@ -104,15 +104,34 @@ function muNote(type,freqs,t,a,hold,r,vol,cut,echo){const c=AU.ctx,f=c.createBiq
  f.connect(g);g.connect(AU.bus.music);const sg=c.createGain();sg.gain.value=0.6;g.connect(sg);sg.connect(MU.rev);if(echo){const eg=c.createGain();eg.gain.value=echo;g.connect(eg);eg.connect(MU.dly);}}
 function muSection(){const r=Math.random;MU.sec={prog:MU_PROG[(r()*MU_PROG.length)|0],len:[32,48,64][(r()*3)|0],start:MU.step,arp:r()<0.75,bass:r()<0.8,
  pat:[[0,1,2,3,2,1,0,1],[0,2,1,3,0,2,3,1],[0,1,2,3,4,3,2,1],[2,1,0,1,2,3,2,3]][(r()*4)|0],oct:r()<0.5?12:24};}
-function muStep(t){const b=60/MU_BPM/2;   /* one step = an eighth note */
- if(MU.rest>0){MU.rest--;return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>180+Math.random()*120){MU.played=0;MU.rest=Math.round((25+Math.random()*35)/b);MU.sec=null;return;}muSection();}
+/* Two tracks (Session 39h): 0 = "Drift" (calm, 80 BPM, pads + arpeggio), 1 = "Pulse" (96 BPM, soft beat + bass line). After 3–5 minutes of a
+   track a 25–60 s break, then the other track. */
+const muBpm=()=>MU.track?96:MU_BPM,muB=()=>60/muBpm()/2;
+function muSwitch(){MU.track=1-MU.track;MU.sec=null;MU.step=0;if(MU.dly)MU.dly.delayTime.setValueAtTime(60/muBpm()*0.75,AU.ctx.currentTime);}
+function muStep(t){const b=muB();   /* one step = an eighth note */
+ if(MU.rest>0){MU.rest--;if(MU.rest===0)muSwitch();return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>180+Math.random()*120){MU.played=0;MU.rest=Math.max(1,Math.round((25+Math.random()*35)/b));MU.sec=null;return;}MU.track?muSection2():muSection();}
+ if(MU.track)return muPlay2(t,b);
  const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16;
  if(pos===0){muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.997,f*1.003]),t,1.6,b*16-2.2,2.6,0.045,900);
   if(s.bass)muNote('triangle',[mf(ch[0]-12)],t,0.05,b*6,1.2,0.2,500);}
  if(s.bass&&pos===8)muNote('triangle',[mf(ch[0]-12)],t,0.05,b*4,1,0.15,500);
  if(s.arp&&i>=16){const nts=[...ch,ch[1]+12],m=nts[s.pat[pos%8]%nts.length]+s.oct;muNote('triangle',[mf(m)],t,0.005,0.02,0.55,0.09,2600,0.45);}
  if(pos===0&&bar%4===2&&Math.random()<0.5){auNoise(t,3.5,0.09,'bandpass',180,900,1.5,'music');const f0=mf(ch[0]+24);muNote('sine',[f0,f0*2.76],t+0.4,0.01,0.05,4,0.065,4000,0.3);}}
+/* track 2 "Pulse": A minor family, soft kick on 1 and 3, ticking hats, soft clap on 2 and 4, a pulsing filtered bass line, light pads,
+   the plucked arpeggio now and then, and an occasional metallic clank in the groove */
+const MU_PROG2=[[[45,52,55,60],[41,48,53,57],[43,50,55,59],[40,47,52,55]],[[45,52,57,60],[45,52,57,60],[41,48,53,57],[43,50,55,59]],
+ [[40,47,52,55],[43,50,55,59],[45,52,55,60],[41,48,53,57]]];
+function muSection2(){const r=Math.random;MU.sec={prog:MU_PROG2[(r()*MU_PROG2.length)|0],len:[32,48,64][(r()*3)|0],start:MU.step,arp:r()<0.5,hats:r()<0.85,
+ bp:[[0,0,12,0,0,0,12,0],[0,12,0,12,0,7,0,12],[0,0,0,12,0,0,7,0]][(r()*3)|0],pat:[[0,1,2,3,2,1,0,1],[0,2,1,3,0,2,3,1]][(r()*2)|0]};}
+function muKick(t,v){auOsc('sine',110,42,t,0.32,v,0,'music');auNoise(t,0.02,v*0.25,'lowpass',1200,400,0.7,'music');}
+function muPlay2(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16,beatsIn=i>=16;
+ if(pos===0)muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.996,f*1.004]),t,1.2,b*16-1.8,2.2,0.05,750);
+ if(beatsIn){if(pos%8===0)muKick(t,0.5);if(pos%8===4)auNoise(t,0.09,0.1,'bandpass',1500,1100,1.2,'music');
+  if(s.hats&&pos%2===1)auNoise(t,0.035,pos%4===3?0.055:0.035,'highpass',7000,7000,0.7,'music');
+  if(pos===14&&bar%2===1&&Math.random()<0.6){const f0=mf(ch[0]+31);muNote('sine',[f0,f0*2.76,f0*5.4],t,0.002,0.01,0.5,0.065,6000,0.35);}}
+ const bn=s.bp[pos%8];if(i>=8&&(bn||pos%2===0)){const f=mf(ch[0]-12+bn);muNote('sawtooth',[f],t,0.005,b*0.55,0.12,0.12,420+(pos%4===0?260:0));}
+ if(s.arp&&bar>=2&&pos%2===0){const nts=[...ch,ch[1]+12],m=nts[s.pat[(pos/2)%8]%nts.length]+12;muNote('triangle',[mf(m)],t,0.005,0.02,0.45,0.09,2400,0.45);}}
 function muTick(){if(!AU.ctx||AU.ctx.state!=='running')return;const play=!OPT.mute&&OPT.vol.music>0&&!document.hidden;const c=AU.ctx;
- if(!play){MU.on=false;return;}muInit();if(!MU.on){MU.on=true;MU.t=c.currentTime+0.3;}const b=60/MU_BPM/2;
- while(MU.t<c.currentTime+0.6){muStep(MU.t);MU.step++;MU.played+=b;MU.t+=b;}}
+ if(!play){MU.on=false;return;}muInit();if(!MU.on){MU.on=true;MU.t=c.currentTime+0.3;}
+ while(MU.t<c.currentTime+0.6){const b=muB();muStep(MU.t);MU.step++;MU.played+=b;MU.t+=b;}}
 setInterval(()=>{try{muTick();}catch(e){}},100);
