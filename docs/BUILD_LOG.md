@@ -1885,3 +1885,31 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
   (power-weighted average of machines with a recipe, drills and pumps; switched-off ones and those measured < 3 s left out). 2D and 3D name tags
   show "Name 87%" with the percentage in the ring colours; zones without measured machines show just the name.
 - Verified: `npm test` 90 PASS / 0 FAIL (dashboard check: the 2D label draws the zone's percentage). Screenshots in 2D and 3D. Build number **82**.
+
+---
+
+## Session 39 — 2026-11-13 (Claude Code, cloud session) · Build 83
+
+### What Markus asked
+Background music and sound effects (machines, placing, deleting), industrial, oriented at big factory games but original. Agreed plan in three
+steps (effects + mixer, machine sounds, music). This is step 1.
+
+### What was built
+- New file `js/audio.js` (in `index.html` after pwa.js and in `sw.js` ASSETS). Web Audio only: oscillators and filtered noise, no audio files.
+  Mixer: master → compressor → speakers; buses music / sfx / mach. Starts on the first tap or key press.
+- Effects (`SFX`): place (low thump + metal ping + ratchet clicks), belt (tick per tile while dragging a line; single belt), del (falling
+  noise + low thump + whoosh), erase (scrape), rotate (4-click ratchet), move (servo whine + set-down), click (buttons), deny (refused
+  action), goal (rising chime), trip (warning buzz). Throttled per effect (`SFX_GAP`).
+- Hooked into: tap placing, line building, dismantle (tap and drag, 2D and 3D), eraser, rotate (tool and selected building), move (long
+  press, drag drop, Move button), every panel/dock button, goal submit, fuse trip.
+- ☰ Menu → Sound: 🔊 On / 🔇 Muted, sliders Effects, Machines (coming), Music (coming). Saved per device (`OPT.vol`, `OPT.mute`).
+- Build number **83**.
+
+### Verified
+- `npm test` 91 PASS / 0 FAIL. New check: audio engine starts after a tap; every effect plays without error; tap place → del → rotate → line
+  build trigger place, del, rotate, place; mute and volume are saved; the Menu shows the Sound section with three sliders.
+- Found by the test: effects with a filter (rotate, move, deny, trip) passed their settings in the wrong order and would have failed silently.
+- A demo WAV of all effects was rendered offline (OfflineAudioContext) and sent to Markus to listen to.
+
+### Next up
+- Step 2: machine sounds by distance and zoom. Step 3: generative music. Tune effect volumes/character after Markus listens.

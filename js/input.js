@@ -14,7 +14,7 @@ function linePath(a,b,rot){
  for(let i=0;i<steps.length;i++){path.push({x,y,d:steps[i]});x+=DX[steps[i]];y+=DY[steps[i]];}
  path.push({x,y,d:steps[steps.length-1]});return path;
 }
-function buildPath(id,path){let fail='';for(const p of path){const why=placeEnt(id,p.x,p.y,p.d);if(why&&why!=='same'&&why!=='Blocked'){fail=why;if(why==='Not enough materials')break;}}if(fail)toast(fail);refreshTools();updInfo();}
+function buildPath(id,path){let fail='',ok=0;for(const p of path){const why=placeEnt(id,p.x,p.y,p.d);if(!why)ok++;if(why&&why!=='same'&&why!=='Blocked'){fail=why;if(why==='Not enough materials')break;}}if(fail)toast(fail);if(ok)sfx(ok>1?'place':'belt');else if(fail)sfx('deny');refreshTools();updInfo();}
 /* Long press (≈0.45 s, no tool, finger still) on a building lifts it; dragging moves the preview, releasing places it */
 let movePrev=null;
 /* Ghost taps (phones): after a finger tap on the map opens the panel, the browser can send the same tap again as a click to whatever button
@@ -23,25 +23,25 @@ let mapTap={t:-1e9,x:0,y:0};
 function calmPanel(){const p=document.getElementById('panel');if(!p)return;p.style.pointerEvents='none';clearTimeout(calmPanel.t);calmPanel.t=setTimeout(()=>{p.style.pointerEvents='';},450);}
 function armLongPress(g,t0){if(UI.tool||UI.moveId||UI.linkFrom)return;const en=t0&&entAt(t0.x,t0.y);if(!en||en.k==='core')return;
  g.lp=setTimeout(()=>{if(g.type!=='pending')return;g.type='move';g.mv={e:en,dx:en.x-t0.x,dy:en.y-t0.y};movePrev={e:en,nx:en.x,ny:en.y,ok:true};
-  try{navigator.vibrate&&navigator.vibrate(18);}catch(_){}toast(`Moving ${B[en.d].n}: drag and let go`);},450);}
+  try{navigator.vibrate&&navigator.vibrate(18);}catch(_){}sfx('click');toast(`Moving ${B[en.d].n}: drag and let go`);},450);}
 function dragMove(g,t){if(!t)return;const nx=t.x+g.mv.dx,ny=t.y+g.mv.dy;movePrev={e:g.mv.e,nx,ny,ok:!canMove(g.mv.e,nx,ny)};}
-function dropMove(){const m=movePrev;movePrev=null;if(!m)return;if(!ents.has(m.e.id))return;const why=moveEnt(m.e,m.nx,m.ny);if(why)toast(why+': not moved');else{UI.sel=m.e.id;refreshTools();}}
+function dropMove(){const m=movePrev;movePrev=null;if(!m)return;if(!ents.has(m.e.id))return;const why=moveEnt(m.e,m.nx,m.ny);if(why){toast(why+': not moved');sfx('deny');}else{sfx('move');UI.sel=m.e.id;refreshTools();}}
 function tap(t){
  if(UI.wireFrom){const a=ents.get(UI.wireFrom),b=entAt(t.x,t.y);UI.wireFrom=null;updInfo();if(!a)return;
   if(!isPN(b)||b===a)toast('That is not a pole, tower, switch or generator');else if(!pnRange(a,b))toast('Too far for a wire (out of range)');else if(pnLinked(a,b))toast('Already connected');else{pnLink(a,b);toast('Wire added');}
   openPanel('ent',a.id);return;}
- if(UI.moveId){const e=ents.get(UI.moveId);UI.moveId=null;movePrev=null;updInfo();if(!e)return;const fp=footprint(e.d,t.x,t.y),why=moveEnt(e,fp.x,fp.y);toast(why?why+': not moved':`${B[e.d].n} moved`);if(!why)UI.sel=e.id;return;}
+ if(UI.moveId){const e=ents.get(UI.moveId);UI.moveId=null;movePrev=null;updInfo();if(!e)return;const fp=footprint(e.d,t.x,t.y),why=moveEnt(e,fp.x,fp.y);sfx(why?'deny':'move');toast(why?why+': not moved':`${B[e.d].n} moved`);if(!why)UI.sel=e.id;return;}
  if(UI.linkFrom){const src=ents.get(UI.linkFrom),e=entAt(t.x,t.y);UI.linkFrom=null;updInfo();
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
  const tool=UI.tool;
- if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();}return;}
+ if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();sfx('del');}return;}
  if(UI.zoneCut){toast('Drag over the area to remove');return;}
  if(tool==='zone'){const v=zoneAt(t.x,t.y);if(v)openPanel('zone',v);else toast('Drag to draw a factory zone');return;}
  if(tool==='fmeter'){const e=entAt(t.x,t.y),r=toggleMeter(e);toast(r==='on'?'Flow Meter on: the rate settles over 30 s':r==='off'?'Flow Meter taken off (refunded)':r);refreshTools();return;}
- if(tool==='clr'){const e=entAt(t.x,t.y);if(!e)return;if(!ERASE_K.includes(e.k)){toast(`The eraser leaves ${B[e.d].n} alone (it's storage)`);return;}const n=eraseEnt(e);sparkle(e);toast(n?`Emptied ${B[e.d].n}: ${n} back to stock (fluids drain away)`:`${B[e.d].n} was already empty`);refreshTools();return;}
+ if(tool==='clr'){const e=entAt(t.x,t.y);if(!e)return;if(!ERASE_K.includes(e.k)){toast(`The eraser leaves ${B[e.d].n} alone (it's storage)`);return;}const n=eraseEnt(e);sparkle(e);sfx('erase');toast(n?`Emptied ${B[e.d].n}: ${n} back to stock (fluids drain away)`:`${B[e.d].n} was already empty`);refreshTools();return;}
  if(tool&&B[tool]){const d=B[tool];
   if(isLine(d.k)){const o=entAt(t.x,t.y);buildPath(tool,[{x:t.x,y:t.y,d:o&&o.k===d.k?o.dir:UI.rot}]);return;}   // tapping an existing belt/pipe upgrades it in place, keeping its direction
-  const fp=footprint(tool,t.x,t.y);const why=placeEnt(tool,fp.x,fp.y,UI.rot);if(why&&why!=='same')toast(why);refreshTools();updInfo();
+  const fp=footprint(tool,t.x,t.y);const why=placeEnt(tool,fp.x,fp.y,UI.rot);if(why&&why!=='same'){toast(why);sfx('deny');}else if(!why)sfx('place');refreshTools();updInfo();
   if(!why&&d.k==='sign'){const e=entAt(fp.x,fp.y);setTool(null);UI.sel=e.id;openPanel('ent',e.id);setTimeout(()=>{const i=document.getElementById('signTxt');if(i)i.focus();},60);}   // straight to typing the label
   return;}
  const e=entAt(t.x,t.y);
@@ -73,10 +73,10 @@ cv.addEventListener('pointermove',e=>{
  if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(G.lp);const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else if(tool==='clr'){G.type='clr';eraseN=0;}else if(tool==='zone'||UI.zoneCut)G.type='zone';else G.type='pan';}
  if(G.type==='pan'){const s=TS*cam.z,now=performance.now(),dt=Math.max(1,now-G.lt)/1000;
   const nx=G.cx-(e.clientX-G.sx)/s,ny=G.cy-(e.clientY-G.sy)/s;G.vx=G.vx*0.5+((nx-cam.x)/dt)*0.5;G.vy=G.vy*0.5+((ny-cam.y)/dt)*0.5;G.lt=now;cam.x=nx;cam.y=ny;clampCam();syncT();}
- else if(G.type==='line'){linePrev={id:UI.tool,path:linePath(G.t0,t,UI.rot)};}
- else if(G.type==='del'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross'||x.k==='pole')){puff(x);removeEnt(x,true);refreshTools();}}
+ else if(G.type==='line'){const n0=linePrev?linePrev.path.length:0;linePrev={id:UI.tool,path:linePath(G.t0,t,UI.rot)};if(linePrev.path.length!==n0)sfx('belt');}
+ else if(G.type==='del'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross'||x.k==='pole')){puff(x);removeEnt(x,true);refreshTools();sfx('del');}}
  else if(G.type==='zone'){G.t1=t;zonePrev=Object.assign(zoneCheck(G.t0,t,UI.zoneCut),{cut:UI.zoneCut});}
- else if(G.type==='clr'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross')){const n=eraseEnt(x);if(n){eraseN+=n;sparkle(x);}}}
+ else if(G.type==='clr'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross')){const n=eraseEnt(x);if(n){eraseN+=n;sparkle(x);sfx('erase');}}}
 });
 function endPtr(e){
  ptrs.delete(e.pointerId);if(!G)return;

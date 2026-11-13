@@ -494,6 +494,18 @@ const server=require('./serve.js');
   for(const id of [A,Bz]){for(let i=0;i<zoneMap.length;i++)if(zoneMap[i]===id)zoneMap[i]=0;}zoneSave();zoneRebuild();
   for(let j=-2;j<8;j++)for(let i=-2;i<18;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
  check(`factories dashboard counts across the fence: ${Object.entries(zd).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(zd).every(Boolean));
+ // sound: engine starts after a tap, every effect plays without errors, actions trigger the right effects, volume + mute saved, Menu section
+ await p.mouse.click(5,300);await p.waitForTimeout(150);
+ const au=await p.evaluate(async()=>{const out={};auStart();await new Promise(r=>setTimeout(r,200));out.ctx=!!AU.ctx&&!!AU.bus.sfx;let err='';const t=AU.ctx.currentTime;
+  for(const k in SFX){try{SFX[k](t+0.01);}catch(e){err+=k+':'+e.message+' ';}}out.allPlay=err===''?true:err;
+  const log=[],orig=sfx;sfx=n=>log.push(n);try{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('smelter',x,y)&&!canPlace('smelter',x+3,y)){X=x;Y=y;break;}}
+   S.inv.iron_rod=(S.inv.iron_rod||0)+20;S.inv.wire=(S.inv.wire||0)+20;setTool('smelter');tap({x:X,y:Y});setTool('del');tap({x:X,y:Y});setTool(null);ACT.rotate();buildPath('belt1',[{x:X,y:Y,d:0},{x:X+1,y:Y,d:0}]);
+   for(const e of [fw.entAt(X,Y),fw.entAt(X+1,Y)])if(e&&e.k!=='core')removeEnt(e,false,true);}finally{sfx=orig;}
+  out.actions=log.join(',');
+  ACT.auMute('1');out.muted=OPT.mute===true&&JSON.parse(localStorage.getItem('frontierworks_opts')).mute===true;ACT.auMute('0');
+  OPT.vol.sfx=0.4;saveOpt();out.vol=JSON.parse(localStorage.getItem('frontierworks_opts')).vol.sfx===0.4;OPT.vol.sfx=0.7;saveOpt();
+  openPanel('menu');out.menu=document.getElementById('pbody').textContent.includes('Sound')&&document.querySelectorAll('#pbody .auvol').length===3;ACT.closePanel();return out;});
+ check(`sound effects: ${Object.entries(au).map(([k,v])=>k+'='+v).join(' ')}`,au.ctx&&au.allPlay===true&&au.actions.startsWith('place,del,rotate,place')&&au.muted&&au.vol&&au.menu);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

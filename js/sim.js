@@ -383,7 +383,7 @@ function powerStep(dt){
   let dem=0;for(const c of g.cons)dem+=drawMW(c);
   let cap=0;for(const ge of g.gens){ge.can=genCan(ge);if(ge.can)cap+=B[ge.d].cap;}
   let tr=g.nodes.some(x=>x.trip);
-  if(!tr&&cap>0&&dem>cap+1e-6){for(const x of g.nodes)x.trip=true;tr=true;toast('⚠ Power fuse tripped — demand exceeds supply');}
+  if(!tr&&cap>0&&dem>cap+1e-6){for(const x of g.nodes)x.trip=true;tr=true;toast('⚠ Power fuse tripped — demand exceeds supply');if(typeof sfx==='function')sfx('trip');}
   g.trip=tr;g.dem=dem;g.cap=cap;
   const ok=!tr&&cap>0&&dem<=cap+1e-6;
   for(const c of g.cons)c.pw=ok?1:0;

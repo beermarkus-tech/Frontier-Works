@@ -25,7 +25,7 @@ and keep the game playable after every commit.
 3. Tell Markus in two or three plain sentences what changed and what to try on his phone.
 
 ## Architecture
-- Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → plan → zones → view3d → input → pwa → sync → main (Three.js is injected by `view3d.js` on first 3D use). Top-level `const`/`let` are visible across files; don't redeclare names.
+- Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → plan → zones → view3d → input → pwa → audio → sync → main (Three.js is injected by `view3d.js` on first 3D use). Top-level `const`/`let` are visible across files; don't redeclare names.
 - Sim runs at fixed 20 ticks/s (`tick(0.05)` in `js/sim.js`). Belts hold one item per tile; `beltOrder` processes downstream first. Buildings push output only into belts/pipes pointing away from them; input is any belt/pipe pointing into them.
 - Power: wires are saved per node (`e.pl` = corners of linked poles/generators/switches, both ends). A new node wires itself to the nearest node in range
   (`pnAuto`); removing/moving one rewires orphans and bridges splits (`pnHeal`). Old saves without `S.pw2` are reduced once to a spanning tree (`pnMigrate`).
@@ -48,6 +48,8 @@ and keep the game playable after every commit.
 - Factory zones (`js/zones.js`): per-tile `zoneMap` (Uint16, 0 = none), saved as run-length text `S.zmap`, zone list `S.zones` [{id,name,c}];
   `zoneDrop(a,b,cut)` adds/extends/cuts; `zoneRebuild()` makes outline edges, row runs and labels (`zoneVer` bumps). 2D `drawZoneTint/drawZoneFence`,
   3D `v3Zones`. Tool id `'zone'` (pseudo-building in the Signs tab).
+- Sound (`js/audio.js`): Web Audio synthesis only (no files). `sfx(name)` plays an effect from `SFX` (gap throttling in `SFX_GAP`); buses
+  music/sfx/mach under `AU.master`; volumes `OPT.vol`, `OPT.mute`. Context starts on the first tap/key (`auStart`).
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).
 
 ## Rules

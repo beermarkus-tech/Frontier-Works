@@ -241,6 +241,7 @@ function menuHtml(){
  <div class="row"><span>Efficiency rings on buildings</span><span class="chips"><button class="btn chip ${OPT.eff?'on':''}" data-act="optEff" data-v="1">On</button><button class="btn chip ${OPT.eff?'':'on'}" data-act="optEff" data-v="0">Off</button></span></div>
  <div class="row"><span>3D quality</span><span class="chips"><button class="btn chip ${V3.q==='high'?'on':''}" data-act="q3" data-v="high">High</button><button class="btn chip ${V3.q==='low'?'on':''}" data-act="q3" data-v="low">Low (faster)</button></span></div>
  <div class="row"><span>3D look</span><span class="chips"><button class="btn chip ${V3.look==='nice'?'on':''}" data-act="look3" data-v="nice">Enhanced</button><button class="btn chip ${V3.look==='classic'?'on':''}" data-act="look3" data-v="classic">Classic (faster)</button></span></div>
+ ${typeof audioMenu==='function'?audioMenu():''}
  ${PWA.standalone?'':'<h4>Install app</h4>'+installHtml()}
  <h4>Simulation speed</h4><div class="chips">${[1,2,4].map(v=>`<button class="btn chip ${S.spd===v?'on':''}" data-act="spd" data-v="${v}">${v}×</button>`).join('')}</div>
  <h4>Save</h4><button class="btn" data-act="saveNow">💾 Save now</button> <span class="muted">(auto-saves every 30 s)</span>
@@ -261,7 +262,7 @@ const ACT={
  toolNone:()=>setTool(null),
  toolDel:()=>setTool(UI.tool==='del'?null:'del'),
  toolClr:()=>setTool(UI.tool==='clr'?null:'clr'),
- rotate:()=>{UI.rot=(UI.rot+1)&3;UI.rotA=(UI.rotA||0)+90;updInfo();},
+ rotate:()=>{UI.rot=(UI.rot+1)&3;UI.rotA=(UI.rotA||0)+90;updInfo();sfx('rotate');},
  home:()=>{camT.x=MW/2;camT.y=MH/2;camT.z=1.2;vel.x=vel.y=0;zAnchor=null;},
  closePanel,
  openMs:()=>openPanel('ms'),openInv:()=>openPanel('inv'),openStats:()=>openPanel('stats'),openMenu:()=>openPanel('menu'),openCodex:()=>openPanel('codex'),
@@ -284,11 +285,11 @@ const ACT={
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},
  delSel:()=>{const e=ents.get(UI.panel.arg);if(e){removeEnt(e,true);closePanel();buildTools();}},
- rotSel:()=>{const e=ents.get(UI.panel.arg);if(e){e.dir=(e.dir+1)&3;topoDirty=true;}},
+ rotSel:()=>{const e=ents.get(UI.panel.arg);if(e){e.dir=(e.dir+1)&3;topoDirty=true;sfx('rotate');}},
  resetFuse:()=>{for(const g of grids)if(g.trip){for(const n of g.nodes)n.trip=false;g.trip=false;}toast('Fuse reset');},
  craft:(v,el)=>{const r=RC[v],n=+el.dataset.n;if(!afford(r.i,n))return;for(const k in r.i)S.inv[k]-=r.i[k]*n;for(const k in r.o)give(k,r.o[k]*n);renderPanel(true);buildTools();},
  handMine:()=>{const n=UI.panel.arg;give(NODE_T[n.t][0],5);toast(`+5 ${IT[NODE_T[n.t][0]].n}`);},
- submitMs:()=>{const m=MS[S.ms];if(!m||!afford(m.req))return;pay(m.req);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);if(m.oc)S.oc=true;S.ms++;
+ submitMs:()=>{const m=MS[S.ms];if(!m||!afford(m.req))return;pay(m.req);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);if(m.oc)S.oc=true;S.ms++;sfx('goal');
   toast(`Tier ${S.ms} complete: ${m.n}!`);buildTools();renderPanel(true);
   if(m.win){S.won=true;dialog(`<h2>🚀 Orbital Beacon launched!</h2><p>Your frontier outpost has reached orbit — every tier is complete. Thanks for playing. Feel free to keep optimising your factory.</p><button class="btn on" data-act="closeDlg">Keep building</button>`);}
   else{const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>Tier ${S.ms}: ${m.n}</h2><p>Unlocked: ${un.join(', ')||'—'}${m.oc?', overclocking':''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);}
@@ -314,7 +315,7 @@ const ACT={
 };
 document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el||el.tagName==='INPUT')return;
  if(typeof mapTap!=='undefined'&&performance.now()-mapTap.t<600&&Math.hypot(ev.clientX-mapTap.x,ev.clientY-mapTap.y)<40&&!ev.target.closest('#dock'))return;   /* ghost tap from the map tap */
-const f=ACT[el.dataset.act];if(f)f(el.dataset.v,el);});
+const f=ACT[el.dataset.act];if(f){if(!['rotate','rotSel','submitMs','auMute'].includes(el.dataset.act))sfx('click');f(el.dataset.v,el);}});
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset.act==='signText'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tx=el.value.slice(0,60);e._tk=null;topoVer++;}return;}if(el.dataset.act==='clock'&&UI.panel){const e=ents.get(UI.panel.arg);if(e){e.clock=+el.value/100;const cv2=document.getElementById('clockv');if(cv2)cv2.textContent=el.value+'%';}}});
 document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.act==='clock')renderPanel(true);});
 
