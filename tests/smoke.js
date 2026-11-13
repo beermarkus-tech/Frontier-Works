@@ -511,6 +511,17 @@ const server=require('./serve.js');
   OPT.vol.sfx=0.4;saveOpt();out.vol=JSON.parse(localStorage.getItem('frontierworks_opts')).vol.sfx===0.4;OPT.vol.sfx=0.7;saveOpt();
   openPanel('menu');out.menu=document.getElementById('pbody').textContent.includes('Sound')&&document.querySelectorAll('#pbody .auvol').length===3;ACT.closePanel();return out;});
  check(`sound effects: ${Object.entries(au).map(([k,v])=>k+'='+v).join(' ')}`,au.ctx&&au.allPlay===true&&au.actions.startsWith('place,del,rotate,place')&&au.muted&&au.vol&&au.menu);
+ // machine sounds: a working smelter at the screen centre makes the furnace voice audible; far zoom softer; switched off or muted = silent
+ const ms=await p.evaluate(async()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};auStart();await new Promise(r=>setTimeout(r,150));let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<6&&ok;j++)for(let i=-1;i<8&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  P('smelter',X,Y,0);P('burner',X,Y+2,0);P('belt1',X+2,Y,0);P('incin',X+3,Y,0);const sm=fw.entAt(X,Y),g=fw.entAt(X,Y+2);sm.r='r_iron_ingot';
+  const run=n=>{for(let i=0;i<n;i++){g.fuel={coal:50};sm.inb={iron_ore:20};tick(0.05);}};run(30);
+  cam.x=camT.x=X+1;cam.y=camT.y=Y+1;cam.z=camT.z=2;mvUpdate();out.near=MV.lvl.furnace||0;out.voices=Object.keys(MV.v).length;
+  cam.z=camT.z=0.4;mvUpdate();out.far=MV.lvl.furnace||0;cam.z=camT.z=2;
+  sm.off=true;g.off=true;run(10);mvUpdate();out.off=MV.lvl.furnace||0;sm.off=false;g.off=false;run(30);
+  OPT.mute=true;mvUpdate();out.muted=Math.max(...Object.values(MV.lvl));OPT.mute=false;
+  for(let j=-1;j<6;j++)for(let i=-1;i<8;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}mvUpdate();return out;});
+ check(`machine sounds: furnace ${ms.near.toFixed(2)} near, ${ms.far.toFixed(2)} zoomed out, ${ms.off.toFixed(2)} with ours switched off (others nearby), ${ms.muted} muted (${ms.voices} voices)`,ms.voices===7&&ms.near>0.3&&ms.far<ms.near*0.5&&ms.near-ms.off>0.2&&ms.muted===0);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

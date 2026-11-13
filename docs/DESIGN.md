@@ -199,7 +199,9 @@ Hand mining gives +5 ore from a node.
 - **Sound** (Session 39, agreed with Markus: industrial, in the spirit of big factory games, all original and synthesised in code): step 1 =
   effects for placing (metal clunk + ratchet), belt ticks while dragging, dismantling, eraser scrape, rotating (ratchet), moving (servo), buttons,
   refused actions, goal reached (chime), fuse trip (buzz). ☰ Menu → Sound: On/Muted, sliders Effects / Machines / Music (per device).
-  Next: machine sounds by distance and zoom, then generative background music.
+  Step 2 (Session 39c): machine sounds: one voice per kind (furnace, press, assembler, refinery/pump, drill, generator, belts), louder the more
+  working buildings of that kind are near the screen centre; zoom works as overall volume (far out = soft); idle/blocked/off = silent.
+  Next: generative background music.
 - **Factory zones** (Session 38, agreed with Markus: drawn boundaries instead of power switches, since pole circles reach into neighbouring
   factories): Factory Zone tool in the Signs tab, free. Drag a rectangle: touching one zone extends it (any shape from rectangles), touching none
   starts a new one, touching two is refused. Zones never overlap. Shown as a coloured fence (2D line with posts, 3D low fence), faint tint and a

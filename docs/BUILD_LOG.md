@@ -1922,3 +1922,29 @@ steps (effects + mixer, machine sounds, music). This is step 1.
 - Done: cards sorted by colour (palette order: orange, light blue, green, pink, purple, yellow, teal, coral), then by name (case-insensitive,
   numbers in natural order: "Factory 2" before "Factory 10"); "Outside zones" stays last.
 - `npm test` 91 PASS / 0 FAIL (dashboard check builds zones in two colours with mixed names and checks the order). Build number **84**.
+
+---
+
+## Session 39c — 2026-11-13 (Claude Code, cloud session) · Build 85
+
+### What Markus asked
+Next sound step: machine sounds.
+
+### What was built (`js/audio.js`)
+- Seven continuous voices on the Machines bus, built once: furnace (smelter, foundry: low rumble + crackle), press (rhythmic thump ~1.2 s),
+  assembler (assembler, fabricator: servo whir + ticks), refinery (refinery, blender, pumps: low bubbling), drill (grinding tremolo), generator
+  (mains hum), belts (light rattle; only belts carrying items).
+- `mvUpdate()` every 150 ms: working buildings within the visible area are summed per kind with a falloff from the screen centre; level =
+  1 − e^(−0.9·sum), times the zoom (2D: cam.z/1.6, 3D: 14/camera distance; 0.12–1) as an overall volume. Idle, blocked and switched-off
+  buildings count as silent. Rhythmic parts are scheduled 0.3 s ahead while a kind is audible. Silent when muted, at Machines 0 % or in the background.
+- Voice volumes (`MV_BASE`) balanced from an offline render (first render: assembler and drill much too quiet).
+- Menu slider "Machines" no longer says "coming". Build number **85**.
+
+### Verified
+- `npm test` 92 PASS / 0 FAIL. New check: a working smelter at the centre → furnace level 0.61; zoomed out 0.21; our smelter switched off
+  → its share gone; muted → 0; 7 voices.
+- Found while testing: at far zoom many visible machines added up almost as loud as one close one → zoom is now an overall volume factor.
+- Demo WAV of the seven voices (3.2 s each) sent to Markus.
+
+### Next up
+- Step 3: generative background music. Tune machine sounds after Markus listens.
