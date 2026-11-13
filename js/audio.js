@@ -59,7 +59,7 @@ function mvBuild(){const c=AU.ctx,bus=AU.bus.mach,mk=k=>{const g=c.createGain();
  const lfo=(param,rate,depth)=>{const l=c.createOscillator();l.frequency.value=rate;const lg=c.createGain();lg.gain.value=depth;l.connect(lg);lg.connect(param);l.start();};
  {const g=mk('furnace');loopNoise(g,'lowpass',320,0.8,0.55);const t=tone(g,'sine',52,0.25);lfo(t.g.gain,0.3,0.08);}
  {const g=mk('press');loopNoise(g,'lowpass',180,0.7,0.12);}
- {const g=mk('assembler');tone(g,'triangle',92,0.14);tone(g,'sine',184,0.04);const w=loopNoise(g,'bandpass',420,0.6,0.22);lfo(w.gain,0.25,0.07);}   /* calm: low hum + soft muffled whir (Session 39e; the buzzy wobbling sawtooth and high ticks were annoying) */
+ {const g=mk('assembler');tone(g,'sine',58,0.1);const w=loopNoise(g,'bandpass',300,0.6,0.22);lfo(w.gain,0.25,0.07);}   /* Session 39g: pure deep 58 Hz (the 92 Hz triangle's overtones were what small speakers played, and they sounded intrusive) */   /* calm: low hum + soft muffled whir (Session 39e; the buzzy wobbling sawtooth and high ticks were annoying) */
  {const g=mk('refinery');loopNoise(g,'lowpass',260,0.9,0.3);tone(g,'sine',41,0.18);}
  {const g=mk('drill');const n=loopNoise(g,'bandpass',190,1.4,0.6);lfo(n.gain,9,0.3);tone(g,'square',62,0.05);}
  {const g=mk('gen');tone(g,'sine',50,0.32);tone(g,'sine',100,0.12);tone(g,'triangle',150,0.03);loopNoise(g,'bandpass',900,0.8,0.05);}

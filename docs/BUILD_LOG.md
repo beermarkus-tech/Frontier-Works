@@ -1994,3 +1994,23 @@ Belts: keep the rattle but remove the whoosh, and let them rattle even without i
 
 ### Next up
 - Tune music/sounds after Markus listens (tempo, darker/brighter, more or less melody).
+
+---
+
+## Session 39g — 2026-11-13 (Claude Code, cloud session) · Build 89
+
+### What Markus asked
+1. The assembler/fabricator hum sounds like the wrong frequency and is intrusive; make it deeper / less intrusive.
+2. In the planner summary some lines are wider than the panel.
+
+### What changed
+- Assembler voice: the 92 Hz triangle (+184 Hz) became a pure 58 Hz sine at lower level, whir band moved 420 → 300 Hz. Reason: small speakers
+  can't play 92 Hz, so mostly the triangle's overtones (276, 460 Hz…) were heard, which made it sound like the "wrong" note.
+- Planner summaries (node, target and power tabs): "Buildings" is now a list, one type per line, largest first (`plMachBlock`), instead of one
+  comma line; the old `plMachList` is removed. CSS: text-only values in panel rows may shrink and wrap; rows with inputs/selects keep their size.
+- Build number **89**.
+
+### Verified
+- Phone-size check found the overflowing row ("Buildings 9 × Fabricator, 1 × Blender, 22 × Assembler…"); after the fix no row in any planner tab
+  is wider than the panel (new permanent check). Screenshot of the target summary on a phone.
+- `npm test` 94 PASS / 0 FAIL.

@@ -132,6 +132,9 @@ input[type=range]{width:100%;accent-color:#ffb547;margin:4px 0}
 #pbody .row>span:last-child>select,#lbody .row>span:last-child>select{min-width:160px}
 #pbody input[type=number],#lbody input[type=number]{width:96px;text-align:right;flex-shrink:0}
 #pbody .row>span:last-child,#lbody .row>span:last-child{flex-shrink:0}
+/* text-only values may wrap; rows with inputs/selects keep their size (Session 39g) */
+#pbody .row>span:last-child:not(:has(input,select)),#lbody .row>span:last-child:not(:has(input,select)){flex-shrink:1;min-width:0;text-align:right;overflow-wrap:anywhere}
+#pbody .row>span:first-child,#lbody .row>span:first-child{min-width:0;overflow-wrap:anywhere}
 #pbody select.wide,#lbody select.wide{display:block;width:100%;max-width:100%;margin:6px 0}
 #pbody option,#pbody optgroup,#lbody option,#lbody optgroup{background:#141b22;color:var(--txt)}
 @media (pointer:coarse){#pbody select,#pbody input[type=number]{font-size:16px}}

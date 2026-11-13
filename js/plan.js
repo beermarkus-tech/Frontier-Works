@@ -156,7 +156,8 @@ function plRecOpts(list){
 }
 /* In/Out lists for n machines running recipe r (per minute, with the belt/pipe each line needs) */
 const plIO=(r,n)=>`<div class="plsub">In</div>`+Object.keys(r.i).map(k=>plRate(k,n*plPerMin(r,r.i[k]))).join('')+`<div class="plsub">Out</div>`+Object.keys(r.o).map(k=>plRate(k,n*plPerMin(r,r.o[k]))).join('');
-const plMachList=m=>Object.keys(m).map(k=>`${m[k]} × ${B[k].n}`).join(', ');
+/* summary: one building type per line (Session 39g: one long comma list ran off the panel on phones) */
+const plMachBlock=m=>{const ks=Object.keys(m).filter(k=>m[k]>0).sort((a,b)=>m[b]-m[a]);return`<div class="plsub">Buildings</div>`+(ks.length?ks.map(k=>`<div class="row"><span>${B[k].n}${plLock(ub(k))}</span><span>${m[k]} ×</span></div>`).join(''):'<div class="muted">—</div>');};
 function planHtml(){
  plFix();
  let h=plTabs()+`<div class="chips" style="margin-bottom:8px"><button class="btn chip ${PL.mode==='fwd'?'on':''}" data-act="plMode" data-v="fwd">From a node →</button><button class="btn chip ${PL.mode==='rev'?'on':''}" data-act="plMode" data-v="rev">← For a target</button><button class="btn chip ${PL.mode==='pow'?'on':''}" data-act="plMode" data-v="pow">⚡ Power</button><button class="btn chip ${PL.locked?'on':''}" data-act="plLocked">${PL.locked?'🔓':'🔒'} Show locked</button></div>`;
@@ -192,7 +193,7 @@ function plFwdHtml(){
  const used=Math.round(o.used*100);
  h+=`<h4>Summary</h4><div class="card">`;
  h+=`<div class="${used>=100?'plok':''}" style="margin-bottom:4px"><b>${used>=100?'✓ ':''}Node output used: ${used}%</b></div>`;
- h+=plRow('Buildings',plMachList(o.mach))+plRow('Total power',fmt(o.power)+' MW')+plPlantLine(o.power);
+ h+=plMachBlock(o.mach)+plRow('Total power',fmt(o.power)+' MW')+plPlantLine(o.power);
  const lk=Object.keys(o.left);
  h+=`<div class="plsub">Output / left over</div>`+(lk.length?lk.map(k=>plRate(k,o.left[k])).join(''):'<div class="muted">nothing</div>');
  const sk=Object.keys(o.short);
@@ -221,7 +222,7 @@ function plRevHtml(){
  if(bk.length)h+=`<h4>Byproducts left over</h4><div class="card"><div class="muted">These come out too. Belt them on, recycle them or burn them in an Incinerator.</div>${bk.map(k=>plRate(k,o.by[k])).join('')}</div>`;
  if(nk.length)h+=`<h4>Bring in from elsewhere</h4><div class="card"><div class="muted">No ${PL.locked?'':'unlocked '}recipe makes these here.</div>${nk.map(k=>plRate(k,o.none[k],'plbad')).join('')}</div>`;
  const ex=plExtract(o.raw),tp=o.power+ex.power;
- h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(o.mach)||'—')+plRow('Machines power',fmt(o.power)+' MW')+plRow('Drills & pumps (estimate)',fmt(ex.power)+' MW')+plRow('<b>Total power</b>',`<b>${fmt(tp)} MW</b>`)+plPlantLine(tp)+`</div>`;
+ h+=`<h4>Summary</h4><div class="card">`+plMachBlock(o.mach)+plRow('Machines power',fmt(o.power)+' MW')+plRow('Drills & pumps (estimate)',fmt(ex.power)+' MW')+plRow('<b>Total power</b>',`<b>${fmt(tp)} MW</b>`)+plPlantLine(tp)+`</div>`;
  return h;
 }
 /* One line under a plan's power total: what plant covers it, plus a jump to the Power tab with that demand */
@@ -245,7 +246,7 @@ function plPowHtml(){
   const bk=Object.keys(c.by);if(bk.length)h+=`<div class="card"><div class="plsub">Byproducts</div>${bk.map(k=>plRate(k,c.by[k])).join('')}</div>`;
   const nk=Object.keys(c.none);if(nk.length)h+=`<div class="card"><div class="plsub">Bring in from elsewhere</div>${nk.map(k=>plRate(k,c.none[k],'plbad')).join('')}</div>`;}
  h+=`<h4>Drills & pumps</h4><div class="card ${plDone('w:ex')?'pldone':''}">${o.ex.list.length?`<div class="row"><b>${plTickBtn('w:ex')} Drills & pumps</b></div>`:''}`+(o.ex.list.length?o.ex.list.map(x=>plRate(x.k,x.rate)+`<div class="muted" style="margin:-2px 0 4px">≈ ${plN(x.n)} × ${B[x.id].n}${plLock(ub(x.id))} ${x.k==='water'?'on water':'on normal nodes'}${S.gen===2&&x.k!=='water'?` · found mostly in ${plWhere(PL_RES.find(r=>plResItem(r)===x.k))}`:''}</div>`).join(''):'<div class="muted">none</div>')+`</div>`;
- h+=`<h4>Summary</h4><div class="card">`+plRow('Buildings',plMachList(Object.assign({[p.gen]:Math.ceil(o.n-PL_EPS)},c.mach))||'—')+plRow('Power for others',`${fmt(p.mw)} MW`)+`</div>`;
+ h+=`<h4>Summary</h4><div class="card">`+plMachBlock(Object.assign({[p.gen]:Math.ceil(o.n-PL_EPS)},c.mach))+plRow('Power for others',`${fmt(p.mw)} MW`)+`</div>`;
  return h;
 }
 /* Open the planner set to a node / existing drill: resource, purity, extractor (given or best unlocked), clock, one first step */
