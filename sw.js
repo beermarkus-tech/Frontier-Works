@@ -1,5 +1,5 @@
 // Frontier Works service worker — bump VERSION on every release so players get the update.
-const VERSION = 'fw-build-93';   // keep in step with BUILD in js/pwa.js
+const VERSION = 'fw-build-94';   // keep in step with BUILD in js/pwa.js
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './js/data.js', './js/sim.js', './js/render.js', './js/ui.js', './js/plan.js', './js/zones.js', './js/view3d.js', './js/lib/three.min.js', './js/input.js', './js/pwa.js', './js/audio.js', './js/sync.js', './js/main.js',

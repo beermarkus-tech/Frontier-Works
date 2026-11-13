@@ -2108,3 +2108,21 @@ covered everything.
 - Offline render, compared with the old track 2: high-frequency share 0.028 → 0.161 (≈ 6×), beat regularity (envelope autocorrelation at one
   beat) 0.36 → 0.85. New one-minute WAV sent.
 - `npm test` 96 PASS / 0 FAIL.
+
+---
+
+## Session 39l — 2026-11-13 (Claude Code, cloud session) · Build 94
+
+### What Markus said
+Track 2's bass drum could be more distinct, hats and clap still not audible; and play it a bit more upbeat, not only spherical, not too intrusive.
+
+### What changed (`js/audio.js`, "Pulse")
+- Tempo 96 → 110 BPM; three major-key (C) progressions instead of A minor.
+- Kick louder with a stronger click (170 → 50 Hz body, 2.2 kHz click, 5 kHz tick); clap 0.22 → 0.95; hats 0.16 → 0.75 (all dry).
+- Pads much quieter (0.03 → 0.012), arpeggio always on from bar 2 (brighter, 3.6 kHz), busier bass line patterns at a lower level.
+- Build number **94**.
+
+### Verified
+- Measured with an A-weighted spectrum (how loud each band sounds to the ear), previous → now: kick 9 % → 54 %, bass/pads 83 % → 18 %,
+  clap 6 % → 10 %, hats 1 % → 13 %. New one-minute WAV sent.
+- `npm test` 96 PASS / 0 FAIL.
