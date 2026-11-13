@@ -1617,3 +1617,21 @@ got almost everything (test: 78 vs 5 crude).
 ### Verified
 - `npm test` 81 PASS, 0 FAIL. New checks: refinery with crude in and residue out on separate pipes: no warning, residue flows; with only the
   crude pipe the warning still shows. Slow belt (1 item every 30 s) reads 2.00/min, 0.67/min three minutes after items stop. Full Mk1 still 60/min.
+
+---
+
+## Session 37h — 2026-11-13 (Claude Code, cloud session) · Build 67
+
+### What Markus asked
+1. The output line in a machine's panel misses the secondary product.
+2. Hide the bottom toolbar, leaving a small button to bring it back.
+
+### What was built
+- Efficiency section (`effHtml`): one line per product: "Output" for the main one, "Byproduct" for the others (fluids in m³).
+- ▾ button at the end of the tool row hides the toolbar (`OPT.dockHid`, per device); a small "▴ Tools" pill at the bottom brings it back.
+  `layoutVars` uses the pill's height for `--dockH` while hidden, so panels use the freed space.
+- Build number **67**.
+
+### Verified
+- `npm test` 82 PASS / 0 FAIL. New check: hide → toolbar gone, pill shown, saved; show → back; a plastic refinery's panel lists Plastic and
+  Heavy Residue (Byproduct). Phone screenshots of both states.

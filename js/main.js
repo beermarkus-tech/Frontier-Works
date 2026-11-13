@@ -92,7 +92,7 @@ UI.rotA=0;resize();
 (async()=>{
  const loaded=await loadStored();
  if(!loaded){newGame();}
- buildCats();layoutVars();if(typeof syncBoot==='function')syncBoot();if(OPT.plLeft&&OPT.plOpen)plRenderLeft(true);
+ buildCats();applyDock();if(typeof syncBoot==='function')syncBoot();if(OPT.plLeft&&OPT.plOpen)plRenderLeft(true);
  requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
  if(V3.want)setView3D(true);
  setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),500);if(!loaded)openPanel('menu');},250);

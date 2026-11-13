@@ -186,3 +186,7 @@ body.plleft #mini{display:none}
 .pltabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.pltabs .btn.chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn.chip.pltab.on{background:linear-gradient(180deg,#5aa0f0,#2f6fc0);color:#fff;border-color:transparent}
 .pltabs.plctl{margin-top:-2px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+
+/* hidden toolbar */
+#dockShow{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + var(--sab));z-index:6;gap:6px;align-items:center;padding:8px 16px;border-radius:999px;font-weight:600}
+body.dockhid #dock{display:none}body.dockhid #dockShow{display:inline-flex}

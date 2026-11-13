@@ -122,11 +122,11 @@ function effHtml(e){
  const d=B[e.d];if(e.k==='mach'&&!e.r)return'';
  if(e._efT==null||e._efT<3)return`<h4>Efficiency</h4><div class="muted">Measuring…</div>`;
  const pc=Math.round(e._ef*100),col=effCol(pc);
- let item,max;if(e.k==='mach'){const r=RC[e.r];item=Object.keys(r.o)[0];max=r.o[item]*60/r.t*(e.clock||1);}
- else{item=e.item;max=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1);}
+ let outs=[];if(e.k==='mach'){const r=RC[e.r];outs=Object.keys(r.o).map(k=>[k,r.o[k]*60/r.t*(e.clock||1)]);}   // every product, incl. byproducts (Session 37h)
+ else if(e.item)outs=[[e.item,(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1)]];
  let h=`<h4>Efficiency <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· last ${Math.round(e._efT)} s</span></h4>`;
  h+=`<div class="row"><span>Working</span><span><b style="color:${col}">${pc}%</b></span></div><div class="bar"><i style="width:${pc}%;background:${col}"></i></div>`;
- if(item)h+=`<div class="row"><span>Output</span><span>${fmt(e._ef*max)} of ${fmt(max)} ${IT[item].n}/min</span></div>`;
+ outs.forEach(([k,max],i)=>{h+=`<div class="row"><span>${i?'Byproduct':'Output'}</span><span>${fmt(e._ef*max)} of ${fmt(max)} ${IT[k].n}${IT[k].f?' m³':''}/min</span></div>`;});
  const W=e._efw||{},ks=Object.keys(W).filter(k=>W[k]>=0.01).sort((a,b)=>W[b]-W[a]);
  const lbl=k=>k==='out'?'Output full':k==='power'?'No power':k==='none'?'Nothing to extract':k==='recipe'?'No recipe':'Waiting for '+IT[k.slice(3)].n;
  for(const k of ks)h+=`<div class="row"><span class="muted">${lbl(k)}</span><span class="muted">${Math.round(W[k]*100)}%</span></div>`;
@@ -279,6 +279,8 @@ const ACT={
  swToggle:v=>{const e=ents.get(+v);if(!e||e.d!=='pswitch')return;e.off=!e.off;topoDirty=true;toast(`${e.tx||'Power Switch'} ${e.off?'off':'on'}`);renderPanel(true);},
  pnCut:v=>{const a=ents.get(UI.panel.arg),b=ents.get(+v);if(a&&b){pnUnlink(a,b);toast('Wire removed');}renderPanel(true);},
  pnWire:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.wireFrom=e.id;setTool(null);toast('Tap the pole, tower, switch or generator to connect to');updInfo();},
+ dockHide:()=>{OPT.dockHid=true;saveOpt();applyDock();},
+ dockShow:()=>{OPT.dockHid=false;saveOpt();applyDock();},
  moveSel:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.moveId=e.id;setTool(null);closePanel();toast(`Tap where the ${B[e.d].n} should go`);updInfo();},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},

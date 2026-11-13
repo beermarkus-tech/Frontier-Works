@@ -112,4 +112,6 @@ function miniJump(ev){const r=mini.getBoundingClientRect();camT.x=(ev.clientX-r.
 mini.addEventListener('pointerdown',ev=>{mini.setPointerCapture(ev.pointerId);miniJump(ev);mini._d=true;});
 mini.addEventListener('pointermove',ev=>{if(mini._d)miniJump(ev);});
 mini.addEventListener('pointerup',()=>{mini._d=false;});
-function layoutVars(){const d=document.getElementById('dock');if(d)document.documentElement.style.setProperty('--dockH',d.offsetHeight+'px');}
+function layoutVars(){const d=document.getElementById('dock'),b=document.getElementById('dockShow'),hid=document.body.classList.contains('dockhid');const h=hid?(b?b.offsetHeight:40):(d?d.offsetHeight:0);document.documentElement.style.setProperty('--dockH',h+'px');}
+/* hidden toolbar (Session 37h): OPT.dockHid, a small ▴ Tools button brings it back */
+function applyDock(){document.body.classList.toggle('dockhid',!!OPT.dockHid);layoutVars();}

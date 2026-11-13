@@ -414,6 +414,13 @@ const server=require('./serve.js');
   for(let t=0;t<20*180;t++)tick(0.05);const r2=fmRate(mb)[0];
   for(let i=-1;i<8;i++)for(let j=-1;j<3;j++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{r1,r2};});
  check(`Flow Meter on a slow belt: 1 item every 30 s reads ${slow.r1.toFixed(2)}/min; 3 min after items stop ${slow.r2.toFixed(2)}/min`,slow.r1>1.85&&slow.r1<2.15&&slow.r2<slow.r1*0.75);
+ // toolbar can be hidden (small Tools button brings it back, remembered); machine panel lists every product incl. byproducts
+ const dk=await p.evaluate(()=>{const vis=id=>getComputedStyle(document.getElementById(id)).display!=='none';const out={};ACT.dockHide();out.hidden=!vis('dock')&&vis('dockShow')&&JSON.parse(localStorage.getItem('frontierworks_opts')).dockHid===true;
+  ACT.dockShow();out.back=vis('dock')&&!vis('dockShow');
+  const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('refinery',x,y)){X=x;Y=y;break;}}
+  fw.placeEnt('refinery',X,Y,0,true);const e=fw.entAt(X,Y);e.r='r_plastic';e._efT=10;e._ef=0.5;openPanel('ent',e.id);const t=document.getElementById('pbody').textContent;
+  out.byproduct=t.includes('Byproduct')&&t.includes('Heavy Residue')&&t.includes('Plastic');ACT.closePanel();removeEnt(e,false,true);return out;});
+ check(`toolbar hide/show + byproduct in machine panel: ${Object.entries(dk).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(dk).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
