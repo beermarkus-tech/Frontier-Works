@@ -2260,3 +2260,19 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Built:** `accept()` stamps `e.burnT` when an incinerator takes an item or a unit of fluid. `isActive()` counts an incinerator as active for 1.5 s after its last burn, so occasional items still give a steady fire that fades out smoothly. The 2D fire glow now scales with activity; before, it pulsed all the time. The 3D glow and the smoke in 2D and 3D already followed `isActive`, so all of them now stop when it is idle. `burnT` is not saved (a freshly loaded incinerator starts dark).
 
 **Verified:** new smoke check (lit while fed, dark 5 s after the last item). `npm test` all PASS.
+
+## Session 39v — 2026-11-13 (Claude Code, cloud session) · Build 104
+
+**Asked:** a belt line couldn't bend when the corner tile sat next to a machine and turned away from it (screenshot). Should belts need a junction-like piece to connect to buildings, as pipes do, or is there another way?
+
+**Found:** when choosing a belt's curve, any building directly behind the belt counted as "fed from behind". That forced the tile straight, even when a belt was clearly coming in from the side, so the corner was drawn straight. The machine could also dump output onto the turning line. Poles and signs behind a belt had the same effect.
+
+**Decision (recommended, not mandating junctions):** keep buildings' direct belt output, which avoids breaking saves and keeps it simple.
+- Only a same-direction line, a splitter/merger/router or a crossing behind a belt keeps it straight.
+- A building, pole or sign behind it no longer does, so the belt bends towards a single side feeder.
+- A bent belt takes items only from its bend: `pushOut` skips a belt whose `cin` differs from the push direction, so the machine doesn't output into it.
+- Trade-off: a layout where a machine output into the first belt tile *and* a side belt merged into that same tile now becomes a bend. The machine's output there is blocked; use a Merger for that. DESIGN.md updated.
+
+**Verified:** new smoke check covering a bend next to a crate (no output into it) and the straight case (output into it). `npm test` all PASS. `npm run playthrough`: all recipes ✓, only noise-level changes.
+
+**Next up:** watch for old factories that relied on the machine + side merge on the same tile.

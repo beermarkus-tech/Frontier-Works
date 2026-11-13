@@ -84,6 +84,9 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   So a crossing can carry input in or output out, and it never fills up with output aimed at an incoming belt.
 - Belts can feed another belt from the side (side-loading). Belt corners are drawn curved, also when a splitter, merger, crossing or pipe
   junction feeds a belt from the side (Session 21).
+- A belt with a building behind it and one belt (or splitter/merger/crossing) feeding it from the side bends towards that feeder, so a line
+  can turn away from a machine it runs past. A bent belt takes items only from its bend: the building behind it does not output into it
+  (Session 39v). With no side feeder, the belt stays straight and takes the building's output as before.
 - Splitter (back → front/left/right), Merger (back/left/right → front, fair alternation),
   Sorting Splitter (filter item → front, rest → sides), Crossing (two lines cross), Pipe Junction (fluid to all other sides).
 - Storage Crate (2000 items) and Fluid Tank (400 m³) buffer and pass items on. The Incinerator (2×2 since Session 35e, like a Press) destroys anything.

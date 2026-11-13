@@ -286,7 +286,7 @@ function beltCarry(t,from){if(t.k!=='belt')return 0;if(t.freeAt!=null)from=Math.
 function pushOut(e,item){
  const n=e.ports.length;
  for(let k=0;k<n;k++){const idx=(e.rr+k)%n,p=e.ports[idx];const t=entAt(p.x,p.y);if(!t)continue;
-  if(isLine(t.k)){if(t.dir!==p.d)continue;}else if(t.k==='cross'){const far=entAt(t.x+DX[p.d],t.y+DY[p.d]);if(!far||!passOK(far,item,p.d))continue;}
+  if(isLine(t.k)){if(t.dir!==p.d||(t.cin!=null&&t.cin!==p.d))continue;}   /* a bent belt only takes items from its bend */else if(t.k==='cross'){const far=entAt(t.x+DX[p.d],t.y+DY[p.d]);if(!far||!passOK(far,item,p.d))continue;}
   else if(t.k!=='router')continue;
   // a building's item starts with the progress it would have made since the belt tile became free (Session 37i): without this, every item
   // waited for a whole tick and a Mk3 belt fed by a drill or machine carried 240/min instead of 270
@@ -320,7 +320,9 @@ function rebuildTopo(){
   if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);
   e.grid=null;if(B[e.d].pw)e.pw=0;
  }
- for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):true))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
+ /* a belt bends towards a single side feeder unless a line/splitter/crossing feeds it from behind. A building behind no longer forces it straight
+    (Session 39v: a line could not turn away from a machine); a bent belt takes no building output from behind (see pushOut). */
+ for(const e of lines){e.cin=null;const bk=entAt(e.x-DX[e.dir],e.y-DY[e.dir]);if(bk&&(isLine(bk.k)?(bk.k===e.k&&bk.dir===e.dir):(bk.k==='router'||bk.k==='cross')))continue;let f=null,c=0;for(const o of [(e.dir+1)&3,(e.dir+3)&3]){const sd=entAt(e.x+DX[o],e.y+DY[o]);if(sd&&feedsInto(sd,e,o)){f=(o+2)&3;c++;}}if(c===1)e.cin=f;}
  const vis=new Set();
  for(const b of lines){if(vis.has(b))continue;const ch=[];let c=b;while(c&&isLine(c.k)&&!vis.has(c)){vis.add(c);ch.push(c);c=entAt(c.x+DX[c.dir],c.y+DY[c.dir]);}for(let i=ch.length-1;i>=0;i--)beltOrder.push(ch[i]);}
  // power

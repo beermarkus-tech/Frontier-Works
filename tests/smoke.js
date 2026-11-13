@@ -119,6 +119,15 @@ const server=require('./serve.js');
   run(90);const a=fw.entAt(X,Y)._ef,b=fw.entAt(X-1,Y+5)._ef;
   for(let j=-1;j<8;j++)for(let i=-5;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{ok:r.every(v=>v===''),a,b};});
  check(`crossing in front of a machine: input survives a pause (${Math.round(xj.a*100)}%), output through a crossing works (${Math.round(xj.b*100)}%)`,xj.ok&&xj.a>0.8&&xj.b>0.8);
+ // a belt line can bend away from a building beside it; the bent belt takes no output from that building (Session 39v)
+ const bend=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<4&&ok;j++)for(let i=-1;i<5&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('storage',X,Y,0),P('belt1',X+2,Y,0),P('belt1',X+2,Y+1,3)];tick(0.05);const a=fw.entAt(X+2,Y),cr=fw.entAt(X,Y);cr.ports=[{x:X+2,y:Y,d:0}];
+  const bent=a.cin===3,blocked=!pushOut(cr,'iron_plate');a.item=null;removeEnt(fw.entAt(X+2,Y+1),false,true);tick(0.05);cr.ports=[{x:X+2,y:Y,d:0}];
+  const straight=a.cin==null,fed=pushOut(cr,'iron_plate');a.item=null;
+  for(let j=-1;j<4;j++)for(let i=-1;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),bent,blocked,straight,fed};});
+ check('a belt beside a building bends towards its side feeder (and takes no output from that building); without the feeder it stays straight and takes it',bend.ok&&bend.bent&&bend.blocked&&bend.straight&&bend.fed);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
