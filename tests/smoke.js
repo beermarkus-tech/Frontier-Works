@@ -534,6 +534,9 @@ const server=require('./serve.js');
   {const per={},tr=new Set();let T=0;const keep={muNote,auNoise,auOsc};muNote=()=>{per[Math.floor(T/60)]=1;};auNoise=()=>{};auOsc=()=>{};
    try{Object.assign(MU,{track:0,sec:null,step:0,rest:0,played:0});while(T<60*20){const b=muB();muStep(T);MU.step++;MU.played+=b;T+=b;tr.add(MU.track);}}finally{muNote=keep.muNote;auNoise=keep.auNoise;auOsc=keep.auOsc;}
    out.loops20min=Object.keys(per).length>=20&&tr.size===2;Object.assign(MU,{track:0,sec:null,step:0,rest:0,played:0});}
+  openPanel('menu');out.boxes=document.querySelectorAll('#pbody [data-act="auOnOff"]').length===3;ACT.auOnOff('music');await new Promise(r=>setTimeout(r,300));out.musicOff=OPT.son.music===false&&!MU.on&&JSON.parse(localStorage.getItem('frontierworks_opts')).son.music===false;
+  ACT.auOnOff('music');out.musicOn=OPT.son.music===true;ACT.auOnOff('sfx');const log=[],o2=SFX.click;let played=false;SFX.click=()=>{played=true;};sfx('click');out.sfxOff=!played;ACT.auOnOff('sfx');sfx('click');out.sfxOn=played;SFX.click=o2;
+  ACT.auOnOff('mach');mvUpdate();out.machOff=Math.max(0,...Object.values(MV.lvl))===0;ACT.auOnOff('mach');ACT.closePanel();
   openPanel('menu');out.menu=!document.getElementById('pbody').textContent.includes('coming');ACT.closePanel();return out;});
  check(`music (2 tracks): ${Object.entries(mu).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mu).every(v=>v===true));
  // Markus's crossing grid (Session 39j): four input columns with a splitter per row feed a fabricator; its output used to leak into the input

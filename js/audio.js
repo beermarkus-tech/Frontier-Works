@@ -4,12 +4,14 @@
    Step 1: effects for building, belts, dismantling, eraser, rotating, moving, buttons, goals and fuse trips. Step 2: machine sounds (below). */
 const AU={ctx:null,master:null,bus:{},noise:null,last:{}};
 OPT.vol=Object.assign({music:0.5,sfx:0.7,mach:0.6},OPT.vol||{});
+OPT.son=Object.assign({music:true,sfx:true,mach:true},OPT.son||{});   /* per-part on/off tick boxes (Session 39o); the slider keeps its volume */
+const auOn=k=>!OPT.mute&&OPT.son[k]!==false&&OPT.vol[k]>0;
 function auStart(){if(AU.ctx){if(AU.ctx.state==='suspended')AU.ctx.resume().catch(()=>{});return true;}
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
  try{const c=new AC();AU.ctx=c;const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(c.destination);
   AU.master=c.createGain();AU.master.connect(comp);for(const k of ['music','sfx','mach']){const g=c.createGain();g.connect(AU.master);AU.bus[k]=g;}
   const n=c.createBuffer(1,c.sampleRate,c.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;AU.noise=n;auApply();return true;}catch(e){AU.ctx=null;return false;}}
-function auApply(){if(!AU.ctx)return;const t=AU.ctx.currentTime;AU.master.gain.setTargetAtTime(OPT.mute?0:0.9,t,0.03);for(const k in AU.bus)AU.bus[k].gain.setTargetAtTime(OPT.vol[k],t,0.03);}
+function auApply(){if(!AU.ctx)return;const t=AU.ctx.currentTime;AU.master.gain.setTargetAtTime(OPT.mute?0:0.9,t,0.03);for(const k in AU.bus)AU.bus[k].gain.setTargetAtTime(OPT.son[k]===false?0:OPT.vol[k],t,0.03);}
 for(const ev of ['pointerdown','keydown','touchend'])addEventListener(ev,()=>auStart(),{passive:true});
 /* coming back to the app (or after a phone call / screen lock): resume the audio by itself, and keep trying every 2 s while it isn't running */
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&AU.ctx&&AU.ctx.state!=='running')AU.ctx.resume().catch(()=>{});});
@@ -38,13 +40,14 @@ const SFX={
  goal:t=>{[523.25,659.25,783.99,1046.5].forEach((f,i)=>{auOsc('triangle',f,f,t+i*0.11,1.4,0.11);auOsc('sine',f*2,f*2,t+i*0.11,0.8,0.03);});auOsc('sine',130.8,130.8,t,1.6,0.18);},
  trip:t=>{for(let i=0;i<2;i++)auOsc('square',110,105,t+i*0.22,0.16,0.09,1400);auNoise(t,0.06,0.2,'highpass',2000,2000,0.7);}};
 const SFX_GAP={del:0.05,belt:0.04,erase:0.07,click:0.03,deny:0.2,trip:1};
-function sfx(name){if(OPT.mute||!(OPT.vol.sfx>0))return;if(!AU.ctx||AU.ctx.state!=='running'){auStart();if(!AU.ctx||AU.ctx.state!=='running')return;}
+function sfx(name){if(!auOn('sfx'))return;if(!AU.ctx||AU.ctx.state!=='running'){auStart();if(!AU.ctx||AU.ctx.state!=='running')return;}
  const t=AU.ctx.currentTime,g=SFX_GAP[name]||0;if(g&&AU.last[name]&&t-AU.last[name]<g)return;AU.last[name]=t;try{SFX[name](t+0.005);}catch(e){}}
 /* Menu controls */
-function audioMenu(){const sl=(k,lbl)=>`<div class="row"><span>${lbl}</span><span><input type="range" min="0" max="100" step="5" value="${Math.round(OPT.vol[k]*100)}" data-act="auVol" data-v="${k}" class="auvol"></span></div>`;
+function audioMenu(){const sl=(k,lbl)=>`<div class="row"><span><button class="btn chip autog ${OPT.son[k]!==false?'on':''}" data-act="auOnOff" data-v="${k}" title="Turn ${lbl.toLowerCase()} on or off">${OPT.son[k]!==false?'☑':'☐'}</button> ${lbl}</span><span><input type="range" min="0" max="100" step="5" value="${Math.round(OPT.vol[k]*100)}" data-act="auVol" data-v="${k}" class="auvol"></span></div>`;
  return`<h4>Sound</h4><div class="chips" style="margin-bottom:6px"><button class="btn chip ${OPT.mute?'':'on'}" data-act="auMute" data-v="0">🔊 On</button><button class="btn chip ${OPT.mute?'on':''}" data-act="auMute" data-v="1">🔇 Muted</button></div>
   ${sl('sfx','Effects')}${sl('mach','Machines')}${sl('music','Music')}`;}
-Object.assign(ACT,{auMute:v=>{OPT.mute=v==='1';saveOpt();auStart();auApply();renderPanel(true);if(!OPT.mute)sfx('click');}});
+Object.assign(ACT,{auOnOff:v=>{OPT.son[v]=OPT.son[v]===false;saveOpt();auStart();auApply();renderPanel(true);if(v==='sfx'&&OPT.son.sfx)sfx('click');},
+ auMute:v=>{OPT.mute=v==='1';saveOpt();auStart();auApply();renderPanel(true);if(!OPT.mute)sfx('click');}});
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='auVol'){OPT.vol[el.dataset.v]=(+el.value)/100;saveOpt();auStart();auApply();}});
 document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='auVol'&&el.dataset.v==='sfx')sfx('place');});
 /* ---------- Machine sounds (Session 39c) ----------
@@ -77,7 +80,7 @@ const MV_EVT={
  assembler:(t,l)=>{auOsc('sine',120,80,t,0.18,0.22*l,0,'mach');auNoise(t,0.07,0.08*l,'lowpass',900,400,0.8,'mach');return 1.6+Math.random()*1.4;}};   /* occasional soft set-down clunk */
 const MV_BASE={furnace:0.45,press:0.4,assembler:0.9,refinery:0.75,drill:1.0,gen:0.4,belt:0.3};   /* balanced from an offline render so each kind is about equally present */
 function mvUpdate(){if(!AU.ctx||AU.ctx.state!=='running'||!S||!ents)return;if(!MV.on)mvBuild();
- const quiet=OPT.mute||!(OPT.vol.mach>0)||document.hidden;const sum={};
+ const quiet=!auOn('mach')||document.hidden;const sum={};
  if(!quiet){const v3=typeof V3!=='undefined'&&V3.on,cx=v3?C3.x:cam.x,cy=v3?C3.y:cam.y,
    zoom=v3?Math.max(0.12,Math.min(1,14/(C3.dist||30))):Math.max(0.12,Math.min(1,cam.z/1.6)),R=v3?Math.max(10,(C3.dist||30)*0.8):Math.max(10,innerWidth/(TS*cam.z)/2);
   for(const e of ents.values()){const dx=e.x+e.w/2-cx,dy=e.y+e.h/2-cy;if(dx>R||dx<-R||dy>R||dy<-R)continue;let k=null,act=false;
@@ -138,7 +141,7 @@ function muPlay2(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s
   if(pos===14&&bar%2===1&&Math.random()<0.6){const f0=mf(ch[0]+31);muNote('sine',[f0,f0*2.76,f0*5.4],t,0.002,0.01,0.5,0.05,6000,0.35);}}
  const bn=s.bp[pos%8];if(i>=8){const f=mf(ch[0]-12+bn);muNote('sawtooth',[f],t,0.005,b*0.5,0.1,0.075,500+(pos%4===0?300:0));}
  if(beatsIn){const nts=[...ch,ch[1]+12,ch[2]+12],m=nts[s.pat[pos%8]%nts.length]+12;muNote('triangle',[mf(m)],t,0.004,0.02,0.32,0.05,3600,0.35);}}
-function muTick(){if(!AU.ctx||AU.ctx.state!=='running')return;const play=!OPT.mute&&OPT.vol.music>0&&!document.hidden;const c=AU.ctx;
+function muTick(){if(!AU.ctx||AU.ctx.state!=='running')return;const play=auOn('music')&&!document.hidden;const c=AU.ctx;
  if(!play){MU.on=false;return;}muInit();if(!MU.on){MU.on=true;MU.t=c.currentTime+0.3;}
  while(MU.t<c.currentTime+0.6){const b=muB();muStep(MU.t);MU.step++;MU.played+=b;MU.t+=b;}}
 setInterval(()=>{try{muTick();}catch(e){}},100);

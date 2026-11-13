@@ -2170,3 +2170,13 @@ Build 95 only changed input buffer sizes, no recipe.)
 ### Verified
 - Simulation: notes in every one of 40 minutes, alternating tracks. New permanent check: 20 simulated minutes, music in every minute, both tracks.
 - `npm test` 97 PASS / 0 FAIL.
+
+---
+
+## Session 39o — 2026-11-13 (Claude Code, cloud session) · Build 97
+
+- Markus: tick boxes before the three sound options to turn music, machine sounds and interface sounds on/off individually.
+- Built: ☑/☐ button before Effects, Machines and Music in ☰ Menu → Sound (`OPT.son`, per device). Off = that bus silent (`auApply`), and
+  effects/machine levels/music scheduling check `auOn(k)`; the slider keeps its volume for when it's ticked again. On/Muted stays as master switch.
+- Verified: `npm test` 97 PASS / 0 FAIL (music check: three boxes; music off stops it and is saved; effects off plays no click; machines off →
+  all machine levels 0). Phone screenshot. Build number **97**.

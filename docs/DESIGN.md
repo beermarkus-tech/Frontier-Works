@@ -201,7 +201,7 @@ Hand mining gives +5 ore from a node.
   byproducts" on the card and in "Byproducts used here"; only the rest is listed as "Byproducts left over".
 - **Sound** (Session 39, agreed with Markus: industrial, in the spirit of big factory games, all original and synthesised in code): step 1 =
   effects for placing (metal clunk + ratchet), belt ticks while dragging, dismantling, eraser scrape, rotating (ratchet), moving (servo), buttons,
-  refused actions, goal reached (chime), fuse trip (buzz). ☰ Menu → Sound: On/Muted, sliders Effects / Machines / Music (per device).
+  refused actions, goal reached (chime), fuse trip (buzz). ☰ Menu → Sound: On/Muted, and per part (Effects / Machines / Music) a tick box and a volume slider (per device; Session 39o).
   Step 2 (Session 39c): machine sounds: one voice per kind (furnace, press, assembler, refinery/pump, drill, generator, belts), louder the more
   working buildings of that kind are near the screen centre; zoom works as overall volume (far out = soft); idle/blocked/off = silent.
   Belts rattle (clicks only) whether loaded or not (Session 39f).
