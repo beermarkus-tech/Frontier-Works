@@ -2085,3 +2085,26 @@ crossing has one sideways lane for both directions, so the lane the bolts needed
 ### Open question
 - Markus's earlier message about the second music track ("a slight beat … so a bass drum,") was cut off; proposed a clear four-on-the-floor
   bass drum, waiting for his answer.
+
+---
+
+## Session 39k — 2026-11-13 (Claude Code, cloud session) · Build 93
+
+### What Markus said
+On track 2 he hears no claps or hi-hats; it sounds like track 1. He wants a bass drum four on the floor.
+
+### Cause
+The drums were mixed far too low (hats 0.022–0.035, clap 0.1) and the kick sat at 110 → 42 Hz, which tablet speakers can't reproduce; the pads
+covered everything.
+
+### What changed (`js/audio.js`, track "Pulse")
+- Kick on every beat (four on the floor): sine 150 → 48 Hz + short triangle body + a 1.8 kHz click for small speakers.
+- Hats on every off-beat (high-passed noise at 7.5 kHz + a 10 kHz layer), louder; an open hat at the end of every other bar.
+- Clap on beats 2 and 4: three quick band-passed noise bursts plus a short tail.
+- Pads and arpeggio quieter, bass line a bit louder, so the beat leads.
+- Build number **93**.
+
+### Verified
+- Offline render, compared with the old track 2: high-frequency share 0.028 → 0.161 (≈ 6×), beat regularity (envelope autocorrelation at one
+  beat) 0.36 → 0.85. New one-minute WAV sent.
+- `npm test` 96 PASS / 0 FAIL.

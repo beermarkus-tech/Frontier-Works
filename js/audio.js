@@ -123,14 +123,18 @@ const MU_PROG2=[[[45,52,55,60],[41,48,53,57],[43,50,55,59],[40,47,52,55]],[[45,5
  [[40,47,52,55],[43,50,55,59],[45,52,55,60],[41,48,53,57]]];
 function muSection2(){const r=Math.random;MU.sec={prog:MU_PROG2[(r()*MU_PROG2.length)|0],len:[32,48,64][(r()*3)|0],start:MU.step,arp:r()<0.5,hats:r()<0.85,
  bp:[[0,0,12,0,0,0,12,0],[0,12,0,12,0,7,0,12],[0,0,0,12,0,0,7,0]][(r()*3)|0],pat:[[0,1,2,3,2,1,0,1],[0,2,1,3,0,2,3,1]][(r()*2)|0]};}
-function muKick(t,v){auOsc('sine',110,42,t,0.32,v,0,'music');auNoise(t,0.02,v*0.25,'lowpass',1200,400,0.7,'music');}
+/* drums (Session 39k: four-on-the-floor kick with a click small speakers can play; louder hats; a real 3-burst clap) */
+function muKick(t,v){auOsc('sine',150,48,t,0.28,v,0,'music');auOsc('triangle',95,55,t,0.12,v*0.5,0,'music');auNoise(t,0.012,v*0.5,'bandpass',1800,1800,1.2,'music');}
+function muHat(t,v,open){auNoise(t,open?0.18:0.04,v,'highpass',7500,7500,0.9,'music');auNoise(t,open?0.12:0.03,v*0.5,'bandpass',10000,10000,2,'music');}
+function muClap(t,v){for(let k=0;k<3;k++)auNoise(t+k*0.011,0.03,v*(k===2?1:0.7),'bandpass',1300,1300,1.4,'music');auNoise(t+0.033,0.16,v*0.5,'bandpass',1200,900,1,'music');}
 function muPlay2(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16,beatsIn=i>=16;
- if(pos===0)muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.996,f*1.004]),t,1.2,b*16-1.8,2.2,0.05,750);
- if(beatsIn){if(pos%8===0)muKick(t,0.5);if(pos%8===4)auNoise(t,0.09,0.1,'bandpass',1500,1100,1.2,'music');
-  if(s.hats&&pos%2===1)auNoise(t,0.035,pos%4===3?0.055:0.035,'highpass',7000,7000,0.7,'music');
-  if(pos===14&&bar%2===1&&Math.random()<0.6){const f0=mf(ch[0]+31);muNote('sine',[f0,f0*2.76,f0*5.4],t,0.002,0.01,0.5,0.065,6000,0.35);}}
- const bn=s.bp[pos%8];if(i>=8&&(bn||pos%2===0)){const f=mf(ch[0]-12+bn);muNote('sawtooth',[f],t,0.005,b*0.55,0.12,0.12,420+(pos%4===0?260:0));}
- if(s.arp&&bar>=2&&pos%2===0){const nts=[...ch,ch[1]+12],m=nts[s.pat[(pos/2)%8]%nts.length]+12;muNote('triangle',[mf(m)],t,0.005,0.02,0.45,0.09,2400,0.45);}}
+ if(pos===0)muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.996,f*1.004]),t,1.2,b*16-1.8,2.2,0.03,700);
+ if(beatsIn){if(pos%2===0)muKick(t,0.55);                       /* every beat */
+  if(pos%4===2)muClap(t,0.22);                                   /* beats 2 and 4 */
+  if(pos%2===1)muHat(t,pos%4===3?0.16:0.11,pos===15&&bar%2===1); /* every off-beat, an open hat now and then */
+  if(pos===14&&bar%2===1&&Math.random()<0.6){const f0=mf(ch[0]+31);muNote('sine',[f0,f0*2.76,f0*5.4],t,0.002,0.01,0.5,0.05,6000,0.35);}}
+ const bn=s.bp[pos%8];if(i>=8&&(bn||pos%2===0)){const f=mf(ch[0]-12+bn);muNote('sawtooth',[f],t,0.005,b*0.55,0.12,0.1,420+(pos%4===0?260:0));}
+ if(s.arp&&bar>=2&&pos%2===0){const nts=[...ch,ch[1]+12],m=nts[s.pat[(pos/2)%8]%nts.length]+12;muNote('triangle',[mf(m)],t,0.005,0.02,0.45,0.06,2400,0.45);}}
 function muTick(){if(!AU.ctx||AU.ctx.state!=='running')return;const play=!OPT.mute&&OPT.vol.music>0&&!document.hidden;const c=AU.ctx;
  if(!play){MU.on=false;return;}muInit();if(!MU.on){MU.on=true;MU.t=c.currentTime+0.3;}
  while(MU.t<c.currentTime+0.6){const b=muB();muStep(MU.t);MU.step++;MU.played+=b;MU.t+=b;}}
