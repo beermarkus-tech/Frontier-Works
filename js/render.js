@@ -341,7 +341,7 @@ function drawBuilding(e,X,Y,s){
 
 /* ---------- items ---------- */
 const SHAPE={};const setS=(sh,ids)=>ids.split(' ').forEach(i=>SHAPE[i]=sh);
-setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium');setS('crystal','quartz quartz_crystal resonator');
+setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium quartz');setS('crystal','quartz_crystal');setS('reson','resonator');
 setS('ingot','iron_ingot copper_ingot steel_ingot alu_ingot alu_casing');setS('plate','iron_plate copper_sheet alloy_panel braced_plate plastic heat_sink');
 setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete rubber coolant_block');setS('girder','cased_girder');
 setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell fuel_rod battery');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
@@ -359,6 +359,12 @@ function paintItem(g,id,R){
  let h=0;for(let k=0;k<id.length;k++)h=(h*31+id.charCodeAt(k))|0;
  switch(sh){
   case 'ore':{g.beginPath();for(let k=0;k<7;k++){const a=k/7*Math.PI*2,rr=R*0.4*(0.72+0.28*(((h>>(k*3))&7)/7));g[k?'lineTo':'moveTo'](Math.cos(a)*rr,Math.sin(a)*rr);}g.closePath();g.fillStyle=rad(R*0.42);g.fill();fin();g.fillStyle='rgba(255,255,255,0.35)';g.beginPath();g.arc(-R*0.12,-R*0.12,R*0.07,0,7);g.fill();break;}
+  case 'reson':{   /* Resonator (Session 39d): silver capsule on two legs with a crystal window, so it no longer looks like Quartz Crystal */
+   g.strokeStyle='#b8c0c8';g.lineWidth=Math.max(1,R*0.09);g.lineCap='round';g.beginPath();g.moveTo(-R*0.16,R*0.18);g.lineTo(-R*0.16,R*0.5);g.moveTo(R*0.16,R*0.18);g.lineTo(R*0.16,R*0.5);g.stroke();g.lineCap='butt';
+   const mg=g.createLinearGradient(-R*0.4,0,R*0.4,0);mg.addColorStop(0,'#7d8790');mg.addColorStop(0.35,'#eef2f5');mg.addColorStop(1,'#6a737c');
+   g.fillStyle=mg;g.beginPath();g.ellipse(0,-R*0.06,R*0.42,R*0.3,0,0,7);g.fill();g.strokeStyle=out;g.lineWidth=lw;g.stroke();
+   g.fillStyle=rad(R*0.18);g.beginPath();g.moveTo(0,-R*0.24);g.lineTo(R*0.13,-R*0.06);g.lineTo(0,R*0.12);g.lineTo(-R*0.13,-R*0.06);g.closePath();g.fill();g.strokeStyle='rgba(0,0,0,0.45)';g.lineWidth=lw*0.7;g.stroke();
+   g.strokeStyle='rgba(255,255,255,0.6)';g.lineWidth=lw*0.8;g.beginPath();g.ellipse(0,-R*0.06,R*0.34,R*0.22,0,Math.PI*1.1,Math.PI*1.5);g.stroke();break;}
   case 'crystal':g.beginPath();g.moveTo(0,-R*0.46);g.lineTo(R*0.3,-R*0.1);g.lineTo(R*0.2,R*0.4);g.lineTo(-R*0.2,R*0.4);g.lineTo(-R*0.3,-R*0.1);g.closePath();g.fillStyle=rad(R*0.45);g.fill();fin();g.strokeStyle='rgba(255,255,255,0.45)';g.lineWidth=lw*0.7;g.beginPath();g.moveTo(0,-R*0.46);g.lineTo(0,R*0.4);g.moveTo(-R*0.3,-R*0.1);g.lineTo(R*0.3,-R*0.1);g.stroke();break;
   case 'ingot':g.beginPath();g.moveTo(-R*0.42,R*0.22);g.lineTo(R*0.42,R*0.22);g.lineTo(R*0.3,-R*0.2);g.lineTo(-R*0.3,-R*0.2);g.closePath();g.fillStyle=lin(R*0.22);g.fill();fin();g.fillStyle='rgba(255,255,255,0.3)';g.fillRect(-R*0.26,-R*0.16,R*0.52,R*0.08);break;
   case 'plate':rrg(g,-R*0.38,-R*0.38,R*0.76,R*0.76,R*0.08);g.fillStyle=lin(R*0.38);g.fill();fin();g.strokeStyle='rgba(255,255,255,0.3)';g.lineWidth=lw*0.7;rrg(g,-R*0.3,-R*0.3,R*0.6,R*0.6,R*0.05);g.stroke();

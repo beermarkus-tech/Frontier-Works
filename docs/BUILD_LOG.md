@@ -1948,3 +1948,13 @@ Next sound step: machine sounds.
 
 ### Next up
 - Step 3: generative background music. Tune machine sounds after Markus listens.
+
+---
+
+## Session 39d — 2026-11-13 (Claude Code, cloud session) · Build 86
+
+- Markus: Resonator and Quartz Crystal look almost identical.
+- Done (`js/render.js` item shapes): new shape `reson` for the Resonator: silver capsule on two legs with a small crystal window (an electronic
+  part). Also fixed the same problem one step earlier: Raw Quartz now uses the rough ore-lump shape, so Raw Quartz / Quartz Crystal /
+  Resonator are three different shapes. In 3D, Resonators on belts use the generic block (no own 3D shape).
+- Verified: icon comparison at 96 px and 32 px; `npm test` 92 PASS / 0 FAIL. Build number **86**.
