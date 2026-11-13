@@ -105,7 +105,7 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
  const per={};const get=z=>per[z]||(per[z]={p:{},c:{},k:{},s:{},b:{},out:{},inn:{}});
  for(const key in R){const v=R[key],a=key.split('|');if(a[0]==='x'){const o=get(a[1]).out,i=get(a[2]).inn;(o[a[2]]||(o[a[2]]={}))[a[3]]=((o[a[2]]||{})[a[3]]||0)+v;(i[a[1]]||(i[a[1]]={}))[a[3]]=((i[a[1]]||{})[a[3]]||0)+v;}else get(a[1])[a[0]][a[2]]=(get(a[1])[a[0]][a[2]]||0)+v;}
  const flows=(m,arrow)=>{const parts=[];for(const z in m)for(const it in m[z])if(m[z][it]>=0.05)parts.push(`<div class="row"><span>${arrow==='→'?'→ '+zName(z):'← '+zName(z)}: ${nm(it)}</span><span>${fmt(m[z][it])}/min</span></div>`);return parts.join('');};
- let h=`<div class="muted">Last ${ZS.hist.length} s. Counted where items cross a zone’s fence (belts, pipes, drones). Tap a name to show it on the map.</div>`;
+ let h='';
  const ids=[...zs.map(z=>z.id),0];
  for(const z of ids){const d=get(z),M=zMachines(z);if(z===0&&!M.n&&!Object.keys(d.p).length&&!Object.keys(d.out).length)continue;
   const zz=zoneById(z),col=(OPT.zCol||[]).includes(z),eff=M.eff!=null?Math.round(M.eff*100):null;

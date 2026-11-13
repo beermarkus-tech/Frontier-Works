@@ -483,7 +483,7 @@ const server=require('./serve.js');
   ZS.hist=[];ZS.cur={};for(let t=0;t<20*70;t++){c.store={iron_ore:999};g1.fuel={coal:50};g2.fuel={coal:50};tick(0.05);}
   const R=zRates();out.made=(R['p|'+A+'|iron_ingot']||0)>20;out.usedB=(R['c|'+Bz+'|iron_ingot']||0)>20;out.cross=(R['x|'+A+'|'+Bz+'|iron_ingot']||0)>20&&!R['x|'+A+'|0|iron_ingot'];   // across the gap between the fences: counted as Smelting → Pressing
   out.burned=(R['b|'+Bz+'|iron_plate']||0)>0||(R['x|'+Bz+'|0|iron_plate']||0)>0;
-  openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=txt.includes('Smelting')&&txt.includes('Pressing')&&!txt.includes('All factories together')&&!txt.includes('Items per minute')&&txt.includes('Factory size')&&txt.includes('Sends to other factories')&&txt.includes('Designed to make')&&!txt.includes('MakesUses')&&!/\bMakes\b/.test(txt)&&!txt.includes('Could make more');
+  openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=!txt.includes('Counted where items cross')&&txt.includes('Smelting')&&txt.includes('Pressing')&&!txt.includes('All factories together')&&!txt.includes('Items per minute')&&txt.includes('Factory size')&&txt.includes('Sends to other factories')&&txt.includes('Designed to make')&&!txt.includes('MakesUses')&&!/\bMakes\b/.test(txt)&&!txt.includes('Could make more');
   out.noEmpty=(txt.match(/Gets from other factories/g)||[]).length===1&&(txt.match(/Sends to other factories/g)||[]).length===1;   // Smelting only sends, Pressing only gets
   out.effBadge=document.querySelectorAll('#pbody .zeff').length>=2;
   const M=zMachines(A);out.design=Math.abs((M.design.iron_ingot||0)-30)<0.5&&!(M.design.iron_ore>0);out.eff=M.eff!=null&&Math.abs(M.eff-sm._ef)<0.01;
@@ -573,10 +573,11 @@ const server=require('./serve.js');
   const v1=btoa(unescape(encodeURIComponent(JSON.stringify({v:1,S:Object.assign({},S),es:[...ents.values()].map(e=>({d:e.d,x:e.x,y:e.y,dir:e.dir}))}))));await importText(v1);const v1n=ents.size;
   await importText(t);await fw.save();return{ok,where:fw.SAVE.where,n,per:+per.toFixed(1),fw2:t.startsWith('FW2:'),back,v1n};});
  check(`save goes to the ${sv2.where}, ${sv2.per} bytes per object; FW2 export/import and old text import keep all ${sv2.n} objects`,sv2.ok&&sv2.where==='browser database'&&sv2.fw2&&sv2.back===sv2.n&&sv2.v1n===sv2.n&&sv2.per<40);
- const before=await p.evaluate(()=>ents.size);
+ const before=await p.evaluate(()=>{OPT.zCol=[4242];saveOpt();return ents.size;});   // a collapsed factory card must survive a reload
  await p.waitForTimeout(500);await ctx.setOffline(true);await p.reload();await p.waitForTimeout(2000);
  check('works offline',await p.evaluate(()=>!!window.__fw&&document.getElementById('cv').width>0));
  check('reload restores the saved factory from the browser database',await p.evaluate(n=>ents.size===n,before));
+ check('collapsed factory cards stay collapsed after a reload',await p.evaluate(()=>{const ok=Array.isArray(OPT.zCol)&&OPT.zCol.includes(4242);OPT.zCol=[];saveOpt();return ok;}));
  // factory size in Stats; far zoom uses simple blocks
  check('Stats shows factory size',await p.evaluate(()=>{ACT.openStats();const t=document.getElementById('pbody').innerText;ACT.closePanel();return /Factory size[\s\S]*Objects\s*[\d,]+/i.test(t);}));
  check('far zoom draws without errors (simple blocks)',await p.evaluate(()=>{cam.z=camT.z=0.3;render();cam.z=camT.z=1.2;return true;}));

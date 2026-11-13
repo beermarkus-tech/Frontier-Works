@@ -1855,3 +1855,12 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
 - Markus: move buildings count and power use from the card header into the card body, right below the header, collapsing with the card.
 - Done: header = ▾/▸, name, efficiency badge; first body row = "N buildings … X MW" with a thin divider. Collapsed cards show only the header.
 - `npm test` 88 PASS / 0 FAIL (fold check also confirms the buildings line disappears). Phone screenshot. Build number **79**.
+
+---
+
+## Session 38i — 2026-11-13 (Claude Code, cloud session) · Build 80
+
+- Markus: remove the explanation at the top of the dashboard; check that the collapse state of the cards is saved.
+- Done: the "Last 60 s. Counted where…" text is gone. The collapse state lives in `OPT.zCol` (per-device settings, `frontierworks_opts`, like the
+  panel pin); new check reloads the page and confirms a collapsed card stays collapsed. Note: it's per device, not part of the game save/cloud sync.
+- `npm test` 89 PASS / 0 FAIL. Build number **80**.
