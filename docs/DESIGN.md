@@ -76,7 +76,7 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   The Pipe Junction connects all four sides, to pipes and to the buildings it touches. Old saves keep their pipes, with direction ignored.
 - **A building outputs into any belt/pipe that points away from its edge, and accepts input from any belt/pipe pointing into it.**
   There are no fixed ports. Solids only go to belts and fluids only to pipes.
-  **Routers touch buildings directly** (confirmed with Markus, Session 10): a Splitter/Sorting Splitter output side (or Pipe Junction side)
+  **Routers touch buildings directly** (confirmed with Markus, Session 10): a Splitter/Logic Splitter output side (or Pipe Junction side)
   touching a building feeds it without a belt, and a building pushes output straight into a touching Merger (from any side except
   the merger's front) or into the back of a touching Splitter. A Merger's front can also feed a building directly.
   **Crossings touching a building are see-through** (Session 22): the building only pushes output into a crossing if whatever is on the
@@ -90,7 +90,7 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   can turn away from a machine it runs past. A bent belt takes items only from its bend: the building behind it does not output into it
   (Session 39v). With no side feeder, the belt stays straight and takes the building's output as before.
 - Splitter (back → front/left/right), Merger (back/left/right → front, fair alternation),
-  Sorting Splitter (filter item → front, rest → sides), Crossing (two lines cross), Pipe Junction (fluid to all other sides).
+  Logic Splitter (rules per output, see below), Crossing (two lines cross), Pipe Junction (fluid to all other sides).
 - Storage Crate (2000 items) and Fluid Tank (400 m³) buffer and pass items on. The Incinerator (2×2 since Session 35e, like a Press) destroys anything.
 - **Cargo Drones** (agreed with Markus, Session 28; Tier 5): a **Drone Pad** (3×3, holds 400 solid items, fed by belts like a crate). In its panel,
   "Send to…" then tap another pad sets a route (stored by position, so it survives saves). A linked pad is a sender: its drone waits for a full
@@ -116,7 +116,7 @@ Ten sequential tiers (Goals panel). Each requires parts from the item stock and 
 |---|---|---|
 | start | — | Drill Mk1, Smelter, Press, Belt Mk1, Splitter/Merger/Crossing, Storage, Coal Burner, Pole |
 | 1 | Field Assembly | Assembler, Belt Mk2, Incinerator, Braced Plate, Rotor, Copper Sheet |
-| 2 | Structural Works | Pipes, Junction, Water Pump, Tank, Sorting Splitter, Truss Frame |
+| 2 | Structural Works | Pipes, Junction, Water Pump, Tank, Logic Splitter, Truss Frame |
 | 3 | Steam Power | Steam Generator, Power Tower, Drill Mk2 |
 | 4 | Steelworks | Foundry, Belt Mk3, steel chain, Cased Girder, Stator, Motor, overclocking |
 | 5 | Heavy Industry | Fabricator, Heavy Truss, Drone Pad (Cargo Drones) |
@@ -159,7 +159,7 @@ Hand mining gives +5 ore from a node.
 - **On/off per building** (Session 37e): machines, drills, pumps and generators have ⏻ Turn off / ▶ Turn on in their panel (`e.off`, saved).
   Off: no new cycles (a started one pauses), no extraction or burning, no power drawn or supplied; finished items still leave. Shown dimmed with a
   power symbol in 2D; status "Switched off"; efficiency pauses.
-- **Logic Splitter** (Session 39r, Tier 2 "Structural Works" with the Sorting Splitter, 2 Braced Plate + 10 Cable): rules per output (left,
+- **Logic Splitter** (Session 39r, Tier 2 "Structural Works", 2 Braced Plate + 10 Cable; it replaced the Sorting Splitter in Session 39ae, old saves convert it to filter item → front, Any other → sides): rules per output (left,
   front, right): specific items, Any, Any other (items no output names), Overflow (only when every normal choice is full or blocked); no rules =
   blocked. Items take turns among the outputs that want them, then overflow outputs; otherwise they wait. Default: Any on all three (= Splitter).
   2D: arrows per output, red square = blocked, amber arrow = overflow-only. Own design, inspired by programmable splitters in factory games.

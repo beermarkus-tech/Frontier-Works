@@ -88,21 +88,17 @@ function entStatic(e){
  const outNote=o=>{const t=entAt(e.x+DX[o],e.y+DY[o]),back=(o+2)&3;if(!t)return'Nothing attached here.';
   if(fluidOnly(t))return'⚠ A pipe piece is attached here, not a belt.';
   if(isLine(t.k)&&t.dir===back)return'⚠ The belt here points <b>into</b> the splitter, so it takes nothing. Rotate it to point away, or redraw it starting at the splitter.';
-  if(t.k==='router'){const s2=B[t.d].sub;if((s2==='split'||s2==='sort'||s2==='logic')&&t.dir!==o)return'⚠ The splitter here only takes items from its back side.';if(s2==='merge'&&t.dir===back)return'⚠ The merger here faces this way: that is its output side.';}
+  if(t.k==='router'){const s2=B[t.d].sub;if((s2==='split'||s2==='logic')&&t.dir!==o)return'⚠ The splitter here only takes items from its back side.';if(s2==='merge'&&t.dir===back)return'⚠ The merger here faces this way: that is its output side.';}
   if(t.k==='mach'||t.k==='gen'||t.k==='storage'||t.k==='core'||t.k==='incin'||t.k==='dpad'||t.k==='cross')return'';
   if(!isLine(t.k)&&t.k!=='router')return'⚠ Nothing here takes items.';return'';};
  const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
- if(e.k==='router'&&(d.sub==='split'||d.sub==='sort')){const D=e.dir,w=[['Left',(D+3)&3],['Front',D],['Right',(D+1)&3]].map(([n,o])=>{const t=outNote(o);return t[0]==='⚠'?`<div class="plbad" style="margin:2px 0">${n}: ${t}</div>`:'';}).join('');if(w)h+=`<h4>Outputs</h4>${w}`;}
+ if(e.k==='router'&&d.sub==='split'){const D=e.dir,w=[['Left',(D+3)&3],['Front',D],['Right',(D+1)&3]].map(([n,o])=>{const t=outNote(o);return t[0]==='⚠'?`<div class="plbad" style="margin:2px 0">${n}: ${t}</div>`:'';}).join('');if(w)h+=`<h4>Outputs</h4>${w}`;}
  if(e.k==='router'&&d.sub==='logic'){const L=lsRules(e),items=Object.keys(IT).filter(k=>!IT[k].f&&(S.ub.length>0)),lbl={any:'Any',rest:'Any other',over:'Overflow'};
   h+=`<div class="muted">Each item goes to an output whose rules want it (taking turns). <b>Any other</b> = items no output names. <b>Overflow</b> = only when the others are full or blocked. No rules = blocked.</div>`;
   for(const [k,name] of [['l','Left'],['f','Front'],['r','Right']]){const R=L[k]||[],od={l:(e.dir+3)&3,f:e.dir,r:(e.dir+1)&3}[k];
    h+=`<h4>${name} output</h4>${R.length?noteHtml(od):''}<div class="chips">${R.length?R.map(x=>`<button class="btn chip on" data-act="lsDel" data-v="${k}|${x}" title="Remove">${lbl[x]||nm(x)} ✕</button>`).join(''):'<span class="plbad" style="padding:4px 2px">Blocked</span>'}</div>
     <div class="chips" style="margin-top:4px">${['any','rest','over'].filter(x=>!R.includes(x)).map(x=>`<button class="btn chip" data-act="lsAdd" data-v="${k}|${x}">+ ${lbl[x]}</button>`).join('')}${R.length?`<button class="btn chip" data-act="lsBlock" data-v="${k}">Block</button>`:''}</div>
     <select class="wide lssel" data-ls="${k}"><option value="">+ Add an item…</option>${items.filter(x=>!R.includes(x)).sort((a,b)=>IT[a].n.localeCompare(IT[b].n)).map(x=>`<option value="${x}">${IT[x].n}</option>`).join('')}</select>`;}
- }
- if(e.k==='router'&&d.sub==='sort'){
-  const items=Object.keys(IT).filter(k=>!IT[k].f);
-  h+=`<h4>Filter (goes out the front)</h4><div class="chips"><button class="btn chip ${!e.filter?'on':''}" data-act="filter" data-v="">None (split all)</button>${items.map(k=>`<button class="btn chip ${e.filter===k?'on':''}" data-act="filter" data-v="${k}">${nm(k)}</button>`).join('')}</div>`;
  }
  if(e.k==='gen')h+=`<h4>Hand-feed</h4><div class="chips">${d.fuels.filter(f=>!IT[f].f).map(f=>`<button class="btn chip" data-act="feed" data-v="${f}">+10 ${nm(f)} from stock</button>`).join('')}</div>`;
  if(e.k==='dpad'){const tg=padTarget(e);h+=`<h4>Drone route</h4><div class="muted" style="margin-bottom:6px">${tg?`Sends its items by drone to the Drone Pad at ${tg.x}, ${tg.y} (${Math.round(padRoute(e,tg))} tiles away).`:'Not linked: this pad receives drones and passes their items on to outgoing belts.'}</div><button class="btn" data-act="padLink">📍 ${tg?'Change destination':'Send to…'}</button>${tg?' <button class="btn" data-act="padUnlink">✕ Unlink</button>':''} <button class="btn" data-act="takeAll">Move all into item stock</button>`;}
@@ -286,7 +282,6 @@ const ACT={
  lsAdd:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));if(x==='any')L[k]=L[k].filter(y=>y==='over');if(!L[k].includes(x))L[k].push(x);renderPanel(true);},
  lsDel:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[k]=L[k].filter(y=>y!==x);renderPanel(true);},
  lsBlock:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[v]=[];renderPanel(true);},
- filter:v=>{const e=ents.get(UI.panel.arg);if(e){e.filter=v||null;renderPanel(true);}},
  collectAll:()=>{let n=0,c=0;for(const e of ents.values())if(e.k==='storage'){let any=false;for(const k in e.store){give(k,e.store[k]);n+=e.store[k];any=true;}if(any)c++;e.store={};}toast(n?`Moved ${fmt(n)} items from ${c} crate${c>1?'s':''} into the stock`:'The crates are empty');renderPanel(true);buildTools();},
  padLink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.linkFrom=e.id;setTool(null);toast('Tap the Drone Pad the drone should fly to');updInfo();},
  padUnlink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;delete e.lx;delete e.ly;renderPanel(true);toast('Route removed: this pad now receives drones');},

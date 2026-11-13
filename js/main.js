@@ -1,6 +1,6 @@
 'use strict';
 /* ---------- save/load ---------- */
-const SKEYS=['d','x','y','dir','fm','pl','off','lr','lx','ly','dr','del','lv','tx','tc','item','prog','r','inb','outb','run','clock','buf','fuel','energy','water','wacc','trip','store','ft','amt','filter','hs','vs','hd','vd'];
+const SKEYS=['d','x','y','dir','fm','pl','off','lr','lx','ly','dr','del','lv','tx','tc','item','prog','r','inb','outb','run','clock','buf','fuel','energy','water','wacc','trip','store','ft','amt','hs','vs','hd','vd'];
 /* Save format v2: compact JSON (entities as [d,x,y,dir,{only non-default fields}]), gzip-compressed where the browser supports it,
    stored in IndexedDB (lots of room) with localStorage as fallback. Old v1 saves (base64 JSON, entity objects) still load.
    Exported text: "FW2:" + base64(gzip). If saving fails, the player sees a warning (it used to fail silently). */
@@ -28,9 +28,12 @@ function growIncin(){const inc=[...ents.values()].filter(e=>e.k==='incin');if(!i
  if(back)setTimeout(()=>toast(`Incinerators are 2×2 now: ${back} had no room and went back to stock`),1500);}
 function load(str){const data=typeof str==='string'?parseSave(str):str;
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;genMap(S.seed);ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
- for(const o0 of data.es){const o=Array.isArray(o0)?Object.assign({d:o0[0],x:o0[1],y:o0[2],dir:o0[3]},o0[4]||{}):o0;const d=B[o.d];if(!d)continue;
+ for(const o0 of data.es){const o=Array.isArray(o0)?Object.assign({d:o0[0],x:o0[1],y:o0[2],dir:o0[3]},o0[4]||{}):o0;
+  /* Sorting Splitter removed (Session 39ae): becomes a Logic Splitter doing the same (filter item → front, the rest → sides) */
+  if(o.d==='sorter'){o.d='lsplit';o.lr=o.filter?{l:['rest'],f:[o.filter],r:['rest']}:{l:['any'],f:['any'],r:['any']};delete o.filter;}
+  const d=B[o.d];if(!d)continue;
   const e=Object.assign({},o,{id:nextId++,k:d.k,w:d.w,h:d.w});initEnt(e,d);ents.set(e.id,e);for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
- growIncin();if(!S.pw2)pnMigrate();zoneInit();grantUnlocks();
+ if(S.ub)S.ub=S.ub.filter(id=>B[id]);growIncin();if(!S.pw2)pnMigrate();zoneInit();grantUnlocks();
  S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
 }
 async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}

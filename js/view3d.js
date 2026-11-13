@@ -268,7 +268,7 @@ function v3Models(){
  {const c=B.incin.col;def('incin',[...base(2),['box',c,[0,0.7,0.1],[1.5,1.0,1.3]],['box',shade(c,-30),[0,1.24,0.1],[1.56,0.1,1.36]],['cyl','#575c63',[0.45,1.7,-0.5],[0.32,1.8,0.32]],['box','#22262b',[0,0.62,0.76],[0.8,0.55,0.03]]],
   [['box','#ff6a2a',[0,0.62,0.77],[0.66,0.42,0.03],{glow:1}]],{smoke:[[0.45,2.7,-0.5,0]],h:1.6});}
  // logistics pieces (1×1, rotate with dir; front = +x)
- for(const id of ['splitter','merger','sorter','lsplit']){const c=B[id].col,mk=[];const sides=id==='merger'?[[-0.36,0],[0,-0.36],[0,0.36]]:[[0.36,0],[0,-0.36],[0,0.36]];
+ for(const id of ['splitter','merger','lsplit']){const c=B[id].col,mk=[];const sides=id==='merger'?[[-0.36,0],[0,-0.36],[0,0.36]]:[[0.36,0],[0,-0.36],[0,0.36]];
   for(const [x,z] of sides)mk.push(['box',shade(c,45),[x,0.44,z],[Math.abs(x)>0?0.12:0.3,0.04,Math.abs(z)>0?0.12:0.3]]);
   def(id,[['box','#2a3037',[0,0.08,0],[0.92,0.16,0.92]],['box',c,[0,0.28,0],[0.84,0.28,0.84]],['box','#23272c',[0,0.425,0],[0.6,0.03,0.6]],...mk,['box','#f0f2f4',[0.28,0.44,0],[0.1,0.05,0.22]]],[],{h:0.45});}
  def('junction',[['box','#2a3037',[0,0.06,0],[0.6,0.12,0.6]],['sph',B.junction.col,[0,0.32,0],[0.5,0.5,0.5]]],[],{h:0.6});   /* stubs only towards real connections (drawn as pipe arms in v3Layout; Session 39s: fixed 4 stubs made belts look plugged in) */

@@ -182,6 +182,14 @@ const server=require('./serve.js');
   for(let j=-2;j<3;j++)for(let i=-3;i<4;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),held,full,lost,fed};});
  check(`crossing at a dead end clogs the line (holds an item, belt backs up, ${xclog.fed} fed, ${xclog.lost} sent to stock)`,xclog.ok&&xclog.held&&xclog.full&&xclog.lost===0&&xclog.fed<=4);
+ // Sorting Splitter removed (Session 39ae): old saves turn it into a Logic Splitter with the same behaviour; it's gone from the menus
+ const srt=await p.evaluate(()=>{const fw=window.__fw;let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(canPlace('incin',x,y)||nodeAt[y*MW+x])continue;X=x;Y=y;break;}
+  const data=JSON.parse(serialize());data.es.push(['sorter',X,Y,1,{filter:'bolts'}],['sorter',X+1,Y,1,{}]);data.S.ub=(data.S.ub||[]).concat(['sorter']);
+  load(JSON.stringify(data));tick(0.05);const a=fw.entAt(X,Y),b=fw.entAt(X+1,Y);
+  const conv=a&&a.d==='lsplit'&&a.dir===1&&a.lr.f[0]==='bolts'&&a.lr.l[0]==='rest'&&a.lr.r[0]==='rest'&&b&&b.d==='lsplit'&&b.lr.f[0]==='any';
+  const gone=!B.sorter&&!S.ub.includes('sorter')&&!MS.some(m=>m.b.includes('sorter'));removeEnt(a,false,true);removeEnt(b,false,true);return{conv,gone};});
+ check('Sorting Splitter removed: old saves get a Logic Splitter with the same rules, menus and goals no longer list it',srt.conv&&srt.gone);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

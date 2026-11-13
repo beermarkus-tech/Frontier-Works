@@ -2370,3 +2370,19 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Built:** removed the stock return. An item that can't move on waits in the crossing (drawn there), and the belt behind backs up. A crossing in an old save that was jammed this way now visibly holds its item. DESIGN.md updated.
 
 **Verified:** new smoke check (belt → crossing → nothing: crossing holds the item, belt is full, 3 items fed, 0 sent to stock). Session 39j crossing-grid test still passes (no leak, no clog). `npm test` all PASS. `npm run playthrough`: all ✓, no errors.
+
+## Session 39ae — 2026-11-13 (Claude Code, cloud session) · Build 113
+
+**Asked:**
+1. Remove the Sorting Splitter, since the Logic (programmable) Splitter covers it.
+2. Rename 11 buildings and items: Press → Constructor, Fabricator → Manufacturer, Coal Burner → Coal Generator, Fuel Turbine → Fuel Generator, Braced Plate → Reinforced Iron Plate, Cased Girder → Encased Beam, Compute Module → Computer, Data Bus → High-Speed Connector, Heavy Truss → Heavy Modular Frame, Resonator → Crystal Oscillator, Truss Frame → Modular Frame.
+
+**Built (1):**
+- Removed `D('sorter')`, its unlock in Tier 2 "Structural Works", the sort routing in `updRouter`/`accept`, the filter panel and `filter` action, its 2D arrows/filter icon and 3D model, and `filter` from `SKEYS`.
+- `load()` turns old saves' sorters into Logic Splitters with the same behaviour: filter item → front, Any other → left/right; with no filter, Any on all three.
+- `load()` drops unknown ids from `S.ub`.
+- DESIGN.md updated.
+
+**Not done (2), asked Markus first:** together, the list is the item and building naming of one specific commercial factory game. CLAUDE.md's rule is "Original content only: own names … don't copy assets or names from commercial games." I proposed original alternatives instead and am waiting for Markus's choice.
+
+**Verified:** new smoke check (old save with a filtered and an unfiltered sorter, both converted correctly, gone from menus and goals). `npm test` all PASS. `npm run playthrough`: all ✓, no dead ends.

@@ -129,7 +129,7 @@ function placeEnt(id,x,y,dir,free){
 function initEnt(e,d){
  switch(e.k){
   case 'belt':case 'pipe':e.item=e.item||null;e.prog=e.prog||0;e.spd=d.spd;break;
-  case 'router':e.item=e.item||null;e.rr=0;e.filter=e.filter||null;e.req={};e.lastIn=-1;break;
+  case 'router':e.item=e.item||null;e.rr=0;e.req={};e.lastIn=-1;break;
   case 'cross':e.hs=e.hs||null;e.vs=e.vs||null;e.hd=e.hd||0;e.vd=e.vd||1;break;
   case 'mach':e.r=e.r||null;e.inb=e.inb||{};e.outb=e.outb||{};e.prog=e.prog||0;e.run=!!e.run;e.clock=e.clock||1;e.rr=0;break;
   case 'drill':case 'pump':{e.buf=e.buf||0;e.prog=e.prog||0;e.clock=e.clock||1;e.rr=0;let nd=null;for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++){const n=nodeAt[(e.y+j)*MW+e.x+i];if(n&&!nd)nd=n;}e.node=nd;break;}
@@ -239,7 +239,7 @@ function accept(e,item,dir,carry){
   case 'router':{
    if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc')return false;   // a Pipe Junction is a network piece
    const sub=B[e.d].sub;
-   if(sub==='split'||sub==='sort'||sub==='logic'){if(dir!==e.dir||e.item)return false;}
+   if(sub==='split'||sub==='logic'){if(dir!==e.dir||e.item)return false;}
    else if(sub==='merge'){
     if(dir===((e.dir+2)&3))return false;
     if(e.item){e.req[dir]=tickNo;return false;}
@@ -301,7 +301,7 @@ function pushOut(e,item){
 function cen(e){return{x:e.x+e.w/2,y:e.y+e.h/2};}
 function rectDist(px,py,e){const dx=Math.max(e.x-px,0,px-(e.x+e.w)),dy=Math.max(e.y-py,0,py-(e.y+e.h));return Math.hypot(dx,dy);}
 /* Does side neighbour sd (lying in direction o from line e) push items into e? Used for belt/pipe curves:
-   another line pointing in, a splitter/sorter/merger with an output side facing e, a pipe junction (pipes),
+   another line pointing in, a splitter/merger with an output side facing e, a pipe junction (pipes),
    or a crossing whose far side is fed in the same direction (items pass straight through it). */
 /* fluid-only pieces: a belt pointing at one is a dead end (Session 39t: Rotate skips these, 2D draws an end stop) */
 const fluidOnly=t=>!!t&&(t.k==='pipe'||t.k==='tank'||t.k==='pump'||(t.k==='router'&&!!B[t.d].fl));
@@ -426,7 +426,6 @@ function updRouter(e){
     const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);tk[key]=(i+1)%n;e.item=null;e[key]=tk[key];return;}}}
   return;}
  if(sub==='split')outs=[D,(D+1)&3,(D+3)&3];
- else if(sub==='sort')outs=!e.filter?[D,(D+1)&3,(D+3)&3]:(e.item===e.filter?[D]:[(D+1)&3,(D+3)&3]);
  else if(sub==='merge')outs=[D];
  else outs=[0,1,2,3].filter(o=>o!==((e.inDir+2)&3));
  for(let k=0;k<outs.length;k++){const o=outs[(e.rr+k)%outs.length];const t=entAt(e.x+DX[o],e.y+DY[o]);
