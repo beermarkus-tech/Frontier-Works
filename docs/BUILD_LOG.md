@@ -2180,3 +2180,13 @@ Build 95 only changed input buffer sizes, no recipe.)
   effects/machine levels/music scheduling check `auOn(k)`; the slider keeps its volume for when it's ticked again. On/Muted stays as master switch.
 - Verified: `npm test` 97 PASS / 0 FAIL (music check: three boxes; music off stops it and is saved; effects off plays no click; machines off →
   all machine levels 0). Phone screenshot. Build number **97**.
+
+---
+
+## Session 39p — 2026-11-13 (Claude Code, cloud session) · Build 98
+
+- Markus: fill a machine's input buffers from the inventory.
+- Built: "⬆ Fill from stock" under the input buffer in the machine panel (`fillInb`): tops every solid input up to its stack (`capIn`) from
+  `S.inv`, toast lists what moved. Shown only when at least one input has room and some stock; fluids skipped (the stock holds no fluids).
+  Items go back to the stock as before on recipe change / dismantle / eraser.
+- Verified: `npm test` 97 PASS / 0 FAIL (buffer check: 30 → 100 iron ore, stock 500 → 430; button hidden with empty stock). Build number **98**.

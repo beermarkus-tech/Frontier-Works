@@ -142,7 +142,7 @@ function entDyn(e){
  if(d.pw){h+=`<div class="row"><span>Power</span><span>${fmt(d.pw*Math.pow(e.clock||1,1.6))} MW ${e.grid?'':'<span style="color:#e04030">(not connected)</span>'}</span></div>`;}
  if(e.k==='mach')h+=effHtml(e);
  if(e.k==='mach'){
-  if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}<h4>Output buffer</h4>${bufList(e.outb)}`;}
+  if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}${Object.keys(r.i).some(k=>!IT[k].f&&(e.inb[k]||0)<capIn(r.i[k],k)&&(S.inv[k]||0)>=1)?'<button class="btn" data-act="fillInb" style="margin-top:6px">⬆ Fill from stock</button>':''}<h4>Output buffer</h4>${bufList(e.outb)}`;}
   h+=`<div class="muted" style="margin-top:8px">Belts/pipes pointing <b>into</b> the machine feed it; belts/pipes pointing <b>away</b> from it receive output. A Splitter or Merger touching the machine also works without a belt: a splitter side facing it feeds it, and a merger takes its output (the merger's front must not face the machine).</div>`;}
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
@@ -276,6 +276,9 @@ const ACT={
  signColor:v=>{const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tc=+v;topoVer++;renderPanel(true);}},
  machOff:()=>{const e=ents.get(UI.panel.arg);if(!e)return;e.off=!e.off;toast(`${B[e.d].n} ${e.off?'switched off':'switched on'}`);renderPanel(true);},
  meterOff:()=>{const e=UI.panel&&ents.get(UI.panel.arg);if(e&&e.fm){toggleMeter(e);sfx('del');toast('Flow Meter removed (refunded); the belt stays');refreshTools();renderPanel(true);}},
+ fillInb:()=>{const e=UI.panel&&ents.get(UI.panel.arg);if(!e||e.k!=='mach'||!e.r)return;const r=RC[e.r],moved=[];   /* Session 39p: top each input up to its stack from the item stock */
+  for(const k in r.i){if(IT[k].f)continue;const room=capIn(r.i[k],k)-Math.floor(e.inb[k]||0),n=Math.min(room,Math.floor(S.inv[k]||0));if(n>0){S.inv[k]-=n;e.inb[k]=(e.inb[k]||0)+n;moved.push(`${n} ${IT[k].n}`);}}
+  if(moved.length){sfx('place');toast('Filled from stock: '+moved.join(', '));}else toast('Nothing to fill: the buffer is full or your stock has none of these');refreshTools();renderPanel(true);},
  swToggle:v=>{const e=ents.get(+v);if(!e||e.d!=='pswitch')return;e.off=!e.off;topoDirty=true;toast(`${e.tx||'Power Switch'} ${e.off?'off':'on'}`);renderPanel(true);},
  pnCut:v=>{const a=ents.get(UI.panel.arg),b=ents.get(+v);if(a&&b){pnUnlink(a,b);toast('Wire removed');}renderPanel(true);},
  pnWire:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.wireFrom=e.id;setTool(null);toast('Tap the pole, tower, switch or generator to connect to');updInfo();},
