@@ -2334,3 +2334,15 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Verified:** rendered icons side by side at 96 px and 24 px. `npm test` all PASS.
 
 **Open:** Compute Module and Circuit Board are also both green square chips (dark vs. mid green). Offered to change one if Markus finds them confusing.
+
+## Session 39ab — 2026-11-13 (Claude Code, cloud session) · Build 110
+
+**Asked:** (screenshot) a Logic Splitter with Left = Circuit Board, Front = Any other, Right = Circuit Board sends circuit boards only left. One set up the same way on the cable line works both sides.
+
+**Found:** the routing code takes turns between left and right correctly, so the right output's neighbour must be refusing. The usual cause: the right belt was drawn towards the splitter, so it points into it. An empty belt shows no motion, so its direction can't be seen. Reproduced: with the right belt pointing back, left gets everything and right gets nothing, exactly as in the screenshot. I can't see Markus's save, so this is the likely cause rather than a proven one.
+
+**Built:** output diagnostics in the panel (`outNote` in `js/ui.js`).
+- **Logic Splitter:** under each output that has rules, the panel names the problem: belt points into the splitter, pipe piece attached, splitter not facing the right way, merger output side, or nothing attached.
+- **Splitter / Sorting Splitter:** an "Outputs" section appears only when there's a problem.
+
+**Verified:** new smoke check (backwards belt refuses items, panel warns, warning goes once the belt is turned). `npm test` all PASS.

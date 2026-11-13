@@ -151,6 +151,18 @@ const server=require('./serve.js');
   for(let j=-3;j<4;j++)for(let i=-3;i<6;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),...o};});
  check(`merger takes turns: slow Mk1 side ${mfair.s}/30 s, fast sides ${mfair.w} + ${mfair.n}`,mfair.ok&&mfair.s>=24&&Math.abs(mfair.w-mfair.n)<=3&&mfair.w+mfair.n+mfair.s>=130);
+ // a belt drawn towards a Logic Splitter output refuses items; the panel says so (Session 39ab)
+ const lsw=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-2;j<4&&ok;j++)for(let i=-3;i<4&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  S.ub.push('lsplit');const r=[P('belt1',X,Y+1,3),P('lsplit',X,Y,3),P('belt1',X-1,Y,2),P('belt1',X-2,Y,2),P('belt1',X+1,Y,2)];
+  const ls=fw.entAt(X,Y);ls.lr={l:['iron_plate'],f:[],r:['iron_plate']};tick(0.05);const src=fw.entAt(X,Y+1),rb=fw.entAt(X+1,Y);let right=0;
+  for(let k=0;k<80;k++){if(!src.item){src.item='iron_plate';src.prog=0;}if(rb.item)right++;tick(0.05);}
+  const left=!!(fw.entAt(X-1,Y).item||fw.entAt(X-2,Y).item);
+  openPanel('ent',ls.id);const warn=document.getElementById('pbody').textContent.includes('points into the splitter');ACT.closePanel();
+  rb.dir=0;topoDirty=true;tick(0.05);openPanel('ent',ls.id);const gone=!document.getElementById('pbody').textContent.includes('points into the splitter');ACT.closePanel();
+  for(let j=-2;j<4;j++)for(let i=-3;i<4;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),left,right,warn,gone};});
+ check('Logic Splitter panel warns when an output belt points into the splitter (and stops warning once it is turned)',lsw.ok&&lsw.left&&lsw.right===0&&lsw.warn&&lsw.gone);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

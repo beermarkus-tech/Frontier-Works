@@ -84,10 +84,19 @@ function entStatic(e){
  if(e.k==='mach'||e.k==='drill'||e.k==='pump'){
   const mx=S.oc?250:100;h+=`<h4>Clock speed</h4><div class="clockv" id="clockv">${Math.round(e.clock*100)}%</div><input type="range" min="10" max="${mx}" step="1" value="${Math.round(e.clock*100)}" data-act="clock"><div class="chips clockbtns">${[-10,-1,1,10].map(v=>`<button class="btn chip" data-act="clockStep" data-v="${v}">${v>0?"+":"−"}${Math.abs(v)}</button>`).join("")}</div>${S.oc?'':'<div class="muted">Overclocking above 100% unlocks with “Steelworks”.</div>'}<div class="muted">Power use scales with clock^1.6.</div>`;
  }
+ /* why can't an output pass items on? (Session 39ab: a belt drawn towards a splitter looks fine but refuses everything) */
+ const outNote=o=>{const t=entAt(e.x+DX[o],e.y+DY[o]),back=(o+2)&3;if(!t)return'Nothing attached here.';
+  if(fluidOnly(t))return'⚠ A pipe piece is attached here, not a belt.';
+  if(isLine(t.k)&&t.dir===back)return'⚠ The belt here points <b>into</b> the splitter, so it takes nothing. Rotate it to point away, or redraw it starting at the splitter.';
+  if(t.k==='router'){const s2=B[t.d].sub;if((s2==='split'||s2==='sort'||s2==='logic')&&t.dir!==o)return'⚠ The splitter here only takes items from its back side.';if(s2==='merge'&&t.dir===back)return'⚠ The merger here faces this way: that is its output side.';}
+  if(t.k==='mach'||t.k==='gen'||t.k==='storage'||t.k==='core'||t.k==='incin'||t.k==='dpad'||t.k==='cross')return'';
+  if(!isLine(t.k)&&t.k!=='router')return'⚠ Nothing here takes items.';return'';};
+ const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
+ if(e.k==='router'&&(d.sub==='split'||d.sub==='sort')){const D=e.dir,w=[['Left',(D+3)&3],['Front',D],['Right',(D+1)&3]].map(([n,o])=>{const t=outNote(o);return t[0]==='⚠'?`<div class="plbad" style="margin:2px 0">${n}: ${t}</div>`:'';}).join('');if(w)h+=`<h4>Outputs</h4>${w}`;}
  if(e.k==='router'&&d.sub==='logic'){const L=lsRules(e),items=Object.keys(IT).filter(k=>!IT[k].f&&(S.ub.length>0)),lbl={any:'Any',rest:'Any other',over:'Overflow'};
   h+=`<div class="muted">Each item goes to an output whose rules want it (taking turns). <b>Any other</b> = items no output names. <b>Overflow</b> = only when the others are full or blocked. No rules = blocked.</div>`;
-  for(const [k,name] of [['l','Left'],['f','Front'],['r','Right']]){const R=L[k]||[];
-   h+=`<h4>${name} output</h4><div class="chips">${R.length?R.map(x=>`<button class="btn chip on" data-act="lsDel" data-v="${k}|${x}" title="Remove">${lbl[x]||nm(x)} ✕</button>`).join(''):'<span class="plbad" style="padding:4px 2px">Blocked</span>'}</div>
+  for(const [k,name] of [['l','Left'],['f','Front'],['r','Right']]){const R=L[k]||[],od={l:(e.dir+3)&3,f:e.dir,r:(e.dir+1)&3}[k];
+   h+=`<h4>${name} output</h4>${R.length?noteHtml(od):''}<div class="chips">${R.length?R.map(x=>`<button class="btn chip on" data-act="lsDel" data-v="${k}|${x}" title="Remove">${lbl[x]||nm(x)} ✕</button>`).join(''):'<span class="plbad" style="padding:4px 2px">Blocked</span>'}</div>
     <div class="chips" style="margin-top:4px">${['any','rest','over'].filter(x=>!R.includes(x)).map(x=>`<button class="btn chip" data-act="lsAdd" data-v="${k}|${x}">+ ${lbl[x]}</button>`).join('')}${R.length?`<button class="btn chip" data-act="lsBlock" data-v="${k}">Block</button>`:''}</div>
     <select class="wide lssel" data-ls="${k}"><option value="">+ Add an item…</option>${items.filter(x=>!R.includes(x)).sort((a,b)=>IT[a].n.localeCompare(IT[b].n)).map(x=>`<option value="${x}">${IT[x].n}</option>`).join('')}</select>`;}
  }
