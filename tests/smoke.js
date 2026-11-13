@@ -695,9 +695,9 @@ const server=require('./serve.js');
    await pp.touchscreen.tap(206,Math.round(915*fy));await pp.waitForTimeout(500);got.push(await pp.evaluate(i=>window.__fw.entAt(i.X,i.Y).r+(UI.panel&&UI.panel.kind==='ent'?'':'(no panel)'),i));}
   check(`phone: tapping a machine opens its panel without a ghost tap changing the recipe (${got.join(', ')})`,got.every(r=>r==='r_wire'));
   // recipe list: new machine shows all; with a recipe only that one (+ Change); tapping it shows all; picking another collapses again
-  const rl=await pp.evaluate(i=>{const e=window.__fw.entAt(i.X,i.Y),n=()=>document.querySelectorAll('#pbody [data-act="setRec"]').length;e.r=null;openPanel('ent',e.id);const fresh=n();
-   ACT.setRec('r_bolts');const one=n(),chg=document.querySelector('#pbody .rec.on').textContent.includes('Change');ACT.setRec('r_bolts');const open=n();ACT.setRec('r_wire');const again=n();
-   ACT.closePanel();return{fresh,one,chg,open,again,r:e.r};},i);
+  const rl=await pp.evaluate(i=>{const e=window.__fw.entAt(i.X,i.Y),n=()=>document.querySelectorAll('#pbody [data-act="setRec"]').length;e.r=null;e._efT=200;e._ef=0;e._efw={recipe:1};openPanel('ent',e.id);const fresh=n();
+   ACT.setRec('r_bolts');const efReset=!e._efT&&!Object.keys(e._efw).length;const one=n(),chg=document.querySelector('#pbody .rec.on').textContent.includes('Change');ACT.setRec('r_bolts');const open=n();ACT.setRec('r_wire');const again=n();
+   ACT.closePanel();return{fresh,one,chg,open,again,r:e.r,efReset};},i);
   const plo=await pp.evaluate(()=>{if(UI.panel)ACT.closePanel();OPT.plLeft=false;PL.locked=true;const bad=[];const chk=m=>{const b=document.getElementById('pbody');for(const r of b.querySelectorAll('.row'))if(r.scrollWidth>r.clientWidth+2||r.getBoundingClientRect().right>b.getBoundingClientRect().right+1)bad.push(m+': '+r.textContent.slice(0,40));};
    ACT.openPlan();PL.mode='fwd';PL.fwd.steps=[];plAddStep();plAddStep();plRefresh();chk('node');PL.mode='pow';PL.pow.gen='turbine';PL.pow.fuel='fuel';PL.pow.mw=900;plFix();plRefresh();chk('power');
    PL.mode='rev';PL.rev.targets=[{item:'control_chip',rate:2},{item:'turbine_core',rate:2}];plRefresh();chk('target');ACT.closePanel();return bad;});
@@ -708,7 +708,7 @@ const server=require('./serve.js');
    S.ub=ub0;S.ur=ur0;return bad;});
   check(`phone: recipes with many inputs wrap inside the machine panel (${rco.length?rco.join(' | '):'all fit'})`,rco.length===0);
   check(`phone: no planner line runs off the panel (${plo.length?plo.join(' | '):'all fit'})`,plo.length===0);
-  check(`recipe list folds: new machine ${rl.fresh} recipes, after picking 1 (+Change ${rl.chg}), tap shows ${rl.open}, new pick folds to ${rl.again}`,rl.fresh>3&&rl.one===1&&rl.chg&&rl.open===rl.fresh&&rl.again===1&&rl.r==='r_wire');await pc.close();}
+  check(`recipe list folds: new machine ${rl.fresh} recipes, after picking 1 (+Change ${rl.chg}), tap shows ${rl.open}, new pick folds to ${rl.again}`,rl.fresh>3&&rl.one===1&&rl.chg&&rl.open===rl.fresh&&rl.again===1&&rl.r==='r_wire');check('picking a recipe starts the machine efficiency history fresh (no old "No recipe" share)',rl.efReset);await pc.close();}
  check('no page errors',errs.length===0);
  for(const [n,v] of ok)console.log((v?'PASS ':'FAIL ')+n);if(errs.length)console.log(errs);
  await b.close();server.close();process.exit(ok.every(x=>x[1])?0:1);

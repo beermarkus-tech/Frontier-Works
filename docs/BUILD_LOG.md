@@ -2286,3 +2286,13 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Built:** a router or crossing behind a belt now keeps it straight only if it really pushes items into that belt (`feedsInto(bk,e,back)`, the same test used for side feeders). So pipe junctions behind a belt, and crossings whose line doesn't run into it, no longer block the bend.
 
 **Verified:** new smoke check reproducing the screenshot (junction behind, merger feeding from the side, so the belt bends). `npm test` all PASS.
+
+## Session 39x — 2026-11-13 (Claude Code, cloud session) · Build 106
+
+**Asked:** (screenshot) a working Press showed "No recipe 8% · Check the setup" in its efficiency card.
+
+**Found:** the 5-minute efficiency average still contained the seconds before a recipe was picked. That history was real but irrelevant once the recipe was set.
+
+**Built:** picking or changing a recipe (`setRec` in `js/ui.js`) resets the machine's efficiency history (`_efT`, `_ef`, `_efw`). The average then starts fresh for the new setup. Machines already showing the message clear on their own within 5 game minutes.
+
+**Verified:** added a check to the recipe-fold smoke test. `npm test` all PASS.

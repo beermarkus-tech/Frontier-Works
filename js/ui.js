@@ -273,7 +273,7 @@ const ACT={
  home:()=>{camT.x=MW/2;camT.y=MH/2;camT.z=1.2;vel.x=vel.y=0;zAnchor=null;},
  closePanel,
  openMs:()=>openPanel('ms'),openInv:()=>openPanel('inv'),openStats:()=>openPanel('stats'),openMenu:()=>openPanel('menu'),openCodex:()=>openPanel('codex'),
- setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v){UI.recOpen=UI.recOpen===e.id?null:e.id;renderPanel(true);return;}UI.recOpen=null;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;renderPanel(true);},
+ setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v){UI.recOpen=UI.recOpen===e.id?null:e.id;renderPanel(true);return;}UI.recOpen=null;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;e._efT=0;e._ef=0;e._efw={};renderPanel(true);},   /* new recipe: efficiency history starts fresh (Session 39x: 'No recipe' lingered for 5 min) */
  lsAdd:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));if(x==='any')L[k]=L[k].filter(y=>y==='over');if(!L[k].includes(x))L[k].push(x);renderPanel(true);},
  lsDel:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[k]=L[k].filter(y=>y!==x);renderPanel(true);},
  lsBlock:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[v]=[];renderPanel(true);},
