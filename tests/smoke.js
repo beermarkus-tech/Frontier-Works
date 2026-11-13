@@ -115,7 +115,8 @@ const server=require('./serve.js');
    P('storage',X-4,Y+5,0),P('belt1',X-2,Y+5,0),P('smelter',X-1,Y+5,0),P('crossing',X+1,Y+5,0),P('belt1',X+2,Y+5,0),P('incin',X+3,Y+5,0)];
   const g=fw.entAt(X,Y+2),run=s=>{for(let i=0;i<s;i++){g.fuel.coal=50;for(let k=0;k<20;k++)tick(0.05);}};
   fw.entAt(X-4,Y).store={iron_ore:20};fw.entAt(X-4,Y+5).store={iron_ore:999};fw.entAt(X,Y).r='r_iron_ingot';fw.entAt(X-1,Y+5).r='r_iron_ingot';
-  run(90);fw.entAt(X-4,Y).store={iron_ore:999};stat.hist=[];run(90);const a=fw.entAt(X,Y)._ef,b=fw.entAt(X-1,Y+5)._ef;
+  run(90);fw.entAt(X-4,Y).store={iron_ore:999};stat.hist=[];for(const m of [fw.entAt(X,Y),fw.entAt(X-1,Y+5)]){m._efT=0;m._ef=0;m._efw={};}   /* measure after the pause (efficiency averages 5 min since Session 39q) */
+  run(90);const a=fw.entAt(X,Y)._ef,b=fw.entAt(X-1,Y+5)._ef;
   for(let j=-1;j<8;j++)for(let i=-5;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{ok:r.every(v=>v===''),a,b};});
  check(`crossing in front of a machine: input survives a pause (${Math.round(xj.a*100)}%), output through a crossing works (${Math.round(xj.b*100)}%)`,xj.ok&&xj.a>0.8&&xj.b>0.8);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;

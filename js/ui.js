@@ -99,8 +99,8 @@ function entStatic(e){
   <button class="btn ${e.off?'pri':'warn'}" data-act="swToggle" data-v="${e.id}" style="margin-top:8px">${e.off?'▶ Turn on':'⏻ Turn off'}</button>`;
  if(isPN(e)){const ps=pnPeers(e),C=cen(e);h+=`<h4>Wires (${ps.length})</h4>`+ps.map(p=>{const P2=cen(p);return`<div class="row"><span>${B[p.d].n}${p.tx?' “'+p.tx+'”':''}</span><span>${Math.round(Math.hypot(P2.x-C.x,P2.y-C.y))} tiles <button class="btn chip" data-act="pnCut" data-v="${p.id}" title="Remove this wire">✕</button></span></div>`;}).join('')+
   `<button class="btn" data-act="pnWire">＋ Connect to…</button>`;}
- if(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')h+=`<h4>&nbsp;</h4><button class="btn ${e.off?'pri':'warn'}" data-act="machOff">${e.off?'▶ Turn on':'⏻ Turn off'}</button>`;
- if(e.k!=='core')h+=`<h4>&nbsp;</h4><button class="btn" data-act="moveSel" title="Or long-press the building and drag it">✥ Move</button> <button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'&&e.k!=='pipe'&&!(e.k==='router'&&B[e.d].sub==='junc')?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button>`;
+ const offBtn=(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')?`<button class="btn ${e.off?'pri':'warn'}" data-act="machOff">${e.off?'▶ Turn on':'⏻ Turn off'}</button> `:'';   /* one row with Move and Dismantle (Session 39q) */
+ if(e.k!=='core')h+=`<h4>&nbsp;</h4><div class="btnrow">${offBtn}<button class="btn" data-act="moveSel" title="Or long-press the building and drag it">✥ Move</button> <button class="btn" data-act="rotSel" ${e.w===1&&e.k!=='pole'&&e.k!=='pipe'&&!(e.k==='router'&&B[e.d].sub==='junc')?'':'style="display:none"'}>↻ Rotate</button> <button class="btn" data-act="delSel">🗑 Dismantle</button></div>`;
  return h;
 }
 function bufList(b){const ks=Object.keys(b).filter(k=>b[k]>0);return ks.length?ks.map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(b[k]))}</span></div>`).join(''):'<div class="muted">empty</div>';}
@@ -110,7 +110,7 @@ const effCol=pc=>pc>=90?'#4fe08a':pc>=60?'#ffd34a':pc>=30?'#ffa53a':'#ff5a46';
 function effChip(e){if(e.k==='gen'){const L=Math.round(Math.min(1,e._ls||0)*100),c=L>=95?'#ff8a6a':L>=80?'#ffd34a':'#4fe08a';return`<span class="effchip" style="color:${c};border-color:${c}" title="Load (last few seconds)">⚡ ${L}%</span>`;}
  if(!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return'';
  if(e._efT==null||e._efT<3)return`<span class="effchip" title="Efficiency (measuring)">…</span>`;
- const pc=Math.round(e._ef*100);return`<span class="effchip" style="color:${effCol(pc)};border-color:${effCol(pc)}" title="Efficiency, last ${Math.round(e._efT)} s">${pc}%</span>`;}
+ const pc=Math.round(e._ef*100);return`<span class="effchip" style="color:${effCol(pc)};border-color:${effCol(pc)}" title="Efficiency, last ${fmtSec(e._efT)}">${pc}%</span>`;}
 /* Generator consumption: fuel burned in proportion to load (fuel/min = MW·60 / item energy), plus water and waste */
 function genUseHtml(e){const d=B[e.d],f=d.fuels.find(k=>(e.fuel[k]||0)>0)||d.fuels[0],en=IT[f].e,L=Math.min(1,e._ls||0),full=d.cap*60/en;
  let h=`<h4>Consumption</h4><div class="row"><span>Burns now</span><span><b>${fmt(full*L)} ${IT[f].n}/min</b> <small class="muted">at ${Math.round(L*100)}% load</small></span></div>`;
@@ -126,7 +126,7 @@ function effHtml(e){
  const pc=Math.round(e._ef*100),col=effCol(pc);
  let outs=[];if(e.k==='mach'){const r=RC[e.r];outs=Object.keys(r.o).map(k=>[k,r.o[k]*60/r.t*(e.clock||1)]);}   // every product, incl. byproducts (Session 37h)
  else if(e.item)outs=[[e.item,(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1)]];
- let h=`<h4>Efficiency <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· last ${Math.round(e._efT)} s</span></h4>`;
+ let h=`<h4>Efficiency <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· last ${fmtSec(e._efT)}</span></h4>`;
  h+=`<div class="row"><span>Working</span><span><b style="color:${col}">${pc}%</b></span></div><div class="bar"><i style="width:${pc}%;background:${col}"></i></div>`;
  outs.forEach(([k,max],i)=>{h+=`<div class="row"><span>${i?'Byproduct':'Output'}</span><span>${fmt(e._ef*max)} of ${fmt(max)} ${IT[k].n}${IT[k].f?' m³':''}/min</span></div>`;});
  const W=e._efw||{},ks=Object.keys(W).filter(k=>W[k]>=0.01).sort((a,b)=>W[b]-W[a]);
@@ -143,7 +143,7 @@ function entDyn(e){
  if(e.k==='mach')h+=effHtml(e);
  if(e.k==='mach'){
   if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}${Object.keys(r.i).some(k=>!IT[k].f&&(e.inb[k]||0)<capIn(r.i[k],k)&&(S.inv[k]||0)>=1)?'<button class="btn" data-act="fillInb" style="margin-top:6px">⬆ Fill from stock</button>':''}<h4>Output buffer</h4>${bufList(e.outb)}`;}
-  h+=`<div class="muted" style="margin-top:8px">Belts/pipes pointing <b>into</b> the machine feed it; belts/pipes pointing <b>away</b> from it receive output. A Splitter or Merger touching the machine also works without a belt: a splitter side facing it feeds it, and a merger takes its output (the merger's front must not face the machine).</div>`;}
+ }
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
   if(e.item){const rate=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}

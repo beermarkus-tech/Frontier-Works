@@ -2190,3 +2190,15 @@ Build 95 only changed input buffer sizes, no recipe.)
   `S.inv`, toast lists what moved. Shown only when at least one input has room and some stock; fluids skipped (the stock holds no fluids).
   Items go back to the stock as before on recipe change / dismantle / eraser.
 - Verified: `npm test` 97 PASS / 0 FAIL (buffer check: 30 → 100 iron ore, stock 500 → 430; button hidden with empty stock). Build number **98**.
+
+---
+
+## Session 39q — 2026-11-13 (Claude Code, cloud session) · Build 99
+
+- Markus: Turn off, Move and Dismantle in one row in the machine panel; remove the informational sentence at the bottom; average efficiency
+  over 5 minutes.
+- Done: buttons share one wrapping row (`.btnrow`, Rotate joins where it applies); the "Belts/pipes pointing into the machine feed it…"
+  paragraph is gone; `EFF_T` 30 → 300 s (labels show "last x min" via `fmtSec`). Rings, dashboard badge and zone labels use the same value,
+  so they all react more slowly to changes now.
+- Test adjusted: "crossing in front of a machine" resets the efficiency after its deliberate pause (the 5-min window still contained it).
+- Verified: `npm test` 97 PASS / 0 FAIL; phone screenshot of the panel. Build number **99**.

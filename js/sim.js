@@ -423,7 +423,7 @@ function updCross(e){
 function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}
 /* Efficiency: running average over the last EFF_T seconds of "working" vs. why not (e._ef 0..1, e._efw {reason: share}).
    Not saved; it re-measures after loading. Reasons: 'in:<item>' waiting for input, 'out' output full, 'power', 'recipe', 'none'. */
-const EFF_T=30;
+const EFF_T=300;   /* 5 minutes (Session 39q; was 30 s) */
 function effTrack(e,dt,st){const T=e._efT=Math.min(EFF_T,(e._efT||0)+dt),a=dt/T;e._ef=(e._ef||0)*(1-a)+(st==='work'?a:0);
  const w=e._efw||(e._efw={});for(const k in w){w[k]*=1-a;if(w[k]<0.002)delete w[k];}if(st!=='work')w[st]=(w[st]||0)+a;}
 function machState(e,r){if(!r)return'recipe';if(e.run)return e.pw>0?'work':'power';
