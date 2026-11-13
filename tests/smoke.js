@@ -483,11 +483,11 @@ const server=require('./serve.js');
   ZS.hist=[];ZS.cur={};for(let t=0;t<20*70;t++){c.store={iron_ore:999};g1.fuel={coal:50};g2.fuel={coal:50};tick(0.05);}
   const R=zRates();out.made=(R['p|'+A+'|iron_ingot']||0)>20;out.usedB=(R['c|'+Bz+'|iron_ingot']||0)>20;out.cross=(R['x|'+A+'|'+Bz+'|iron_ingot']||0)>20&&!R['x|'+A+'|0|iron_ingot'];   // across the gap between the fences: counted as Smelting → Pressing
   out.burned=(R['b|'+Bz+'|iron_plate']||0)>0||(R['x|'+Bz+'|0|iron_plate']||0)>0;
-  UI.statTab='zones';openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=txt.includes('Smelting')&&txt.includes('Pressing')&&txt.includes('All factories together')&&txt.includes('Sends to other factories')&&txt.includes('Designed to make')&&!txt.includes('MakesUses')&&!/\bMakes\b/.test(txt)&&!txt.includes('Could make more');
+  openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=txt.includes('Smelting')&&txt.includes('Pressing')&&!txt.includes('All factories together')&&!txt.includes('Items per minute')&&txt.includes('Factory size')&&txt.includes('Sends to other factories')&&txt.includes('Designed to make')&&!txt.includes('MakesUses')&&!/\bMakes\b/.test(txt)&&!txt.includes('Could make more');
   out.noEmpty=(txt.match(/Gets from other factories/g)||[]).length===1&&(txt.match(/Sends to other factories/g)||[]).length===1;   // Smelting only sends, Pressing only gets
   out.effBadge=document.querySelectorAll('#pbody .zeff').length>=2;
   const M=zMachines(A);out.design=Math.abs((M.design.iron_ingot||0)-30)<0.5&&!(M.design.iron_ore>0);out.eff=M.eff!=null&&Math.abs(M.eff-sm._ef)<0.01;
-  ACT.zoneShow(String(Bz));out.show=UI.hlZone&&UI.hlZone.id===Bz;UI.statTab='items';if(UI.panel)ACT.closePanel();
+  ACT.zoneShow(String(Bz));out.show=UI.hlZone&&UI.hlZone.id===Bz;if(UI.panel)ACT.closePanel();
   for(const id of [A,Bz]){for(let i=0;i<zoneMap.length;i++)if(zoneMap[i]===id)zoneMap[i]=0;}zoneSave();zoneRebuild();
   for(let j=-2;j<8;j++)for(let i=-2;i<18;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
  check(`factories dashboard counts across the fence: ${Object.entries(zd).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(zd).every(Boolean));

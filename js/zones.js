@@ -106,18 +106,13 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
  for(const key in R){const v=R[key],a=key.split('|');if(a[0]==='x'){const o=get(a[1]).out,i=get(a[2]).inn;(o[a[2]]||(o[a[2]]={}))[a[3]]=((o[a[2]]||{})[a[3]]||0)+v;(i[a[1]]||(i[a[1]]={}))[a[3]]=((i[a[1]]||{})[a[3]]||0)+v;}else get(a[1])[a[0]][a[2]]=(get(a[1])[a[0]][a[2]]||0)+v;}
  const flows=(m,arrow)=>{const parts=[];for(const z in m)for(const it in m[z])if(m[z][it]>=0.05)parts.push(`<div class="row"><span>${arrow==='→'?'→ '+zName(z):'← '+zName(z)}: ${nm(it)}</span><span>${fmt(m[z][it])}/min</span></div>`);return parts.join('');};
  let h=`<div class="muted">Last ${ZS.hist.length} s. Counted where items cross a zone’s fence (belts, pipes, drones). Tap a name to show it on the map.</div>`;
- const tot={p:{},c:{},spare:{},k:{},b:{}};
  const ids=[...zs.map(z=>z.id),0];
  for(const z of ids){const d=get(z),M=zMachines(z);if(z===0&&!M.n&&!Object.keys(d.p).length&&!Object.keys(d.out).length)continue;
-  for(const t of ['p','c','k','b'])for(const it in d[t])tot[t][it]=(tot[t][it]||0)+d[t][it];for(const it in M.spare)tot.spare[it]=(tot.spare[it]||0)+M.spare[it];
   const zz=zoneById(z);h+=`<div class="card zcard" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="row"><b>${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:zName(z)}</b><span class="muted">${M.eff!=null?`<span class="zeff" style="border-color:${effCol(Math.round(M.eff*100))};color:${effCol(Math.round(M.eff*100))}" title="Average efficiency of its machines (bigger machines count more)">${Math.round(M.eff*100)}%</span> `:''}${M.n} buildings · ${fmt(M.mw)} MW</span></div>
    <div class="plsub">Designed to make <span class="muted" style="text-transform:none;letter-spacing:0">· at full speed, after its own use (now)</span></div>${zDesign(M.design,d)}
    ${(f=>f?`<div class="plsub">Sends to other factories</div>${f}`:'')(flows(d.out,'→'))}${(f=>f?`<div class="plsub">Gets from other factories</div>${f}`:'')(flows(d.inn,'←'))}
    ${Object.keys(d.k).length?`<div class="plsub">Into your stock (Base Core)</div>${zList(d.k)}`:''}${Object.keys(d.s).length?`<div class="plsub">Into crates</div>${zList(d.s)}`:''}${Object.keys(d.b).length?`<div class="plsub">Burned</div>${zList(d.b,'plbad')}`:''}
 ${Object.keys(M.short).length?`<div class="plsub">Short of (machines waiting)</div>${zList(M.short,'plbad')}`:''}</div>`;}
- const items=[...new Set([...Object.keys(tot.p),...Object.keys(tot.c),...Object.keys(tot.spare)])].sort((a,b)=>(tot.p[b]||0)-(tot.p[a]||0));
- h+=`<h4>All factories together</h4><table><tr><th>Item</th><th>Made</th><th>Used</th><th>Left</th><th>Spare</th></tr>${items.map(it=>{const left=(tot.p[it]||0)-(tot.c[it]||0);return`<tr><td>${nm(it)}</td><td>${fmt(tot.p[it]||0)}</td><td>${fmt(tot.c[it]||0)}</td><td style="color:${left>0.05?'#7ee07a':left<-0.05?'#ff8a6a':'inherit'}">${left>0?'+':''}${fmt(left)}</td><td>${tot.spare[it]?'+'+fmt(tot.spare[it]):''}</td></tr>`;}).join('')}</table>
-  <div class="muted">Left = made minus used inside your factories (it goes to your stock, crates, other belts or backs up; negative = taken from stock or crates). Spare = what machines could still make if their output were used.</div>`;
  return h;}
 Object.assign(ACT,{zoneShow:v=>{const z=zoneById(+v);if(!z||!z.lab)return;UI.hlZone={id:z.id,t:performance.now()};let sx=0,sy=0,n=0;for(const r of zoneRuns)if(r[3]===z.id){sx+=(r[0]+r[2]/2)*r[2];sy+=(r[1]+0.5)*r[2];n+=r[2];}
  if(n){camT.x=sx/n;camT.y=sy/n;if(V3.on){C3.x=camT.x;C3.y=camT.y;}}autoClose();}});

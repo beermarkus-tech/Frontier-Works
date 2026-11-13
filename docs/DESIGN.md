@@ -200,11 +200,12 @@ Hand mining gives +5 ore from a node.
   factories): Factory Zone tool in the Signs tab, free. Drag a rectangle: touching one zone extends it (any shape from rectangles), touching none
   starts a new one, touching two is refused. Zones never overlap. Shown as a coloured fence (2D line with posts, 3D low fence), faint tint and a
   name tag (2D). Tap a zone with the tool: name, colour, area, buildings inside, ✂ Cut area, Delete. Blocks nothing.
-- **Factories dashboard** (Session 38b, Stats → 🏭 Factories): one card per zone (+ "Outside zones"): buildings, power, Designed to make (net full-speed
+- **Factories dashboard** (Session 38b, the Stats panel): one card per zone (+ "Outside zones"): buildings, power, Designed to make (net full-speed
   output after its own use, with "now"; Session 38c replaced Makes/Uses/Could make more), Sends to / Gets from other factories, Into stock / crates,
   Burned, Short of (machines waiting).
-  Items remember the zone they last came from, so a gap between fences still counts as zone → zone. Table "All factories together": made, used,
-  left, spare per item. Tap a zone name: the map flies there and its fence pulses. Averages over the last 60 s.
+  Items remember the zone they last came from, so a gap between fences still counts as zone → zone. Efficiency badge per card.
+  Tap a zone name: the map flies there and its fence pulses. Averages over the last 60 s. Since Session 38f the Stats panel shows only this
+  (no Items table, no "All factories together"), with Factory size and Power at the bottom.
 - **Several plans** (Session 37b): the planner has plan tabs (blue) above the mode buttons. Each plan keeps its own mode, settings and ticks;
   tabs are named after what they make unless renamed (✎). ＋ New plan, ✕ Delete this plan (asks), up to 12. "Plan this node" and "Plan the power"
   open their own new tab (or reuse an untouched one). Stored per device.

@@ -1827,3 +1827,13 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
   efficiency (`_ef`, measured ≥ 3 s, switched-off ones left out), weighted by nominal power (power × clock^1.6, min 1) so big machines count more.
 - Verified: `npm test` 88 PASS / 0 FAIL; dashboard check also confirms the badges and that a one-smelter zone's value equals the smelter's
   efficiency. Screenshot: Smelting 99 %, Pressing 91 %. Build number **76**.
+
+---
+
+## Session 38f — 2026-11-13 (Claude Code, cloud session) · Build 77
+
+- Markus: Stats should show only the factories (no Items view); Factory size and Power at the bottom; remove "All factories together" and its
+  helper text.
+- Done: `statsHtml` = factory cards, then Factory size, then Power. The Items/Factories tabs, the per-item table and the overall table (with its
+  totals calculation) are removed. The global item rates (`stat`/`rates()`) stay; the planner, machines and tests still use them.
+- `npm test` 88 PASS / 0 FAIL (dashboard check confirms the old sections are gone and Factory size shows). Build number **77**.
