@@ -299,7 +299,7 @@ const ACT={
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},
  delSel:()=>{const e=ents.get(UI.panel.arg);if(e){removeEnt(e,true);closePanel();buildTools();}},
- rotSel:()=>{const e=ents.get(UI.panel.arg);if(e){e.dir=(e.dir+1)&3;topoDirty=true;sfx('rotate');}},
+ rotSel:()=>{const e=ents.get(UI.panel.arg);if(e){const d0=e.dir;e.dir=(e.dir+1)&3;for(let k=0;k<3&&beltBlocked(e);k++)e.dir=(e.dir+1)&3;if(beltBlocked(e))e.dir=(d0+1)&3;topoDirty=true;sfx('rotate');}},   /* belts skip pointing into pipes/junctions/tanks */
  resetFuse:()=>{for(const g of grids)if(g.trip){for(const n of g.nodes)n.trip=false;g.trip=false;}toast('Fuse reset');},
  craft:(v,el)=>{const r=RC[v],n=+el.dataset.n;if(!afford(r.i,n))return;for(const k in r.i)S.inv[k]-=r.i[k]*n;for(const k in r.o)give(k,r.o[k]*n);renderPanel(true);buildTools();},
  handMine:()=>{const n=UI.panel.arg;give(NODE_T[n.t][0],5);toast(`+5 ${IT[NODE_T[n.t][0]].n}`);},

@@ -301,6 +301,9 @@ function rectDist(px,py,e){const dx=Math.max(e.x-px,0,px-(e.x+e.w)),dy=Math.max(
 /* Does side neighbour sd (lying in direction o from line e) push items into e? Used for belt/pipe curves:
    another line pointing in, a splitter/sorter/merger with an output side facing e, a pipe junction (pipes),
    or a crossing whose far side is fed in the same direction (items pass straight through it). */
+/* fluid-only pieces: a belt pointing at one is a dead end (Session 39t: Rotate skips these, 2D draws an end stop) */
+const fluidOnly=t=>!!t&&(t.k==='pipe'||t.k==='tank'||t.k==='pump'||(t.k==='router'&&!!B[t.d].fl));
+const beltBlocked=e=>e.k==='belt'&&fluidOnly(entAt(e.x+DX[e.dir],e.y+DY[e.dir]));
 function feedsInto(sd,e,o){const into=(o+2)&3;
  if(isLine(sd.k))return sd.k===e.k&&sd.dir===into;
  if(sd.k==='router'){const d=B[sd.d];if(!!d.fl!==(e.k==='pipe'))return false;const D=sd.dir;

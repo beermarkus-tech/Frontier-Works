@@ -126,7 +126,8 @@ const server=require('./serve.js');
   S.ub.push('junction','pipe1','tank');
   const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,2),P('pipe1',X+4,Y,2),P('junction',X+5,Y,0),P('pipe1',X+6,Y,1),P('pipe1',X+6,Y+1,3),P('junction',X+6,Y+2,0),P('incin',X+7,Y+2,0),P('tank',X+2,Y+1,0),P('pipe1',X+9,Y+3,0),P('pipe1',X+10,Y+3,0),P('incin',X+8,Y+4,0)];
   const bl=P('belt1',X+5,Y-1,1);tick(0.05);const jn=fw.entAt(X+5,Y),bt=fw.entAt(X+5,Y-1),jpc=jn.pc||0;let jb=0;for(let d=0;d<4;d++)if(jpc&(1<<d))jb++;
-  const noBelt=bl===''&&bt&&bt.k==='belt'&&jb===2&&!bt.cin&&!bt.net;   /* belts beside a junction never attach (Build 101: 3D stubs follow e.pc) */
+  const noBelt=bl===''&&bt&&bt.k==='belt'&&jb===2&&!bt.cin&&!bt.net;
+  openPanel('ent',bt.id);let hit=0;for(let k=0;k<4;k++){ACT.rotSel();if(fw.entAt(bt.x+DX[bt.dir],bt.y+DY[bt.dir])===jn)hit++;}ACT.closePanel();const rotSkip=hit===0;   /* belts beside a junction never attach (Build 101: 3D stubs follow e.pc) */
   const tk=fw.entAt(X,Y),t2=fw.entAt(X+2,Y+1);tick(0.05);const one=new Set([X+2,X+3,X+4,X+5].map(x=>fw.entAt(x,Y).net).concat([fw.entAt(X+6,Y+2).net])).size===1;
   for(let s=0;s<5;s++){tk.ft='water';tk.amt=400;for(let k=0;k<20;k++)tick(0.05);}
   stat.hist=[];t2.ft='crude';t2.amt=100;for(let s=0;s<70;s++){tk.ft='water';tk.amt=400;t2.ft='crude';t2.amt=100;for(let k=0;k<20;k++)tick(0.05);}
@@ -137,10 +138,11 @@ const server=require('./serve.js');
   openPanel('inv');const btn=!!document.querySelector('#pbody [data-act="collectAll"]');ACT.collectAll();const after=(S.inv.iron_plate||0)+(S.inv.wire||0)+(S.inv.bolts||0);ACT.closePanel();
   const empty=Object.keys(fw.entAt(X,Y+5).store).length+Object.keys(fw.entAt(X+3,Y+5).store).length;
   for(let j=-1;j<8;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
-  return{ok:r.every(v=>v===''),one,rate,mix,kept,past,btn,gain:after-before,empty,noBelt};});
+  return{ok:r.every(v=>v===''),one,rate,mix,kept,past,btn,gain:after-before,empty,noBelt,rotSkip};});
  check(`pipes without direction: junction entry points + backwards pipes + junction + corner form one network, ${pnet.rate} m³/min (Mk1 = 300)`,pnet.ok&&pnet.one&&pnet.rate>=270&&pnet.rate<=310);
  check('pipe network refuses a second fluid (no mixing) and flags it',pnet.mix);
  check('a belt beside a pipe junction does not connect (junction only links its pipes)',pnet.noBelt);
+ check('Rotate never turns a belt to point into a pipe junction',pnet.rotSkip);
  check('a plain pipe running past a building does not connect (only Pipe Junctions are entry points)',pnet.past);
  check('pipe network fluid and amount survive save/load',pnet.kept);
  check(`Items: "Move everything from all crates" collects ${pnet.gain} items and empties the crates`,pnet.btn&&pnet.gain===15&&pnet.empty===0);

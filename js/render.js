@@ -421,6 +421,8 @@ function drawLines(list,sx,sy,s,alpha,tint){
   ctx.strokeStyle='#202328';ctx.lineWidth=s*0.66;ctx.stroke(all);
   if(s>6){const per=s*0.25;ctx.setLineDash([s*0.06,per-s*0.06]);for(const k in byS){ctx.lineDashOffset=-((animT*k*s)%per);ctx.strokeStyle='#3c414a';ctx.lineWidth=s*0.6;ctx.stroke(byS[k]);}ctx.setLineDash([]);}
   if(s>10){ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=s*0.03;const hl=new Path2D();for(const e of belts){const X=sx(e.x),Y=sy(e.y);if(e.cin!=null)continue;const d=e.dir,px=-DY[d],py=DX[d],cx=X+s/2+px*s*0.39,cy=Y+s/2+py*s*0.39;hl.moveTo(cx-DX[d]*s/2,cy-DY[d]*s/2);hl.lineTo(cx+DX[d]*s/2,cy+DY[d]*s/2);}ctx.stroke(hl);}
+  /* end stop where a belt points into a pipe/junction/tank: shows it is not connected */
+  if(s>4){const st=new Path2D();for(const e of belts){if(!beltBlocked(e))continue;const X=sx(e.x),Y=sy(e.y),d=e.dir,px=-DY[d],py=DX[d],cx=X+s/2+DX[d]*s*0.44,cy=Y+s/2+DY[d]*s*0.44;st.moveTo(cx-px*s*0.42,cy-py*s*0.42);st.lineTo(cx+px*s*0.42,cy+py*s*0.42);}ctx.strokeStyle='#c8ccd2';ctx.lineWidth=s*0.1;ctx.stroke(st);}
  }
  if(pipes.length){
   // pipes have no direction: draw arms from the tile centre to every connected side (e.pc bitmask); fluid colour and fill come from the network

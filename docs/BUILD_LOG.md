@@ -2236,3 +2236,19 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Verified:** 3D screenshot showing pipe–junction–pipe with belts on the other sides, where the stubs point only to the pipes. New smoke check: a belt beside a junction doesn't connect (the junction keeps 2 links, and the belt has no input and no network). `npm test` all PASS.
 
 **Known issues / next up / open questions:** unchanged from 39r.
+
+## Session 39t — 2026-11-13 (Claude Code, cloud session) · Build 102
+
+**Asked:** Markus sent screenshots of rotating a belt next to a pipe junction: the belt could point into the pipe and into the junction, and both looked like "allowed connections".
+
+**Found:** nothing was ever transferred, because a belt pointing at a pipe, junction, tank or pump is a dead end. But Rotate offered those directions, and in 2D the belt ran flush against the pipe piece, so it looked connected.
+
+**Built:**
+- `fluidOnly(t)` / `beltBlocked(e)` in `js/sim.js`.
+- Rotate in the building panel (`rotSel`) skips directions where a belt would point into a pipe, junction, tank or pump. If every direction is blocked it rotates normally.
+- In 2D, a belt that still points into one (old saves, or one drawn that way) gets a light end-stop bar at its front edge, so it visibly isn't connected.
+- No change to placement or the simulation.
+
+**Verified:** screenshot of the end stop. New smoke check: four Rotate taps never point the belt at the junction. `npm test` all PASS.
+
+**Known issues:** the 3D view has no end stop yet; only 2D shows it.
