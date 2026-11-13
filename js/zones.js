@@ -111,7 +111,7 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
  for(const key in R){const v=R[key],a=key.split('|');if(a[0]==='x'){const o=get(a[1]).out,i=get(a[2]).inn;(o[a[2]]||(o[a[2]]={}))[a[3]]=((o[a[2]]||{})[a[3]]||0)+v;(i[a[1]]||(i[a[1]]={}))[a[3]]=((i[a[1]]||{})[a[3]]||0)+v;}else get(a[1])[a[0]][a[2]]=(get(a[1])[a[0]][a[2]]||0)+v;}
  const flows=(m,arrow)=>{const parts=[];for(const z in m)for(const it in m[z])if(m[z][it]>=0.05)parts.push(`<div class="row"><span>${arrow==='→'?'→ '+zName(z):'← '+zName(z)}: ${nm(it)}</span><span>${fmt(m[z][it])}/min</span></div>`);return parts.join('');};
  let h='';
- const ids=[...zs.map(z=>z.id),0];
+ const ids=[...zs.slice().sort((a,b)=>((a.c||0)-(b.c||0))||String(a.name).localeCompare(String(b.name),undefined,{numeric:true,sensitivity:'base'})).map(z=>z.id),0];   // by colour (palette order), then name; 'Outside zones' last
  for(const z of ids){const d=get(z),M=zMachines(z);if(z===0&&!M.n&&!Object.keys(d.p).length&&!Object.keys(d.out).length)continue;
   const zz=zoneById(z),col=(OPT.zCol||[]).includes(z),eff=M.eff!=null?Math.round(M.eff*100):null;
   h+=`<div class="card zcard${col?' zcol':''}" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="zhead">

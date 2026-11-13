@@ -1913,3 +1913,12 @@ steps (effects + mixer, machine sounds, music). This is step 1.
 
 ### Next up
 - Step 2: machine sounds by distance and zoom. Step 3: generative music. Tune effect volumes/character after Markus listens.
+
+---
+
+## Session 39b — 2026-11-13 (Claude Code, cloud session) · Build 84
+
+- Markus: sort the factories in the dashboard by colour, then by name.
+- Done: cards sorted by colour (palette order: orange, light blue, green, pink, purple, yellow, teal, coral), then by name (case-insensitive,
+  numbers in natural order: "Factory 2" before "Factory 10"); "Outside zones" stays last.
+- `npm test` 91 PASS / 0 FAIL (dashboard check builds zones in two colours with mixed names and checks the order). Build number **84**.

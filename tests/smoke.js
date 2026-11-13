@@ -488,6 +488,11 @@ const server=require('./serve.js');
   out.effBadge=document.querySelectorAll('#pbody .zeff').length>=2;
   {const seen=[],f=ctx.fillText;ctx.fillText=function(t,...a){seen.push(String(t));return f.call(this,t,...a);};cam.x=camT.x=X+4;cam.y=camT.y=Y;cam.z=camT.z=1.5;render();ctx.fillText=f;const za=zoneById(A);out.labelEff=za.eff!=null&&seen.includes(Math.round(za.eff*100)+'%');}
   const M=zMachines(A);out.design=Math.abs((M.design.iron_ingot||0)-30)<0.5&&!(M.design.iron_ore>0);out.eff=M.eff!=null&&Math.abs(M.eff-sm._ef)<0.01;
+  {const keep=zones().map(z=>({id:z.id,c:z.c,name:z.name}));zones().push({id:9001,name:'b Zeta',c:1},{id:9002,name:'a Alpha',c:1},{id:9003,name:'Factory 10',c:0},{id:9004,name:'Factory 2',c:0});
+   for(const [id,x] of [[9001,0],[9002,1],[9003,2],[9004,3]])zoneMap[x]=id;zoneRebuild();zoneById(A).c=0;zoneById(Bz).c=1;
+   renderPanel(true);const names=[...document.querySelectorAll('#pbody .zlink')].map(b=>b.textContent.replace(' ⌖','').trim());
+   const mine=['Factory 2','Factory 10','Smelting','a Alpha','b Zeta','Pressing'];out.sorted=JSON.stringify(names.filter(n=>mine.includes(n)))===JSON.stringify(['Factory 2','Factory 10','Smelting','a Alpha','b Zeta','Pressing']);if(!out.sorted)out.order=names.join('|');
+   for(let x=0;x<4;x++)zoneMap[x]=0;zoneRebuild();for(const k of keep){const z=zoneById(k.id);if(z){z.c=k.c;z.name=k.name;}}renderPanel(true);}
   ACT.zoneFold(String(A));const t2=document.getElementById('pbody').textContent;out.fold=(OPT.zCol||[]).includes(A)&&(t2.match(/buildings/g)||[]).length===(txt.match(/buildings/g)||[]).length-1&&(t2.match(/Designed to make/g)||[]).length===(txt.match(/Designed to make/g)||[]).length-1&&t2.includes('Smelting');
   ACT.zoneFold(String(A));out.unfold=!(OPT.zCol||[]).includes(A);
   ACT.zoneShow(String(Bz));out.show=UI.hlZone&&UI.hlZone.id===Bz;if(UI.panel)ACT.closePanel();
