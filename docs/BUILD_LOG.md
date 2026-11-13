@@ -1847,3 +1847,11 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
   (name, efficiency badge, buildings, MW). The header is now a wrapping flex row (`.zhead`): name and info move to a second line when needed.
 - Verified: `npm test` 88 PASS / 0 FAIL (dashboard check folds and unfolds a card). Phone screenshot with a long factory name and a collapsed card.
   Build number **78**.
+
+---
+
+## Session 38h — 2026-11-13 (Claude Code, cloud session) · Build 79
+
+- Markus: move buildings count and power use from the card header into the card body, right below the header, collapsing with the card.
+- Done: header = ▾/▸, name, efficiency badge; first body row = "N buildings … X MW" with a thin divider. Collapsed cards show only the header.
+- `npm test` 88 PASS / 0 FAIL (fold check also confirms the buildings line disappears). Phone screenshot. Build number **79**.

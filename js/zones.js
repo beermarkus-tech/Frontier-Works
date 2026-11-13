@@ -112,8 +112,8 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
   h+=`<div class="card zcard${col?' zcol':''}" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="zhead">
    <button class="btn chip ztog" data-act="zoneFold" data-v="${z}" title="${col?'Show details':'Hide details'}">${col?'▸':'▾'}</button>
    ${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:`<b>${zName(z)}</b>`}
-   <span class="zinfo">${eff!=null?`<span class="zeff" style="border-color:${effCol(eff)};color:${effCol(eff)}" title="Average efficiency of its machines (bigger machines count more)">${eff}%</span>`:''}<span class="muted">${M.n} buildings · ${fmt(M.mw)} MW</span></span></div>`;
-  if(!col)h+=`<div class="plsub">Designed to make <span class="muted" style="text-transform:none;letter-spacing:0">· at full speed, after its own use (now)</span></div>${zDesign(M.design,d)}
+   <span class="zinfo">${eff!=null?`<span class="zeff" style="border-color:${effCol(eff)};color:${effCol(eff)}" title="Average efficiency of its machines (bigger machines count more)">${eff}%</span>`:''}</span></div>`;
+  if(!col)h+=`<div class="row zmeta"><span class="muted">${M.n} buildings</span><span class="muted">${fmt(M.mw)} MW</span></div><div class="plsub">Designed to make <span class="muted" style="text-transform:none;letter-spacing:0">· at full speed, after its own use (now)</span></div>${zDesign(M.design,d)}
    ${(f=>f?`<div class="plsub">Sends to other factories</div>${f}`:'')(flows(d.out,'→'))}${(f=>f?`<div class="plsub">Gets from other factories</div>${f}`:'')(flows(d.inn,'←'))}
    ${Object.keys(d.k).length?`<div class="plsub">Into your stock (Base Core)</div>${zList(d.k)}`:''}${Object.keys(d.s).length?`<div class="plsub">Into crates</div>${zList(d.s)}`:''}${Object.keys(d.b).length?`<div class="plsub">Burned</div>${zList(d.b,'plbad')}`:''}
    ${Object.keys(M.short).length?`<div class="plsub">Short of (machines waiting)</div>${zList(M.short,'plbad')}`:''}`;

@@ -487,7 +487,7 @@ const server=require('./serve.js');
   out.noEmpty=(txt.match(/Gets from other factories/g)||[]).length===1&&(txt.match(/Sends to other factories/g)||[]).length===1;   // Smelting only sends, Pressing only gets
   out.effBadge=document.querySelectorAll('#pbody .zeff').length>=2;
   const M=zMachines(A);out.design=Math.abs((M.design.iron_ingot||0)-30)<0.5&&!(M.design.iron_ore>0);out.eff=M.eff!=null&&Math.abs(M.eff-sm._ef)<0.01;
-  ACT.zoneFold(String(A));const t2=document.getElementById('pbody').textContent;out.fold=(OPT.zCol||[]).includes(A)&&(t2.match(/Designed to make/g)||[]).length===(txt.match(/Designed to make/g)||[]).length-1&&t2.includes('Smelting');
+  ACT.zoneFold(String(A));const t2=document.getElementById('pbody').textContent;out.fold=(OPT.zCol||[]).includes(A)&&(t2.match(/buildings/g)||[]).length===(txt.match(/buildings/g)||[]).length-1&&(t2.match(/Designed to make/g)||[]).length===(txt.match(/Designed to make/g)||[]).length-1&&t2.includes('Smelting');
   ACT.zoneFold(String(A));out.unfold=!(OPT.zCol||[]).includes(A);
   ACT.zoneShow(String(Bz));out.show=UI.hlZone&&UI.hlZone.id===Bz;if(UI.panel)ACT.closePanel();
   for(const id of [A,Bz]){for(let i=0;i<zoneMap.length;i++)if(zoneMap[i]===id)zoneMap[i]=0;}zoneSave();zoneRebuild();
