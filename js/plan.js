@@ -12,9 +12,20 @@ const plResItem=res=>res==='water'?'water':NODE_T[res][0];
 const PL_RAW=new Set(PL_RES.map(plResItem));
 const PL_EPS=1e-6;
 function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{targets:[{item:'iron_plate',rate:60}],pick:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
-let PL=plDefault();
-try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s),d=plDefault();PL={mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow),done:o.done&&typeof o.done==='object'?o.done:{},doneSig:o.doneSig||''};}}catch(e){PL=plDefault();}
-function plSave(){try{localStorage.setItem(PLAN_KEY,JSON.stringify(PL));}catch(e){}}
+/* Several plans at once (Session 37b): PLS.list holds plans (each: name, mode, fwd/rev/pow, ticks); PL is the active one (same object).
+   Older single-plan storage becomes the first plan. */
+function plNorm(o){const d=plDefault();o=o||{};return{name:typeof o.name==='string'?o.name:'',mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow),done:o.done&&typeof o.done==='object'?o.done:{},doneSig:o.doneSig||''};}
+let PLS={list:[],cur:0},PL;
+try{const s=localStorage.getItem(PLAN_KEY);if(s){const o=JSON.parse(s);if(Array.isArray(o.list)&&o.list.length)PLS={list:o.list.map(plNorm),cur:Math.max(0,Math.min(o.cur|0,o.list.length-1))};else PLS={list:[plNorm(o)],cur:0};}}catch(e){PLS={list:[],cur:0};}
+if(!PLS.list.length)PLS={list:[plNorm()],cur:0};
+PL=PLS.list[PLS.cur];
+const plEsc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function plName(p){if(p.name)return p.name;if(p.mode==='fwd')return IT[plResItem(p.fwd.res)].n+' node';if(p.mode==='rev')return p.rev.targets.map(t=>IT[t.item]?IT[t.item].n:'?').join(' + ');return`Power ${fmt(p.pow.mw)} MW`;}
+const plPristine=p=>!p.name&&JSON.stringify(plNorm(p))===JSON.stringify(plNorm());
+function plNewTab(){if(plPristine(PL))return;if(PLS.list.length>=12){PLS.list.splice(0,1);}const p=plNorm();PLS.list.push(p);PLS.cur=PLS.list.length-1;PL=p;}
+function plTabs(){return`<div class="pltabs">${PLS.list.map((p,i)=>`<button class="btn chip pltab ${i===PLS.cur?'on':''}" data-act="plTab" data-v="${i}">${plEsc(plName(p))}</button>`).join('')}<button class="btn chip" data-act="plNew" title="Start another plan">＋ New plan</button></div>
+ <div class="pltabs plctl"><button class="btn chip" data-act="plRen">✎ Rename</button>${PLS.list.length>1?'<button class="btn chip" data-act="plDelPlan">✕ Delete this plan</button>':''}</div>`;}
+function plSave(){try{localStorage.setItem(PLAN_KEY,JSON.stringify({v:2,list:PLS.list,cur:PLS.cur}));}catch(e){}}
 
 /* ---------- visibility (unlocked only, unless "Show locked") ---------- */
 const plRecOk=r=>PL.locked||ur(r.id);
@@ -130,7 +141,7 @@ const plIO=(r,n)=>`<div class="plsub">In</div>`+Object.keys(r.i).map(k=>plRate(k
 const plMachList=m=>Object.keys(m).map(k=>`${m[k]} × ${B[k].n}`).join(', ');
 function planHtml(){
  plFix();
- let h=`<div class="chips" style="margin-bottom:8px"><button class="btn chip ${PL.mode==='fwd'?'on':''}" data-act="plMode" data-v="fwd">From a node →</button><button class="btn chip ${PL.mode==='rev'?'on':''}" data-act="plMode" data-v="rev">← For a target</button><button class="btn chip ${PL.mode==='pow'?'on':''}" data-act="plMode" data-v="pow">⚡ Power</button><button class="btn chip ${PL.locked?'on':''}" data-act="plLocked">${PL.locked?'🔓':'🔒'} Show locked</button></div>`;
+ let h=plTabs()+`<div class="chips" style="margin-bottom:8px"><button class="btn chip ${PL.mode==='fwd'?'on':''}" data-act="plMode" data-v="fwd">From a node →</button><button class="btn chip ${PL.mode==='rev'?'on':''}" data-act="plMode" data-v="rev">← For a target</button><button class="btn chip ${PL.mode==='pow'?'on':''}" data-act="plMode" data-v="pow">⚡ Power</button><button class="btn chip ${PL.locked?'on':''}" data-act="plLocked">${PL.locked?'🔓':'🔒'} Show locked</button></div>`;
  return h+(PL.mode==='fwd'?plFwdHtml():PL.mode==='rev'?plRevHtml():plPowHtml());
 }
 function plFwdHtml(){
@@ -218,7 +229,7 @@ function plPowHtml(){
 }
 /* Open the planner set to a node / existing drill: resource, purity, extractor (given or best unlocked), clock, one first step */
 const d3res=e=>B[e.d].water?'water':e.node?e.node.t:'iron';
-function planFrom(res,p,ex,clock){const f=PL.fwd,list=plExtractors(res);
+function planFrom(res,p,ex,clock){plNewTab();const f=PL.fwd,list=plExtractors(res);
  f.res=res;f.p=p==null?1:p;f.ex=ex&&list.includes(ex)?ex:(list.filter(id=>ub(id)).pop()||list[0]);f.n=1;f.clock=Math.round((clock||1)*100);f.steps=[];
  PL.mode='fwd';plFix();plAddStep();plSave();plShow();}
 /* Default recipe for a new step: use the biggest leftover, preferring recipes whose inputs are all available, then standard ones. */
@@ -252,6 +263,10 @@ function plTickBtn(k){const on=plDone(k);return`<button class="btn chip pltick $
 document.addEventListener('change',ev=>{const k=ev.target.dataset&&ev.target.dataset.pl;if(!k)return;plSet(k,ev.target.value);plRefresh();});
 Object.assign(ACT,{
  openPlan:()=>plOpen(false),
+ plTab:v=>{PLS.cur=Math.max(0,Math.min(+v,PLS.list.length-1));PL=PLS.list[PLS.cur];plRefresh();$('pbody').scrollTop=0;$('lbody').scrollTop=0;},
+ plNew:()=>{const p=plNorm();if(PLS.list.length>=12)return toast('Up to 12 plans: delete one first');PLS.list.push(p);PLS.cur=PLS.list.length-1;PL=p;plRefresh();},
+ plRen:()=>{const n=prompt('Name of this plan',plName(PL));if(n!==null){PL.name=n.trim().slice(0,30);plRefresh();}},
+ plDelPlan:()=>{if(PLS.list.length<2)return;if(!confirm(`Delete the plan “${plName(PL)}”?`))return;PLS.list.splice(PLS.cur,1);PLS.cur=Math.max(0,PLS.cur-1);PL=PLS.list[PLS.cur];plRefresh();},
  plPinLeft:()=>{OPT.plLeft=true;OPT.plOpen=true;saveOpt();if(UI.panel&&UI.panel.kind==='plan')closePanel();plRenderLeft(true);toast('Planner pinned. Other panels open and close as usual');},
  plUnpinLeft:()=>{OPT.plLeft=false;OPT.plOpen=false;saveOpt();plRenderLeft();openPanel('plan');},
  plCloseLeft:()=>{OPT.plOpen=false;saveOpt();plRenderLeft();},
@@ -260,7 +275,7 @@ Object.assign(ACT,{
  plTDel:v=>{PL.rev.targets.splice(+v,1);plFix();plRefresh();},
  plMode:v=>{PL.mode=v;plRefresh();},
  plLocked:()=>{PL.locked=!PL.locked;plFix();plRefresh();},
- plPowFrom:v=>{PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();$('pbody').scrollTop=0;$('lbody').scrollTop=0;},
+ plPowFrom:v=>{const src=plName(PL);plNewTab();PL.name='Power for '+src.slice(0,18);PL.pow.mw=+v;PL.mode='pow';plFix();plRefresh();$('pbody').scrollTop=0;$('lbody').scrollTop=0;},
  plAdd:()=>{if(!plAddStep())toast(Object.keys(plFwd(PL.fwd).left).length?'Nothing can use what is left over. Try “Show locked”.':'Nothing left over to use');plRefresh();},
  plDel:v=>{PL.fwd.steps.splice(+v,1);plRefresh();},
  plClear:()=>{PL.fwd.steps=[];plRefresh();},

@@ -190,6 +190,9 @@ Hand mining gives +5 ore from a node.
 - Desktop extras: wheel zoom to cursor, right-drag pan, WASD, R/X/Q/H/Esc.
 - Camera: eased zoom, swipe momentum, clamped to the map.
 
+- **Several plans** (Session 37b): the planner has plan tabs (blue) above the mode buttons. Each plan keeps its own mode, settings and ticks;
+  tabs are named after what they make unless renamed (✎). ＋ New plan, ✕ Delete this plan (asks), up to 12. "Plan this node" and "Plan the power"
+  open their own new tab (or reuse an untouched one). Stored per device.
 - **Planner pinned on the left** (Session 36c): the ⇤ button in the planner's header moves it into its own window on the left (on phones: at the top).
   The normal panel keeps opening/closing on the right and follows its own 📌 pin. ⇥ puts the planner back on the right; ✕ closes it (it reopens on
   the left next time). Remembered per device. Planner steps / machine cards have a ☐ tick box: ticked cards are greyed out ("built already").

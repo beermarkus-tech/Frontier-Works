@@ -348,6 +348,18 @@ const server=require('./serve.js');
   for(let j=-2;j<14;j++)for(let i=-2;i<26;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   out.unlock=MS[0].b.includes('pswitch');return out;});
  check(`power wires & switch: ${Object.entries(pwr).map(([k,v])=>k+'='+v).join(' ')}`,Object.entries(pwr).every(([k,v])=>k.startsWith('dbg')||v===true));
+ // several plans: tabs keep their own mode, targets and ticks; "Plan this node" opens its own tab; delete; old single-plan storage carries over
+ const mp=await p.evaluate(()=>{const out={},n0=PLS.list.length;ACT.openPlan();ACT.plNew();ACT.plMode('rev');PL.rev.targets=[{item:'iron_rod',rate:30}];plRefresh();const a=PLS.cur;
+  ACT.plTick('m:iron_rod');ACT.plNew();ACT.plMode('pow');PL.pow.mw=90;plRefresh();const b=PLS.cur;
+  const tabs=[...document.querySelectorAll('#pbody [data-act="plTab"]')].map(x=>x.textContent);out.tabs=tabs.includes('Iron Rod')&&tabs.includes('Power 90 MW');
+  ACT.plTab(String(a));out.switchA=PL.mode==='rev'&&PL.rev.targets[0].item==='iron_rod'&&!!document.querySelector('#pbody .card.pldone');
+  ACT.plTab(String(b));out.switchB=PL.mode==='pow'&&PL.pow.mw===90&&!document.querySelector('#pbody .card.pldone');
+  const node=nodes.find(x=>x.t==='copper');const before=PLS.list.length;openPanel('node',node);ACT.planNode&&ACT.planNode();out.nodeTab=PLS.list.length===before+1&&PL.fwd.res==='copper';
+  const stored=JSON.parse(localStorage.getItem('frontierworks_plan'));out.saved=Array.isArray(stored.list)&&stored.list.length===PLS.list.length;
+  const keepConfirm=window.confirm;window.confirm=()=>true;const c=PLS.list.length;ACT.plDelPlan();out.deleted=PLS.list.length===c-1;window.confirm=keepConfirm;
+  out.convert=plNorm({mode:'rev',rev:{targets:[{item:'wire',rate:5}],pick:{}}}).rev.targets[0].item==='wire';
+  PLS.list.splice(n0);PLS.cur=0;PL=PLS.list[0];plSave();ACT.closePanel();return out;});
+ check(`several plans as tabs: ${Object.entries(mp).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mp).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

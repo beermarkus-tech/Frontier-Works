@@ -1488,3 +1488,25 @@ The power planner (Power tab) needs the same tick boxes as the other planner tab
 
 ### Verified
 - `npm test` 74/74; the planner check now also ticks the power plant card and confirms it stays greyed after a MW change.
+
+---
+
+## Session 37b — 2026-11-13 (Claude Code, cloud session) · Build 61
+
+### What Markus asked
+Plan several production chains at the same time. (Also asked how to cross pipes over belts/pipes: answered, the Crossing already does both;
+verified in the game that a belt and a pipe pass through one Crossing and that two crossing pipes stay separate networks.)
+
+### What was built (my suggested defaults)
+- `PLS = {list, cur}` in `js/plan.js`; `PL` is the active plan (same object), so all planner code works unchanged. Storage `{v:2, list, cur}`;
+  old single-plan storage becomes the first plan (`plNorm`).
+- Plan tabs at the top of the planner (blue when active, divider below): names from content (`plName`: "Iron Rod", "Copper node",
+  "Power 90 MW") unless renamed. ＋ New plan, ✎ Rename (prompt), ✕ Delete this plan (confirm), max 12.
+- "Plan this node" and "Plan the power for this" open a new tab (`plNewTab`, reuses an untouched plan); the power one is named "Power for …".
+- Ticks are per plan (they live in each plan).
+- Build number **61**.
+
+### Verified
+- `npm test` 75/75. New check: two new plans (target Iron Rod with a tick, Power 90 MW) show as tabs; switching restores each plan's mode,
+  numbers and ticks; "Plan this node" adds a tab for copper; storage holds the list; delete removes one; old format converts.
+- Tablet screenshot of the tabs in the left-pinned planner.

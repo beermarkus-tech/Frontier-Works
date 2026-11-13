@@ -182,3 +182,7 @@ body.plleft #mini{display:none}
 .pltick{min-width:30px;padding:2px 6px;font-size:15px;margin-right:4px;vertical-align:middle}
 .card.pldone{opacity:.45;filter:grayscale(.6)}.card.pldone .pltick{opacity:1}
 @media (max-width:700px){#lpanel{left:calc(8px + var(--sal));right:calc(8px + var(--sar));width:auto;top:calc(58px + var(--sat));max-height:36%}}
+
+.pltabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.pltabs .btn.chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn.chip.pltab.on{background:linear-gradient(180deg,#5aa0f0,#2f6fc0);color:#fff;border-color:transparent}
+.pltabs.plctl{margin-top:-2px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
