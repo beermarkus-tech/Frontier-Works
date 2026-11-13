@@ -201,3 +201,4 @@ body.dockhid #dock{display:none}body.dockhid #dockShow{display:inline-flex}
 .zhead .ztog{min-width:30px;padding:2px 6px}.zcard.zcol{padding-bottom:10px}
 .zmeta{margin-top:6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
 .auvol{width:150px;accent-color:var(--acc)}
+.rec{white-space:normal;overflow-wrap:anywhere}.ing{white-space:nowrap;display:inline-block;max-width:100%}

@@ -70,7 +70,7 @@ function renderPanel(full){
 }
 
 function perMin(r,amt,clock){return amt*60/r.t*(clock||1);}
-function recLine(r,clock){const i=Object.keys(r.i).map(k=>`${dot(k)}${r.i[k]} ${IT[k].n} <small>${fmt(perMin(r,r.i[k],clock))}/m</small>`).join(' + ');const o=Object.keys(r.o).map(k=>`${dot(k)}${r.o[k]} ${IT[k].n} <small>${fmt(perMin(r,r.o[k],clock))}/m</small>`).join(' + ');return`${i}<br>→ ${o} <small>· ${r.t}s</small>`;}
+function recLine(r,clock){const i=Object.keys(r.i).map(k=>`<span class="ing">${dot(k)}${r.i[k]} ${IT[k].n} <small>${fmt(perMin(r,r.i[k],clock))}/m</small></span>`).join(' + ');const o=Object.keys(r.o).map(k=>`<span class="ing">${dot(k)}${r.o[k]} ${IT[k].n} <small>${fmt(perMin(r,r.o[k],clock))}/m</small></span>`).join(' + ');return`${i}<br>→ ${o} <small>· ${r.t}s</small>`;}
 function entStatic(e){
  const d=B[e.d];let h=`<div class="muted" style="margin-bottom:6px">${d.desc||''}</div>`;
  if(e.k==='mach'){
@@ -137,7 +137,7 @@ function effHtml(e){
 }
 function entDyn(e){
  const d=B[e.d];let h='';const st=bStatus(e);
- if(e.fm){const [v,mx]=fmRate(e),u=e.k==='pipe'?' m³/min':'/min';h+=`<h4>Flow Meter</h4><div class="row"><span>Flow</span><span><b>${fmt(v)}${u}</b></span></div><div class="row"><span>Maximum here</span><span>${fmt(mx)}${u}</span></div><div class="row"><span>Used</span><span>${mx?Math.round(v/mx*100):0}%</span></div>`;}
+ if(e.fm){const [v,mx]=fmRate(e),u=e.k==='pipe'?' m³/min':'/min';h+=`<h4>Flow Meter</h4><div class="row"><span>Flow</span><span><b>${fmt(v)}${u}</b></span></div><div class="row"><span>Maximum here</span><span>${fmt(mx)}${u}</span></div><div class="row"><span>Used</span><span>${mx?Math.round(v/mx*100):0}%</span></div><button class="btn" data-act="meterOff" style="margin-top:6px">✕ Remove Flow Meter</button>`;}
  if(st)h+=`<div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>`;
  if(d.pw){h+=`<div class="row"><span>Power</span><span>${fmt(d.pw*Math.pow(e.clock||1,1.6))} MW ${e.grid?'':'<span style="color:#e04030">(not connected)</span>'}</span></div>`;}
  if(e.k==='mach')h+=effHtml(e);
@@ -275,6 +275,7 @@ const ACT={
  signSize:v=>{const e=ents.get(UI.panel.arg);if(!e||e.k!=='sign')return;const why=resizeSign(e,v);if(why)toast(why);renderPanel(true);},
  signColor:v=>{const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tc=+v;topoVer++;renderPanel(true);}},
  machOff:()=>{const e=ents.get(UI.panel.arg);if(!e)return;e.off=!e.off;toast(`${B[e.d].n} ${e.off?'switched off':'switched on'}`);renderPanel(true);},
+ meterOff:()=>{const e=UI.panel&&ents.get(UI.panel.arg);if(e&&e.fm){toggleMeter(e);sfx('del');toast('Flow Meter removed (refunded); the belt stays');refreshTools();renderPanel(true);}},
  swToggle:v=>{const e=ents.get(+v);if(!e||e.d!=='pswitch')return;e.off=!e.off;topoDirty=true;toast(`${e.tx||'Power Switch'} ${e.off?'off':'on'}`);renderPanel(true);},
  pnCut:v=>{const a=ents.get(UI.panel.arg),b=ents.get(+v);if(a&&b){pnUnlink(a,b);toast('Wire removed');}renderPanel(true);},
  pnWire:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.wireFrom=e.id;setTool(null);toast('Tap the pole, tower, switch or generator to connect to');updInfo();},

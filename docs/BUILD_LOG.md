@@ -2035,3 +2035,23 @@ He likes the music; a second track with a slight beat, switching every couple of
 - `npm test` 94 PASS / 0 FAIL. Music check extended: a finished run rests and then switches to Pulse, Pulse plays 200 steps without error,
   the next run switches back.
 - One-minute render of Pulse sent to Markus.
+
+---
+
+## Session 39i — 2026-11-13 (Claude Code, cloud session) · Build 91
+
+### What Markus asked
+1. Remove a Flow Meter from a belt or pipe without deleting the belt/pipe.
+2. Recipes with many inputs miss line breaks.
+
+### What changed
+- Flow Meter (it could already be taken off by tapping the tile again with the Flow Meter tool; made easier to find): "✕ Remove Flow Meter"
+  button in the belt/pipe panel's Flow Meter section; tapping a metered tile with Dismantle first removes only the meter (toast says tap again
+  for the belt/pipe). Drag-dismantle still clears whole lines (meters refunded).
+- Recipe buttons in machine panels wrap: `.rec` may break lines, each ingredient (`.ing`: icon, amount, name, rate) stays together, so lines
+  break between ingredients. Phone check found the overflow in Fabricator and Blender panels (Codex, Items and Planner were fine).
+- Build number **91**.
+
+### Verified
+- `npm test` 95 PASS / 0 FAIL. Flow Meter check extended (panel button keeps the belt; first Dismantle tap removes only the meter, second the
+  belt); new phone check: no recipe button in Fabricator/Blender panels is wider than the panel. Phone screenshot of the Blender recipes.

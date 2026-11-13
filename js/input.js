@@ -34,7 +34,8 @@ function tap(t){
  if(UI.linkFrom){const src=ents.get(UI.linkFrom),e=entAt(t.x,t.y);UI.linkFrom=null;updInfo();
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
  const tool=UI.tool;
- if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();sfx('del');}return;}
+ if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.fm){toggleMeter(e);sfx('del');toast(`Flow Meter removed. Tap again to remove the ${e.k==='pipe'?'pipe':'belt'}`);refreshTools();return;}   /* a metered tile: the first tap takes only the meter */
+  if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();sfx('del');}return;}
  if(UI.zoneCut){toast('Drag over the area to remove');return;}
  if(tool==='zone'){const v=zoneAt(t.x,t.y);if(v)openPanel('zone',v);else toast('Drag to draw a factory zone');return;}
  if(tool==='fmeter'){const e=entAt(t.x,t.y),r=toggleMeter(e);toast(r==='on'?'Flow Meter on: the rate settles over 30 s':r==='off'?'Flow Meter taken off (refunded)':r);refreshTools();return;}

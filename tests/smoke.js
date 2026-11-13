@@ -313,8 +313,10 @@ const server=require('./serve.js');
   S.inv.iron_plate+=10;S.inv.bolts=(S.inv.bolts||0)+20;placeEnt('belt2',X+5,Y,0);const up=fw.entAt(X+5,Y),upKept=up.d==='belt2'&&!!up.fm;
   const p1=S.inv.iron_plate;setTool('fmeter');tap({x:X+5,y:Y});setTool(null);const off=!up.fm&&S.inv.iron_plate===p1+2;
   setTool('fmeter');tap({x:X,y:Y});setTool(null);const notCrate=!fw.entAt(X,Y).fm;
+  setTool('fmeter');tap({x:X+6,y:Y});setTool(null);const mt=fw.entAt(X+6,Y);openPanel('ent',mt.id);const pbtn=!!document.querySelector('#pbody [data-act="meterOff"]');ACT.meterOff();const panelOff=pbtn&&!mt.fm&&fw.entAt(X+6,Y)===mt;ACT.closePanel();
+  setTool('fmeter');tap({x:X+6,y:Y});setTool('del');tap({x:X+6,y:Y});const delFirst=!mt.fm&&fw.entAt(X+6,Y)===mt;tap({x:X+6,y:Y});const delSecond=!fw.entAt(X+6,Y);setTool(null);
   for(let j=-1;j<5;j++)for(let i=-1;i<12;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
-  return{ok:r.every(v=>v===''),unlocked,paid,rate:Math.round(v),max:mx,pipe:Array.isArray(pr)&&pr[1]===300,drawn,panel,kept,upKept,off,notCrate};});
+  return{ok:r.every(v=>v===''),unlocked,paid,rate:Math.round(v),max:mx,pipe:Array.isArray(pr)&&pr[1]===300,drawn,panel,kept,upKept,off,notCrate,panelOff,delFirst,delSecond};});
  check(`Flow Meter: Mk1 line measured ${fmt_.rate}/min of ${fmt_.max} (${Object.entries(fmt_).filter(([k])=>k!=='rate'&&k!=='max').map(([k,v])=>k+'='+v).join(' ')})`,fmt_.rate>=50&&fmt_.rate<=61&&fmt_.max===60&&Object.entries(fmt_).every(([k,v])=>k==='rate'||k==='max'||v===true));
  // power wires: tree instead of web, old saves migrate to a tree with the same grids, Power Switch cuts a factory, rewiring, manual wires, save/load
  const pwr=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};let X,Y;
@@ -638,6 +640,12 @@ const server=require('./serve.js');
   const plo=await pp.evaluate(()=>{if(UI.panel)ACT.closePanel();OPT.plLeft=false;PL.locked=true;const bad=[];const chk=m=>{const b=document.getElementById('pbody');for(const r of b.querySelectorAll('.row'))if(r.scrollWidth>r.clientWidth+2||r.getBoundingClientRect().right>b.getBoundingClientRect().right+1)bad.push(m+': '+r.textContent.slice(0,40));};
    ACT.openPlan();PL.mode='fwd';PL.fwd.steps=[];plAddStep();plAddStep();plRefresh();chk('node');PL.mode='pow';PL.pow.gen='turbine';PL.pow.fuel='fuel';PL.pow.mw=900;plFix();plRefresh();chk('power');
    PL.mode='rev';PL.rev.targets=[{item:'control_chip',rate:2},{item:'turbine_core',rate:2}];plRefresh();chk('target');ACT.closePanel();return bad;});
+  const rco=await pp.evaluate(()=>{const fw=window.__fw,bad=[],ub0=S.ub.slice(),ur0=S.ur.slice();S.ur=Object.keys(RC);S.ub=Object.keys(B);
+   for(const id of ['fabricator','blender']){let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace(id,x,y)){X=x;Y=y;break;}}
+    fw.placeEnt(id,X,Y,0,true);const e=fw.entAt(X,Y);UI.recOpen=e.id;openPanel('ent',e.id);const b=document.getElementById('pbody'),R=b.getBoundingClientRect().right;
+    for(const el of b.querySelectorAll('.rec'))if(el.getBoundingClientRect().right>R+1||el.scrollWidth>el.clientWidth+2)bad.push(id+': '+el.textContent.slice(0,30));ACT.closePanel();removeEnt(e,false,true);}
+   S.ub=ub0;S.ur=ur0;return bad;});
+  check(`phone: recipes with many inputs wrap inside the machine panel (${rco.length?rco.join(' | '):'all fit'})`,rco.length===0);
   check(`phone: no planner line runs off the panel (${plo.length?plo.join(' | '):'all fit'})`,plo.length===0);
   check(`recipe list folds: new machine ${rl.fresh} recipes, after picking 1 (+Change ${rl.chg}), tap shows ${rl.open}, new pick folds to ${rl.again}`,rl.fresh>3&&rl.one===1&&rl.chg&&rl.open===rl.fresh&&rl.again===1&&rl.r==='r_wire');await pc.close();}
  check('no page errors',errs.length===0);
