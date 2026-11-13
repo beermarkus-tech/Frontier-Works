@@ -172,8 +172,8 @@ function eraseEnt(e){if(!e||!ERASE_K.includes(e.k))return 0;let n=0;const back=(
  if(e.k==='drill'||e.k==='pump'){if(e.buf>0&&e.node){back(NODE_T[e.node.t][0],e.buf);if(IT[NODE_T[e.node.t][0]]&&IT[NODE_T[e.node.t][0]].f)n+=Math.floor(e.buf);}e.buf=0;e.prog=0;return n;}
  if(e.k==='gen'){for(const k in e.outb)back(k,e.outb[k]);e.outb={};return n;}
  return n;}
-/* Flow Meter (Session 36f): a marker on a belt/pipe tile (e.fm, saved). Belts remember when the last 30 items arrived (at most 5 min back,
-   e.fa) and the rate is the time between them (Session 37g: busy belts react within ~30 s, 1–2 items/min settle over several minutes,
+/* Flow Meter (Session 36f): a marker on a belt/pipe tile (e.fm, saved). Belts remember item arrival times (e.fa): always the last 60 s, and on
+   slow belts back to the last 30 items (max 5 min); the rate is the time between them (Session 37k: busy belts average over 60 s, 1–2 items/min over several minutes,
    and a belt that stops drops gradually); pipes show their network's flow. fmRate → [per minute, max per minute]. */
 function fmRate(e){if(e.k==='pipe'){const n=e.net;return[n?Math.max(n.inR,n.outR):0,(n?n.rate:e.spd)*60];}
  const a=e.fa||[],n=a.length;if(n<2)return[0,e.spd*60];const span=Math.max(0.5,a[n-1]-a[0]),gap=span/(n-1),extra=Math.max(0,S.t-a[n-1]-gap);
@@ -233,7 +233,7 @@ function accept(e,item,dir,carry){
   case 'pipe':return false;   // pipes are part of a fluid network (updNets), they don't pass single items
   case 'belt':
    if(e.item||fl!==(e.k==='pipe'))return false; if(((dir+2)&3)===e.dir)return false;
-   e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;if(e.fm){const a=e.fa||(e.fa=[]);a.push(S.t);if(a.length>30)a.shift();}return true;
+   e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;if(e.fm){const a=e.fa||(e.fa=[]);a.push(S.t);if(a.length>3000)a.shift();}return true;
   case 'router':{
    if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc')return false;   // a Pipe Junction is a network piece
    const sub=B[e.d].sub;
@@ -474,7 +474,7 @@ function updBuilding(e,dt){
 function tick(dt){
  if(topoDirty)rebuildTopo();
  tickNo++;S.t+=dt;
- if(tickNo%20===0)for(const e of meters){const a=e.fa;if(a)while(a.length&&S.t-a[0]>300)a.shift();}   // Flow Meters: arrival times of the last 30 items, at most 5 min back
+ if(tickNo%20===0)for(const e of meters){const a=e.fa;if(a)while(a.length&&(S.t-a[0]>300||(a.length>30&&S.t-a[0]>60)))a.shift();}   // Flow Meters: at least the last 60 s; slow belts: the last 30 items, at most 5 min
  powerStep(dt);
  for(const e of beltOrder)updBelt(e,dt);
  for(const e of routers)updRouter(e);   // after the belts (Session 37j): the tile in front has already moved on this tick, so a

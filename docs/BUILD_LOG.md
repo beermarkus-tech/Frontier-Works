@@ -1687,3 +1687,24 @@ A plain belt from a drill to a crate now carries 270/min, but a Mk3 line along a
 - Counted items per minute (not just the meter) on a line with 5 splitters + a crossing: Mk3 270 of 270, Mk4 480, Mk5 780 (old code: 240, 400, 600).
 - `npm test` 84 PASS / 0 FAIL (splitter feeding, curves, crossing, merger checks unchanged). New check: the 5-splitter line at 100 % for Mk3 and Mk5.
 - `npm run playthrough`: unchanged (measurement noise only).
+
+---
+
+## Session 37k — 2026-11-13 (Claude Code, cloud session) · Build 70
+
+### What Markus asked
+The Flow Meter still jumps up and down quickly.
+
+### Cause and fix
+- Build 66 averaged over the last 30 items (max 5 min). Good for slow belts, but on a 270/min belt that's under 7 s.
+- Now the meter keeps at least the last 60 s of arrivals, and on slow belts reaches back to the last 30 items (max 5 min). Busy belts average
+  over a minute; 1–2 items/min still settle correctly.
+- Build number **70**.
+
+### Tests made robust
+- Two checks could fail depending on where the random map placed them: the on/off check read the whole grid's demand/capacity (its burner
+  could wire into the main test factory) → now checks the switched-off building itself; the power-wire check could pick a spot near an earlier
+  pole that took the first wire → now only uses spots with no pole/generator in wire range.
+
+### Verified
+- `npm test` 85 PASS / 0 FAIL, twice. New check: on a full Mk3 line, read every second for a minute, the meter stays at 270.0–270.1/min.

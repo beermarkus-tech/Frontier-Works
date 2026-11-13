@@ -318,7 +318,8 @@ const server=require('./serve.js');
  check(`Flow Meter: Mk1 line measured ${fmt_.rate}/min of ${fmt_.max} (${Object.entries(fmt_).filter(([k])=>k!=='rate'&&k!=='max').map(([k,v])=>k+'='+v).join(' ')})`,fmt_.rate>=50&&fmt_.rate<=61&&fmt_.max===60&&Object.entries(fmt_).every(([k,v])=>k==='rate'||k==='max'||v===true));
  // power wires: tree instead of web, old saves migrate to a tree with the same grids, Power Switch cuts a factory, rewiring, manual wires, save/load
  const pwr=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};let X,Y;
-  for(let r=10;r<170&&X==null;r+=2)for(let a=0;a<64;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));let ok=true;for(let j=-2;j<14&&ok;j++)for(let i=-2;i<26&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  const PN=[...ents.values()].filter(isPN);   // no other poles/generators within wire range of the test area (they would take the wires)
+  for(let r=10;r<170&&X==null;r+=2)for(let a=0;a<64;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));let ok=PN.every(e=>e.x<x-28||e.x>x+52||e.y<y-28||e.y>y+40);for(let j=-2;j<14&&ok;j++)for(let i=-2;i<26&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
   // 1) a cluster of 6 poles all in range of each other + a burner: one wire per new node → 6 wires (old rule: a web of ~15)
   P('burner',X,Y+8,0);for(const [i,j] of [[4,8],[6,8],[4,10],[6,10],[5,12],[8,9]])P('pole1',X+i,Y+j,0);tick(0.05);
   const cl=pnodes.filter(e=>e.y>=Y+8&&e.y<Y+14&&e.x>=X&&e.x<X+12);out.tree=pwLinks.filter(([a,b])=>cl.includes(a)&&cl.includes(b)).length===cl.length-1&&new Set(cl.map(e=>e.grid)).size===1;
@@ -378,10 +379,10 @@ const server=require('./serve.js');
   P('smelter',X,Y,0);P('belt1',X+2,Y,0);P('incin',X+3,Y,0);P('burner',X,Y+2,0);let sm=fw.entAt(X,Y),g=fw.entAt(X,Y+2);sm.r='r_iron_ingot';
   const act=n=>{let moved=0;for(let i=0;i<n;i++){const p0=sm.prog,r0=sm.run;g.fuel={coal:50};sm.inb={iron_ore:20};tick(0.05);if(sm.prog!==p0||sm.run!==r0)moved++;}return moved;};
   act(40);out.runs=act(60)>20;openPanel('ent',sm.id);out.btn=!!document.querySelector('#pbody [data-act="machOff"]');ACT.machOff();act(5);
-  out.stopped=act(60)===0&&!sm.want&&bStatus(sm)[1]==='Switched off'&&sm.grid&&sm.grid.dem===0;ACT.closePanel();
+  out.stopped=act(60)===0&&!sm.want&&bStatus(sm)[1]==='Switched off'&&drawMW(sm)===0;ACT.closePanel();
   const sv=serialize();load(sv);sm=fw.entAt(X,Y);g=fw.entAt(X,Y+2);out.saved=sm.off===true;
   openPanel('ent',sm.id);ACT.machOff();ACT.closePanel();act(10);out.again=act(60)>20;
-  g.off=true;act(10);out.genOff=g.grid.cap===0&&bStatus(g)[1]==='Switched off';
+  g.off=true;act(10);out.genOff=!genCan(g)&&bStatus(g)[1]==='Switched off'&&!g.load;
   for(let j=-1;j<6;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
  check(`machine on/off switch: ${Object.entries(mo).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mo).every(Boolean));
  // pipe network with short supply: two refineries on one network get equal shares (before, one was always served first)
@@ -441,6 +442,12 @@ const server=require('./serve.js');
    try{for(let t=0;t<20*30;t++){c.store={iron_plate:999};tick(0.05);}}finally{accept=orig;}out[id]=cnt*2/(B[id].spd*60);
    for(let j=-1;j<3;j++)for(let i=-1;i<26;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}}return out;});
  check(`a line through 5 splitters + a crossing keeps the full rate (Mk3 ${Math.round(sp.belt3*100)}%, Mk5 ${Math.round(sp.belt5*100)}%)`,sp.belt3>0.97&&sp.belt3<1.02&&sp.belt5>0.97&&sp.belt5<1.02);
+ // Flow Meter is steady on a busy belt: read every second for a minute on a full Mk3 line, the value stays within ±1 %
+ const st=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  P('storage',X,Y,0);for(let i=2;i<9;i++)P('belt3',X+i,Y,0);P('incin',X+9,Y,0);const c=fw.entAt(X,Y),mb=fw.entAt(X+6,Y);S.inv.iron_plate+=5;S.inv.wire=(S.inv.wire||0)+5;toggleMeter(mb);
+  for(let t=0;t<20*70;t++){c.store={iron_plate:999};tick(0.05);}const v=[];for(let s=0;s<60;s++){for(let t=0;t<20;t++){c.store={iron_plate:999};tick(0.05);}v.push(fmRate(mb)[0]);}
+  for(let j=-1;j<3;j++)for(let i=-1;i<12;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return{min:Math.min(...v),max:Math.max(...v)};});
+ check(`Flow Meter is steady on a busy belt: ${st.min.toFixed(1)}–${st.max.toFixed(1)}/min over a minute (Mk3 270)`,st.min>267&&st.max<273);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');
