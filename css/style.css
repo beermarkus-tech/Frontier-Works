@@ -192,3 +192,4 @@ body.plleft #mini{display:none}
 body.dockhid #dock{display:none}body.dockhid #dockShow{display:inline-flex}
 
 .zcard .zlink{font-weight:700}
+.zeff{display:inline-block;font-weight:800;font-size:13px;padding:1px 8px;border:2px solid;border-radius:999px;margin-right:6px;background:rgba(10,14,18,.6)}

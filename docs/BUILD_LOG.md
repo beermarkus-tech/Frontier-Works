@@ -1817,3 +1817,13 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
   when nothing crossed; the heading is only added when there's content).
 - Dashboard check extended: in the two-zone test, Smelting only shows "Sends", Pressing only "Gets".
 - `npm test` 88 PASS / 0 FAIL. Build number **75**.
+
+---
+
+## Session 38e — 2026-11-13 (Claude Code, cloud session) · Build 76
+
+- Markus: an overall efficiency indicator per factory in the dashboard.
+- Built: a badge in each factory card's header (same colours as the rings): average of the machines' (with a recipe), drills' and pumps'
+  efficiency (`_ef`, measured ≥ 3 s, switched-off ones left out), weighted by nominal power (power × clock^1.6, min 1) so big machines count more.
+- Verified: `npm test` 88 PASS / 0 FAIL; dashboard check also confirms the badges and that a one-smelter zone's value equals the smelter's
+  efficiency. Screenshot: Smelting 99 %, Pressing 91 %. Build number **76**.

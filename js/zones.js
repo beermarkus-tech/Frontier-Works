@@ -87,14 +87,14 @@ function zTick(dt){ZS.acc+=dt;if(ZS.acc<1)return;ZS.acc-=1;
  ZS.hist.push(ZS.cur);ZS.cur={};if(ZS.hist.length>60)ZS.hist.shift();}
 function zRates(){const out={};for(const h of ZS.hist)for(const k in h)out[k]=(out[k]||0)+h[k];const m=60/Math.max(1,ZS.hist.length);for(const k in out)out[k]*=m;return out;}
 /* spare capacity (machines held up by full output) and shortages (machines waiting for an input), from the efficiency measurements */
-function zMachines(z){const spare={},short={},design={};let mw=0,n=0;const dz=(k,v)=>{design[k]=(design[k]||0)+v;};
- for(const e of ents.values()){if(zOf(e)!==z||e.k==='core')continue;n++;if(B[e.d].pw)mw+=drawMW(e);const w=e._efw||{};
+function zMachines(z){const spare={},short={},design={};let mw=0,n=0,ew=0,ef=0;const dz=(k,v)=>{design[k]=(design[k]||0)+v;};
+ for(const e of ents.values()){if(zOf(e)!==z||e.k==='core')continue;if(!e.off&&e._efT>=3&&(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump')){const w=Math.max(1,(B[e.d].pw||0)*Math.pow(e.clock||1,1.6));ew+=w;ef+=w*(e._ef||0);}n++;if(B[e.d].pw)mw+=drawMW(e);const w=e._efw||{};
   if(e.k==='mach'&&e.r&&!e.off){const r0=RC[e.r],c0=(e.clock||1)*60/r0.t;for(const k in r0.o)dz(k,r0.o[k]*c0);for(const k in r0.i)dz(k,-r0.i[k]*c0);}
   if((e.k==='drill'||e.k==='pump')&&e.item&&!e.off){const d=B[e.d];dz(e.item,(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1));}
   if(e.k==='mach'&&e.r){const r=RC[e.r],c=(e.clock||1)*60/r.t;if(w.out>0.02)for(const k in r.o)spare[k]=(spare[k]||0)+r.o[k]*c*w.out;
    for(const k in w)if(k.startsWith('in:')&&w[k]>0.02){const it=k.slice(3);short[it]=(short[it]||0)+(r.i[it]||0)*c*w[k];}}
   else if((e.k==='drill'||e.k==='pump')&&e.item&&w.out>0.02){const d=B[e.d],max=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1);spare[e.item]=(spare[e.item]||0)+max*w.out;}}
- return{spare,short,design,mw,n};}
+ return{spare,short,design,mw,n,eff:ew?ef/ew:null};}
 /* design list: net full-speed output per item (positive only), with what the zone makes of it now (made − used inside) */
 function zDesign(des,d){const ks=Object.keys(des).filter(k=>des[k]>=0.05).sort((a,b)=>des[b]-des[a]);if(!ks.length)return'<div class="muted">No machines with a recipe</div>';
  return ks.map(k=>{const now=Math.max(0,(d.p[k]||0)-(d.c[k]||0)),f=now/des[k];return`<div class="row"><span>${nm(k)}</span><span>${fmt(des[k])}/min <small style="color:${f>=0.95?'#7ee07a':f>=0.6?'#ffd34a':'#ff8a6a'}">(now ${fmt(now)})</small></span></div>`;}).join('');}
@@ -110,7 +110,7 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
  const ids=[...zs.map(z=>z.id),0];
  for(const z of ids){const d=get(z),M=zMachines(z);if(z===0&&!M.n&&!Object.keys(d.p).length&&!Object.keys(d.out).length)continue;
   for(const t of ['p','c','k','b'])for(const it in d[t])tot[t][it]=(tot[t][it]||0)+d[t][it];for(const it in M.spare)tot.spare[it]=(tot.spare[it]||0)+M.spare[it];
-  const zz=zoneById(z);h+=`<div class="card zcard" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="row"><b>${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:zName(z)}</b><span class="muted">${M.n} buildings · ${fmt(M.mw)} MW</span></div>
+  const zz=zoneById(z);h+=`<div class="card zcard" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="row"><b>${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:zName(z)}</b><span class="muted">${M.eff!=null?`<span class="zeff" style="border-color:${effCol(Math.round(M.eff*100))};color:${effCol(Math.round(M.eff*100))}" title="Average efficiency of its machines (bigger machines count more)">${Math.round(M.eff*100)}%</span> `:''}${M.n} buildings · ${fmt(M.mw)} MW</span></div>
    <div class="plsub">Designed to make <span class="muted" style="text-transform:none;letter-spacing:0">· at full speed, after its own use (now)</span></div>${zDesign(M.design,d)}
    ${(f=>f?`<div class="plsub">Sends to other factories</div>${f}`:'')(flows(d.out,'→'))}${(f=>f?`<div class="plsub">Gets from other factories</div>${f}`:'')(flows(d.inn,'←'))}
    ${Object.keys(d.k).length?`<div class="plsub">Into your stock (Base Core)</div>${zList(d.k)}`:''}${Object.keys(d.s).length?`<div class="plsub">Into crates</div>${zList(d.s)}`:''}${Object.keys(d.b).length?`<div class="plsub">Burned</div>${zList(d.b,'plbad')}`:''}
