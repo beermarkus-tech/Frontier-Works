@@ -473,6 +473,21 @@ const server=require('./serve.js');
   const keep=window.confirm;window.confirm=()=>true;openPanel('zone',zoneAt(X+21,Y+1));ACT.zoneDel();window.confirm=keep;out.deleted=!zoneAt(X+21,Y+1)&&zones().length===1;
   out.unlocked=ub('zone');setTool(null);if(UI.panel)ACT.closePanel();return out;},zA);
  check(`factory zones: ${Object.entries(zn).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(zn).every(Boolean));
+ // factories dashboard: zone A (crate → smelter) belts ingots across the fence to zone B (press): A sends ingots to B, B gets them, made/used per zone
+ const zd=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};let X,Y;
+  const PN=[...ents.values()].filter(isPN);
+  for(let r=20;r<170&&X==null;r+=3)for(let a=0;a<64;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));let ok=PN.every(e=>Math.abs(e.x-x-8)>24||Math.abs(e.y-y-3)>20);for(let j=-2;j<8&&ok;j++)for(let i=-2;i<18&&ok;i++)if(canPlace('incin',x+i,y+j)||zoneAt(x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  P('storage',X,Y,0);P('belt1',X+2,Y,0);P('smelter',X+3,Y,0);for(let i=5;i<11;i++)P('belt1',X+i,Y+1,0);P('press',X+11,Y+1,0);P('belt1',X+13,Y+1,0);P('incin',X+14,Y+1,0);P('burner',X+6,Y+3,0);P('burner',X+9,Y+3,0);
+  const c=fw.entAt(X,Y),sm=fw.entAt(X+3,Y),pr=fw.entAt(X+11,Y+1),g1=fw.entAt(X+6,Y+3),g2=fw.entAt(X+9,Y+3);sm.r='r_iron_ingot';pr.r='r_iron_plate';
+  zoneDrop({x:X-1,y:Y-1},{x:X+7,y:Y+2});const A=zoneAt(X,Y);zoneById(A).name='Smelting';zoneDrop({x:X+9,y:Y-1},{x:X+15,y:Y+2});const Bz=zoneAt(X+11,Y+1);zoneById(Bz).name='Pressing';
+  ZS.hist=[];ZS.cur={};for(let t=0;t<20*70;t++){c.store={iron_ore:999};g1.fuel={coal:50};g2.fuel={coal:50};tick(0.05);}
+  const R=zRates();out.made=(R['p|'+A+'|iron_ingot']||0)>20;out.usedB=(R['c|'+Bz+'|iron_ingot']||0)>20;out.cross=(R['x|'+A+'|'+Bz+'|iron_ingot']||0)>20&&!R['x|'+A+'|0|iron_ingot'];   // across the gap between the fences: counted as Smelting → Pressing
+  out.burned=(R['b|'+Bz+'|iron_plate']||0)>0||(R['x|'+Bz+'|0|iron_plate']||0)>0;
+  UI.statTab='zones';openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=txt.includes('Smelting')&&txt.includes('Pressing')&&txt.includes('All factories together')&&txt.includes('Sends to other factories');
+  ACT.zoneShow(String(Bz));out.show=UI.hlZone&&UI.hlZone.id===Bz;UI.statTab='items';if(UI.panel)ACT.closePanel();
+  for(const id of [A,Bz]){for(let i=0;i<zoneMap.length;i++)if(zoneMap[i]===id)zoneMap[i]=0;}zoneSave();zoneRebuild();
+  for(let j=-2;j<8;j++)for(let i=-2;i<18;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
+ check(`factories dashboard counts across the fence: ${Object.entries(zd).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(zd).every(Boolean));
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

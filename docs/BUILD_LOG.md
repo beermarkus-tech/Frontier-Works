@@ -1762,3 +1762,30 @@ cross the boundary. Part 1 (this build): the zone tool. Part 2 (next): the dashb
 - Next: Factories dashboard (Stats tab): per zone imports/exports counted at the fence (belts, pipes, drones), made/used inside, spare capacity
   (machines blocked by output), shortages; overall per-item table (produced, moved between factories, left over: core, crates, incinerators,
   backing up); tap a card to highlight the zone.
+
+---
+
+## Session 38b — 2026-11-13 (Claude Code, cloud session) · Build 73
+
+### What Markus asked
+Part 2: the Factories dashboard on top of the zones.
+
+### What was built
+- Counting (`js/zones.js`, per-second buckets over 60 s in `ZS`): made/used per zone at the existing `stat.p/stat.c` points (machines, drills,
+  pumps, generator fuel), delivered to the Base Core, put into crates, burned. Crossings: `zMove` at every item handoff (belts, splitters,
+  crossings per lane, building outputs); items remember their last zone (`oz`, `hoz/voz`) so a no-man's-land strip between fences still counts
+  as zone → zone; counted when an item enters another zone or is used/stored outside all zones. Drones: pad zone → pad zone per delivery.
+  Pipes: per network and second, each zone's input and output is netted and the difference split between zones.
+- Stats panel: tabs Items | 🏭 Factories. One card per zone (+ "Outside zones" when used): buildings, power, Makes, Uses, Sends to / Gets from
+  other factories, Into stock, Into crates, Burned, Could make more (output-blocked share of machines × their rate), Short of (input-waiting
+  share × input rate). Table "All factories together": made, used, left (made − used), spare. Zone name button flies the map there and pulses its fence.
+- Build number **73**.
+
+### Verified
+- `npm test` 88 PASS / 0 FAIL. New check: zone "Smelting" (crate → smelter) belts ingots across a gap to zone "Pressing": made/used per zone,
+  counted as Smelting → Pressing (not via "outside"), plates burned in Pressing, cards and table shown, zone highlight.
+- Screenshot of the dashboard ("→ Pressing: Iron Ingot 35/min").
+
+### Known issues
+- Numbers need about a minute to settle after changes (60 s window), like the Items view.
+- Zone names show in 2D only.

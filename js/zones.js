@@ -54,7 +54,8 @@ function drawZoneTint(sx,sy,s){if(!zoneRuns.length)return;const W=cv.width,H=cv.
  for(const [x,y,n,v] of zoneRuns){const X=sx(x),Y=sy(y);if(Y>H||Y+s<0||X>W||X+n*s<0)continue;ctx.fillStyle=zoneCol(zoneById(v));ctx.globalAlpha=0.08;ctx.fillRect(X,Y,n*s,s);}ctx.globalAlpha=1;}
 function drawZoneFence(sx,sy,s){if(!zoneEdges.length&&!zonePrev)return;const W=cv.width,H=cv.height,lw=Math.max(1.5,s*0.07);
  for(const [x0,y0,x1,y1,v] of zoneEdges){const X0=sx(x0),Y0=sy(y0),X1=sx(x1),Y1=sy(y1);if(Math.max(X0,X1)<-s||Math.min(X0,X1)>W+s||Math.max(Y0,Y1)<-s||Math.min(Y0,Y1)>H+s)continue;
-  const c=zoneCol(zoneById(v));ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=lw*1.8;ctx.beginPath();ctx.moveTo(X0,Y0);ctx.lineTo(X1,Y1);ctx.stroke();
+  const c=zoneCol(zoneById(v)),hl=UI.hlZone&&UI.hlZone.id===v&&performance.now()-UI.hlZone.t<6000;if(hl){ctx.strokeStyle=c;ctx.globalAlpha=0.35+0.3*Math.sin(performance.now()/150);ctx.lineWidth=lw*5;ctx.beginPath();ctx.moveTo(X0,Y0);ctx.lineTo(X1,Y1);ctx.stroke();ctx.globalAlpha=1;}
+  ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=lw*1.8;ctx.beginPath();ctx.moveTo(X0,Y0);ctx.lineTo(X1,Y1);ctx.stroke();
   ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(X0,Y0);ctx.lineTo(X1,Y1);ctx.stroke();
   if(s>=10){const p=Math.max(2,s*0.11);ctx.fillStyle='#3a3226';ctx.fillRect(X0-p/2,Y0-p/2,p,p);}}
  for(const z of zones()){if(!z.lab)continue;const X=sx(z.lab.x),Y=sy(z.lab.y);if(X>W||Y>H+40||X<-400||Y<-40)continue;const fs=Math.round(11*DPR);ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;
@@ -62,3 +63,56 @@ function drawZoneFence(sx,sy,s){if(!zoneEdges.length&&!zonePrev)return;const W=c
   ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.fillText(z.name,x+fs*0.6,y+h/2+0.5);}
  if(zonePrev){const p=zonePrev,r=p.r,X=sx(r.x0),Y=sy(r.y0),w=(r.x1-r.x0+1)*s,h=(r.y1-r.y0+1)*s,col=p.why?'#ff5a46':p.cut?'#ff9a5a':p.id?zoneCol(zoneById(p.id)):'#6ef08a';
   ctx.fillStyle=col;ctx.globalAlpha=0.15;ctx.fillRect(X,Y,w,h);ctx.globalAlpha=1;ctx.strokeStyle=col;ctx.lineWidth=2*DPR;ctx.setLineDash([6*DPR,4*DPR]);ctx.strokeRect(X,Y,w,h);ctx.setLineDash([]);}}
+/* ---------- Factory dashboard (Session 38b) ----------
+   Per-second buckets over the last 60 s (like stat.hist). Keys: 'p|z|item' made, 'c|z|item' used, 'k|z|item' delivered to the Base Core,
+   's|z|item' put into crates, 'b|z|item' burned in incinerators, 'x|from|to|item' crossed from zone `from` to zone `to` (0 = outside any zone).
+   Crossings are counted wherever an item moves between tiles of different zones (belts, splitters, crossings, building outputs, drones);
+   pipes: per network and second, what each zone put in and took out is netted and split between zones. */
+const ZS={acc:0,cur:{},hist:[]};
+const zOf=e=>zoneMap?zoneMap[e.y*MW+e.x]:0;
+function zc(key,n){ZS.cur[key]=(ZS.cur[key]||0)+n;}
+function zStat(t,e,item,n){if(zoneMap&&n)zc(t+'|'+zOf(e)+'|'+item,n);}
+/* items on belts, splitters and crossings remember the zone they last came from (oz; crossings per lane), so a strip of no-man's-land between two
+   fences doesn't hide the connection: a crossing is counted when the item enters another zone, or is used/stored outside every zone */
+function zMove(src,soz,t,item,dir){if(!zoneMap||!t)return;const zs=zOf(src),org=zs||soz||0,zt=zOf(t);
+ if(t.k==='belt'||t.k==='router')t.oz=zt||org;else if(t.k==='cross'){if(dir===0||dir===2)t.hoz=zt||org;else t.voz=zt||org;}
+ else{if(zt!==org)zc('x|'+org+'|'+zt+'|'+item,1);return;}
+ if(zt&&zt!==org)zc('x|'+org+'|'+zt+'|'+item,1);}
+function zFlow(a,b,item,n){if(!zoneMap||!a||!b)return;const za=zOf(a),zb=zOf(b);if(za!==zb)zc('x|'+za+'|'+zb+'|'+item,n||1);}
+function zNetFlow(net,b,amt,dirIn){if(!zoneMap||!amt)return;const z=zOf(b),m=dirIn?(net.zi||(net.zi={})):(net.zo||(net.zo={}));m[z]=(m[z]||0)+amt;}
+function zTick(dt){ZS.acc+=dt;if(ZS.acc<1)return;ZS.acc-=1;
+ for(const n of nets){if(!n.zi&&!n.zo)continue;const zi=n.zi||{},zo=n.zo||{},ex=[],im=[];let E=0,I=0;
+  for(const z of new Set([...Object.keys(zi),...Object.keys(zo)])){const d=(zi[z]||0)-(zo[z]||0);if(d>0){ex.push([z,d]);E+=d;}else if(d<0){im.push([z,-d]);I+=-d;}}
+  if(E&&I&&n.fluid){const T=Math.min(E,I);for(const [a,ea] of ex)for(const [b,ib] of im)zc('x|'+a+'|'+b+'|'+n.fluid,T*(ea/E)*(ib/I));}n.zi=n.zo=null;}
+ ZS.hist.push(ZS.cur);ZS.cur={};if(ZS.hist.length>60)ZS.hist.shift();}
+function zRates(){const out={};for(const h of ZS.hist)for(const k in h)out[k]=(out[k]||0)+h[k];const m=60/Math.max(1,ZS.hist.length);for(const k in out)out[k]*=m;return out;}
+/* spare capacity (machines held up by full output) and shortages (machines waiting for an input), from the efficiency measurements */
+function zMachines(z){const spare={},short={};let mw=0,n=0;
+ for(const e of ents.values()){if(zOf(e)!==z||e.k==='core')continue;n++;if(B[e.d].pw)mw+=drawMW(e);const w=e._efw||{};
+  if(e.k==='mach'&&e.r){const r=RC[e.r],c=(e.clock||1)*60/r.t;if(w.out>0.02)for(const k in r.o)spare[k]=(spare[k]||0)+r.o[k]*c*w.out;
+   for(const k in w)if(k.startsWith('in:')&&w[k]>0.02){const it=k.slice(3);short[it]=(short[it]||0)+(r.i[it]||0)*c*w[k];}}
+  else if((e.k==='drill'||e.k==='pump')&&e.item&&w.out>0.02){const d=B[e.d],max=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*60*(e.clock||1);spare[e.item]=(spare[e.item]||0)+max*w.out;}}
+ return{spare,short,mw,n};}
+const zName=z=>+z?((zoneById(+z)||{}).name||'Removed zone'):'Outside zones';
+const zList=(o,cls)=>{const ks=Object.keys(o).filter(k=>o[k]>=0.05).sort((a,b)=>o[b]-o[a]);return ks.length?ks.map(k=>`<div class="row ${cls||''}"><span>${nm(k)}</span><span>${fmt(o[k])}/min</span></div>`).join(''):'<div class="muted">—</div>';};
+function zoneDashHtml(){const R=zRates(),zs=zones();
+ if(!zs.length)return`<div class="muted">No factory zones yet. Draw them with the Factory Zone tool (Signs tab), then this page shows what each factory makes, sends to the others and could still make.</div>`;
+ const per={};const get=z=>per[z]||(per[z]={p:{},c:{},k:{},s:{},b:{},out:{},inn:{}});
+ for(const key in R){const v=R[key],a=key.split('|');if(a[0]==='x'){const o=get(a[1]).out,i=get(a[2]).inn;(o[a[2]]||(o[a[2]]={}))[a[3]]=((o[a[2]]||{})[a[3]]||0)+v;(i[a[1]]||(i[a[1]]={}))[a[3]]=((i[a[1]]||{})[a[3]]||0)+v;}else get(a[1])[a[0]][a[2]]=(get(a[1])[a[0]][a[2]]||0)+v;}
+ const flows=(m,arrow)=>{const parts=[];for(const z in m)for(const it in m[z])if(m[z][it]>=0.05)parts.push(`<div class="row"><span>${arrow==='→'?'→ '+zName(z):'← '+zName(z)}: ${nm(it)}</span><span>${fmt(m[z][it])}/min</span></div>`);return parts.join('')||'<div class="muted">—</div>';};
+ let h=`<div class="muted">Last ${ZS.hist.length} s. Counted where items cross a zone’s fence (belts, pipes, drones). Tap a name to show it on the map.</div>`;
+ const tot={p:{},c:{},spare:{},k:{},b:{}};
+ const ids=[...zs.map(z=>z.id),0];
+ for(const z of ids){const d=get(z),M=zMachines(z);if(z===0&&!M.n&&!Object.keys(d.p).length&&!Object.keys(d.out).length)continue;
+  for(const t of ['p','c','k','b'])for(const it in d[t])tot[t][it]=(tot[t][it]||0)+d[t][it];for(const it in M.spare)tot.spare[it]=(tot.spare[it]||0)+M.spare[it];
+  const zz=zoneById(z);h+=`<div class="card zcard" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="row"><b>${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:zName(z)}</b><span class="muted">${M.n} buildings · ${fmt(M.mw)} MW</span></div>
+   <div class="plsub">Makes</div>${zList(d.p)}<div class="plsub">Uses</div>${zList(d.c)}
+   <div class="plsub">Sends to other factories</div>${flows(d.out,'→')}<div class="plsub">Gets from other factories</div>${flows(d.inn,'←')}
+   ${Object.keys(d.k).length?`<div class="plsub">Into your stock (Base Core)</div>${zList(d.k)}`:''}${Object.keys(d.s).length?`<div class="plsub">Into crates</div>${zList(d.s)}`:''}${Object.keys(d.b).length?`<div class="plsub">Burned</div>${zList(d.b,'plbad')}`:''}
+   ${Object.keys(M.spare).length?`<div class="plsub">Could make more (output backs up)</div>${zList(M.spare,'plok')}`:''}${Object.keys(M.short).length?`<div class="plsub">Short of (machines waiting)</div>${zList(M.short,'plbad')}`:''}</div>`;}
+ const items=[...new Set([...Object.keys(tot.p),...Object.keys(tot.c),...Object.keys(tot.spare)])].sort((a,b)=>(tot.p[b]||0)-(tot.p[a]||0));
+ h+=`<h4>All factories together</h4><table><tr><th>Item</th><th>Made</th><th>Used</th><th>Left</th><th>Spare</th></tr>${items.map(it=>{const left=(tot.p[it]||0)-(tot.c[it]||0);return`<tr><td>${nm(it)}</td><td>${fmt(tot.p[it]||0)}</td><td>${fmt(tot.c[it]||0)}</td><td style="color:${left>0.05?'#7ee07a':left<-0.05?'#ff8a6a':'inherit'}">${left>0?'+':''}${fmt(left)}</td><td>${tot.spare[it]?'+'+fmt(tot.spare[it]):''}</td></tr>`;}).join('')}</table>
+  <div class="muted">Left = made minus used inside your factories (it goes to your stock, crates, other belts or backs up; negative = taken from stock or crates). Spare = what machines could still make if their output were used.</div>`;
+ return h;}
+Object.assign(ACT,{zoneShow:v=>{const z=zoneById(+v);if(!z||!z.lab)return;UI.hlZone={id:z.id,t:performance.now()};let sx=0,sy=0,n=0;for(const r of zoneRuns)if(r[3]===z.id){sx+=(r[0]+r[2]/2)*r[2];sy+=(r[1]+0.5)*r[2];n+=r[2];}
+ if(n){camT.x=sx/n;camT.y=sy/n;if(V3.on){C3.x=camT.x;C3.y=camT.y;}}autoClose();}});

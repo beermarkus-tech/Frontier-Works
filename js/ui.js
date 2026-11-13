@@ -200,9 +200,11 @@ function saveInfo(){if(SAVE.err)return`<span style="color:#ff8a6a">⚠ Last save
 function factoryHtml(){let b=0,l=0,po=0,it=0,m=0;for(const e of ents.values()){if(isLine(e.k)){l++;if(e.item)it++;}else if(e.k==='pole')po++;else{b++;if(e.k==='mach')m++;}}
  return`<h4>Factory size</h4><div class="row"><span>Objects</span><span><b>${ents.size.toLocaleString()}</b></span></div><div class="row"><span>Buildings (machines)</span><span>${b.toLocaleString()} (${m.toLocaleString()})</span></div><div class="row"><span>Belts & pipes</span><span>${l.toLocaleString()}</span></div><div class="row"><span>Power poles</span><span>${po.toLocaleString()}</span></div><div class="row"><span>Items moving on belts & pipes</span><span>${it.toLocaleString()}</span></div><div class="row"><span>Save size</span><span>${SAVE.bytes?fmtKB(SAVE.bytes):'—'}</span></div><div class="muted">Phones stay smooth to about 10,000 objects; far zoom switches to simple blocks for big factories.</div>`;}
 function statsHtml(){
+ const tabs=`<div class="chips" style="margin-bottom:10px"><button class="btn chip ${UI.statTab!=='zones'?'on':''}" data-act="statTab" data-v="items">Items</button><button class="btn chip ${UI.statTab==='zones'?'on':''}" data-act="statTab" data-v="zones">🏭 Factories</button></div>`;
+ if(UI.statTab==='zones')return tabs+zoneDashHtml();
  const {p,c}=rates();const ks=[...new Set([...Object.keys(p),...Object.keys(c)])].sort((a,b)=>(p[b]||0)-(p[a]||0));
  let tot=0,cap=0;for(const g of grids){tot+=g.dem;cap+=g.cap;}
- let h=factoryHtml()+`<h4>Power</h4><div class="row"><span>Grids</span><span>${grids.length}</span></div><div class="row"><span>Consumption / capacity</span><span>${fmt(tot)} / ${fmt(cap)} MW</span></div>`;
+ let h=tabs+factoryHtml()+`<h4>Power</h4><div class="row"><span>Grids</span><span>${grids.length}</span></div><div class="row"><span>Consumption / capacity</span><span>${fmt(tot)} / ${fmt(cap)} MW</span></div>`;
  h+=`<h4>Items per minute (last ${stat.hist.length}s)</h4><table><tr><th>Item</th><th>Made</th><th>Used</th></tr>${ks.map(k=>`<tr><td>${nm(k)}</td><td>${fmt(p[k]||0)}</td><td>${fmt(c[k]||0)}</td></tr>`).join('')}</table>`;
  if(!ks.length)h+='<div class="muted">No production yet.</div>';
  h+=`<div style="margin-top:10px"><button class="btn" data-act="openCodex">📖 Recipe codex</button></div>`;
@@ -283,6 +285,7 @@ const ACT={
  pnWire:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.wireFrom=e.id;setTool(null);toast('Tap the pole, tower, switch or generator to connect to');updInfo();},
  dockHide:()=>{OPT.dockHid=true;saveOpt();applyDock();},
  dockShow:()=>{OPT.dockHid=false;saveOpt();applyDock();},
+ statTab:v=>{UI.statTab=v;renderPanel(true);},
  moveSel:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.moveId=e.id;setTool(null);closePanel();toast(`Tap where the ${B[e.d].n} should go`);updInfo();},
  takeAll:()=>{const e=ents.get(UI.panel.arg);if(!e)return;for(const k in e.store)give(k,e.store[k]);e.store={};toast('Moved to item stock');},
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},

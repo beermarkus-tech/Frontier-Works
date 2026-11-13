@@ -256,10 +256,10 @@ function accept(e,item,dir,carry){
   case 'gen':{const d=B[e.d];
    if(item==='water'&&d.water){if(e.water>=100)return false;e.water++;return true;}
    if(!has(d.fuels,item))return false;const cap=item==='fuel_rod'?5:50;if((e.fuel[item]||0)>=cap)return false;e.fuel[item]=(e.fuel[item]||0)+1;return true;}
-  case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}
+  case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
-  case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;return true;
-  case 'incin':stat.c[item]=(stat.c[item]||0)+1;return true;
+  case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;zStat('k',e,item,1);return true;
+  case 'incin':stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
  }
  return false;
 }
@@ -289,7 +289,7 @@ function pushOut(e,item){
   // a building's item starts with the progress it would have made since the belt tile became free (Session 37i): without this, every item
   // waited for a whole tick and a Mk3 belt fed by a drill or machine carried 240/min instead of 270
   const c=t.k==='belt'&&t.freeAt!=null?beltCarry(t,t.freeAt):0;
-  if(accept(t,item,p.d,c)){e.rr=(idx+1)%n;return true;}}
+  if(accept(t,item,p.d,c)){zMove(e,null,t,item,p.d);e.rr=(idx+1)%n;return true;}}
  return false;
 }
 
@@ -359,8 +359,8 @@ function buildNets(){
 function fluidHome(b,k,except){for(const m of nets)if(m!==except&&(!m.fluid||m.fluid===k)&&m.att.includes(b))return true;return false;}
 function updNets(dt){
  for(const n of nets){const lim=n.rate;n.bi=Math.min(lim,n.bi+lim*dt);n.bo=Math.min(lim,n.bo+lim*dt);let got=0,sent=0;
-  const take=(fluid,avail)=>{if(n.fluid&&n.fluid!==fluid)return 0;const m=Math.min(avail,Math.floor(n.cap-n.amt),Math.floor(n.bi));if(m<=0)return 0;n.fluid=fluid;n.amt+=m;n.bi-=m;got+=m;return m;};
-  for(const b of n.att){
+  let src=null;const take=(fluid,avail)=>{if(n.fluid&&n.fluid!==fluid)return 0;const m=Math.min(avail,Math.floor(n.cap-n.amt),Math.floor(n.bi));if(m<=0)return 0;n.fluid=fluid;n.amt+=m;n.bi-=m;got+=m;zNetFlow(n,src,m,true);return m;};
+  for(const b of n.att){src=b;
    if(b.k==='pump'){if(b.item&&b.buf>0){if(n.fluid&&n.fluid!==b.item){if(!fluidHome(b,b.item,n))n.conflict={fluid:b.item,b,t:tickNo};continue;}b.buf-=take(b.item,b.buf);}}
    else if(b.k==='mach'){for(const k in b.outb)if(IT[k].f&&b.outb[k]>0){if(n.fluid&&n.fluid!==k){if(!fluidHome(b,k,n))n.conflict={fluid:k,b,t:tickNo};continue;}b.outb[k]-=take(k,b.outb[k]);}}
    else if(b.k==='tank'&&b.ft&&b.amt>0&&n.amt<n.cap*0.5){if(n.fluid&&n.fluid!==b.ft){if(!fluidHome(b,b.ft,n))n.conflict={fluid:b.ft,b,t:tickNo};continue;}b.amt-=take(b.ft,b.amt);if(!b.amt)b.ft=null;}}
@@ -370,7 +370,7 @@ function updNets(dt){
    // fluid was short one refinery always got served first.
    const cons=n.att.filter(b=>b.k!=='pump'&&!(b.k==='tank'&&n.amt<=n.cap*0.8)&&!(b.k==='mach'&&!(b.r&&RC[b.r].i[n.fluid])));
    if(cons.length){let i=(n.rr=((n.rr||0)+1)%cons.length),stall=0;
-    while(n.amt>=1&&n.bo>=1&&stall<cons.length){if(accept(cons[i],n.fluid,0,0)){n.amt--;n.bo--;sent++;stall=0;}else stall++;i=(i+1)%cons.length;}}}
+    while(n.amt>=1&&n.bo>=1&&stall<cons.length){if(accept(cons[i],n.fluid,0,0)){n.amt--;n.bo--;sent++;stall=0;zNetFlow(n,cons[i],1,false);}else stall++;i=(i+1)%cons.length;}}}
   const a=Math.min(1,dt/3);n.inR+=(got/dt*60-n.inR)*a;n.outR+=(sent/dt*60-n.outR)*a;n._fl+=((n.cap?n.amt/n.cap:0)-n._fl)*Math.min(1,dt/1.2);}
 }
 
@@ -392,14 +392,14 @@ function powerStep(dt){
  }
 }
 function burn(g,mj){const d=B[g.d];
- while(g.energy<mj){let got=false;for(const f of d.fuels)if((g.fuel[f]||0)>0){g.fuel[f]--;g.energy+=IT[f].e;stat.c[f]=(stat.c[f]||0)+1;if(f==='fuel_rod'){g.outb.waste=(g.outb.waste||0)+10;stat.p.waste=(stat.p.waste||0)+10;}got=true;break;}if(!got)break;}
+ while(g.energy<mj){let got=false;for(const f of d.fuels)if((g.fuel[f]||0)>0){g.fuel[f]--;g.energy+=IT[f].e;stat.c[f]=(stat.c[f]||0)+1;zStat('c',g,f,1);if(f==='fuel_rod'){g.outb.waste=(g.outb.waste||0)+10;stat.p.waste=(stat.p.waste||0)+10;}got=true;break;}if(!got)break;}
  g.energy=Math.max(0,g.energy-mj);
  if(d.water){g.wacc+=mj*d.water;while(g.wacc>=1&&g.water>0){g.water--;g.wacc--;stat.c.water=(stat.c.water||0)+1;}}
 }
 function updBelt(e,dt){
  if(e.k==='pipe')return;
  if(!e.item)return;e.prog+=e.spd*dt;
- if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]),ov=e.prog-1;accT=S.t-ov/e.spd;const ok=t&&t!==e&&accept(t,e.item,e.dir,ov);accT=null;if(ok){e.item=null;e.prog=0;e.freeAt=S.t-ov/e.spd;}else e.prog=1;}   // freeAt: the exact moment the tile became free
+ if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]),ov=e.prog-1;accT=S.t-ov/e.spd;const it0=e.item,ok=t&&t!==e&&accept(t,e.item,e.dir,ov);accT=null;if(ok){zMove(e,e.oz,t,it0,e.dir);e.item=null;e.prog=0;e.freeAt=S.t-ov/e.spd;}else e.prog=1;}   // freeAt: the exact moment the tile became free
 }
 function updRouter(e){
  if(!e.item)return;const sub=B[e.d].sub,D=e.dir;let outs;
@@ -408,12 +408,12 @@ function updRouter(e){
  else if(sub==='merge')outs=[D];
  else outs=[0,1,2,3].filter(o=>o!==((e.inDir+2)&3));
  for(let k=0;k<outs.length;k++){const o=outs[(e.rr+k)%outs.length];const t=entAt(e.x+DX[o],e.y+DY[o]);
-  if(!t)continue;const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
+  if(!t)continue;const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
 }
 function updCross(e){
  // an item heading into a belt/pipe that points back at the crossing can never move (old saves could jam like this): return it to the stock
  const stuck=(t,d)=>t&&isLine(t.k)&&t.dir===((d+2)&3);
- const pass=(item,d,T)=>{const t=entAt(e.x+DX[d],e.y+DY[d]);if(!t)return false;const T0=T!=null?T:S.t;accT=T0;const ok=accept(t,item,d,beltCarry(t,T0));accT=null;return ok;};
+ const pass=(item,d,T)=>{const t=entAt(e.x+DX[d],e.y+DY[d]);if(!t)return false;const T0=T!=null?T:S.t;accT=T0;const ok=accept(t,item,d,beltCarry(t,T0));accT=null;if(ok)zMove(e,(d===0||d===2)?e.hoz:e.voz,t,item,d);return ok;};
  if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(pass(e.hs,e.hd,e.hT))e.hs=null;else if(stuck(t,e.hd)){give(e.hs,1);e.hs=null;}}
  if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(pass(e.vs,e.vd,e.vT))e.vs=null;else if(stuck(t,e.vd)){give(e.vs,1);e.vs=null;}}
 }
@@ -441,7 +441,7 @@ function updPad(e,dt){const d=B[e.d],D=e.dr,tg=padTarget(e),pw=e.pw>0;
     D.st=1;D.t=0;D.w=0;D.tx=tg.x;D.ty=tg.y;}}else D.w=0;}
  else if(pw){const dist=Math.max(1,Math.hypot(D.tx-e.x,D.ty-e.y));
   if(D.st===1){if(!tg||tg.x!==D.tx||tg.y!==D.ty){D.st=2;}else{D.t=Math.min(1,D.t+DRONE.spd*dt/dist);if(D.t>=1){D.w+=dt;if(D.w>=DRONE.unload){let n=0;
-     for(const k in D.c){const m=Math.min(d.cap-padCount(tg),D.c[k]);if(m>0){tg.store[k]=(tg.store[k]||0)+m;D.c[k]-=m;n+=m;}if(!D.c[k])delete D.c[k];}
+     for(const k in D.c){const m=Math.min(d.cap-padCount(tg),D.c[k]);if(m>0){tg.store[k]=(tg.store[k]||0)+m;D.c[k]-=m;n+=m;zFlow(e,tg,k,m);}if(!D.c[k])delete D.c[k];}
      e.del=(e.del||0)+n;D.st=2;D.w=0;}}}}
   if(D.st===2){D.t=Math.max(0,D.t-DRONE.spd*dt/dist);if(D.t<=0){for(const k in D.c)e.store[k]=(e.store[k]||0)+D.c[k];D.c={};D.st=0;}}}
 }
@@ -450,9 +450,9 @@ function updBuilding(e,dt){
   case 'mach':{
    const r=e.r&&RC[e.r];e.want=false;if(!r){effTrack(e,dt,'recipe');return;}
    if(e.off){for(const k in e.outb)if(e.outb[k]>0){if(pushOut(e,k))e.outb[k]--;}break;}   // switched off (Session 37e): no new cycles, no power; finished items still leave
-   if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];}e.run=true;e.prog=0;}
-   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t;if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];}e.run=false;e.prog=0;
-     if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];}e.run=true;}}}}
+   if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=0;}
+   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t;if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];zStat('p',e,k,r.o[k]);}e.run=false;e.prog=0;
+     if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;}}}}
    for(const k in e.outb)if(e.outb[k]>0){for(let a=0;a<2&&e.outb[k]>0;a++){if(pushOut(e,k))e.outb[k]--;else break;}}
    effTrack(e,dt,machState(e,r));
    break;}
@@ -461,7 +461,7 @@ function updBuilding(e,dt){
    if(d.water){item='water';rate=d.rate;}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
    e.item=item;e.want=!!item&&e.buf<10&&!e.off;
    if(e.off){if(item&&e.buf>0&&pushOut(e,item))e.buf--;break;}
-   if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;}}
+   if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;zStat('p',e,item,1);}}
    if(item)for(let a=0;a<2&&e.buf>0;a++){if(pushOut(e,item))e.buf--;else break;}
    effTrack(e,dt,!item?'none':e.want&&e.pw>0?'work':!e.want?'out':'power');   // a full buffer (want false) is 'Output full', never 'No power'
    break;}
@@ -484,6 +484,6 @@ function tick(dt){
  for(const e of crosses)updCross(e);    // splitter never waits a whole tick (Mk5 through splitters: 684 → 780/min)
  for(const e of buildings)updBuilding(e,dt);
  updNets(dt);
- stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}
+ zTick(dt);stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}
 }
 function rates(){const p={},c={};for(const h of stat.hist){for(const k in h.p)p[k]=(p[k]||0)+h.p[k];for(const k in h.c)c[k]=(c[k]||0)+h.c[k];}const m=60/Math.max(1,stat.hist.length);for(const k in p)p[k]*=m;for(const k in c)c[k]*=m;return{p,c};}
