@@ -1571,3 +1571,25 @@ An on/off switch inside each machine's panel.
 ### Verified
 - `npm test` 78/78. New check: a fed, powered smelter runs; Turn off stops it (no progress, no demand, status), stays off through save/load,
   Turn on resumes; a generator switched off gives 0 MW.
+
+---
+
+## Session 37f — 2026-11-13 (Claude Code, cloud session) · Build 65
+
+### What Markus asked
+How do Pipe Junctions share fluid between several refineries: in turn like splitters, or one output first? It looked like the upper one
+always came first.
+
+### Cause
+`updNets` filled each attached building in turn as far as it could take before the next one, and its rotating start moved by the number of
+buildings visited, so with some numbers of attachments the start landed on the same building every tick. With short supply that building
+got almost everything (test: 78 vs 5 crude).
+
+### Fix
+- Fair share: each tick the network hands out one unit at a time, in turn, to every building that can take it (pumps excluded, tanks only
+  above 80 %, machines only if their recipe uses that fluid); the start moves by one each tick.
+- Build number **65**.
+
+### Verified
+- New check: two refineries on one network with short supply get 39 vs 44 crude (old code: 5 vs 78).
+- `npm test` 79/79 (pipe throughput still 300 m³/min on Mk1); `npm run playthrough` unchanged apart from measurement noise.

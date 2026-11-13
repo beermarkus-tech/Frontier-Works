@@ -349,9 +349,12 @@ function updNets(dt){
    else if(b.k==='mach'){for(const k in b.outb)if(IT[k].f&&b.outb[k]>0){if(n.fluid&&n.fluid!==k){n.conflict={fluid:k,b,t:tickNo};continue;}b.outb[k]-=take(k,b.outb[k]);}}
    else if(b.k==='tank'&&b.ft&&b.amt>0&&n.amt<n.cap*0.5){if(n.fluid&&n.fluid!==b.ft){n.conflict={fluid:b.ft,b,t:tickNo};continue;}b.amt-=take(b.ft,b.amt);if(!b.amt)b.ft=null;}}
   if(n.fluid&&n.amt>=1){
-   for(let k=0;k<n.att.length&&n.amt>=1&&n.bo>=1;k++){const b=n.att[(k+(n.rr=(n.rr||0)+1))%n.att.length];
-    if(b.k==='pump')continue;if(b.k==='tank'&&n.amt<=n.cap*0.8)continue;if(b.k==='mach'&&!(b.r&&RC[b.r].i[n.fluid]))continue;
-    while(n.amt>=1&&n.bo>=1&&accept(b,n.fluid,0,0)){n.amt--;n.bo--;sent++;}}}
+   // fair share (Session 37f): one unit at a time, in turn, to every building that can take it; the starting point moves by one each tick.
+   // Before, each building in turn was filled as far as it could take, and the start could land on the same building every tick, so when
+   // fluid was short one refinery always got served first.
+   const cons=n.att.filter(b=>b.k!=='pump'&&!(b.k==='tank'&&n.amt<=n.cap*0.8)&&!(b.k==='mach'&&!(b.r&&RC[b.r].i[n.fluid])));
+   if(cons.length){let i=(n.rr=((n.rr||0)+1)%cons.length),stall=0;
+    while(n.amt>=1&&n.bo>=1&&stall<cons.length){if(accept(cons[i],n.fluid,0,0)){n.amt--;n.bo--;sent++;stall=0;}else stall++;i=(i+1)%cons.length;}}}
   const a=Math.min(1,dt/3);n.inR+=(got/dt*60-n.inR)*a;n.outR+=(sent/dt*60-n.outR)*a;n._fl+=((n.cap?n.amt/n.cap:0)-n._fl)*Math.min(1,dt/1.2);}
 }
 

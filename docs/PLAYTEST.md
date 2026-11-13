@@ -30,11 +30,11 @@ Each recipe was built with real belts/pipes (Mk5 belts / Mk2 pipes, so supply is
 | Iron Ingot | Smelter | 30 / 30 | 100% | ✓ |
 | Copper Ingot | Smelter | 30 / 30 | 100% | ✓ |
 | Iron Plate | Press | 20 / 20 | 100% | ✓ |
-| Iron Rod | Press | 14.8 / 15 | 100% | ✓ |
+| Iron Rod | Press | 15 / 15 | 100% | ✓ |
 | Bolts | Press | 40 / 40 | 100% | ✓ |
 | Wire | Press | 29.5 / 30 | 100% | ✓ |
 | Cable | Press | 30 / 30 | 100% | ✓ |
-| Concrete | Press | 15 / 15 | 100% | ✓ |
+| Concrete | Press | 14.8 / 15 | 100% | ✓ |
 | Braced Plate | Assembler | 5 / 5 | 100% | ✓ |
 | Rotor | Assembler | 4 / 4 | 100% | ✓ |
 | Copper Sheet | Press | 10 / 10 | 100% | ✓ |
