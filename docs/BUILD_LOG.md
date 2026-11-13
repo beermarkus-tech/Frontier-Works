@@ -2296,3 +2296,17 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Built:** picking or changing a recipe (`setRec` in `js/ui.js`) resets the machine's efficiency history (`_efT`, `_ef`, `_efw`). The average then starts fresh for the new setup. Machines already showing the message clear on their own within 5 game minutes.
 
 **Verified:** added a check to the recipe-fold smoke test. `npm test` all PASS.
+
+## Session 39y — 2026-11-13 (Claude Code, cloud session) · Build 107
+
+**Asked:** (screenshot) layout: line → Splitter → Crossing → belt that turns north. It didn't work: the belt didn't bend and nothing flowed.
+
+**Found:** two gaps.
+1. `feedsInto` only counted a crossing as a side feeder when a *belt* sat on its far side, not a splitter or merger, so the belt never got its bend.
+2. `passOK` only let items pass through a crossing into a belt pointing straight on. The splitter therefore refused to send anything into the crossing.
+
+**Built:**
+- `feedsInto` follows crossing chains recursively (depth ≤ 32) to whatever feeds them: a belt, splitter or merger.
+- `passOK` also accepts a belt whose bend (`cin`) comes from that direction. Plain perpendicular belts are still refused, so machine output can't leak sideways onto input lines (the Session 39j protection).
+
+**Verified:** new smoke check reproducing the layout: the belt bends and items arrive in a crate. `npm test` all PASS. `npm run playthrough`: all recipes ✓, no errors.

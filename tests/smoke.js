@@ -131,6 +131,16 @@ const server=require('./serve.js');
   return{ok:r.every(v=>v===''),bent,blocked,straight,fed,jbend};});
  check('a belt beside a building bends towards its side feeder (and takes no output from that building); without the feeder it stays straight and takes it',bend.ok&&bend.bent&&bend.blocked&&bend.straight&&bend.fed);
  check('a belt with a pipe junction behind it still bends towards a merger feeding it from the side',bend.jbend);
+ // splitter → crossing → belt turning away: the belt bends and items flow through (Session 39y screenshot)
+ const sxb=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-5;j<3&&ok;j++)for(let i=-2;i<5&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('belt1',X-1,Y,0),P('splitter',X,Y,0),P('crossing',X+1,Y,0),P('belt1',X+2,Y,3),P('belt1',X+2,Y-1,3),P('storage',X+2,Y-3,0)];tick(0.05);
+  const b=fw.entAt(X+2,Y),bent=b.cin===0,src=fw.entAt(X-1,Y),cr=fw.entAt(X+2,Y-3);
+  for(let k=0;k<200;k++){if(!src.item){src.item='iron_plate';src.prog=0;}tick(0.05);}
+  const got=(cr.store.iron_plate||0);
+  for(let j=-5;j<3;j++)for(let i=-2;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),bent,got};});
+ check(`splitter → crossing → belt turning away: belt bends and items arrive (${sxb.got})`,sxb.ok&&sxb.bent&&sxb.got>=5);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

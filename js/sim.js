@@ -270,7 +270,7 @@ function perim(e){const p=[];
 /* can an item moving in direction d end up somewhere useful from tile t? Crossings are followed to the end of the chain (Session 39j: before,
    any crossing counted as fine, so machine output leaked into input crossings, ran to a dead end and blocked the lane other inputs needed) */
 function passOK(t,item,d,depth){const fl=IT[item].f;depth=depth||0;
- if(isLine(t.k))return t.dir===d&&fl===(t.k==='pipe');
+ if(isLine(t.k))return (t.dir===d||(t.k==='belt'&&t.cin===d))&&fl===(t.k==='pipe');   /* straight in, or into the belt's bend (Session 39y) */
  if(t.k==='router'){const b=B[t.d];if(fl!==!!b.fl)return false;if(b.sub==='merge')return d!==((t.dir+2)&3);if(b.sub==='junc')return true;return d===t.dir;}
  if(t.k==='cross'){if(depth>32)return false;const far=entAt(t.x+DX[d],t.y+DY[d]);return !!far&&passOK(far,item,d,depth+1);}
  if(t.k==='mach')return !!(t.r&&RC[t.r].i[item]);
@@ -304,11 +304,11 @@ function rectDist(px,py,e){const dx=Math.max(e.x-px,0,px-(e.x+e.w)),dy=Math.max(
 /* fluid-only pieces: a belt pointing at one is a dead end (Session 39t: Rotate skips these, 2D draws an end stop) */
 const fluidOnly=t=>!!t&&(t.k==='pipe'||t.k==='tank'||t.k==='pump'||(t.k==='router'&&!!B[t.d].fl));
 const beltBlocked=e=>e.k==='belt'&&fluidOnly(entAt(e.x+DX[e.dir],e.y+DY[e.dir]));
-function feedsInto(sd,e,o){const into=(o+2)&3;
+function feedsInto(sd,e,o,depth){const into=(o+2)&3;
  if(isLine(sd.k))return sd.k===e.k&&sd.dir===into;
  if(sd.k==='router'){const d=B[sd.d];if(!!d.fl!==(e.k==='pipe'))return false;const D=sd.dir;
   if(d.sub==='merge')return into===D;if(d.sub==='junc')return true;return into===D||into===((D+1)&3)||into===((D+3)&3);}
- if(sd.k==='cross'){const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&isLine(far.k)&&far.k===e.k&&far.dir===into;}
+ if(sd.k==='cross'){if((depth||0)>32)return false;const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&feedsInto(far,e,o,(depth||0)+1);}   /* follows the chain to a belt, splitter or merger (Session 39y) */
  return false;}
 function rebuildTopo(){
  syncPipes();topoDirty=false;topoVer++;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];meters=[];

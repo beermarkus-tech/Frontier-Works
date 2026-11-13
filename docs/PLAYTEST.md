@@ -42,7 +42,7 @@ Each recipe was built with real belts/pipes (Mk5 belts / Mk2 pipes, so supply is
 | Stitched Plate (alt) | Assembler | 5.3 / 5.6 | 99% | ✓ |
 | Cast Bolts (alt) | Press | 50 / 50 | 100% | ✓ |
 | Steel Ingot | Foundry | 44.3 / 45 | 100% | ✓ |
-| Steel Beam | Press | 14.8 / 15 | 100% | ✓ |
+| Steel Beam | Press | 15 / 15 | 100% | ✓ |
 | Steel Pipe | Press | 20 / 20 | 100% | ✓ |
 | Cased Girder | Assembler | 6 / 6 | 100% | ✓ |
 | Stator | Assembler | 5 / 5 | 100% | ✓ |
