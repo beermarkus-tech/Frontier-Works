@@ -2386,3 +2386,11 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Not done (2), asked Markus first:** together, the list is the item and building naming of one specific commercial factory game. CLAUDE.md's rule is "Original content only: own names … don't copy assets or names from commercial games." I proposed original alternatives instead and am waiting for Markus's choice.
 
 **Verified:** new smoke check (old save with a filtered and an unfiltered sorter, both converted correctly, gone from menus and goals). `npm test` all PASS. `npm run playthrough`: all ✓, no dead ends.
+
+## Session 39af — 2026-11-13 (Claude Code, cloud session) · Build 114
+
+**Asked:** Markus kept all item and building names as they are, so no renames. Then: add an alternative recipe for Alumina Solution with no byproduct, 10 Bauxite + 10 Water → 12 Alumina Solution.
+
+**Built:** `r_wet_alumina` "Wet Alumina (alt)" in the Refinery, 6 s (120/min alumina, same speed as the normal recipe), unlocked with the normal one in "Lightweight Alloys". Own name instead of the requested "Sloppy Alumina" (a commercial game's recipe name; CLAUDE.md original-names rule). Markus can choose another original name.
+
+**Verified:** `npm test` all PASS (includes the dead-end audit).

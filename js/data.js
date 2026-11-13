@@ -82,6 +82,7 @@ R('r_residual_plastic','Residual Plastic','refinery',6,'polymer_resin:6,water:2'
 R('r_residual_rubber','Residual Rubber','refinery',6,'polymer_resin:4,water:4','rubber:2');
 R('r_wet_concrete','Wet Concrete (alt)','refinery',3,'limestone:6,water:5','concrete:4',1);
 R('r_alumina','Alumina Solution','refinery',6,'bauxite:12,water:18','alumina:12,silica:5');
+R('r_wet_alumina','Wet Alumina (alt)','refinery',6,'bauxite:10,water:10','alumina:12',1);   /* no silica byproduct (Session 39af, Markus) */
 R('r_alu_scrap','Aluminum Scrap','refinery',4,'alumina:4,petro_coke:2','alu_scrap:6,water:2');
 R('r_acid','Sulfuric Acid','refinery',6,'sulfur:5,water:5','acid:5');
 // Fabricator
@@ -155,7 +156,7 @@ const MS=[
 {n:'Heavy Industry',req:{motor:50,cased_girder:100,stator:100,steel_pipe:300},b:['fabricator','dpad'],r:['r_heavy_truss','r_iron_wire','r_steel_rotor']},
 {n:'Petrochemistry',req:{heavy_truss:10,motor:100,steel_beam:300,cased_girder:200},b:['opump','refinery','turbine','pipe2','belt4'],r:['r_plastic','r_rubber','r_fuel','r_residual_fuel','r_petro_coke','r_residual_plastic','r_residual_rubber','r_wet_concrete','r_circuit_board','r_coke_steel','r_insulated_cable']},
 {n:'Electronics',req:{plastic:300,rubber:300,circuit_board:100,heavy_truss:20},b:[],r:['r_compute_module','r_data_bus','r_quartz_crystal','r_silica','r_resonator']},
-{n:'Lightweight Alloys',req:{compute_module:25,data_bus:50,resonator:100,steel_pipe:500},b:['blender','drill3'],r:['r_alumina','r_alu_scrap','r_alu_ingot','r_pure_alu','r_alu_casing','r_alloy_panel','r_heat_sink','r_acid','r_battery','r_coolant_block','r_control_chip']},
+{n:'Lightweight Alloys',req:{compute_module:25,data_bus:50,resonator:100,steel_pipe:500},b:['blender','drill3'],r:['r_alumina','r_wet_alumina','r_alu_scrap','r_alu_ingot','r_pure_alu','r_alu_casing','r_alloy_panel','r_heat_sink','r_acid','r_battery','r_coolant_block','r_control_chip']},
 {n:'Nuclear Age',req:{alloy_panel:300,heat_sink:100,battery:200,control_chip:20},b:['reactor','belt5'],r:['r_uranium_cell','r_fuel_rod','r_turbine_core','r_quantum_core']},
 {n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:[],win:1},
 ];
