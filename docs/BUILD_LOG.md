@@ -1808,3 +1808,12 @@ Remove Makes and Uses from the factory cards; replace "Could make more" with wha
 ### Verified
 - `npm test` 88 PASS / 0 FAIL. Dashboard check: "Designed to make" shown, old sections gone, a smelter zone designs 30 ingots/min and no ore.
 - Screenshot: Smelting "Iron Ingot 45/min (now 45)", Pressing "Iron Plate 20/min (now 18)".
+
+---
+
+## Session 38d — 2026-11-13 (Claude Code, cloud session) · Build 75
+
+- Markus: hide "Sends to other factories" and "Gets from other factories" on a factory card when they're empty. Done (`flows` returns ''
+  when nothing crossed; the heading is only added when there's content).
+- Dashboard check extended: in the two-zone test, Smelting only shows "Sends", Pressing only "Gets".
+- `npm test` 88 PASS / 0 FAIL. Build number **75**.

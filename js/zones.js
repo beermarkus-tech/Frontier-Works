@@ -104,7 +104,7 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
  if(!zs.length)return`<div class="muted">No factory zones yet. Draw them with the Factory Zone tool (Signs tab), then this page shows what each factory makes, sends to the others and could still make.</div>`;
  const per={};const get=z=>per[z]||(per[z]={p:{},c:{},k:{},s:{},b:{},out:{},inn:{}});
  for(const key in R){const v=R[key],a=key.split('|');if(a[0]==='x'){const o=get(a[1]).out,i=get(a[2]).inn;(o[a[2]]||(o[a[2]]={}))[a[3]]=((o[a[2]]||{})[a[3]]||0)+v;(i[a[1]]||(i[a[1]]={}))[a[3]]=((i[a[1]]||{})[a[3]]||0)+v;}else get(a[1])[a[0]][a[2]]=(get(a[1])[a[0]][a[2]]||0)+v;}
- const flows=(m,arrow)=>{const parts=[];for(const z in m)for(const it in m[z])if(m[z][it]>=0.05)parts.push(`<div class="row"><span>${arrow==='→'?'→ '+zName(z):'← '+zName(z)}: ${nm(it)}</span><span>${fmt(m[z][it])}/min</span></div>`);return parts.join('')||'<div class="muted">—</div>';};
+ const flows=(m,arrow)=>{const parts=[];for(const z in m)for(const it in m[z])if(m[z][it]>=0.05)parts.push(`<div class="row"><span>${arrow==='→'?'→ '+zName(z):'← '+zName(z)}: ${nm(it)}</span><span>${fmt(m[z][it])}/min</span></div>`);return parts.join('');};
  let h=`<div class="muted">Last ${ZS.hist.length} s. Counted where items cross a zone’s fence (belts, pipes, drones). Tap a name to show it on the map.</div>`;
  const tot={p:{},c:{},spare:{},k:{},b:{}};
  const ids=[...zs.map(z=>z.id),0];
@@ -112,7 +112,7 @@ function zoneDashHtml(){const R=zRates(),zs=zones();
   for(const t of ['p','c','k','b'])for(const it in d[t])tot[t][it]=(tot[t][it]||0)+d[t][it];for(const it in M.spare)tot.spare[it]=(tot.spare[it]||0)+M.spare[it];
   const zz=zoneById(z);h+=`<div class="card zcard" style="border-left:4px solid ${z?zoneCol(zz):'#6c7680'}"><div class="row"><b>${z?`<button class="btn chip zlink" data-act="zoneShow" data-v="${z}" title="Show on the map" style="border-color:${zoneCol(zz)}">${zName(z)} ⌖</button>`:zName(z)}</b><span class="muted">${M.n} buildings · ${fmt(M.mw)} MW</span></div>
    <div class="plsub">Designed to make <span class="muted" style="text-transform:none;letter-spacing:0">· at full speed, after its own use (now)</span></div>${zDesign(M.design,d)}
-   <div class="plsub">Sends to other factories</div>${flows(d.out,'→')}<div class="plsub">Gets from other factories</div>${flows(d.inn,'←')}
+   ${(f=>f?`<div class="plsub">Sends to other factories</div>${f}`:'')(flows(d.out,'→'))}${(f=>f?`<div class="plsub">Gets from other factories</div>${f}`:'')(flows(d.inn,'←'))}
    ${Object.keys(d.k).length?`<div class="plsub">Into your stock (Base Core)</div>${zList(d.k)}`:''}${Object.keys(d.s).length?`<div class="plsub">Into crates</div>${zList(d.s)}`:''}${Object.keys(d.b).length?`<div class="plsub">Burned</div>${zList(d.b,'plbad')}`:''}
 ${Object.keys(M.short).length?`<div class="plsub">Short of (machines waiting)</div>${zList(M.short,'plbad')}`:''}</div>`;}
  const items=[...new Set([...Object.keys(tot.p),...Object.keys(tot.c),...Object.keys(tot.spare)])].sort((a,b)=>(tot.p[b]||0)-(tot.p[a]||0));

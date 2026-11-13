@@ -484,6 +484,7 @@ const server=require('./serve.js');
   const R=zRates();out.made=(R['p|'+A+'|iron_ingot']||0)>20;out.usedB=(R['c|'+Bz+'|iron_ingot']||0)>20;out.cross=(R['x|'+A+'|'+Bz+'|iron_ingot']||0)>20&&!R['x|'+A+'|0|iron_ingot'];   // across the gap between the fences: counted as Smelting → Pressing
   out.burned=(R['b|'+Bz+'|iron_plate']||0)>0||(R['x|'+Bz+'|0|iron_plate']||0)>0;
   UI.statTab='zones';openPanel('stats');const txt=document.getElementById('pbody').textContent;out.cards=txt.includes('Smelting')&&txt.includes('Pressing')&&txt.includes('All factories together')&&txt.includes('Sends to other factories')&&txt.includes('Designed to make')&&!txt.includes('MakesUses')&&!/\bMakes\b/.test(txt)&&!txt.includes('Could make more');
+  out.noEmpty=(txt.match(/Gets from other factories/g)||[]).length===1&&(txt.match(/Sends to other factories/g)||[]).length===1;   // Smelting only sends, Pressing only gets
   const M=zMachines(A);out.design=Math.abs((M.design.iron_ingot||0)-30)<0.5&&!(M.design.iron_ore>0);
   ACT.zoneShow(String(Bz));out.show=UI.hlZone&&UI.hlZone.id===Bz;UI.statTab='items';if(UI.panel)ACT.closePanel();
   for(const id of [A,Bz]){for(let i=0;i<zoneMap.length;i++)if(zoneMap[i]===id)zoneMap[i]=0;}zoneSave();zoneRebuild();
