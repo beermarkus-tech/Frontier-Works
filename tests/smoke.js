@@ -533,6 +533,21 @@ const server=require('./serve.js');
    Object.assign(MU,{played:1000,sec:null});muStep(t);while(MU.rest>0){muStep(t);MU.step++;}out.back=MU.track===0;}catch(e){out.switches=e.message;}
   openPanel('menu');out.menu=!document.getElementById('pbody').textContent.includes('coming');ACT.closePanel();return out;});
  check(`music (2 tracks): ${Object.entries(mu).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mu).every(v=>v===true));
+ // Markus's crossing grid (Session 39j): four input columns with a splitter per row feed a fabricator; its output used to leak into the input
+ // crossings, run to a dead end and block the lane bolts needed
+ const xj2=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;const PN=[...ents.values()].filter(isPN);
+  for(let r=20;r<170&&X==null;r+=3)for(let a=0;a<64;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));let ok=PN.every(e=>Math.abs(e.x-x-4)>22||Math.abs(e.y-y-4)>22);for(let j=-3;j<11&&ok;j++)for(let i=-2;i<14&&ok;i++)if(canPlace('incin',x+i,y+j)||zoneAt(x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+  const items=['truss_frame','bolts','steel_pipe','cased_girder'],r=[];
+  // four input columns going down; in row j the splitter sits in column j, crossings elsewhere; the fabricator touches column 3 on its left
+  for(let c=0;c<4;c++){r.push(P('belt3',X+c,Y-1,1));for(let j=0;j<4;j++)r.push(P(j===c?'splitter':'crossing',X+c,Y+j,1));r.push(P('belt3',X+c,Y+4,1),P('belt3',X+c,Y+5,1));}
+  r.push(P('incin',X,Y+6,0),P('incin',X+2,Y+6,0),P('fabricator',X+4,Y,0),P('belt3',X+8,Y+1,0),P('incin',X+9,Y+1,0),P('burner',X+4,Y+5,0),P('burner',X+6,Y+5,0));
+  const fab=fw.entAt(X+4,Y),g1=fw.entAt(X+4,Y+5),g2=fw.entAt(X+6,Y+5);fab.r='r_heavy_truss';let made=0;const orig=accept;
+  accept=function(e,it){const ok=orig.apply(this,arguments);if(ok&&it==='heavy_truss'&&e===fw.entAt(X+8,Y+1))made++;return ok;};
+  let leaked=0;try{for(let t=0;t<20*240;t++){for(let c=0;c<4;c++){const b=fw.entAt(X+c,Y-1);if(!b.item){b.item=items[c];b.prog=0;}}g1.fuel={coal:50};g2.fuel={coal:50};tick(0.05);
+   if(t%20===0)for(let c=0;c<4;c++)for(let j=0;j<4;j++){const x=fw.entAt(X+c,Y+j);if(x.k==='cross'&&x.hs==='heavy_truss')leaked++;}}}finally{accept=orig;}
+  for(let j=-3;j<11;j++)for(let i=-2;i<14;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),made,leaked,eff:Math.round((fab._ef||0)*100)};});
+ check(`crossing grid feeding a fabricator doesn't clog: ${xj2.made} Heavy Truss in 4 min (old code: 1), output never leaks into the input crossings (${xj2.leaked}), efficiency ${xj2.eff}% (bolts limit it: the splitter sends half sideways)`,xj2.ok&&xj2.made>=3&&xj2.leaked===0&&xj2.eff>=40);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

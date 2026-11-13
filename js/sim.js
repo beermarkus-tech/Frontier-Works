@@ -267,14 +267,16 @@ function perim(e){const p=[];
  for(let i=0;i<e.w;i++){p.push({x:e.x+i,y:e.y-1,d:3});p.push({x:e.x+e.w,y:e.y+i,d:0});p.push({x:e.x+e.w-1-i,y:e.y+e.h,d:1});p.push({x:e.x-1,y:e.y+e.h-1-i,d:2});}
  return p;}
 /* Would t take item arriving in direction d (without changing anything)? Used to see through a crossing. */
-function passOK(t,item,d){const fl=IT[item].f;
+/* can an item moving in direction d end up somewhere useful from tile t? Crossings are followed to the end of the chain (Session 39j: before,
+   any crossing counted as fine, so machine output leaked into input crossings, ran to a dead end and blocked the lane other inputs needed) */
+function passOK(t,item,d,depth){const fl=IT[item].f;depth=depth||0;
  if(isLine(t.k))return t.dir===d&&fl===(t.k==='pipe');
  if(t.k==='router'){const b=B[t.d];if(fl!==!!b.fl)return false;if(b.sub==='merge')return d!==((t.dir+2)&3);if(b.sub==='junc')return true;return d===t.dir;}
- if(t.k==='cross')return true;
+ if(t.k==='cross'){if(depth>32)return false;const far=entAt(t.x+DX[d],t.y+DY[d]);return !!far&&passOK(far,item,d,depth+1);}
  if(t.k==='mach')return !!(t.r&&RC[t.r].i[item]);
  if(t.k==='gen')return has(B[t.d].fuels,item)||(item==='water'&&!!B[t.d].water);
  if(t.k==='tank')return fl;
- return t.k==='storage'||t.k==='core'?!fl:t.k==='incin';}
+ return t.k==='storage'||t.k==='core'||t.k==='dpad'?!fl:t.k==='incin';}
 /* Sub-tick timing (Sessions 37i/37j): accT = the moment the item being handed over reached the tile edge (set by belts, splitters, crossings
    while they call accept). Splitters/crossings keep it (e.inT, e.hT, e.vT) and act like a belt piece of zero length; a belt tile receiving an
    item starts it with the progress it would have made since max(that moment, the moment the tile became free). Without this every handoff
@@ -408,14 +410,15 @@ function updRouter(e){
  else if(sub==='merge')outs=[D];
  else outs=[0,1,2,3].filter(o=>o!==((e.inDir+2)&3));
  for(let k=0;k<outs.length;k++){const o=outs[(e.rr+k)%outs.length];const t=entAt(e.x+DX[o],e.y+DY[o]);
-  if(!t)continue;const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
+  if(!t)continue;if(t.k==='cross'&&!passOK(t,e.item,o))continue;const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
 }
 function updCross(e){
  // an item heading into a belt/pipe that points back at the crossing can never move (old saves could jam like this): return it to the stock
  const stuck=(t,d)=>t&&isLine(t.k)&&t.dir===((d+2)&3);
  const pass=(item,d,T)=>{const t=entAt(e.x+DX[d],e.y+DY[d]);if(!t)return false;const T0=T!=null?T:S.t;accT=T0;const ok=accept(t,item,d,beltCarry(t,T0));accT=null;if(ok)zMove(e,(d===0||d===2)?e.hoz:e.voz,t,item,d);return ok;};
- if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(pass(e.hs,e.hd,e.hT))e.hs=null;else if(stuck(t,e.hd)){give(e.hs,1);e.hs=null;}}
- if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(pass(e.vs,e.vd,e.vT))e.vs=null;else if(stuck(t,e.vd)){give(e.vs,1);e.vs=null;}}
+ const dead=(t,it,d)=>!t||!passOK(t,it,d);   /* nothing ahead can ever take it */
+ if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(pass(e.hs,e.hd,e.hT))e.hs=null;else if(stuck(t,e.hd)||dead(t,e.hs,e.hd)){give(e.hs,1);e.hs=null;}}
+ if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(pass(e.vs,e.vd,e.vT))e.vs=null;else if(stuck(t,e.vd)||dead(t,e.vs,e.vd)){give(e.vs,1);e.vs=null;}}
 }
 function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}
 /* Efficiency: running average over the last EFF_T seconds of "working" vs. why not (e._ef 0..1, e._efw {reason: share}).

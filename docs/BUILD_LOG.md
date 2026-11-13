@@ -2055,3 +2055,33 @@ He likes the music; a second track with a slight beat, switching every couple of
 ### Verified
 - `npm test` 95 PASS / 0 FAIL. Flow Meter check extended (panel button keeps the belt; first Dismantle tap removes only the meter, second the
   belt); new phone check: no recipe button in Fabricator/Blender panels is wider than the panel. Phone screenshot of the Blender recipes.
+
+---
+
+## Session 39j — 2026-11-13 (Claude Code, cloud session) · Build 92
+
+### What Markus reported (with screenshot)
+A grid of input columns with splitters and crossings feeding two fabricators clogs after a while: the first fabricator starves for bolts
+although the Mk3 bolt belt is full. Clearing the crossings with the eraser helps until it clogs again.
+
+### Cause
+`passOK` treated any crossing as a fine destination. The fabricator touches the crossing grid, so `pushOut` pushed finished Heavy Truss
+sideways into the crossings (they only checked one tile ahead). The trusses ran left through the chain to a dead end and stayed there; a
+crossing has one sideways lane for both directions, so the lane the bolts needed towards the machine was blocked.
+
+### Fix (`js/sim.js`)
+- `passOK` follows crossing chains to the first non-crossing tile (max 32) and only says yes if that can take the item. Drone Pads now count
+  as destinations too.
+- Splitters only send into a crossing whose chain leads somewhere (`updRouter`).
+- A crossing item whose way ahead leads nowhere goes back to the stock, so jams in existing saves clear themselves.
+- Build number **92**.
+
+### Verified
+- Rebuilt Markus's layout (four input columns, splitter per row, fabricator on the right, Heavy Truss): old code 1 truss in 4 min, 2 %
+  efficiency, trusses seen in the input crossings 109 times; new code 4 trusses, 56 %, no leaks (limited by bolts: each splitter sends about
+  half its items sideways, ~135 of the 200 bolts/min the recipe needs). New permanent check.
+- `npm test` 96 PASS / 0 FAIL; `npm run playthrough` unchanged (noise only).
+
+### Open question
+- Markus's earlier message about the second music track ("a slight beat … so a bass drum,") was cut off; proposed a clear four-on-the-floor
+  bass drum, waiting for his answer.
