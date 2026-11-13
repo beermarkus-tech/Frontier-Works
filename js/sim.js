@@ -433,12 +433,11 @@ function updRouter(e){
   if(!t)continue;if(t.k==='cross'&&!passOK(t,e.item,o))continue;const T0=e.inT!=null?e.inT:S.t;accT=T0;const ok=accept(t,e.item,o,beltCarry(t,T0));accT=null;if(ok){zMove(e,e.oz,t,e.item,o);e.item=null;e.rr=(e.rr+k+1)%outs.length;return;}}
 }
 function updCross(e){
- // an item heading into a belt/pipe that points back at the crossing can never move (old saves could jam like this): return it to the stock
- const stuck=(t,d)=>t&&isLine(t.k)&&t.dir===((d+2)&3);
+ /* an item that can't move on waits in the crossing, so the line behind clogs (Session 39ad: dead-end items used to go back to the stock,
+    which hid the problem; machines and splitters already check passOK before entering a crossing) */
  const pass=(item,d,T)=>{const t=entAt(e.x+DX[d],e.y+DY[d]);if(!t)return false;const T0=T!=null?T:S.t;accT=T0;const ok=accept(t,item,d,beltCarry(t,T0));accT=null;if(ok)zMove(e,(d===0||d===2)?e.hoz:e.voz,t,item,d);return ok;};
- const dead=(t,it,d)=>!t||!passOK(t,it,d);   /* nothing ahead can ever take it */
- if(e.hs){const t=entAt(e.x+DX[e.hd],e.y+DY[e.hd]);if(pass(e.hs,e.hd,e.hT))e.hs=null;else if(stuck(t,e.hd)||dead(t,e.hs,e.hd)){give(e.hs,1);e.hs=null;}}
- if(e.vs){const t=entAt(e.x+DX[e.vd],e.y+DY[e.vd]);if(pass(e.vs,e.vd,e.vT))e.vs=null;else if(stuck(t,e.vd)||dead(t,e.vs,e.vd)){give(e.vs,1);e.vs=null;}}
+ if(e.hs&&pass(e.hs,e.hd,e.hT))e.hs=null;
+ if(e.vs&&pass(e.vs,e.vd,e.vT))e.vs=null;
 }
 function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}
 /* Efficiency: running average over the last EFF_T seconds of "working" vs. why not (e._ef 0..1, e._efw {reason: share}).

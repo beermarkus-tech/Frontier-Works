@@ -2360,3 +2360,13 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 - **Icons:** Compute Module gets its own shape, `'module'`: a boxy dark-green unit with a grey cooling-fin block on top and gold pins along the bottom. In 3D it's a thicker block.
 
 **Verified:** icons rendered side by side. New smoke check (mixed belt, circuit board left/right within 2, front gets the rest). `npm test` all PASS.
+
+## Session 39ad — 2026-11-13 (Claude Code, cloud session) · Build 112
+
+**Asked:** a crossing at the end of a line, with nothing behind it to take the items, doesn't clog. It should.
+
+**Found:** `updCross` sent an item back to the stock when the tile ahead could never take it (`dead`), or when a belt pointed back at the crossing (`stuck`). That came from Session 39j, when machine output leaked into input crossings. The leak is prevented at the entry since then: machines (`pushOut`) and splitters (`updRouter`) check `passOK` before using a crossing. So the stock return only hid real dead ends.
+
+**Built:** removed the stock return. An item that can't move on waits in the crossing (drawn there), and the belt behind backs up. A crossing in an old save that was jammed this way now visibly holds its item. DESIGN.md updated.
+
+**Verified:** new smoke check (belt → crossing → nothing: crossing holds the item, belt is full, 3 items fed, 0 sent to stock). Session 39j crossing-grid test still passes (no leak, no clog). `npm test` all PASS. `npm run playthrough`: all ✓, no errors.

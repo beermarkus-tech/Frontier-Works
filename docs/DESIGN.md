@@ -82,6 +82,8 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   **Crossings touching a building are see-through** (Session 22): the building only pushes output into a crossing if whatever is on the
   crossing's far side would accept it from that direction (a belt pointing away, a router facing the right way, storage, a machine needing it…).
   So a crossing can carry input in or output out, and it never fills up with output aimed at an incoming belt.
+  A belt that runs into a crossing with nothing able to take the item on the far side clogs: the item waits in the crossing and the line
+  backs up, like any belt end (Session 39ad; before, such items went back to the stock).
 - Belts can feed another belt from the side (side-loading). Belt corners are drawn curved, also when a splitter, merger, crossing or pipe
   junction feeds a belt from the side (Session 21).
 - A belt with a building behind it and one belt (or splitter/merger/crossing) feeding it from the side bends towards that feeder, so a line

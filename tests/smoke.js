@@ -173,6 +173,15 @@ const server=require('./serve.js');
   for(let j=-4;j<4;j++)for(let i=-4;i<6;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),L,R,F};});
  check(`Logic Splitter shares an item left/right evenly while other items go out the front (${lsm.L}/${lsm.R}, front ${lsm.F})`,lsm.ok&&lsm.L>=20&&Math.abs(lsm.L-lsm.R)<=2&&lsm.F>=40);
+ // a crossing at the end of a line with nothing behind it clogs: the item waits there, nothing vanishes into the stock (Session 39ad)
+ const xclog=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-2;j<3&&ok;j++)for(let i=-3;i<4&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('belt1',X-2,Y,0),P('belt1',X-1,Y,0),P('crossing',X,Y,0)];tick(0.05);const src=fw.entAt(X-2,Y),cx=fw.entAt(X,Y),inv0=S.inv.bolts||0;let fed=0;
+  for(let k=0;k<200;k++){if(!src.item){src.item='bolts';src.prog=0;fed++;}tick(0.05);}
+  const held=cx.hs==='bolts',full=!!fw.entAt(X-1,Y).item&&!!src.item,lost=(S.inv.bolts||0)-inv0;
+  for(let j=-2;j<3;j++)for(let i=-3;i<4;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),held,full,lost,fed};});
+ check(`crossing at a dead end clogs the line (holds an item, belt backs up, ${xclog.fed} fed, ${xclog.lost} sent to stock)`,xclog.ok&&xclog.held&&xclog.full&&xclog.lost===0&&xclog.fed<=4);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
