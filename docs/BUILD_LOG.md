@@ -1958,3 +1958,14 @@ Next sound step: machine sounds.
   part). Also fixed the same problem one step earlier: Raw Quartz now uses the rough ore-lump shape, so Raw Quartz / Quartz Crystal /
   Resonator are three different shapes. In 3D, Resonators on belts use the generic block (no own 3D shape).
 - Verified: icon comparison at 96 px and 32 px; `npm test` 92 PASS / 0 FAIL. Build number **86**.
+
+---
+
+## Session 39e — 2026-11-13 (Claude Code, cloud session) · Build 87
+
+- Markus: assemblers and fabricators sound very annoying.
+- Cause: their voice was a band-passed sawtooth with pitch wobble plus high 4.2 kHz ticks (buzzy and shrill over time).
+- Done: calm voice: low triangle hum (92 Hz) + faint octave, soft muffled whir (band-passed noise at 420 Hz with slow breathing), and an
+  occasional soft low "set-down clunk" every 1.6–3 s instead of the ticks. Base level 1.4 → 0.9 (similar loudness to the other kinds in an
+  offline render). New demo WAV sent.
+- `npm test` 92 PASS / 0 FAIL. Build number **87**.

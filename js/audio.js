@@ -59,7 +59,7 @@ function mvBuild(){const c=AU.ctx,bus=AU.bus.mach,mk=k=>{const g=c.createGain();
  const lfo=(param,rate,depth)=>{const l=c.createOscillator();l.frequency.value=rate;const lg=c.createGain();lg.gain.value=depth;l.connect(lg);lg.connect(param);l.start();};
  {const g=mk('furnace');loopNoise(g,'lowpass',320,0.8,0.55);const t=tone(g,'sine',52,0.25);lfo(t.g.gain,0.3,0.08);}
  {const g=mk('press');loopNoise(g,'lowpass',180,0.7,0.12);}
- {const g=mk('assembler');const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=700;f.Q.value=2;f.connect(g);const t=tone(f,'sawtooth',138,0.18);lfo(t.o.frequency,0.7,22);lfo(f.frequency,0.45,260);loopNoise(g,'highpass',2400,0.7,0.04);}
+ {const g=mk('assembler');tone(g,'triangle',92,0.14);tone(g,'sine',184,0.04);const w=loopNoise(g,'bandpass',420,0.6,0.22);lfo(w.gain,0.25,0.07);}   /* calm: low hum + soft muffled whir (Session 39e; the buzzy wobbling sawtooth and high ticks were annoying) */
  {const g=mk('refinery');loopNoise(g,'lowpass',260,0.9,0.3);tone(g,'sine',41,0.18);}
  {const g=mk('drill');const n=loopNoise(g,'bandpass',190,1.4,0.6);lfo(n.gain,9,0.3);tone(g,'square',62,0.05);}
  {const g=mk('gen');tone(g,'sine',50,0.32);tone(g,'sine',100,0.12);tone(g,'triangle',150,0.03);loopNoise(g,'bandpass',900,0.8,0.05);}
@@ -70,8 +70,8 @@ const MV_EVT={
  press:(t,l)=>{auOsc('sine',95,48,t,0.22,0.5*l,0,'mach');auNoise(t,0.06,0.25*l,'bandpass',900,500,1.2,'mach');auNoise(t+0.18,0.05,0.12*l,'highpass',3000,3000,0.8,'mach');return 1.15+Math.random()*0.15;},
  furnace:(t,l)=>{auNoise(t,0.02,0.12*l,'highpass',2500+Math.random()*2000,3000,0.8,'mach');return 0.08+Math.random()*0.35;},
  refinery:(t,l)=>{const f=180+Math.random()*420;auOsc('sine',f,f*1.6,t,0.07,0.09*l,0,'mach');return 0.12+Math.random()*0.4;},
- assembler:(t,l)=>{auNoise(t,0.015,0.08*l,'bandpass',4200,4200,3,'mach');return 0.35+Math.random()*0.5;}};
-const MV_BASE={furnace:0.45,press:0.4,assembler:1.4,refinery:0.75,drill:1.0,gen:0.4,belt:0.3};   /* balanced from an offline render so each kind is about equally present */
+ assembler:(t,l)=>{auOsc('sine',120,80,t,0.18,0.22*l,0,'mach');auNoise(t,0.07,0.08*l,'lowpass',900,400,0.8,'mach');return 1.6+Math.random()*1.4;}};   /* occasional soft set-down clunk */
+const MV_BASE={furnace:0.45,press:0.4,assembler:0.9,refinery:0.75,drill:1.0,gen:0.4,belt:0.3};   /* balanced from an offline render so each kind is about equally present */
 function mvUpdate(){if(!AU.ctx||AU.ctx.state!=='running'||!S||!ents)return;if(!MV.on)mvBuild();
  const quiet=OPT.mute||!(OPT.vol.mach>0)||document.hidden;const sum={};
  if(!quiet){const v3=typeof V3!=='undefined'&&V3.on,cx=v3?C3.x:cam.x,cy=v3?C3.y:cam.y,
