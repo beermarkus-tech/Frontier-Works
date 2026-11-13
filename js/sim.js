@@ -243,7 +243,9 @@ function accept(e,item,dir,carry){
    else if(sub==='merge'){
     if(dir===((e.dir+2)&3))return false;
     if(e.item){e.req[dir]=tickNo;return false;}
-    if(e.lastIn===dir){for(let od=0;od<4;od++)if(od!==dir&&e.req[od]>=tickNo-1){e.req[dir]=tickNo;e.lastIn=-1;return false;}}
+    /* strict turn-taking (Session 39z): among the sides waiting (asked within the last tick), the next one after the last side served goes first.
+       Before, a slow belt could be starved by two fast ones, depending on processing order. */
+    {const L=e.lastIn>=0?e.lastIn:e.dir,pr=d=>(d-L+3)&3,pd=pr(dir);for(let od=0;od<4;od++)if(od!==dir&&e.req[od]>=tickNo-1&&pr(od)<pd){e.req[dir]=tickNo;return false;}}
     e.lastIn=dir;
    } else if(e.item)return false;
    e.item=item;e.inDir=dir;e.inT=accT!=null?accT:S.t;return true;}

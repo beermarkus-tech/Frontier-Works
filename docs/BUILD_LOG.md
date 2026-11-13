@@ -2310,3 +2310,17 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 - `passOK` also accepts a belt whose bend (`cin`) comes from that direction. Plain perpendicular belts are still refused, so machine output can't leak sideways onto input lines (the Session 39j protection).
 
 **Verified:** new smoke check reproducing the layout: the belt bends and items arrive in a crate. `npm test` all PASS. `npm run playthrough`: all recipes ✓, no errors.
+
+## Session 39z — 2026-11-13 (Claude Code, cloud session) · Build 108
+
+**Asked:** a merger doesn't merge its three sides equally: with one slow belt, it prefers the fast belts on the other sides.
+
+**Found:** the old rule only stopped the *same* side from going twice in a row. With two fast sides, they alternated with each other, and the slow side only got in when the processing order happened to favour it.
+- Measured with an Mk3 output, two Mk3 inputs and one Mk1 input (max 60/min), over 1 minute.
+- The slow side got 44, 53 or **0** items depending on which side it was on.
+
+**Built:** strict turn-taking in the merger's `accept`. Among the sides that are waiting (asked within the last tick), the next one after the last side served, going round, goes first. A side out of turn is refused and marked waiting.
+
+**Result (same test):** slow side 53 on every side, fast sides 107–108 each, total 268 (no throughput lost). 53 rather than 60 is the cost of waiting for a turn.
+
+**Verified:** new smoke check (slow side ≥ 24 per 30 s, fast sides within 3 of each other, total ≥ 130). `npm test` all PASS.

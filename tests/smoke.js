@@ -141,6 +141,16 @@ const server=require('./serve.js');
   for(let j=-5;j<3;j++)for(let i=-2;i<5;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(v=>v===''),bent,got};});
  check(`splitter → crossing → belt turning away: belt bends and items arrive (${sxb.got})`,sxb.ok&&sxb.bent&&sxb.got>=5);
+ // merger takes turns: a slow input between two fast ones still gets (nearly) its full speed, fast ones share the rest (Session 39z)
+ const mfair=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-3;j<4&&ok;j++)for(let i=-3;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('belt3',X-1,Y,0),P('belt3',X,Y-1,1),P('belt1',X,Y+1,3),P('merger',X,Y,0),P('belt3',X+1,Y,0),P('storage',X+2,Y,0)];tick(0.05);
+  const src=[[fw.entAt(X-1,Y),'iron_plate'],[fw.entAt(X,Y-1),'wire'],[fw.entAt(X,Y+1),'bolts']],cr=fw.entAt(X+2,Y);
+  for(let k=0;k<600;k++){for(const q of src)if(!q[0].item){q[0].item=q[1];q[0].prog=0;}tick(0.05);}
+  const o={w:cr.store.iron_plate||0,n:cr.store.wire||0,s:cr.store.bolts||0};
+  for(let j=-3;j<4;j++)for(let i=-3;i<6;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(v=>v===''),...o};});
+ check(`merger takes turns: slow Mk1 side ${mfair.s}/30 s, fast sides ${mfair.w} + ${mfair.n}`,mfair.ok&&mfair.s>=24&&Math.abs(mfair.w-mfair.n)<=3&&mfair.w+mfair.n+mfair.s>=130);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
