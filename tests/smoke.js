@@ -421,6 +421,18 @@ const server=require('./serve.js');
   fw.placeEnt('refinery',X,Y,0,true);const e=fw.entAt(X,Y);e.r='r_plastic';e._efT=10;e._ef=0.5;openPanel('ent',e.id);const t=document.getElementById('pbody').textContent;
   out.byproduct=t.includes('Byproduct')&&t.includes('Heavy Residue')&&t.includes('Plastic');ACT.closePanel();removeEnt(e,false,true);return out;});
  check(`toolbar hide/show + byproduct in machine panel: ${Object.entries(dk).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(dk).every(Boolean));
+ // belts fed straight from a building carry their full rate (before: Mk3 240 of 270, Mk5 600 of 780); a drill blocked by its belt says "Output full", not "No power"
+ const bl=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};
+  for(const id of ['belt2','belt3','belt5']){let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-1;i<14&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
+   P('storage',X,Y,0);for(let i=2;i<10;i++)P(id,X+i,Y,0);P('incin',X+10,Y,0);const c=fw.entAt(X,Y),mb=fw.entAt(X+7,Y);S.inv.iron_plate+=5;S.inv.wire=(S.inv.wire||0)+5;toggleMeter(mb);
+   for(let t=0;t<20*40;t++){c.store={iron_plate:999};tick(0.05);}out[id]=fmRate(mb)[0]/(B[id].spd*60);
+   for(let j=-1;j<3;j++)for(let i=-1;i<14;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}}
+  const n=nodes.find(n=>n.t==='iron'&&!grid[n.y*MW+n.x]&&[0,1].every(j=>[0,1,2,3,4,5,6,7,8].every(i=>!canPlace('incin',n.x+i,n.y+j)||(i<2&&j<2))));
+  P('drill2',n.x,n.y,0);P('belt1',n.x+2,n.y,0);P('belt1',n.x+3,n.y,0);P('incin',n.x+4,n.y,0);P('burner',n.x+6,n.y,0);const d=fw.entAt(n.x,n.y),g=fw.entAt(n.x+6,n.y);
+  for(let t=0;t<20*40;t++){g.fuel={coal:50};tick(0.05);}out.noFalsePower=!(d._efw&&d._efw.power>0.005)&&(d._efw.out||0)>0.2;
+  for(let j=0;j<2;j++)for(let i=0;i<8;i++){const e=fw.entAt(n.x+i,n.y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}return out;});
+ check(`belts fed by a building reach their rate (Mk2 ${Math.round(bl.belt2*100)}%, Mk3 ${Math.round(bl.belt3*100)}%, Mk5 ${Math.round(bl.belt5*100)}%); blocked drill says Output full (${bl.noFalsePower})`,
+  bl.belt2>0.97&&bl.belt3>0.97&&bl.belt5>0.97&&bl.noFalsePower);
  // signs: four sizes, placing opens the panel, text + colour, drawn in 2D, kept in saves
  const sg=await p.evaluate(()=>{const fw=window.__fw;let X,Y;for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(!canPlace('sign3',x,y)){X=x;Y=y;break;}}
   const sizes=SIGNS.map(id=>B[id].w).join();setTool('sign3');tap({x:X+1,y:Y+1});const e=fw.entAt(X,Y),opened=UI.panel&&UI.panel.kind==='ent'&&UI.panel.arg===e.id&&!!document.getElementById('signTxt');

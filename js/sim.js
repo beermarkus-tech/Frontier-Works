@@ -278,7 +278,10 @@ function pushOut(e,item){
  for(let k=0;k<n;k++){const idx=(e.rr+k)%n,p=e.ports[idx];const t=entAt(p.x,p.y);if(!t)continue;
   if(isLine(t.k)){if(t.dir!==p.d)continue;}else if(t.k==='cross'){const far=entAt(t.x+DX[p.d],t.y+DY[p.d]);if(!far||!passOK(far,item,p.d))continue;}
   else if(t.k!=='router')continue;
-  if(accept(t,item,p.d,0)){e.rr=(idx+1)%n;return true;}}
+  // a building's item starts with the progress it would have made since the belt tile became free (Session 37i): without this, every item
+  // waited for a whole tick and a Mk3 belt fed by a drill or machine carried 240/min instead of 270
+  let c=0;if(t.k==='belt'&&t.freeAt!=null){const el=S.t-t.freeAt;if(el>=0&&el<0.1)c=Math.min(0.95,el*t.spd);}
+  if(accept(t,item,p.d,c)){e.rr=(idx+1)%n;return true;}}
  return false;
 }
 
@@ -388,7 +391,7 @@ function burn(g,mj){const d=B[g.d];
 function updBelt(e,dt){
  if(e.k==='pipe')return;
  if(!e.item)return;e.prog+=e.spd*dt;
- if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]);if(t&&t!==e&&accept(t,e.item,e.dir,e.prog-1)){e.item=null;e.prog=0;}else e.prog=1;}
+ if(e.prog>=1){const t=entAt(e.x+DX[e.dir],e.y+DY[e.dir]),ov=e.prog-1;if(t&&t!==e&&accept(t,e.item,e.dir,ov)){e.item=null;e.prog=0;e.freeAt=S.t-ov/e.spd;}else e.prog=1;}   // freeAt: the exact moment the tile became free
 }
 function updRouter(e){
  if(!e.item)return;const sub=B[e.d].sub,D=e.dir;let outs;
@@ -451,7 +454,7 @@ function updBuilding(e,dt){
    if(e.off){if(item&&e.buf>0&&pushOut(e,item))e.buf--;break;}
    if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;}}
    if(item)for(let a=0;a<2&&e.buf>0;a++){if(pushOut(e,item))e.buf--;else break;}
-   effTrack(e,dt,!item?'none':e.want&&e.pw>0?'work':e.buf>=10?'out':'power');
+   effTrack(e,dt,!item?'none':e.want&&e.pw>0?'work':!e.want?'out':'power');   // a full buffer (want false) is 'Output full', never 'No power'
    break;}
   case 'gen':if(e.outb.waste>0)for(let a=0;a<2&&e.outb.waste>0;a++){if(pushOut(e,'waste'))e.outb.waste--;else break;}break;
   case 'storage':{const ks=Object.keys(e.store);if(!ks.length)break;

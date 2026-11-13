@@ -1635,3 +1635,29 @@ got almost everything (test: 78 vs 5 crude).
 ### Verified
 - `npm test` 82 PASS / 0 FAIL. New check: hide → toolbar gone, pill shown, saved; show → back; a plastic refinery's panel lists Plastic and
   Heavy Residue (Byproduct). Phone screenshots of both states.
+
+---
+
+## Session 37i — 2026-11-13 (Claude Code, cloud session) · Build 68
+
+### What Markus reported (with screenshot)
+Two Drill Mk2 at 225 % on normal nodes should give 270/min onto Mk3 belts (270/min), but the Flow Meters show 240. The drill panel says
+"No power 11 %, not enough power", although the drills are inside the pole circles and the grid has plenty of capacity (1962 of 4920 MW).
+
+### Causes
+1. **Belt throughput from buildings:** the sim runs 20 ticks/s. Belt-to-belt handoffs keep the leftover progress, but `pushOut` (buildings →
+   belt) started every item at 0, so each item waited for a whole tick: a Mk3 tile (4.44 ticks per item) took 5 ticks → 240/min.
+   Measured from a crate: Mk2 109/120, Mk3 240/270, Mk4 400/480, Mk5 600/780 (Mk1 exact by luck: 20 ticks per item).
+2. **False "No power":** a drill whose buffer was full (want = false) was counted as "power" when `pushOut` had just made room in the same tick.
+   Power was never missing (0 ticks without power in the reproduction).
+
+### Fixes
+- `updBelt` notes `e.freeAt` (exact moment the tile became free); `pushOut` gives the next item the progress it would have made since then
+  (only if freed within 0.1 s, max 0.95), so building-fed belts run at their full rate. Now: Mk2 120, Mk3 270, Mk4 477, Mk5 773 (meter averaging).
+- Drill/pump status: not wanting (buffer full) is "Output full", never "No power".
+- Build number **68**.
+
+### Verified
+- Reproduction of Markus's setup: meter 270/min, drill buffer empty, no "No power".
+- `npm test` 83 PASS / 0 FAIL. New check: crate-fed Mk2/Mk3/Mk5 reach ≥ 97 % of their rate; a belt-blocked drill shows "Output full", no power warning.
+- `npm run playthrough`: unchanged (measurement noise only).
