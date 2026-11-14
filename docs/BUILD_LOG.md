@@ -2480,3 +2480,15 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 Solid outputs keep the belt hint.
 
 **Verified:** new smoke check (one refinery with a dead-end pipe, one with no pipe; both hints correct). `npm test` all PASS.
+
+## Session 41c — 2026-11-14 (Claude Code, cloud session) · Build 120
+
+**Asked:** do Pipe Junctions connect directly into Crossings? Markus felt it wasn't working.
+
+**Found:** the simulation was fine. Junction → crossing → junction forms one network, also with a belt crossing the other way, at the full Mk1 rate (300 m³/min, same as a plain pipe). But in 2D nothing showed the link: junctions draw no arms (plain pipes draw their own arm into a junction), and the crossing always showed its dark plus. So a junction next to a crossing looked unconnected. In 3D it already looked right (junction arms from `pc` since Build 101).
+
+**Built (2D, `drawRouter`):**
+- A crossing axis with pipe pieces on both sides is drawn as a blue pipe right through the crossing.
+- A junction gets its own pipe stub towards a linked crossing or valve.
+
+**Verified:** 2D screenshot. New smoke check (junction → crossing → junction with a belt across delivers 100 m³ in 20 s). `npm test` all PASS.

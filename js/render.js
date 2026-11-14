@@ -457,12 +457,18 @@ function drawLines(list,sx,sy,s,alpha,tint){
  ctx.globalAlpha=1;
 }
 function drawRouter(g,e,X,Y,s){const d=B[e.d],sub=d.sub,fl=d.fl;
+ /* a junction linked to something other than a plain pipe (a crossing, a valve) gets its own pipe stub; plain pipes draw their own arm (Session 41c) */
+ if(sub==='junc'&&e.pc){g.fillStyle='#6f93b8';g.strokeStyle='rgba(0,0,0,0.55)';g.lineWidth=Math.max(1,s*0.03);for(let o=0;o<4;o++){if(!(e.pc&(1<<o)))continue;const n=entAt(e.x+DX[o],e.y+DY[o]);if(!n||n.k==='pipe'||n.k==='mach'||n.k==='gen'||n.k==='pump'||n.k==='tank'||n.k==='incin')continue;
+   const w=s*0.3,L=s*0.5;const x0=DX[o]?X+s/2+(DX[o]>0?0:-L):X+s/2-w/2,y0=DY[o]?Y+s/2+(DY[o]>0?0:-L):Y+s/2-w/2;g.beginPath();g.rect(x0,y0,DX[o]?L:w,DY[o]?L:w);g.fill();g.stroke();}}
  g.fillStyle='rgba(0,0,0,0.35)';rrg(g,X+s*0.1,Y+s*0.14,s*0.9,s*0.9,s*0.18);g.fill();
  const gr=g.createLinearGradient(0,Y,0,Y+s);gr.addColorStop(0,'#5a636d');gr.addColorStop(1,'#2c3238');g.fillStyle=gr;rrg(g,X+s*0.05,Y+s*0.05,s*0.9,s*0.9,s*0.18);g.fill();g.strokeStyle='rgba(0,0,0,0.6)';g.lineWidth=Math.max(1,s*0.04);g.stroke();
  const g2=g.createLinearGradient(0,Y,0,Y+s);g2.addColorStop(0,shade(d.col,40));g2.addColorStop(1,shade(d.col,-30));g.fillStyle=g2;rrg(g,X+s*0.18,Y+s*0.18,s*0.64,s*0.64,s*0.12);g.fill();
  const arrow=(o,inward)=>{const cx=X+s/2+DX[o]*s*0.3,cy=Y+s/2+DY[o]*s*0.3,px=-DY[o],py=DX[o],dir=inward?-1:1,t=s*0.11;g.beginPath();g.moveTo(cx+DX[o]*t*dir,cy+DY[o]*t*dir);g.lineTo(cx-DX[o]*t*dir+px*t,cy-DY[o]*t*dir+py*t);g.lineTo(cx-DX[o]*t*dir-px*t,cy-DY[o]*t*dir-py*t);g.closePath();g.fill();};
  g.fillStyle='rgba(255,255,255,0.92)';
- if(e.k==='cross'){g.fillStyle='rgba(20,24,28,0.8)';g.fillRect(X+s*0.18,Y+s*0.4,s*0.64,s*0.2);g.fillRect(X+s*0.4,Y+s*0.18,s*0.2,s*0.64);}
+ if(e.k==='cross'){/* an axis with pipe pieces on both sides carries fluid: drawn as a blue pipe right through (Session 41c) */
+  const pl=(dx,dy)=>pipeLike(entAt(e.x+dx,e.y+dy)),hp=pl(-1,0)&&pl(1,0),vp=pl(0,-1)&&pl(0,1);
+  g.fillStyle='rgba(20,24,28,0.8)';if(!hp)g.fillRect(X+s*0.18,Y+s*0.4,s*0.64,s*0.2);if(!vp)g.fillRect(X+s*0.4,Y+s*0.18,s*0.2,s*0.64);
+  g.fillStyle='#6f93b8';g.strokeStyle='rgba(0,0,0,0.55)';g.lineWidth=Math.max(1,s*0.03);if(hp){g.beginPath();g.rect(X,Y+s*0.35,s,s*0.3);g.fill();g.stroke();}if(vp){g.beginPath();g.rect(X+s*0.35,Y,s*0.3,s);g.fill();g.stroke();}}
  else if(sub==='split'){arrow(e.dir);arrow((e.dir+1)&3);arrow((e.dir+3)&3);}
  else if(sub==='logic'){const L=lsRules(e),D=e.dir||0;for(const [k,o] of [['l',(D+3)&3],['f',D],['r',(D+1)&3]]){const R=L[k]||[];if(!R.length){g.fillStyle='rgba(255,90,70,0.95)';g.fillRect(X+s/2+DX[o]*s*0.3-s*0.06,Y+s/2+DY[o]*s*0.3-s*0.06,s*0.12,s*0.12);g.fillStyle='rgba(255,255,255,0.92)';}else{if(R.includes('over')&&R.length===1)g.fillStyle='rgba(255,200,90,0.95)';arrow(o);g.fillStyle='rgba(255,255,255,0.92)';}}
   g.strokeStyle='rgba(255,255,255,0.75)';g.lineWidth=Math.max(1,s*0.04);g.beginPath();g.arc(X+s/2,Y+s/2,s*0.12,0,7);g.stroke();}
