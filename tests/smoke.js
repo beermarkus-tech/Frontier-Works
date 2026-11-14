@@ -199,6 +199,18 @@ const server=require('./serve.js');
   ACT.optPerf('1');ACT.optFps('1');ACT.closePanel();await new Promise(r=>setTimeout(r,900));const t=document.getElementById('perf').textContent,vis=document.getElementById('perf').style.display!=='none';
   ACT.optPerf('0');ACT.optFps('0');await new Promise(r=>setTimeout(r,100));const hid=document.getElementById('perf').style.display==='none';return{btn:!!b&&!!f,t,vis,hid};});
  check(`performance meter and 30 fps option (${pfm.t})`,pfm.btn&&pfm.vis&&pfm.hid&&/fps · sim .* ms · draw .* ms · .* objects/.test(pfm.t)&&pfm.t.includes('30 fps cap'));
+ // Flow Valve (Session 41): one way, at most the set rate; reversed it passes nothing; a shut valve (0) survives save/load
+ const vlv=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<4&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  S.ub.push('valve','junction','pipe1','tank');
+  const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,0),P('valve',X+4,Y,0),P('pipe1',X+5,Y,0),P('pipe1',X+6,Y,0),P('junction',X+7,Y,0),P('incin',X+8,Y,0)];
+  const tk=fw.entAt(X,Y),v=fw.entAt(X+4,Y);v.vr=30;tick(0.05);const split=v.va&&v.vb&&v.va!==v.vb;
+  const run=n=>{for(let k=0;k<n;k++){tk.ft='water';tk.amt=400;tick(0.05);}};run(900);const f30=v.vf;
+  v.dir=2;topoDirty=true;run(400);const rev=v.vf,why=v.vwhy;v.dir=0;topoDirty=true;
+  v.vr=0;const sv=serialize();load(sv);tick(0.05);const v2=fw.entAt(X+4,Y),shut=v2&&v2.vr===0;
+  for(let j=-1;j<4;j++)for(let i=-1;i<12;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(x=>x===''),split,f30:Math.round(f30),rev:Math.round(rev),why,shut};});
+ check(`Flow Valve: limits to the set rate (${vlv.f30}/30 m³/min), reversed passes ${vlv.rev} (${vlv.why}), shut valve kept after save`,vlv.ok&&vlv.split&&vlv.f30>=26&&vlv.f30<=33&&vlv.rev<=2&&vlv.shut);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
@@ -292,7 +304,7 @@ const server=require('./serve.js');
   const belts=ring.every(([i,j])=>{const b=fw.entAt(X+1+i,Y+j);return b&&b.k==='belt';});
   const again=JSON.parse(serialize());load(JSON.stringify(again));const g2=fw.entAt(X+10,Y),stable=!!g2&&g2.x===X+10&&g2.y===Y;load(keep);
   for(let j=-2;j<4;j++)for(let i=-2;i<14;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
-  return{fl:fl==='pipe1,pipe2,junction,tank',last:prod[prod.length-1]==='incin'&&B.incin.w===2,log:!log.some(id=>B[id].k==='pipe'||id==='tank'||id==='junction'||id==='incin'),boxed,back,grew,belts,stable};});
+  return{fl:fl==='pipe1,pipe2,junction,valve,tank',last:prod[prod.length-1]==='incin'&&B.incin.w===2,log:!log.some(id=>B[id].k==='pipe'||id==='tank'||id==='junction'||id==='incin'),boxed,back,grew,belts,stable};});
  check(`menus: Fluids tab, 2×2 Incinerator last in Production; old 1×1 incinerators grow or are refunded (${Object.values(inc).join(',')})`,Object.values(inc).every(Boolean));
  // cloud save sync against a fake GitHub Gist API: two simulated devices, first connection asks, auto-load, playing-now warning,
  // undo + resume, downgrade guard, both-played conflict, import "only this device"

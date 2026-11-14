@@ -114,6 +114,7 @@ D('lsplit',{n:'Logic Splitter',k:'router',sub:'logic',cat:'log',col:'#2fa8a0',co
 D('crossing',{n:'Crossing',k:'cross',cat:'log',col:'#6c6c6c',cost:{iron_plate:3,bolts:6},ow:1,desc:'Lets two belts/pipes cross each other.'});
 D('fmeter',{n:'Flow Meter',k:'fmeter',cat:'log',col:'#e8eef2',cost:{iron_plate:2,wire:4},ow:1,desc:'Clip it onto a belt or pipe to show how much flows there per minute. Tap the same tile again to take it off.'});
 D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'fluid',col:'#4a7aa8',cost:{copper_sheet:4},ow:1,desc:'The entry point between pipes and a building: connects all four sides, to pipes and to every building it touches.'});
+D('valve',{n:'Flow Valve',k:'router',sub:'valve',fl:1,cat:'fluid',col:'#3f9ad0',cost:{copper_sheet:6,rotor:1},ow:1,desc:'Lets fluid through one way only (arrow), up to a limit you set: e.g. top up a loop with outside water only as much as it lacks. Put it between two pipes.'});
 D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',cost:{iron_plate:10,iron_rod:10},desc:'Buffers 2000 items; passes them on to outgoing belts.'});
 D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'fluid',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
 D('dpad',{n:'Drone Pad',k:'dpad',w:3,pw:25,cap:400,cat:'trans',col:'#2fa7a0',cost:{motor:4,stator:4,cased_girder:6,cable:30},desc:'Holds 400 items. Link it to another pad and its drone flies them there (40 per trip). An unlinked pad receives drones and passes items to outgoing belts.'});
@@ -150,7 +151,7 @@ D('pole2',{n:'Power Tower',k:'pole',link:24,sup:9,cat:'pow',col:'#e0c060',cost:{
 const CATS=[['log','Logistics'],['fluid','Fluids'],['ext','Extraction'],['prod','Production'],['pow','Power'],['trans','Transport'],['sign','Signs']];
 const MS=[
 {n:'Field Assembly',req:{iron_plate:100,iron_rod:100,wire:100},b:['assembler','belt2','incin','fmeter','pswitch'],r:['r_braced_plate','r_rotor','r_copper_sheet']},
-{n:'Structural Works',req:{braced_plate:50,rotor:30,concrete:200,cable:100},b:['pipe1','junction','wpump','tank','lsplit'],r:['r_truss_frame','r_stitched_plate','r_cast_bolts']},
+{n:'Structural Works',req:{braced_plate:50,rotor:30,concrete:200,cable:100},b:['pipe1','junction','valve','wpump','tank','lsplit'],r:['r_truss_frame','r_stitched_plate','r_cast_bolts']},
 {n:'Steam Power',req:{truss_frame:25,rotor:50,copper_sheet:100,cable:200},b:['steam','pole2','drill2']},
 {n:'Steelworks',req:{truss_frame:50,braced_plate:100,concrete:500,cable:300},b:['foundry','belt3'],r:['r_steel_ingot','r_steel_beam','r_steel_pipe','r_cased_girder','r_stator','r_motor','r_steel_rod','r_iron_alloy'],oc:1},
 {n:'Heavy Industry',req:{motor:50,cased_girder:100,stator:100,steel_pipe:300},b:['fabricator','dpad'],r:['r_heavy_truss','r_iron_wire','r_steel_rotor']},

@@ -92,6 +92,10 @@ function entStatic(e){
   if(t.k==='mach'||t.k==='gen'||t.k==='storage'||t.k==='core'||t.k==='incin'||t.k==='dpad'||t.k==='cross')return'';
   if(!isLine(t.k)&&t.k!=='router')return'⚠ Nothing here takes items.';return'';};
  const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
+ if(e.k==='router'&&d.sub==='valve'){const why={pipe:'⚠ Needs a pipe on both ends: behind the valve (fluid comes in) and in front (the arrow side).',same:'⚠ Both ends are the same pipe network, so the valve can do nothing. The two sides must only be connected through the valve.',mix:'⚠ The pipe in front holds a different fluid.',empty:'Nothing to pass on: the pipe behind is empty.',full:'The pipe in front is full: it takes no more right now.'}[e.vwhy];
+  h+=`<h4>Flow limit</h4><div class="row"><span>At most</span><b>${e.vr} m³/min${e.vr?'':' (shut)'}</b></div><div class="chips">${[-60,-10,-1,1,10,60].map(v=>`<button class="btn chip" data-act="valveAdj" data-v="${v}">${v>0?'+':'−'}${Math.abs(v)}</button>`).join('')}<button class="btn chip" data-act="valveSet" data-v="0">Shut</button></div>
+   <div class="row"><span>Flowing now</span><span>${Math.round(e.vf||0)} m³/min${e.va&&e.va.fluid?' of '+nm(e.va.fluid):''}</span></div>${why?`<div class="${why[0]==='⚠'?'plbad':'muted'}" style="margin:4px 0">${why}</div>`:''}
+   <div class="muted">Fluid only goes the way the arrow points. Rotate to turn it round.</div>`;}
  if(e.k==='router'&&d.sub==='split'){const D=e.dir,w=[['Left',(D+3)&3],['Front',D],['Right',(D+1)&3]].map(([n,o])=>{const t=outNote(o);return t[0]==='⚠'?`<div class="plbad" style="margin:2px 0">${n}: ${t}</div>`:'';}).join('');if(w)h+=`<h4>Outputs</h4>${w}`;}
  if(e.k==='router'&&d.sub==='logic'){const L=lsRules(e),items=Object.keys(IT).filter(k=>!IT[k].f&&(S.ub.length>0)),lbl={any:'Any',rest:'Any other',over:'Overflow'};
   h+=`<div class="muted">Each item goes to an output whose rules want it (taking turns). <b>Any other</b> = items no output names. <b>Overflow</b> = only when the others are full or blocked. No rules = blocked.</div>`;
@@ -307,6 +311,8 @@ const ACT={
  feed:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const cap=v==='fuel_rod'?5:50;const n=Math.min(10,S.inv[v]||0,cap-(e.fuel[v]||0));if(n<=0)return toast(S.inv[v]?'Fuel slot full':'None in stock');S.inv[v]-=n;e.fuel[v]=(e.fuel[v]||0)+n;toast(`Added ${n} ${IT[v].n}`);},
  flushTank:()=>{const e=ents.get(UI.panel.arg);if(e){e.amt=0;e.ft=null;}},
  delSel:()=>{const e=ents.get(UI.panel.arg);if(e){removeEnt(e,true);closePanel();buildTools();}},
+ valveAdj:v=>{const e=ents.get(UI.panel.arg);if(e){e.vr=Math.max(0,Math.min(600,e.vr+(+v)));renderPanel(true);}},
+ valveSet:v=>{const e=ents.get(UI.panel.arg);if(e){e.vr=Math.max(0,Math.min(600,+v));renderPanel(true);}},
  rotSel:()=>{const e=ents.get(UI.panel.arg);if(e){const d0=e.dir;e.dir=(e.dir+1)&3;for(let k=0;k<3&&beltBlocked(e);k++)e.dir=(e.dir+1)&3;if(beltBlocked(e))e.dir=(d0+1)&3;topoDirty=true;sfx('rotate');}},   /* belts skip pointing into pipes/junctions/tanks */
  resetFuse:()=>{for(const g of grids)if(g.trip){for(const n of g.nodes)n.trip=false;g.trip=false;}toast('Fuse reset');},
  craft:(v,el)=>{const r=RC[v],n=+el.dataset.n;if(!afford(r.i,n))return;for(const k in r.i)S.inv[k]-=r.i[k]*n;for(const k in r.o)give(k,r.o[k]*n);renderPanel(true);buildTools();},

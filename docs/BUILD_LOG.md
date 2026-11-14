@@ -2449,3 +2449,20 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Verified:** zoom sweep avg 2.6–2.9 ms. `npm test` all PASS.
 
 **Lesson:** desktop and headless measurements don't show mobile canvas or texture costs. Avoid many small canvases; prefer few large ones (atlases or chunk pictures) — relevant for Step 2.
+
+## Session 41 — 2026-11-14 (Claude Code, cloud session) · Build 118
+
+**Context:** Markus's tablet numbers with the meter (Build 117, 3,694 objects / 1,801 buildings, 4× speed): 2D 60 fps, sim 1.7 ms, draw 3.7 ms; 3D 61 fps, sim 3.5 ms, draw 8.1 ms. Zooming through the middle range felt better after Build 117. Decision: stay with what we have; Steps 2 and 3 only if fps drops below about 45.
+
+**Asked:** a valve to limit flow through pipes. Use case: machines produce water that is fed back into the same production, plus some outside water. The outside supply must be limited so the recycled water gets used first.
+
+**Built:** **Flow Valve** (`valve`, k 'router', sub 'valve', fl) in the Fluids menu after the Pipe Junction, unlocked in Tier 2 "Structural Works"; costs 6 Copper Sheet + 1 Rotor.
+- **Networks:** not pipe-like, so it splits networks. `rebuildTopo` stores the networks behind (`va`) and in front (`vb`) along its axis. Pipes get a connection arm towards it (`pc` in `buildNets`).
+- **Flow:** at the end of `updNets`, moves whole units from `va` to `vb` at most `e.vr` m³/min (accumulator `vacc`). Never mixes fluids; stops when the front network is full.
+- **Readouts:** smoothed actual flow in `vf`; reason in `vwhy` (no pipe, same network, empty, other fluid, full).
+- **Panel:** limit with −60/−10/−1/+1/+10/+60 and Shut buttons (0–600); flow now and which fluid; plain-language warnings. Rotate turns it round.
+- **2D look:** hand wheel, flow arrow, limit shown when zoomed in (red wheel when shut). **3D look:** short pipe, red hand wheel on a stem, arrow fin.
+- **Save:** `vr` in `SKEYS`; a limit of 0 is saved too (`serialize` exception). Items never enter it (`accept`), and it never counts as a belt feeder.
+- DESIGN.md updated.
+
+**Verified:** 2D and 3D screenshots. New smoke check: tank → valve at 30 → incinerator gives 30/30 m³/min; reversed it passes 0; a shut valve survives save/load. Fluids-menu test updated. `npm test` all PASS.

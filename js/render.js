@@ -468,6 +468,10 @@ function drawRouter(g,e,X,Y,s){const d=B[e.d],sub=d.sub,fl=d.fl;
   g.strokeStyle='rgba(255,255,255,0.75)';g.lineWidth=Math.max(1,s*0.04);g.beginPath();g.arc(X+s/2,Y+s/2,s*0.12,0,7);g.stroke();}
  else if(sub==='merge'){arrow(e.dir);arrow((e.dir+1)&3,1);arrow((e.dir+3)&3,1);arrow((e.dir+2)&3,1);}
  else if(sub==='junc'){g.fillStyle='rgba(20,24,28,0.8)';g.beginPath();g.arc(X+s/2,Y+s/2,s*0.2,0,7);g.fill();}
+ else if(sub==='valve'){const cx=X+s/2,cy=Y+s/2;g.strokeStyle=e.vr>0?'#e8edf2':'#ff6a55';g.lineWidth=Math.max(1,s*0.05);g.beginPath();g.arc(cx,cy,s*0.17,0,7);g.stroke();
+  g.beginPath();for(let k=0;k<3;k++){const a=k*Math.PI/3;g.moveTo(cx+Math.cos(a)*s*0.17,cy+Math.sin(a)*s*0.17);g.lineTo(cx-Math.cos(a)*s*0.17,cy-Math.sin(a)*s*0.17);}g.stroke();
+  g.fillStyle='rgba(255,255,255,0.92)';arrow(e.dir);
+  if(s>=34&&g===ctx){g.fillStyle='#fff';g.font=`700 ${Math.round(s*0.2)}px Rajdhani,Inter,sans-serif`;g.textAlign='center';g.textBaseline='middle';const bx=cx-DX[e.dir]*s*0.3,by=cy-DY[e.dir]*s*0.3;g.fillText(String(e.vr),bx,by);g.textAlign='left';}}
  if(fl&&e.item){g.fillStyle=IT[e.item].c;g.beginPath();g.arc(X+s/2,Y+s/2,s*0.14,0,7);g.fill();}
 }
 function drawPole(g,e,X,Y,s){const tall=e.d==='pole2',tr=e.grid&&e.grid.trip;

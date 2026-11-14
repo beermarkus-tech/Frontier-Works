@@ -74,6 +74,9 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   past a machine without connecting; the junction is the dedicated entry point). Pumps, machine fluid outputs and tanks (under half full) fill the
   network; machines and generators needing that fluid, tanks (over 80 % full) and incinerators draw from it. A second fluid is refused and marked with a red "!" (no mixing).
   The Pipe Junction connects all four sides, to pipes and to the buildings it touches. Old saves keep their pipes, with direction ignored.
+- **Flow Valve** (Session 41, Tier 2, 6 Copper Sheet + 1 Rotor): sits between two pipes and keeps their networks apart. Moves fluid only in its
+  arrow direction, at most the limit set in its panel (0–600 m³/min, default 60, 0 = shut), never mixing fluids. Use: top up a loop that
+  recycles water with only as much outside water as it lacks, so the recycled water is used first.
 - **A building outputs into any belt/pipe that points away from its edge, and accepts input from any belt/pipe pointing into it.**
   There are no fixed ports. Solids only go to belts and fluids only to pipes.
   **Routers touch buildings directly** (confirmed with Markus, Session 10): a Splitter/Logic Splitter output side (or Pipe Junction side)
@@ -116,7 +119,7 @@ Ten sequential tiers (Goals panel). Each requires parts from the item stock and 
 |---|---|---|
 | start | — | Drill Mk1, Smelter, Press, Belt Mk1, Splitter/Merger/Crossing, Storage, Coal Burner, Pole |
 | 1 | Field Assembly | Assembler, Belt Mk2, Incinerator, Braced Plate, Rotor, Copper Sheet |
-| 2 | Structural Works | Pipes, Junction, Water Pump, Tank, Logic Splitter, Truss Frame |
+| 2 | Structural Works | Pipes, Junction, Flow Valve, Water Pump, Tank, Logic Splitter, Truss Frame |
 | 3 | Steam Power | Steam Generator, Power Tower, Drill Mk2 |
 | 4 | Steelworks | Foundry, Belt Mk3, steel chain, Cased Girder, Stator, Motor, overclocking |
 | 5 | Heavy Industry | Fabricator, Heavy Truss, Drone Pad (Cargo Drones) |

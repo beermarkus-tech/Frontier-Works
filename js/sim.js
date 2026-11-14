@@ -3,7 +3,7 @@
 let S, ents=new Map(), grid=new Int32Array(MW*MH), nextId=1;
 let terr, nodeAt, nodes=[], terrC, bio;
 let nets=[];   // fluid networks (pipes have no direction)
-let topoVer=0, topoDirty=true, beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[], meters=[];
+let topoVer=0, topoDirty=true, valves=[], beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[], meters=[];
 let tickNo=0;
 const stat={p:{},c:{},hist:[],acc:0};
 
@@ -129,7 +129,7 @@ function placeEnt(id,x,y,dir,free){
 function initEnt(e,d){
  switch(e.k){
   case 'belt':case 'pipe':e.item=e.item||null;e.prog=e.prog||0;e.spd=d.spd;break;
-  case 'router':e.item=e.item||null;e.rr=0;e.req={};e.lastIn=-1;break;
+  case 'router':e.item=e.item||null;e.rr=0;e.req={};e.lastIn=-1;if(d.sub==='valve'){if(e.vr==null)e.vr=60;e.vacc=0;e.vf=0;}break;
   case 'cross':e.hs=e.hs||null;e.vs=e.vs||null;e.hd=e.hd||0;e.vd=e.vd||1;break;
   case 'mach':e.r=e.r||null;e.inb=e.inb||{};e.outb=e.outb||{};e.prog=e.prog||0;e.run=!!e.run;e.clock=e.clock||1;e.rr=0;break;
   case 'drill':case 'pump':{e.buf=e.buf||0;e.prog=e.prog||0;e.clock=e.clock||1;e.rr=0;let nd=null;for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++){const n=nodeAt[(e.y+j)*MW+e.x+i];if(n&&!nd)nd=n;}e.node=nd;break;}
@@ -237,7 +237,7 @@ function accept(e,item,dir,carry){
    if(e.item||fl!==(e.k==='pipe'))return false; if(((dir+2)&3)===e.dir)return false;
    e.item=item;e.prog=(dir===e.dir||dir===e.cin)?Math.min(Math.max(carry||0,0),0.95):0.5;if(e.fm){const a=e.fa||(e.fa=[]);a.push(S.t);if(a.length>3000)a.shift();}return true;
   case 'router':{
-   if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc')return false;   // a Pipe Junction is a network piece
+   if(fl!==!!B[e.d].fl)return false;if(B[e.d].sub==='junc'||B[e.d].sub==='valve')return false;   // a Pipe Junction is a network piece
    const sub=B[e.d].sub;
    if(sub==='split'||sub==='logic'){if(dir!==e.dir||e.item)return false;}
    else if(sub==='merge'){
@@ -309,15 +309,15 @@ const beltBlocked=e=>e.k==='belt'&&fluidOnly(entAt(e.x+DX[e.dir],e.y+DY[e.dir]))
 function feedsInto(sd,e,o,depth){const into=(o+2)&3;
  if(isLine(sd.k))return sd.k===e.k&&sd.dir===into;
  if(sd.k==='router'){const d=B[sd.d];if(!!d.fl!==(e.k==='pipe'))return false;const D=sd.dir;
-  if(d.sub==='merge')return into===D;if(d.sub==='junc')return true;return into===D||into===((D+1)&3)||into===((D+3)&3);}
+  if(d.sub==='merge')return into===D;if(d.sub==='junc')return true;if(d.sub==='valve')return false;return into===D||into===((D+1)&3)||into===((D+3)&3);}
  if(sd.k==='cross'){if((depth||0)>32)return false;const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&feedsInto(far,e,o,(depth||0)+1);}   /* follows the chain to a belt, splitter or merger (Session 39y) */
  return false;}
 function rebuildTopo(){
- syncPipes();topoDirty=false;topoVer++;beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];meters=[];
+ syncPipes();topoDirty=false;topoVer++;valves=[];beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];meters=[];
  const lines=[];
  for(const e of ents.values())if(e.fm&&isLine(e.k))meters.push(e);
  for(const e of ents.values()){
-  if(isLine(e.k))lines.push(e);else if(e.k==='router'){if(B[e.d].sub!=='junc')routers.push(e);}else if(e.k==='cross')crosses.push(e);
+  if(isLine(e.k))lines.push(e);else if(e.k==='router'){const sb=B[e.d].sub;if(sb==='valve')valves.push(e);else if(sb!=='junc')routers.push(e);}else if(e.k==='cross')crosses.push(e);
   else if(e.k!=='pole'){e.ports=perim(e);buildings.push(e);}
   if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);
   e.grid=null;if(B[e.d].pw)e.pw=0;
@@ -339,6 +339,7 @@ function rebuildTopo(){
   for(let i=0;i<n;i++){if(!B[pnodes[i].d].sup)continue;const dd=rectDist(C[i].x,C[i].y,e);if(dd<=B[pnodes[i].d].sup&&dd<bd){bd=dd;best=pnodes[i];}}
   if(best){best.grid.cons.push(e);e.grid=best.grid;e.pnode=best;}}
  buildNets();
+ for(const v of valves){const bk=entAt(v.x-DX[v.dir],v.y-DY[v.dir]),fr=entAt(v.x+DX[v.dir],v.y+DY[v.dir]);v.va=pipeLike(bk)?bk.net:null;v.vb=pipeLike(fr)?fr.net:null;}
 }
 /* ---------- Fluid networks ----------
    Pipes have no direction: touching pipe tiles and Pipe Junctions (also straight through a Crossing) form one network, like a power grid.
@@ -353,6 +354,7 @@ function buildNets(){
  for(const t of list)for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(!n)continue;
   if(pipeLike(n)){un(ix.get(t),ix.get(n));t.pc|=1<<d;}
   else if(n.k==='cross'){const far=entAt(n.x+DX[d],n.y+DY[d]);if(pipeLike(far)){un(ix.get(t),ix.get(far));t.pc|=1<<d;}}
+  else if(n.k==='router'&&B[n.d].sub==='valve'&&(d&1)===(n.dir&1))t.pc|=1<<d;   /* a pipe reaches into a valve along its axis; the valve keeps the two networks apart */
   else if(t.k!=='pipe'&&['mach','gen','pump','tank','incin'].includes(n.k))t.pc|=1<<d;}   // only a Pipe Junction is an entry point into a building
  const G=new Map();list.forEach((t,i)=>{const r=f(i);if(!G.has(r))G.set(r,[]);G.get(r).push(t);});
  for(const tiles of G.values()){const cnt={};let rate=Infinity;
@@ -381,6 +383,11 @@ function updNets(dt){
    if(cons.length){let i=(n.rr=((n.rr||0)+1)%cons.length),stall=0;
     while(n.amt>=1&&n.bo>=1&&stall<cons.length){if(accept(cons[i],n.fluid,0,0)){n.amt--;n.bo--;sent++;stall=0;zNetFlow(n,cons[i],1,false);}else stall++;i=(i+1)%cons.length;}}}
   const a=Math.min(1,dt/3);n.inR+=(got/dt*60-n.inR)*a;n.outR+=(sent/dt*60-n.outR)*a;n._fl+=((n.cap?n.amt/n.cap:0)-n._fl)*Math.min(1,dt/1.2);}
+ /* Flow Valves (Session 41): move fluid from the network behind (va) to the one in front (vb), at most e.vr m³/min, never mixing fluids */
+ for(const v of valves){const A=v.va,Bn=v.vb;let m=0;v.vwhy=null;
+  if(!A||!Bn)v.vwhy='pipe';else if(A===Bn)v.vwhy='same';else if(!A.fluid||A.amt<1)v.vwhy='empty';else if(Bn.fluid&&Bn.fluid!==A.fluid&&Bn.amt>=1)v.vwhy='mix';
+  else if(v.vr>0){v.vacc=Math.min(v.vacc+v.vr/60*dt,Math.max(1.5,v.vr/60*dt*2));m=Math.floor(Math.min(v.vacc,A.amt,Bn.cap-Bn.amt));if(m>0){A.amt-=m;Bn.fluid=A.fluid;Bn.amt+=m;v.vacc-=m;}else if(Bn.amt>=Bn.cap-1)v.vwhy='full';}
+  if(v.vwhy)v.vacc=0;v.vf+=(m/dt*60-v.vf)*Math.min(1,dt/3);}
 }
 
 
