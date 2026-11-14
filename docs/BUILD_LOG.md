@@ -2432,3 +2432,20 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Verified:** visual check of ore nodes and glow. New smoke check for the meter and 30 fps option. `npm test` all PASS.
 
 **Next up:** Markus turns the meter on, on his tablet, and reports fps and draw ms in 2D and 3D. Then Step 2 or 3, whichever view is slower there.
+
+## Session 40b — 2026-11-14 (Claude Code, cloud session) · Build 117
+
+**Reported:** (1) the performance meter isn't visible; (2) zooming through the middle range, where detailed buildings switch to the simplified far view, now feels very slow.
+
+**Found / reasoning:**
+- (2) The only Build 116 change that acts in that range is the per-node ore picture cache (one small canvas per node per zoom step). While zooming, the step changes constantly, so hundreds of canvases are created and thrown away. On a desktop this measured slightly *faster* (zoom sweep over the 3,300-object factory: avg 2.4–2.7 ms vs 2.9–3.0 ms), but on mobile GPUs creating and drawing from many separate small canvases is expensive.
+- (1) Unclear. The likeliest cause is an index.html without the `#perf` element (stale cached page) while the JS was already new.
+
+**Built:**
+- Ore nodes are drawn directly again (the `paintNode` refactor stays).
+- The glow sprite cache stays: a handful of canvases, one per colour.
+- `perfShow` creates `#perf` itself if it's missing; z-index raised to 12.
+
+**Verified:** zoom sweep avg 2.6–2.9 ms. `npm test` all PASS.
+
+**Lesson:** desktop and headless measurements don't show mobile canvas or texture costs. Avoid many small canvases; prefer few large ones (atlases or chunk pictures) — relevant for Step 2.

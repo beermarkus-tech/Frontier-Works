@@ -483,12 +483,11 @@ function drawPole(g,e,X,Y,s){const tall=e.d==='pole2',tr=e.grid&&e.grid.trip;
  g.fillStyle=tr?'#ff4a3a':'#ffd34a';g.beginPath();g.arc(X+s/2,Y+s/2,s*0.07,0,7);g.fill();}
 
 /* ---------- main render ---------- */
-/* ore node look (rocks/oil + purity dots), painted live when close, from a per-node cached picture when s<=48 px (Session 40) */
+/* ore node look (rocks/oil + purity dots) */
 function paintNode(g,n,X,Y,s){const col=NODE_T[n.t][1],cx=X+s/2,cy=Y+s/2;
   if(n.t==='oil'){g.fillStyle='rgba(0,0,0,0.5)';g.beginPath();g.ellipse(cx,cy+s*0.05,s*0.46,s*0.36,0,0,7);g.fill();const gr=g.createRadialGradient(cx-s*0.1,cy-s*0.1,0,cx,cy,s*0.4);gr.addColorStop(0,'#5a4a6a');gr.addColorStop(1,'#0c0810');g.fillStyle=gr;g.beginPath();g.ellipse(cx,cy,s*0.4,s*0.3,0,0,7);g.fill();g.fillStyle='rgba(255,255,255,0.25)';g.beginPath();g.ellipse(cx-s*0.12,cy-s*0.08,s*0.1,s*0.04,0,0,7);g.fill();}
   else{for(let k=0;k<4;k++){const ox2=(hash2(n.x*7+k,n.y)-0.5)*s*0.5,oy2=(hash2(n.x,n.y*7+k)-0.5)*s*0.45,r=s*(0.22+hash2(k,n.x+n.y)*0.12);g.fillStyle='rgba(0,0,0,0.35)';g.beginPath();g.ellipse(cx+ox2+s*0.04,cy+oy2+s*0.06,r*1.05,r*0.85,0,0,7);g.fill();const gr=g.createRadialGradient(cx+ox2-r*0.4,cy+oy2-r*0.4,0,cx+ox2,cy+oy2,r*1.1);gr.addColorStop(0,shade(col,55));gr.addColorStop(0.6,col);gr.addColorStop(1,shade(col,-45));g.fillStyle=gr;g.beginPath();g.ellipse(cx+ox2,cy+oy2,r,r*0.82,0,0,7);g.fill();}}
   if(s>12){g.fillStyle='rgba(10,14,18,0.75)';rrg(g,X+s*0.18,Y+s*0.82,s*0.64,s*0.18,s*0.09);g.fill();g.fillStyle=['#e08a5a','#e8e8e8','#7fe08a'][n.p];for(let k=0;k<=n.p;k++){g.beginPath();g.arc(X+s*(0.5+(k-n.p/2)*0.17),Y+s*0.91,s*0.05,0,7);g.fill();}}}
-function nodeSprite(n,s){const b=bkt(s);if(n._sp&&n._sp.b===b)return n._sp;const pad=Math.ceil(b*0.25),c=document.createElement('canvas');c.width=c.height=Math.ceil(b+pad*2);paintNode(c.getContext('2d'),n,pad,pad,b);c.pad=pad;c.b=b;n._sp=c;return c;}
 function render(){
  if(wantLow()!==lowRes)resize();
  const W=cv.width,H=cv.height;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);
@@ -505,7 +504,7 @@ function render(){
  if(tool&&s>14){ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();for(let x=x0;x<=x1;x++){ctx.moveTo(sx(x),sy(y0));ctx.lineTo(sx(x),sy(y1));}for(let y=y0;y<=y1;y++){ctx.moveTo(sx(x0),sy(y));ctx.lineTo(sx(x1),sy(y));}ctx.stroke();}
  // nodes
  for(const n of nodes){if(n.x<x0||n.x>x1||n.y<y0||n.y>y1)continue;if(grid[n.y*MW+n.x])continue;const X=sx(n.x),Y=sy(n.y);
-  if(s<=48){const c=nodeSprite(n,s),k=s/c.b;ctx.drawImage(c,X-c.pad*k,Y-c.pad*k,c.width*k,c.height*k);}else paintNode(ctx,n,X,Y,s);}
+  paintNode(ctx,n,X,Y,s);}   /* drawn directly again (Session 40b: one cached picture per node per zoom step made zooming slow on the tablet) */
  const vis=[];for(const e of ents.values()){if(e.x+e.w<x0||e.x>x1||e.y+e.h<y0||e.y>y1)continue;vis.push(e);}
  const lod=TS*cam.z<12||vis.length>6000;   // far out or very busy: simple blocks instead of detailed sprites
  drawZoneTint(sx,sy,s);

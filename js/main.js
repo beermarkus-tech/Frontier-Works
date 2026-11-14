@@ -68,7 +68,8 @@ setInterval(save,30000);document.addEventListener('visibilitychange',()=>{if(doc
 let last=performance.now(),acc=0,uiT=0,rAcc=0;const DT=0.05;
 /* performance meter (Session 40, ☰ Menu): smoothed fps and milliseconds per frame for simulation and drawing */
 const PF={fps:60,sim:0,draw:0,t:0};
-function perfShow(el){const d=$('perf');if(!d)return;if(!OPT.perf){if(d.style.display!=='none')d.style.display='none';return;}d.style.display='';PF.t+=el;if(PF.t<0.5)return;PF.t=0;
+function perfShow(el){let d=$('perf');if(!d){if(!OPT.perf)return;d=document.createElement('div');d.id='perf';d.className='glass';document.body.appendChild(d);}   /* made here if a cached old page lacks it (Session 40b) */
+ if(!OPT.perf){if(d.style.display!=='none')d.style.display='none';return;}d.style.display='';PF.t+=el;if(PF.t<0.5)return;PF.t=0;
  let b=0;for(const e of ents.values())if(e.k!=='belt'&&e.k!=='pipe')b++;d.textContent=`${Math.round(PF.fps)} fps · sim ${PF.sim.toFixed(1)} ms · draw ${PF.draw.toFixed(1)} ms · ${ents.size.toLocaleString()} objects (${b.toLocaleString()} buildings)${OPT.fps30?' · 30 fps cap':''}`;}
 function frame(now){
  const el=Math.min(0.1,(now-last)/1000);last=now;fdt=el;acc+=el*(S.spd||1);animT+=el;
