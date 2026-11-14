@@ -2603,3 +2603,15 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - DESIGN.md updated.
 
 **Verified:** planner screenshot. New smoke check (Compute Module 5/min: half the Circuit Boards supplied halves that step; all supplied removes it and shrinks Copper Sheet; oversupply capped; button adds the need; section shown). `npm test` all PASS.
+
+## Session 42 — 2026-11-14 (Claude Code, cloud session) · Build 128
+
+**Asked:** a more fitting logo and splash screen, a nicer font and a better icon; proposals first. Three concepts were rendered as a sheet (A "Stencil Works" industrial, B "Horizon" dawn skyline, C "Hex Circuit" tech). Markus chose A, which was the recommendation.
+
+**Built (design A):**
+- **Fonts:** Big Shoulders Stencil Display 800 for the wordmark and Big Shoulders Display 700 for the tagline. Both SIL OFL 1.1, stored in `fonts/` with licence files (`OFL-BigShouldersStencil.txt`, `OFL-BigShoulders.txt`), added to `ASSETS` in `sw.js`; the stencil font is preloaded.
+- **Icon:** an orange gear on dark slate, with an "F" built from conveyor segments (`icons/icon.svg`). PNGs regenerated: icon-192/512, maskable-512 (full bleed, safe zone), apple-touch-icon 180, and favicon-32 (a simplified version without the belt slits, also used in the top bar).
+- **Top bar:** gear icon plus FRONTIER (white) WORKS (orange) in the stencil font.
+- **Loading screen:** blueprint grid on dark navy; icon beside the stacked wordmark (stacked vertically on narrow screens); tagline "MINE · BUILD · CONNECT · LAUNCH"; a moving conveyor loading bar; a hazard-stripe band along the bottom.
+
+**Verified:** screenshots of the loading screen on tablet and phone, and of the top bar. `npm test` all PASS.
