@@ -2615,3 +2615,18 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - **Loading screen:** blueprint grid on dark navy; icon beside the stacked wordmark (stacked vertically on narrow screens); tagline "MINE · BUILD · CONNECT · LAUNCH"; a moving conveyor loading bar; a hazard-stripe band along the bottom.
 
 **Verified:** screenshots of the loading screen on tablet and phone, and of the top bar. `npm test` all PASS.
+
+## Session 43 — 2026-11-14 (Claude Code, cloud session) · Build 129
+
+**Asked:** a third soundtrack in the loop. Markus likes the beat track (Pulse) and wants a different variant, maybe slightly slower but still with a beat. "Be creative."
+
+**Built:** track 3 "Night Shift" (`muSection3`, `muPlay3`, `muSnare` in `js/audio.js`).
+- **Tempo and key:** 92 BPM, E minor, three progressions of seventh chords (Em7–Am7–Cmaj7–B7, Em7–Cmaj7–G6–D/F#, Am7–D9–Gmaj7–Bm7).
+- **Beat:** laid-back boom-bap with one of three kick patterns; a snappy snare (noise + falling tone) on 2 and 4; swung shaker sixteenths (58 %); a small snare fill into each phrase; an anvil ring at phrase ends.
+- **Bass:** round sine sub with a soft octave layer so phone speakers can hear it. Pattern: root, octave, fifth, then an approach note into the next chord.
+- **Keys and melody:** electric-piano stabs (sine chord plus a quiet bell octave) with off-beats slightly late; in about 60 % of sections a soft whistled hook from the E minor pentatonic that answers itself every second time.
+- **Texture and arrangement:** faint vinyl crackle throughout; keys first, bass after half a bar, drums after the first two bars.
+
+**Rotation:** `muSwitch` cycles Drift → Pulse → Night Shift (`muBpm` per track). Loudness matched to Pulse (offline 60 s render: RMS 0.090 vs 0.092, same peak). DESIGN.md updated.
+
+**Verified:** music smoke test extended (switch to track 3, back to Drift; all 3 tracks in a 20-min loop). `npm test` all PASS. A 60 s preview WAV was sent to Markus.

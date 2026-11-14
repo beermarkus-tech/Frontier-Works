@@ -229,6 +229,9 @@ Hand mining gives +5 ore from a node.
   Second track "Pulse" (Session 39h, beat reworked 39k, upbeat 39l): 110 BPM, C-major family, bass drum on every beat (four on the floor, with a click so
   small speakers play it), hats on every off-beat, clap on 2 and 4, busier pulsing bass line, background pads, a plucked arpeggio throughout and an occasional
   metallic clank. Mixed so the beat leads (ear-weighted: kick ~55 %, hats ~13 %, clap ~10 %, bass/pads ~18 %). The tracks alternate forever: 2–3 min each, ~3 s pause between (Session 39n).
+  Third track "Night Shift" (Session 43): 92 BPM, E minor with seventh chords, boom-bap beat (kick on 1 and after 2, snare on 2 and 4,
+  swung shaker sixteenths), round sub bass with approach notes, electric-piano stabs, an occasional whistled hook, anvil rings, faint
+  vinyl crackle. The tracks rotate Drift → Pulse → Night Shift, each 2–3 minutes with a ~3 s pause, forever.
 - **Factory zones** (Session 38, agreed with Markus: drawn boundaries instead of power switches, since pole circles reach into neighbouring
   factories): Factory Zone tool in the Signs tab, free. Drag a rectangle: touching one zone extends it (any shape from rectangles), touching none
   starts a new one, touching two is refused. Zones never overlap. Shown as a coloured fence (2D line with posts, 3D low fence), faint tint and a

@@ -112,11 +112,13 @@ function muSection(){const r=Math.random;MU.sec={prog:MU_PROG[(r()*MU_PROG.lengt
  pat:[[0,1,2,3,2,1,0,1],[0,2,1,3,0,2,3,1],[0,1,2,3,4,3,2,1],[2,1,0,1,2,3,2,3]][(r()*4)|0],oct:r()<0.5?12:24};}
 /* Two tracks (Session 39h): 0 = "Drift" (calm, 80 BPM, pads + arpeggio), 1 = "Pulse" (110 BPM, beat + bass line). After 2–3 minutes of a
    track a ~3 s pause, then the other track, forever. */
-const muBpm=()=>MU.track?110:MU_BPM,muB=()=>60/muBpm()/2;
-function muSwitch(){MU.track=1-MU.track;MU.sec=null;MU.step=0;if(MU.dly)MU.dly.delayTime.setValueAtTime(60/muBpm()*0.75,AU.ctx.currentTime);}
+/* Session 43: a third track, 2 "Night Shift" (92 BPM); the order is Drift → Pulse → Night Shift → Drift … */
+const muBpm=()=>[MU_BPM,110,92][MU.track]||MU_BPM,muB=()=>60/muBpm()/2;
+function muSwitch(){MU.track=(MU.track+1)%3;MU.sec=null;MU.step=0;if(MU.dly)MU.dly.delayTime.setValueAtTime(60/muBpm()*0.75,AU.ctx.currentTime);}
 function muStep(t){const b=muB();   /* one step = an eighth note */
- if(MU.rest>0){MU.rest--;if(MU.rest===0)muSwitch();return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>120+Math.random()*60){MU.played=0;MU.rest=Math.max(1,Math.round((2.5+Math.random()*1.5)/b));MU.sec=null;return;}   /* Session 39n: 2–3 min per track, then a ~3 s pause and the other track: loops forever */MU.track?muSection2():muSection();}
- if(MU.track)return muPlay2(t,b);
+ if(MU.rest>0){MU.rest--;if(MU.rest===0)muSwitch();return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>120+Math.random()*60){MU.played=0;MU.rest=Math.max(1,Math.round((2.5+Math.random()*1.5)/b));MU.sec=null;return;}   /* Session 39n: 2–3 min per track, then a ~3 s pause and the other track: loops forever */MU.track===1?muSection2():MU.track===2?muSection3():muSection();}
+ if(MU.track===1)return muPlay2(t,b);
+ if(MU.track===2)return muPlay3(t,b);
  const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16;
  if(pos===0){muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.997,f*1.003]),t,1.6,b*16-2.2,2.6,0.045,900);
   if(s.bass)muNote('triangle',[mf(ch[0]-12)],t,0.05,b*6,1.2,0.2,500);}
@@ -141,6 +143,41 @@ function muPlay2(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s
   if(pos===14&&bar%2===1&&Math.random()<0.6){const f0=mf(ch[0]+31);muNote('sine',[f0,f0*2.76,f0*5.4],t,0.002,0.01,0.5,0.05,6000,0.35);}}
  const bn=s.bp[pos%8];if(i>=8){const f=mf(ch[0]-12+bn);muNote('sawtooth',[f],t,0.005,b*0.5,0.1,0.075,500+(pos%4===0?300:0));}
  if(beatsIn){const nts=[...ch,ch[1]+12,ch[2]+12],m=nts[s.pat[pos%8]%nts.length]+12;muNote('triangle',[mf(m)],t,0.004,0.02,0.32,0.05,3600,0.35);}}
+/* track 3 "Night Shift" (Session 43): slower (92 BPM) laid-back groove in E minor with seventh chords. A boom-bap beat (kick on 1 and
+   after 2, snappy snare on 2 and 4, swung shaker sixteenths), a round sub bass with walking approach notes, warm electric-piano stabs
+   on the off-beats, now and then a whistled hook that answers itself, an anvil ring at the end of phrases and faint vinyl crackle.
+   One step = an eighth note; 16 steps = two 4/4 bars; the swung sixteenth sits at 58 % of a step. */
+const MU_PROG3=[[[40,55,59,62],[45,52,55,60],[48,52,55,59],[47,51,54,57]],    /* Em7 · Am7 · Cmaj7 · B7 */
+ [[40,55,59,62],[48,52,55,59],[43,50,52,55],[42,50,54,57]],                     /* Em7 · Cmaj7 · G6 · D/F# */
+ [[45,52,55,60],[50,54,60,64],[43,50,54,59],[47,50,54,57]]];                    /* Am7 · D9 · Gmaj7 · Bm7 */
+const MU3_PENTA=[64,67,69,71,74,76,79];   /* E minor pentatonic for the hook */
+function muSection3(){const r=Math.random,pick=a=>a[(r()*a.length)|0];
+ const rhythm=pick([[0,2,3,6],[1,3,4,6,7],[0,3,5,6]]),motif=rhythm.map(()=>(r()*5)|0);
+ MU.sec={prog:pick(MU_PROG3),len:[32,48,64][(r()*3)|0],start:MU.step,np:1,
+  kick:pick([[0,3,8,11],[0,3,5,8,11,13],[0,5,8,10,11]]),   /* positions in 16 eighth steps */
+  keys:pick([[1,3,6],[0,3,5],[2,5,7]]),                     /* electric piano stabs per 4/4 bar */
+  hook:r()<0.6,rhythm,motif,swing:0.58};}
+function muSnare(t,v){auNoise(t,0.09,v,'bandpass',1900,1500,0.9,'music');auOsc('triangle',210,150,t,0.08,v*0.55,0,'music');auNoise(t,0.02,v*0.6,'highpass',6000,6000,0.7,'music');}
+function muPlay3(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16,half=pos%8,sw=b*s.swing,r=Math.random;
+ const drums=i>=16,last=bar%4===3;
+ /* vinyl crackle, always: a few tiny clicks */
+ if(r()<0.35)auNoise(t+r()*b,0.004,0.025+r()*0.03,'highpass',3500,3500,0.7,'music');
+ /* electric piano: soft sine chord with a quiet bell-like octave, on the pattern's off-beat steps (the odd ones swung) */
+ if(s.keys.includes(half)){const tt=t+(half%2?b*0.08:0),fr=ch.slice(1).map(m=>mf(m+12));
+  muNote('sine',fr,tt,0.006,b*(half===s.keys[0]?1.4:0.7),1.2,0.05,2600,0.18);muNote('triangle',fr.map(f=>f*2),tt,0.003,0.03,0.6,0.012,4000,0.25);}
+ /* sub bass: root on 1, octave on the "and" of 2, fifth on 3, approach note into the next chord on the last eighth */
+ if(i>=8){const nx=s.prog[(bar+1)%s.prog.length][0],root=ch[0]-12;let m=null,len=b*0.8;
+  if(pos===0||pos===8){m=root;len=b*2.2;}else if(pos===3||pos===11){m=root+12;len=b*0.5;}else if(pos===5||pos===13){m=root+7;}else if(pos===15){m=nx-12+(nx>ch[0]?-1:1);len=b*0.6;}
+  if(m!=null){const f=mf(m);muNote('sine',[f],t,0.008,len,0.25,0.2,400);muNote('triangle',[f*2],t,0.006,len*0.6,0.18,0.03,900);}}   /* the octave lets phone speakers hear it */
+ if(drums){
+  if(s.kick.includes(pos))muKick(t,pos===0||pos===8?0.9:0.7);
+  if(half===2||half===6)muSnare(t,0.8);                                                           /* backbeat on 2 and 4 */
+  muHat(t,0.32+(half%2?0:0.08),false);muHat(t+sw,0.2,half===7&&last);                              /* swung shaker sixteenths */
+  if(last&&pos>=13)muSnare(t+sw,0.35+0.1*(pos-13));                                                /* small fill into the next phrase */
+  if(pos===15&&last&&r()<0.7){const f0=mf(ch[0]+19);muNote('sine',[f0,f0*2.76,f0*5.4],t+sw,0.002,0.02,1.4,0.045,5000,0.5);}}   /* anvil ring */
+ /* the hook: a soft whistle in the first bar of each two-bar unit; every second time it answers (last note moved up) */
+ if(s.hook&&i>=32&&pos<8){const j=s.rhythm.indexOf(pos);if(j>=0){const ans=bar%2===1&&j===s.rhythm.length-1,deg=(s.motif[j]+(ans?2:0))%MU3_PENTA.length;
+   const tt=t+(pos%2?b*0.08:0);muNote('square',[mf(MU3_PENTA[deg]),mf(MU3_PENTA[deg])*1.004],tt,0.03,b*0.6,0.4,0.02,1500,0.45);}}}
 function muTick(){if(!AU.ctx||AU.ctx.state!=='running')return;const play=auOn('music')&&!document.hidden;const c=AU.ctx;
  if(!play){MU.on=false;return;}muInit();if(!MU.on){MU.on=true;MU.t=c.currentTime+0.3;}
  while(MU.t<c.currentTime+0.6){const b=muB();muStep(MU.t);MU.step++;MU.played+=b;MU.t+=b;}}
