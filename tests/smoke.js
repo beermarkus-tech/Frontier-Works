@@ -289,6 +289,14 @@ const server=require('./serve.js');
   for(let k=0;k<12000;k++){m.inb={copper_ore:100};const o=m.outb.copper_ingot||0;tick(0.05);made+=(m.outb.copper_ingot||0)-o;m.outb.copper_ingot=0;}
   powerStep=ps;removeEnt(m,false,true);return{ok,made};});
  check(`a smelter at 85% makes its full 25.5/min (${clk.made} in 10 min, expected 255)`,clk.ok&&clk.made>=254);
+ // the pipe panel names the slow pieces that cap a mixed Mk1/Mk2 network (Session 41i)
+ const slowP=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<2&&ok;j++)for(let i=-1;i<7&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  S.ub.push('pipe2');S.inv.plastic=(S.inv.plastic||0)+20;const r=[P('pipe2',X,Y,0),P('pipe2',X+1,Y,0),P('pipe1',X+2,Y,0),P('pipe2',X+3,Y,0),P('pipe2',X+4,Y,0)];tick(0.05);
+  const e=fw.entAt(X,Y);openPanel('ent',e.id);const t=document.getElementById('pbody').textContent;ACT.closePanel();
+  for(let i=-1;i<7;i++){const q=fw.entAt(X+i,Y);if(q&&q.k!=='core')removeEnt(q,false,true);}
+  return{ok:r.every(x=>x===''),rate:Math.round(e.net.rate*60),note:t.includes('1 piece of Pipeline Mk1 limits this network')&&t.includes('600 m³/min')};});
+ check(`pipe panel names the piece that caps the network (${slowP.rate} m³/min, one Mk1 among Mk2)`,slowP.ok&&slowP.rate===300&&slowP.note);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

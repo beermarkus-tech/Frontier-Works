@@ -2578,3 +2578,13 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - Smelter output per minute (4 min run): 85% 25.00 → 25.25–25.5 (one ingot still in progress at the end of the count); 100% 30; 250% 75.
 - New smoke check: 85% gives 254 in 10 min (expected 255).
 - `npm test` all PASS. `npm run playthrough`: all ✓; measured rates now exact (Wire 29.5 → 30, Concrete 14.8 → 15).
+
+## Session 41i — 2026-11-14 (Claude Code, cloud session) · Build 126
+
+**Asked:** (screenshot) why is the downstream pipe flow capped at 300 m³/min when the machines need about 380?
+
+**Answer:** a network's max flow is set by its slowest pipe piece (DESIGN.md since Session 31). One Pipeline Mk1 piece (300) anywhere in a Mk2 network (600) caps the whole network at 300. In the screenshot, the short vertical connectors between the machine rows look like Mk1.
+
+**Built:** the pipe panel names the limiting pieces when a network mixes pipe types, e.g. "6 pieces of Pipeline Mk1 limit this network (outlined in orange). Draw Pipeline Mk2 over them to allow 600 m³/min." (`slowNote`). While the panel is open those pieces are outlined in orange on the 2D map. The panel's explanation text now matches the end-to-end pipe rule (41e).
+
+**Verified:** new smoke check (one Mk1 among Mk2: rate 300 and the note shown). `npm test` all PASS.

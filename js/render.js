@@ -566,6 +566,8 @@ function render(){
  else if(hover&&tool==='clr'){const e=entAt(hover.x,hover.y);ctx.strokeStyle='#6fc3ff';ctx.lineWidth=2*DPR;if(e&&ERASE_K.includes(e.k)){ctx.fillStyle='rgba(111,195,255,0.18)';rr(sx(e.x),sy(e.y),e.w*s,e.h*s,s*0.15);ctx.fill();ctx.stroke();}else{rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();}}
  else if(hover&&tool==='del'){const e=entAt(hover.x,hover.y);ctx.strokeStyle='#ff5a46';ctx.lineWidth=2*DPR;if(e&&e.k!=='core'){ctx.fillStyle='rgba(255,70,50,0.2)';rr(sx(e.x),sy(e.y),e.w*s,e.h*s,s*0.15);ctx.fill();ctx.stroke();}else{rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();}}
  else if(hover&&!tool&&!G){const e=entAt(hover.x,hover.y);if(e&&e.id!==UI.sel){ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5*DPR;rr(sx(e.x)+1,sy(e.y)+1,e.w*s-2,e.h*s-2,s*0.18);ctx.stroke();}}
+ {const pe=UI.panel&&UI.panel.kind==='ent'&&ents.get(UI.panel.arg);if(pe&&pe.k==='pipe'&&pe.net){const n=pe.net,ps=n.tiles.filter(t=>t.k==='pipe'),slow=ps.filter(t=>B[t.d].spd===n.rate);   /* slowest pieces of the selected pipe network */
+  if(slow.length&&slow.length<ps.length){ctx.strokeStyle='rgba(255,140,40,0.95)';ctx.lineWidth=Math.max(2,s*0.08);for(const t of slow){rr(sx(t.x)+s*0.08,sy(t.y)+s*0.08,s*0.84,s*0.84,s*0.15);ctx.stroke();}}}}
  if(UI.sel&&ents.has(UI.sel)){const e=ents.get(UI.sel),X=sx(e.x)-3*DPR,Y=sy(e.y)-3*DPR,P=e.w*s+6*DPR;ctx.strokeStyle='rgba(255,181,71,0.25)';ctx.lineWidth=7*DPR;rr(X,Y,P,P,s*0.2);ctx.stroke();ctx.strokeStyle='#ffb547';ctx.lineWidth=2*DPR;ctx.setLineDash([7*DPR,5*DPR]);ctx.lineDashOffset=-animT*24*DPR;ctx.stroke();ctx.setLineDash([]);}
  // clouds and vignette are CSS layers above the canvas (cheap on phones): just keep the cloud layer in step with the camera
  syncClouds(ox,oy);
