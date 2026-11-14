@@ -2466,3 +2466,17 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 - DESIGN.md updated.
 
 **Verified:** 2D and 3D screenshots. New smoke check: tank → valve at 30 → incinerator gives 30/30 m³/min; reversed it passes 0; a shut valve survives save/load. Fluids-menu test updated. `npm test` all PASS.
+
+## Session 41b — 2026-11-14 (Claude Code, cloud session) · Build 119
+
+**Asked:** (screenshot) why does a Refinery on Wet Alumina say "Output full" (0%)? Its output buffer held 24 Alumina Solution.
+
+**Found:** working as designed. A Refinery can't start a batch while 24 of its 12-unit output wait (`capOut`). The alumina can only leave into a pipe network with room. In that row the first refineries run at 100% and fill the shared alumina pipe; the later ones find it full, because downstream use is lower than the row's production. The hint was misleading: it talked about output belts.
+
+**Built:** `outHint(e)` in `js/ui.js`. When a fluid output backs up, the hint names the cause:
+- "The Alumina Solution pipe is full: everything connected to it uses less than gets made. Connect more users, a tank or an incinerator, or lower the clock speed." (all networks that could take it are ≥ 90% full)
+- "No pipe takes the Alumina Solution: connect a Pipe Junction…" (no attached network can take it)
+
+Solid outputs keep the belt hint.
+
+**Verified:** new smoke check (one refinery with a dead-end pipe, one with no pipe; both hints correct). `npm test` all PASS.

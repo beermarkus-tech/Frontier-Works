@@ -211,6 +211,16 @@ const server=require('./serve.js');
   for(let j=-1;j<4;j++)for(let i=-1;i<12;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(x=>x===''),split,f30:Math.round(f30),rev:Math.round(rev),why,shut};});
  check(`Flow Valve: limits to the set rate (${vlv.f30}/30 m³/min), reversed passes ${vlv.rev} (${vlv.why}), shut valve kept after save`,vlv.ok&&vlv.split&&vlv.f30>=26&&vlv.f30<=33&&vlv.rev<=2&&vlv.shut);
+ // a fluid output that backs up names its pipe in the hint (Session 41b)
+ const ohint=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<5&&ok;j++)for(let i=-1;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const w=B.refinery.w,r=[P('refinery',X,Y,0),P('junction',X+w,Y,0),P('pipe1',X+w+1,Y,0),P('refinery',X+6,Y,0)];const a=fw.entAt(X,Y),b=fw.entAt(X+6,Y);
+  for(const m of [a,b]){m.r='r_wet_alumina';}const ps=powerStep;powerStep=function(){for(const e of ents.values())if(e.k==='mach')e.pw=1;};
+  for(let k=0;k<1200;k++){for(const m of [a,b])m.inb={bauxite:100,water:100};tick(0.05);}
+  const txt=m=>{openPanel('ent',m.id);const t=document.getElementById('pbody').textContent;ACT.closePanel();return t;};const ta=txt(a),tb=txt(b);powerStep=ps;
+  for(let j=-1;j<5;j++)for(let i=-1;i<12;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(x=>x===''),full:ta.includes('Alumina Solution pipe is full'),none:tb.includes('No pipe takes the Alumina Solution')};});
+ check('output-full hint for fluids: names a full pipe, or says no pipe takes the fluid',ohint.ok&&ohint.full&&ohint.none);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

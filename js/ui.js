@@ -123,6 +123,12 @@ function bufList(b){const ks=Object.keys(b).filter(k=>b[k]>0);return ks.length?k
 /* Efficiency block for machines, drills and pumps (shown in their panel, refreshed live) */
 const effCol=pc=>pc>=90?'#4fe08a':pc>=60?'#ffd34a':pc>=30?'#ffa53a':'#ff5a46';
 /* Small live efficiency badge for the panel header (machines, drills, pumps) */
+/* why output backs up (Session 41b): a full fluid output names its pipe instead of talking about belts */
+function outHint(e){const r=e.r&&RC[e.r];if(r)for(const f in r.o){if(!IT[f].f||(e.outb[f]||0)+r.o[f]<=capOut(r.o[f]))continue;
+  const ns=nets.filter(n=>n.att.includes(e)&&(!n.fluid||n.fluid===f||n.amt<1));
+  if(!ns.length)return`No pipe takes the ${IT[f].n}: connect a Pipe Junction here to an empty pipe or one carrying ${IT[f].n}.`;
+  if(ns.every(n=>n.amt>=n.cap*0.9))return`The ${IT[f].n} pipe is full: everything connected to it uses less than gets made. Connect more users, a tank or an incinerator, or lower the clock speed.`;}
+ return'Output is backing up: add or speed up an output belt, or use what it makes.';}
 function effChip(e){if(e.k==='gen'){const L=Math.round(Math.min(1,e._ls||0)*100),c=L>=95?'#ff8a6a':L>=80?'#ffd34a':'#4fe08a';return`<span class="effchip" style="color:${c};border-color:${c}" title="Load (last few seconds)">⚡ ${L}%</span>`;}
  if(!(e.k==='mach'&&e.r||e.k==='drill'||e.k==='pump'))return'';
  if(e._efT==null||e._efT<3)return`<span class="effchip" title="Efficiency (measuring)">…</span>`;
@@ -148,7 +154,7 @@ function effHtml(e){
  const W=e._efw||{},ks=Object.keys(W).filter(k=>W[k]>=0.01).sort((a,b)=>W[b]-W[a]);
  const lbl=k=>k==='out'?'Output full':k==='power'?'No power':k==='none'?'Nothing to extract':k==='recipe'?'No recipe':'Waiting for '+IT[k.slice(3)].n;
  for(const k of ks)h+=`<div class="row"><span class="muted">${lbl(k)}</span><span class="muted">${Math.round(W[k]*100)}%</span></div>`;
- if(ks.length&&pc<95){const k=ks[0];h+=`<div class="muted" style="margin-top:4px">💡 ${k==='out'?'Output is backing up: add or speed up an output belt, or use what it makes.':k==='power'?'Not enough power: add generators or reconnect this to a pole.':k.startsWith('in:')?`Not enough ${IT[k.slice(3)].n} arriving: add supply, a faster belt, or lower the clock speed.`:'Check the setup.'}</div>`;}
+ if(ks.length&&pc<95){const k=ks[0];h+=`<div class="muted" style="margin-top:4px">💡 ${k==='out'?outHint(e):k==='power'?'Not enough power: add generators or reconnect this to a pole.':k.startsWith('in:')?`Not enough ${IT[k.slice(3)].n} arriving: add supply, a faster belt, or lower the clock speed.`:'Check the setup.'}</div>`;}
  return h;
 }
 function entDyn(e){
