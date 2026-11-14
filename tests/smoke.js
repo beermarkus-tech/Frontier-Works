@@ -258,6 +258,19 @@ const server=require('./serve.js');
   for(let j=-1;j<7;j++)for(let i=-1;i<7;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(x=>x===''),apart,line,tee,joined};});
  check(`pipes join only end to end: parallel rows apart (${ppar.apart}), a straight row joins (${ppar.line}), a T without junction stays apart (${ppar.tee}), with a junction it joins (${ppar.joined})`,ppar.ok&&ppar.apart&&ppar.line&&ppar.tee&&ppar.joined);
+ // Flow Valve "Top up" (Session 41f): in a loop that gives back 60/min of the 100/min it uses, the valve supplies only the missing 40,
+ // the returned water is never blocked and the pipe ahead stays around half full instead of filling up
+ const vtop=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-1;i<10&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,0),P('valve',X+4,Y,0),P('pipe1',X+5,Y,0),P('pipe1',X+6,Y,0),P('pipe1',X+7,Y,0)];
+  const tk=fw.entAt(X,Y),v=fw.entAt(X+4,Y);v.vm=1;v.vr=600;tick(0.05);let back=0,blocked=0,used=0,want=0,ca=0,cu=0,maxFill=0;
+  for(let k=0;k<1800;k++){tk.ft='water';tk.amt=400;tick(0.05);const n=v.vb;
+   ca+=60/60*0.05;while(ca>=1){ca--;if(n.amt<n.cap){n.amt++;n.fluid='water';back++;}else blocked++;}       // water given back by the loop
+   cu+=100/60*0.05;while(cu>=1){cu--;want++;if(n.amt>=1){n.amt--;used++;}}                                  // water the machines use
+   if(k>200)maxFill=Math.max(maxFill,n.amt/n.cap);}
+  const flow=Math.round(v.vf);for(let j=-1;j<3;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(x=>x===''),blocked,short:want-used,flow,maxFill:+maxFill.toFixed(2)};});
+ check(`Flow Valve Top up: loop gives back 60 of 100/min, valve adds ${vtop.flow}/min, returned water blocked ${vtop.blocked}×, short ${vtop.short}, pipe ahead at most ${Math.round(vtop.maxFill*100)}% full`,vtop.ok&&vtop.blocked===0&&vtop.short<=3&&vtop.flow>=35&&vtop.flow<=45&&vtop.maxFill<=0.7);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

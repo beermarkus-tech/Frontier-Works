@@ -2533,3 +2533,21 @@ The belts worked, the pipes didn't.
 **Note for old saves:** factories that relied on side-by-side or T contacts between pipes will split there. A junction fixes it.
 
 **Verified:** new smoke check (parallel rows apart, straight row joins, T apart, T with a junction joins). Two older tests had single vertical pipe pieces placed pointing sideways; corrected to point along the line. `npm test` all PASS. `npm run playthrough`: all ✓, no errors.
+
+## Session 41f — 2026-11-14 (Claude Code, cloud session) · Build 123
+
+**Asked:** balancing a water loop is very hard. 8 machines give back 28.8 water each (230.4/min); the consumers need 384/min; the difference (153.6) is set on a Flow Valve fed from a water pump. Only whole numbers can be set. Is rounding the reason it stalls after a while? Tanks fill visibly to the top.
+
+**Answer:** not mainly rounding. With a fixed feed:
+- slightly too little (153) only means ~99.8% running, which is harmless
+- any surplus (154, or consumers running a little under 100%) piles up for ever, fills pipes and tanks, then blocks the returned water, and the loop jams
+
+Tanks only delay that. Visibly filling tanks mean the real surplus is larger than rounding: consumers not quite at 100%. A fixed rate can't follow demand.
+
+**Built:** Flow Valve mode **Top up** (`e.vm=1`, saved via `SKEYS` 'vm').
+- Passes fluid only while the network ahead is under half full, still capped by the limit; reason 'topped' shown in the panel.
+- The returned fluid always has room, and the outside feed follows actual use.
+- Panel: Mode chips "Fixed limit / Top up" with a one-line explanation each.
+- DESIGN.md updated.
+
+**Verified:** new smoke check (simulated loop returning 60 of 100/min: valve adds ~36–40/min, returned water never blocked, no shortage, pipe ahead ≤ 53% full). `npm test` all PASS.

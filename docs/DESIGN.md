@@ -80,6 +80,9 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
 - **Flow Valve** (Session 41, Tier 2, 6 Copper Sheet + 1 Rotor): sits between two pipes and keeps their networks apart. Moves fluid only in its
   arrow direction, at most the limit set in its panel (0–600 m³/min, default 60, 0 = shut), never mixing fluids. Use: top up a loop that
   recycles water with only as much outside water as it lacks, so the recycled water is used first.
+  Mode **Top up** (Session 41f, the default answer for loops): passes fluid only while the network ahead is under half full (still capped by the limit),
+  so a loop's own returned fluid always has room and outside fluid follows the real demand. A fixed limit can't: any surplus, however small, fills
+  every buffer and then blocks the returned fluid.
 - **A building outputs into any belt/pipe that points away from its edge, and accepts input from any belt/pipe pointing into it.**
   There are no fixed ports. Solids only go to belts and fluids only to pipes.
   **Routers touch buildings directly** (confirmed with Markus, Session 10): a Splitter/Logic Splitter output side (or Pipe Junction side)

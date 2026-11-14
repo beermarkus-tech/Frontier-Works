@@ -394,7 +394,8 @@ function updNets(dt){
  /* Flow Valves (Session 41): move fluid from the network behind (va) to the one in front (vb), at most e.vr m³/min, never mixing fluids */
  for(const v of valves){const A=v.va,Bn=v.vb;let m=0;v.vwhy=null;
   if(!A||!Bn)v.vwhy='pipe';else if(A===Bn)v.vwhy='same';else if(!A.fluid||A.amt<1)v.vwhy='empty';else if(Bn.fluid&&Bn.fluid!==A.fluid&&Bn.amt>=1)v.vwhy='mix';
-  else if(v.vr>0){v.vacc=Math.min(v.vacc+v.vr/60*dt,Math.max(1.5,v.vr/60*dt*2));m=Math.floor(Math.min(v.vacc,A.amt,Bn.cap-Bn.amt));if(m>0){A.amt-=m;Bn.fluid=A.fluid;Bn.amt+=m;v.vacc-=m;}else if(Bn.amt>=Bn.cap-1)v.vwhy='full';}
+  else if(v.vm&&Bn.amt>=Bn.cap*0.5)v.vwhy='topped';   /* Top up mode (Session 41f): only while the pipe ahead is under half full, so fluid made inside a loop is used first */
+  else if(v.vr>0){const room=v.vm?Math.ceil(Bn.cap*0.5-Bn.amt):Bn.cap-Bn.amt;v.vacc=Math.min(v.vacc+v.vr/60*dt,Math.max(1.5,v.vr/60*dt*2));m=Math.floor(Math.min(v.vacc,A.amt,room));if(m>0){A.amt-=m;Bn.fluid=A.fluid;Bn.amt+=m;v.vacc-=m;}else if(Bn.amt>=Bn.cap-1)v.vwhy='full';}
   if(v.vwhy)v.vacc=0;v.vf+=(m/dt*60-v.vf)*Math.min(1,dt/3);}
 }
 
