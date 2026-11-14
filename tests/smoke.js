@@ -194,6 +194,11 @@ const server=require('./serve.js');
   const conv=a&&a.d==='lsplit'&&a.dir===1&&a.lr.f[0]==='bolts'&&a.lr.l[0]==='rest'&&a.lr.r[0]==='rest'&&b&&b.d==='lsplit'&&b.lr.f[0]==='any';
   const gone=!B.sorter&&!S.ub.includes('sorter')&&!MS.some(m=>m.b.includes('sorter'));removeEnt(a,false,true);removeEnt(b,false,true);return{conv,gone};});
  check('Sorting Splitter removed: old saves get a Logic Splitter with the same rules, menus and goals no longer list it',srt.conv&&srt.gone);
+ // performance meter + 30 fps option in the menu (Session 40)
+ const pfm=await p.evaluate(async()=>{openPanel('menu');const b=document.querySelector('#pbody [data-act="optPerf"][data-v="1"]'),f=document.querySelector('#pbody [data-act="optFps"][data-v="1"]');
+  ACT.optPerf('1');ACT.optFps('1');ACT.closePanel();await new Promise(r=>setTimeout(r,900));const t=document.getElementById('perf').textContent,vis=document.getElementById('perf').style.display!=='none';
+  ACT.optPerf('0');ACT.optFps('0');await new Promise(r=>setTimeout(r,100));const hid=document.getElementById('perf').style.display==='none';return{btn:!!b&&!!f,t,vis,hid};});
+ check(`performance meter and 30 fps option (${pfm.t})`,pfm.btn&&pfm.vis&&pfm.hid&&/fps · sim .* ms · draw .* ms · .* objects/.test(pfm.t)&&pfm.t.includes('30 fps cap'));
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

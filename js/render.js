@@ -189,14 +189,17 @@ function bStatus(e){
 /* live overlays (animation on top of sprites) */
 function isActive(e){if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;if(e.k==='incin')return e.burnT!=null&&S.t-e.burnT<1.5;return e.k==='core';}   /* incinerator: lit only for 1.5 s after it burns something (Session 39u) */
 const SMOKE={smelter:[0.74,0.28,0],foundry:[0.8,0.2,0],burner:[0.72,0.28,0],incin:[0.5,0.5,0],steam:[0.8,0.22,1],reactor:[0.4,0.46,2],refinery:[0.7,0.45,1]};
-function glow(x,y,r,c,a){const gr=ctx.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,rgba(c,a));gr.addColorStop(1,rgba(c,0));ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();}
-function blades(x,y,r,n,ang,c,wd){ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.fillStyle=c;for(let k=0;k<n;k++){ctx.rotate(Math.PI*2/n);ctx.beginPath();ctx.moveTo(0,-wd);ctx.quadraticCurveTo(r*0.6,-wd*2.2,r,0);ctx.quadraticCurveTo(r*0.5,wd*0.6,0,wd);ctx.fill();}ctx.restore();ctx.fillStyle='#d8dde2';ctx.beginPath();ctx.arc(x,y,r*0.22,0,7);ctx.fill();}
+/* glow: a cached radial sprite per colour drawn with globalAlpha (Session 40: a new gradient per glow per frame was a main 2D cost); skipped when invisible */
+const GLOWC=new Map();
+function glow(x,y,r,c,a){if(!(a>0.01)||r<0.5)return;let sp=GLOWC.get(c);if(!sp){sp=document.createElement('canvas');sp.width=sp.height=64;const g=sp.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,rgba(c,1));gr.addColorStop(1,rgba(c,0));g.fillStyle=gr;g.fillRect(0,0,64,64);GLOWC.set(c,sp);}
+ const ga=ctx.globalAlpha;ctx.globalAlpha=ga*Math.min(1,a);ctx.drawImage(sp,x-r,y-r,r*2,r*2);ctx.globalAlpha=ga;}
+function blades(x,y,r,n,ang,c,wd){if(r<2.5)return;ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.fillStyle=c;for(let k=0;k<n;k++){ctx.rotate(Math.PI*2/n);ctx.beginPath();ctx.moveTo(0,-wd);ctx.quadraticCurveTo(r*0.6,-wd*2.2,r,0);ctx.quadraticCurveTo(r*0.5,wd*0.6,0,wd);ctx.fill();}ctx.restore();ctx.fillStyle='#d8dde2';ctx.beginPath();ctx.arc(x,y,r*0.22,0,7);ctx.fill();}
 function drawLive(e,X,Y,s){
  const P=e.w*s,id=e.d,act=(e.act=(e.act||0)+((isActive(e)?1:0)-(e.act||0))*Math.min(1,fdt*4));e.ang=(e.ang||0)+fdt*act;const a=e.ang;
  switch(id){
   case 'drill1':case 'drill2':case 'drill3':blades(X+P/2,Y+P*0.45,P*0.17,3,a*(id==='drill3'?14:id==='drill2'?10:7),'#b8bec6',P*0.035);break;
   case 'wpump':case 'opump':blades(X+P/2,Y+P*0.42,P*(id==='wpump'?0.13:0.11),4,a*5,'#c8d0d8',P*0.03);break;
-  case 'smelter':glow(X+P*0.5,Y+P*0.67,P*0.36,'#ff7a1a',act*(0.55+0.2*Math.sin(animT*13+e.id)));ctx.fillStyle=rgba('#ffb040',act*0.9);rr(X+P*0.31,Y+P*0.6,P*0.38,P*0.14,s*0.08);ctx.fill();break;
+  case 'smelter':glow(X+P*0.5,Y+P*0.67,P*0.36,'#ff7a1a',act*(0.55+0.2*Math.sin(animT*13+e.id)));if(act>0.01){ctx.fillStyle=rgba('#ffb040',act*0.9);rr(X+P*0.31,Y+P*0.6,P*0.38,P*0.14,s*0.08);ctx.fill();}break;
   case 'foundry':for(const fx of [0.36,0.64]){glow(X+P*fx,Y+P*0.42,s*0.42,'#ff8a20',act*(0.75+0.2*Math.sin(animT*9+fx*9)));}break;
   case 'burner':glow(X+P*0.5,Y+P*0.63,P*0.34,'#ff7020',act*(0.6+0.25*Math.sin(animT*11+e.id)));break;
   case 'incin':glow(X+P*0.5,Y+P*0.5,P*0.4,'#ff5a1a',act*(0.35+0.2*Math.sin(animT*8)));break;
@@ -480,6 +483,12 @@ function drawPole(g,e,X,Y,s){const tall=e.d==='pole2',tr=e.grid&&e.grid.trip;
  g.fillStyle=tr?'#ff4a3a':'#ffd34a';g.beginPath();g.arc(X+s/2,Y+s/2,s*0.07,0,7);g.fill();}
 
 /* ---------- main render ---------- */
+/* ore node look (rocks/oil + purity dots), painted live when close, from a per-node cached picture when s<=48 px (Session 40) */
+function paintNode(g,n,X,Y,s){const col=NODE_T[n.t][1],cx=X+s/2,cy=Y+s/2;
+  if(n.t==='oil'){g.fillStyle='rgba(0,0,0,0.5)';g.beginPath();g.ellipse(cx,cy+s*0.05,s*0.46,s*0.36,0,0,7);g.fill();const gr=g.createRadialGradient(cx-s*0.1,cy-s*0.1,0,cx,cy,s*0.4);gr.addColorStop(0,'#5a4a6a');gr.addColorStop(1,'#0c0810');g.fillStyle=gr;g.beginPath();g.ellipse(cx,cy,s*0.4,s*0.3,0,0,7);g.fill();g.fillStyle='rgba(255,255,255,0.25)';g.beginPath();g.ellipse(cx-s*0.12,cy-s*0.08,s*0.1,s*0.04,0,0,7);g.fill();}
+  else{for(let k=0;k<4;k++){const ox2=(hash2(n.x*7+k,n.y)-0.5)*s*0.5,oy2=(hash2(n.x,n.y*7+k)-0.5)*s*0.45,r=s*(0.22+hash2(k,n.x+n.y)*0.12);g.fillStyle='rgba(0,0,0,0.35)';g.beginPath();g.ellipse(cx+ox2+s*0.04,cy+oy2+s*0.06,r*1.05,r*0.85,0,0,7);g.fill();const gr=g.createRadialGradient(cx+ox2-r*0.4,cy+oy2-r*0.4,0,cx+ox2,cy+oy2,r*1.1);gr.addColorStop(0,shade(col,55));gr.addColorStop(0.6,col);gr.addColorStop(1,shade(col,-45));g.fillStyle=gr;g.beginPath();g.ellipse(cx+ox2,cy+oy2,r,r*0.82,0,0,7);g.fill();}}
+  if(s>12){g.fillStyle='rgba(10,14,18,0.75)';rrg(g,X+s*0.18,Y+s*0.82,s*0.64,s*0.18,s*0.09);g.fill();g.fillStyle=['#e08a5a','#e8e8e8','#7fe08a'][n.p];for(let k=0;k<=n.p;k++){g.beginPath();g.arc(X+s*(0.5+(k-n.p/2)*0.17),Y+s*0.91,s*0.05,0,7);g.fill();}}}
+function nodeSprite(n,s){const b=bkt(s);if(n._sp&&n._sp.b===b)return n._sp;const pad=Math.ceil(b*0.25),c=document.createElement('canvas');c.width=c.height=Math.ceil(b+pad*2);paintNode(c.getContext('2d'),n,pad,pad,b);c.pad=pad;c.b=b;n._sp=c;return c;}
 function render(){
  if(wantLow()!==lowRes)resize();
  const W=cv.width,H=cv.height;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);
@@ -495,10 +504,8 @@ function render(){
  const tool=UI.tool;
  if(tool&&s>14){ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();for(let x=x0;x<=x1;x++){ctx.moveTo(sx(x),sy(y0));ctx.lineTo(sx(x),sy(y1));}for(let y=y0;y<=y1;y++){ctx.moveTo(sx(x0),sy(y));ctx.lineTo(sx(x1),sy(y));}ctx.stroke();}
  // nodes
- for(const n of nodes){if(n.x<x0||n.x>x1||n.y<y0||n.y>y1)continue;if(grid[n.y*MW+n.x])continue;const col=NODE_T[n.t][1],X=sx(n.x),Y=sy(n.y),cx=X+s/2,cy=Y+s/2;
-  if(n.t==='oil'){ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.ellipse(cx,cy+s*0.05,s*0.46,s*0.36,0,0,7);ctx.fill();const gr=ctx.createRadialGradient(cx-s*0.1,cy-s*0.1,0,cx,cy,s*0.4);gr.addColorStop(0,'#5a4a6a');gr.addColorStop(1,'#0c0810');ctx.fillStyle=gr;ctx.beginPath();ctx.ellipse(cx,cy,s*0.4,s*0.3,0,0,7);ctx.fill();ctx.fillStyle='rgba(255,255,255,0.25)';ctx.beginPath();ctx.ellipse(cx-s*0.12,cy-s*0.08,s*0.1,s*0.04,0,0,7);ctx.fill();}
-  else{for(let k=0;k<4;k++){const ox2=(hash2(n.x*7+k,n.y)-0.5)*s*0.5,oy2=(hash2(n.x,n.y*7+k)-0.5)*s*0.45,r=s*(0.22+hash2(k,n.x+n.y)*0.12);ctx.fillStyle='rgba(0,0,0,0.35)';ctx.beginPath();ctx.ellipse(cx+ox2+s*0.04,cy+oy2+s*0.06,r*1.05,r*0.85,0,0,7);ctx.fill();const gr=ctx.createRadialGradient(cx+ox2-r*0.4,cy+oy2-r*0.4,0,cx+ox2,cy+oy2,r*1.1);gr.addColorStop(0,shade(col,55));gr.addColorStop(0.6,col);gr.addColorStop(1,shade(col,-45));ctx.fillStyle=gr;ctx.beginPath();ctx.ellipse(cx+ox2,cy+oy2,r,r*0.82,0,0,7);ctx.fill();}}
-  if(s>12){ctx.fillStyle='rgba(10,14,18,0.75)';rr(X+s*0.18,Y+s*0.82,s*0.64,s*0.18,s*0.09);ctx.fill();ctx.fillStyle=['#e08a5a','#e8e8e8','#7fe08a'][n.p];for(let k=0;k<=n.p;k++){ctx.beginPath();ctx.arc(X+s*(0.5+(k-n.p/2)*0.17),Y+s*0.91,s*0.05,0,7);ctx.fill();}}}
+ for(const n of nodes){if(n.x<x0||n.x>x1||n.y<y0||n.y>y1)continue;if(grid[n.y*MW+n.x])continue;const X=sx(n.x),Y=sy(n.y);
+  if(s<=48){const c=nodeSprite(n,s),k=s/c.b;ctx.drawImage(c,X-c.pad*k,Y-c.pad*k,c.width*k,c.height*k);}else paintNode(ctx,n,X,Y,s);}
  const vis=[];for(const e of ents.values()){if(e.x+e.w<x0||e.x>x1||e.y+e.h<y0||e.y>y1)continue;vis.push(e);}
  const lod=TS*cam.z<12||vis.length>6000;   // far out or very busy: simple blocks instead of detailed sprites
  drawZoneTint(sx,sy,s);

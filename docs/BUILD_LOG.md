@@ -2404,3 +2404,31 @@ A programmable splitter like the one in a well-known factory game: overflow per 
 **Built:** with two side feeders, if exactly one of them is a real belt, the belt bends towards it. Items from the other side are then refused (`passOK` only lets crossings pass into the bend), so the splitter beyond the crossing doesn't push into this belt.
 
 **Verified:** new smoke check (belt on one side, crossing + splitter on the other, so the belt bends towards the belt). `npm test` all PASS.
+
+## Session 40 — 2026-11-14 (Claude Code, cloud session) · Build 116
+
+**Asked:** the save has ~3,500 objects and ~1,500 buildings and is starting to feel slower in 2D and 3D. What can be optimized from the ground up? Make a proposal. After the proposal, "yes" to Steps 0 and 1.
+
+**Measured** (scratch profiler: 3,300-object test factory with 770 working smelters and 2,500 Mk3 belts, on the cloud machine; a tablet is perhaps 4–6× slower):
+- Sim 0.3 ms per tick; topology rebuild 1.3 ms.
+- 2D: near 1.5 ms, middle zoom ~5 ms (drawLive ~3 ms, items ~1.2 ms). Zoomed out it is steady at 0.2 ms; a first reading of 24 ms was the one-off chunk painting after a zoom, capped at 8 ms per frame.
+- 3D: JS 2–5 ms, but **1.3–1.5 million triangles** per frame (whole factory drawn every frame, plus a shadow pass).
+
+**Proposal agreed** (steps):
+- 0 — performance meter
+- 1 — 2D quick wins
+- 2 — layered 2D: belts and buildings baked into cached 32×32 chunk pictures, only items and animations drawn live; current renderer kept as fallback
+- 3 — 3D culling per chunk, low-detail far models, near-only shadows, adaptive resolution
+- 4 — sim tidy-up only if the meter shows a need
+
+**Built (Steps 0 + 1):**
+- **☰ Menu → Performance meter:** fps, sim ms, draw ms, object and building counts, shown below the top bar (`PF`, `perfShow` in `js/main.js`, `#perf`).
+- **☰ Menu → Frame rate: Full / 30 fps (saves battery):** draws at most ~30 times a second (`OPT.fps30`, `rAcc`). The sim is unaffected.
+- **Glows:** one cached radial sprite per colour, drawn with globalAlpha, instead of a new gradient per glow per frame. Skipped when invisible (alpha ≈ 0, e.g. idle smelters). Checked side by side: identical.
+- **Ore nodes:** at ≤ 48 px per tile, painted once per zoom step into a per-node cached picture (`paintNode`, `nodeSprite`). Drawn live when close.
+- **Small details:** fan blades skipped when under ~2.5 px; smelter mouth skipped when idle.
+- **Result (same profiler):** middle zoom 4.9 → 3.5 ms, near 1.5 → 0.85 ms.
+
+**Verified:** visual check of ore nodes and glow. New smoke check for the meter and 30 fps option. `npm test` all PASS.
+
+**Next up:** Markus turns the meter on, on his tablet, and reports fps and draw ms in 2D and 3D. Then Step 2 or 3, whichever view is slower there.

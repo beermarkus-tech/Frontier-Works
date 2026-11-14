@@ -65,10 +65,14 @@ async function importText(t){t=t.trim();load(t.startsWith('FW2:')?await gunz(unb
 setInterval(save,30000);document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
 
 /* ---------- loop ---------- */
-let last=performance.now(),acc=0,uiT=0;const DT=0.05;
+let last=performance.now(),acc=0,uiT=0,rAcc=0;const DT=0.05;
+/* performance meter (Session 40, ☰ Menu): smoothed fps and milliseconds per frame for simulation and drawing */
+const PF={fps:60,sim:0,draw:0,t:0};
+function perfShow(el){const d=$('perf');if(!d)return;if(!OPT.perf){if(d.style.display!=='none')d.style.display='none';return;}d.style.display='';PF.t+=el;if(PF.t<0.5)return;PF.t=0;
+ let b=0;for(const e of ents.values())if(e.k!=='belt'&&e.k!=='pipe')b++;d.textContent=`${Math.round(PF.fps)} fps · sim ${PF.sim.toFixed(1)} ms · draw ${PF.draw.toFixed(1)} ms · ${ents.size.toLocaleString()} objects (${b.toLocaleString()} buildings)${OPT.fps30?' · 30 fps cap':''}`;}
 function frame(now){
  const el=Math.min(0.1,(now-last)/1000);last=now;fdt=el;acc+=el*(S.spd||1);animT+=el;
- let n=0;while(acc>=DT&&n<40){tick(DT);acc-=DT;n++;}if(n>=40)acc=0;
+ const pt0=performance.now();let n=0;while(acc>=DT&&n<40){tick(DT);acc-=DT;n++;}if(n>=40)acc=0;const pt1=performance.now();PF.sim+=(pt1-pt0-PF.sim)*0.05;
  // camera: smooth zoom around anchor, inertia, eased jumps
  const k=1-Math.exp(-el*13);
  if(zAnchor){cam.z+=(camT.z-cam.z)*k;if(Math.abs(camT.z-cam.z)<0.0008)cam.z=camT.z;const s=TS*cam.z;cam.x=zAnchor.fx-(zAnchor.sx-innerWidth/2)/s;cam.y=zAnchor.fy-(zAnchor.sy-innerHeight/2)/s;camT.x=cam.x;camT.y=cam.y;if(cam.z===camT.z)zAnchor=null;clampCam();}
@@ -77,7 +81,8 @@ function frame(now){
   else{cam.x+=(camT.x-cam.x)*k;cam.y+=(camT.y-cam.y)*k;cam.z+=(camT.z-cam.z)*k;}
  }
  if(keys.size){const sp=14*el/cam.z;let mx=0,my=0;if(keys.has('w')||keys.has('arrowup'))my-=sp;if(keys.has('s')||keys.has('arrowdown'))my+=sp;if(keys.has('a')||keys.has('arrowleft'))mx-=sp;if(keys.has('d')||keys.has('arrowright'))mx+=sp;if(mx||my){camT.x+=mx;camT.y+=my;cam.x+=mx;cam.y+=my;clampCam();}}
- if(V3.on)render3D(el);else{render();drawMini(el);}
+ rAcc+=el;if(!OPT.fps30||rAcc>=0.03){fdt=rAcc;const pt2=performance.now();if(V3.on)render3D(rAcc);else{render();drawMini(rAcc);}PF.draw+=(performance.now()-pt2-PF.draw)*0.1;PF.fps+=(1/Math.max(0.001,rAcc)-PF.fps)*0.1;rAcc=0;}   /* battery saver: draw at most ~30 times a second */
+ perfShow(el);
  uiT+=el;if(uiT>0.3){uiT=0;updTop();updBiome();if(UI.panel)renderPanel(false);}
  requestAnimationFrame(frame);
 }

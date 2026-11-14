@@ -251,6 +251,8 @@ function menuHtml(){
  <h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button>
  <h4>View</h4><div class="chips"><button class="btn chip ${V3.on?'':'on'}" data-act="view" data-v="2d">2D map</button><button class="btn chip ${V3.on?'on':''}" data-act="view" data-v="3d">3D view</button></div>
  <div class="row"><span>Efficiency rings on buildings</span><span class="chips"><button class="btn chip ${OPT.eff?'on':''}" data-act="optEff" data-v="1">On</button><button class="btn chip ${OPT.eff?'':'on'}" data-act="optEff" data-v="0">Off</button></span></div>
+ <div class="row"><span>Frame rate</span><span class="chips"><button class="btn chip ${OPT.fps30?'':'on'}" data-act="optFps" data-v="0">Full</button><button class="btn chip ${OPT.fps30?'on':''}" data-act="optFps" data-v="1">30 fps (saves battery)</button></span></div>
+ <div class="row"><span>Performance meter</span><span class="chips"><button class="btn chip ${OPT.perf?'on':''}" data-act="optPerf" data-v="1">On</button><button class="btn chip ${OPT.perf?'':'on'}" data-act="optPerf" data-v="0">Off</button></span></div>
  <div class="row"><span>3D quality</span><span class="chips"><button class="btn chip ${V3.q==='high'?'on':''}" data-act="q3" data-v="high">High</button><button class="btn chip ${V3.q==='low'?'on':''}" data-act="q3" data-v="low">Low (faster)</button></span></div>
  <div class="row"><span>3D look</span><span class="chips"><button class="btn chip ${V3.look==='nice'?'on':''}" data-act="look3" data-v="nice">Enhanced</button><button class="btn chip ${V3.look==='classic'?'on':''}" data-act="look3" data-v="classic">Classic (faster)</button></span></div>
  ${typeof audioMenu==='function'?audioMenu():''}
@@ -296,6 +298,8 @@ const ACT={
  swToggle:v=>{const e=ents.get(+v);if(!e||e.d!=='pswitch')return;e.off=!e.off;topoDirty=true;toast(`${e.tx||'Power Switch'} ${e.off?'off':'on'}`);renderPanel(true);},
  pnCut:v=>{const a=ents.get(UI.panel.arg),b=ents.get(+v);if(a&&b){pnUnlink(a,b);toast('Wire removed');}renderPanel(true);},
  pnWire:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.wireFrom=e.id;setTool(null);toast('Tap the pole, tower, switch or generator to connect to');updInfo();},
+ optFps:v=>{OPT.fps30=v==='1';saveOpt();renderPanel(true);},
+ optPerf:v=>{OPT.perf=v==='1';saveOpt();renderPanel(true);},
  dockHide:()=>{OPT.dockHid=true;saveOpt();applyDock();},
  dockShow:()=>{OPT.dockHid=false;saveOpt();applyDock();},
  moveSel:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.moveId=e.id;setTool(null);closePanel();toast(`Tap where the ${B[e.d].n} should go`);updInfo();},

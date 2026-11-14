@@ -204,3 +204,6 @@ body.dockhid #dock{display:none}body.dockhid #dockShow{display:inline-flex}
 .rec{white-space:normal;overflow-wrap:anywhere}.ing{white-space:nowrap;display:inline-block;max-width:100%}
 .autog{min-width:32px;padding:2px 6px;font-size:15px;margin-right:4px}
 .btnrow{display:flex;flex-wrap:wrap;gap:6px}
+
+/* performance meter (Session 40) */
+#perf{position:fixed;left:50%;top:calc(62px + var(--sat));transform:translateX(-50%);padding:4px 10px;border-radius:10px;font:600 12px/1.3 ui-monospace,monospace;z-index:9;pointer-events:none;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis}
