@@ -2630,3 +2630,17 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 **Rotation:** `muSwitch` cycles Drift → Pulse → Night Shift (`muBpm` per track). Loudness matched to Pulse (offline 60 s render: RMS 0.090 vs 0.092, same peak). DESIGN.md updated.
 
 **Verified:** music smoke test extended (switch to track 3, back to Drift; all 3 tracks in a 20-min loop). `npm test` all PASS. A 60 s preview WAV was sent to Markus.
+
+## Session 43b — 2026-11-14 (Claude Code, cloud session) · Build 130
+
+**Feedback:** the Night Shift beat is fine, but the melody sounds random, "like a kid playing anything on the piano".
+
+**Cause:** the whistled hook drew random notes from the E minor pentatonic each section, unrelated to the chords; the piano rhythm also changed each section.
+
+**Built:**
+- Composed tunes (`MU3_MEL`): one per chord progression, one phrase per chord as [step, note, length]. Strong beats sit on chord tones (checked for all 12 phrases). A motif repeats, and the last phrase resolves back towards the first chord.
+- The whistle is now a soft triangle with a quiet square edge, playing proper note lengths.
+- Tune sections and instrumental sections mostly alternate.
+- The piano comping keeps one rhythm for the whole track (`MU.k3`).
+
+**Verified:** offline render (RMS unchanged at 0.090); new 60 s preview with the tune sent to Markus. `npm test` all PASS.
