@@ -2565,3 +2565,16 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - Valve transfers count on both networks. The valve panel's "Flowing now" uses the same exact count.
 
 **Verified:** tank (via valve at 60) + tank → incinerator. The meter near the valve reads 60 and the one near the second tank 240 (real: 60 / 240). New smoke check. `npm test` all PASS (one run hit a known flaky belt-rate check; it passed on rerun).
+
+## Session 41h — 2026-11-14 (Claude Code, cloud session) · Build 125
+
+**Reported:** (screenshot) 12 Smelters at 85% clock (25.5 Copper Ingot/min each, 306 together; planner target 305) all show 100% efficiency and "25.5 of 25.5". The meter on their shared output line shows only 300.2/min.
+
+**Found:** a real machine timing bug in `updBuilding`. When a batch finished partway through a 0.05 s step, the leftover progress was dropped (`e.prog=0`) and the next batch started from zero. At 85% a 2 s recipe needs 47.06 steps but took 48, so 25.0/min instead of 25.5 (12 × 25.0 = 300). Efficiency still read 100% because the machine was never idle. Recipes whose time didn't divide evenly into steps were all slightly slow; floating-point sums also cost the odd step at 100% (the playthrough's 99% readings).
+
+**Built:** on finishing, the leftover is kept (`e.ov`, `e.ovT`). A batch that starts in the same step (or the next) begins with that leftover. A stalled machine starts fresh.
+
+**Verified:**
+- Smelter output per minute (4 min run): 85% 25.00 → 25.25–25.5 (one ingot still in progress at the end of the count); 100% 30; 250% 75.
+- New smoke check: 85% gives 254 in 10 min (expected 255).
+- `npm test` all PASS. `npm run playthrough`: all ✓; measured rates now exact (Wire 29.5 → 30, Concrete 14.8 → 15).

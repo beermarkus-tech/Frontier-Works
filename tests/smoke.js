@@ -281,6 +281,14 @@ const server=require('./serve.js');
   for(let j=-1;j<4;j++)for(let i=-1;i<15;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(x=>x===''),a,b,tot};});
  check(`pipe meters read their own spot: near the valve ${pmet.a} (valve 60), near the tank ${pmet.b} (240), network total ${pmet.tot}`,pmet.ok&&Math.abs(pmet.a-60)<=4&&Math.abs(pmet.b-240)<=8);
+ // a machine at an uneven clock speed makes its full rate (Session 41h: the leftover part of a step was dropped after every batch,
+ // so a smelter at 85% made 25.0 instead of 25.5 ingots/min)
+ const clk=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-1;i<3&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const ps=powerStep;powerStep=function(){for(const e of ents.values())if(e.k==='mach')e.pw=1;};const ok=P('smelter',X,Y,0)==='';const m=fw.entAt(X,Y);m.r='r_copper_ingot';m.clock=0.85;let made=0;
+  for(let k=0;k<12000;k++){m.inb={copper_ore:100};const o=m.outb.copper_ingot||0;tick(0.05);made+=(m.outb.copper_ingot||0)-o;m.outb.copper_ingot=0;}
+  powerStep=ps;removeEnt(m,false,true);return{ok,made};});
+ check(`a smelter at 85% makes its full 25.5/min (${clk.made} in 10 min, expected 255)`,clk.ok&&clk.made>=254);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

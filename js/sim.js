@@ -504,9 +504,9 @@ function updBuilding(e,dt){
   case 'mach':{
    const r=e.r&&RC[e.r];e.want=false;if(!r){effTrack(e,dt,'recipe');return;}
    if(e.off){for(const k in e.outb)if(e.outb[k]>0){if(pushOut(e,k))e.outb[k]--;}break;}   // switched off (Session 37e): no new cycles, no power; finished items still leave
-   if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=0;}
-   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t;if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];zStat('p',e,k,r.o[k]);}e.run=false;e.prog=0;
-     if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;}}}}
+   if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=e.ovT===tickNo-1?e.ov:0;}   /* a batch that starts straight after the last one keeps that batch's leftover step (Session 41h) */
+   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t;if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];zStat('p',e,k,r.o[k]);}e.run=false;e.ov=Math.min(0.999,e.prog-1);e.ovT=tickNo;e.prog=0;
+     if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=e.ov;}}}}
    for(const k in e.outb)if(e.outb[k]>0){for(let a=0;a<2&&e.outb[k]>0;a++){if(pushOut(e,k))e.outb[k]--;else break;}}
    effTrack(e,dt,machState(e,r));
    break;}
