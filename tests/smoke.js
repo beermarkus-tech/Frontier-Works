@@ -297,6 +297,16 @@ const server=require('./serve.js');
   for(let i=-1;i<7;i++){const q=fw.entAt(X+i,Y);if(q&&q.k!=='core')removeEnt(q,false,true);}
   return{ok:r.every(x=>x===''),rate:Math.round(e.net.rate*60),note:t.includes('1 piece of Pipeline Mk1 limits this network')&&t.includes('600 m³/min')};});
  check(`pipe panel names the piece that caps the network (${slowP.rate} m³/min, one Mk1 among Mk2)`,slowP.ok&&slowP.rate===300&&slowP.note);
+ // planner "From other factories" (Session 41j): supplied parts are used first and the chain behind them drops out
+ const psup=await p.evaluate(()=>{const lk=PL.locked;PL.locked=true;const T=[{item:'compute_module',rate:5}];
+  const o0=plRevMulti(T,{}),cb=o0.rows.find(r=>r.item==='circuit_board').rate,cs0=(o0.rows.find(r=>r.item==='copper_sheet')||{rate:0}).rate;
+  const o1=plRevMulti(T,{},{circuit_board:cb/2}),r1=o1.rows.find(r=>r.item==='circuit_board');
+  const o2=plRevMulti(T,{},{circuit_board:cb}),gone=!o2.rows.some(r=>r.item==='circuit_board'),cs2=(o2.rows.find(r=>r.item==='copper_sheet')||{rate:0}).rate;
+  const o3=plRevMulti(T,{},{circuit_board:cb*3});   // more than needed: only the need is used
+  const save=JSON.stringify(PL);PL.mode='rev';PL.rev.targets=T.map(t=>({...t}));PL.rev.sup={};plSupAdd('circuit_board');const added=Math.abs(PL.rev.sup.circuit_board-Math.ceil(cb*10)/10)<1e-9;
+  openPanel('plan');const t=document.getElementById('pbody').textContent;ACT.closePanel();Object.assign(PL,JSON.parse(save));PL.locked=lk;
+  return{half:!!r1&&Math.abs(r1.rate-cb/2)<1e-6&&Math.abs(o1.sup.circuit_board-cb/2)<1e-6,gone,less:cs2<cs0-1e-6,capped:Math.abs(o3.sup.circuit_board-cb)<1e-6,added,ui:t.includes('From other factories')&&t.includes('Circuit Board')};});
+ check(`planner: parts from other factories (half covered: ${psup.half}, fully covered drops the step: ${psup.gone}, chain behind shrinks: ${psup.less}, extra supply capped: ${psup.capped}, button adds the need: ${psup.added}, panel: ${psup.ui})`,Object.values(psup).every(v=>v===true));
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

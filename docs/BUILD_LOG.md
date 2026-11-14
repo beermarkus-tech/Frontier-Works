@@ -2588,3 +2588,18 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 **Built:** the pipe panel names the limiting pieces when a network mixes pipe types, e.g. "6 pieces of Pipeline Mk1 limit this network (outlined in orange). Draw Pipeline Mk2 over them to allow 600 m³/min." (`slowNote`). While the panel is open those pieces are outlined in orange on the 2D map. The panel's explanation text now matches the end-to-end pipe rule (41e).
 
 **Verified:** new smoke check (one Mk1 among Mk2: rate 300 and the note shown). `npm test` all PASS.
+
+## Session 41j — 2026-11-14 (Claude Code, cloud session) · Build 127
+
+**Asked:** in the planner, mark items (fully or partly) as already produced in another factory and used for this plan. E.g. the plan needs 10 Circuit Boards and 5 come from elsewhere: enter 5 as an external input, and the chain for those 5 must drop out.
+
+**Built:** "From other factories" section in "For a target" mode.
+- **Data:** `PL.rev.sup = {item: per minute}`, saved with the plan and cleaned in `plFix`.
+- **Calculation:** `plRevMulti/plRevOnce(…, sup)` take supplied amounts first (before byproducts) wherever an item is needed: intermediates, end products, raw resources. So machines, power and mining behind them shrink or disappear. `out.sup` holds the amount actually used; extra supply is capped and shown as "only X/min of it is needed here".
+- **UI:**
+  - each machine card that isn't an end product gets "⇢ I make this elsewhere", which adds the item with its current need, rounded up to 0.1 (`plSupAdd`)
+  - the section lists supplied items with an editable rate and ✕, plus "+ Bring in an item…" for any item or raw resource in the plan
+  - a card partly covered says "⇢ X/min more comes from another factory"
+- DESIGN.md updated.
+
+**Verified:** planner screenshot. New smoke check (Compute Module 5/min: half the Circuit Boards supplied halves that step; all supplied removes it and shrinks Copper Sheet; oversupply capped; button adds the need; section shown). `npm test` all PASS.

@@ -11,7 +11,7 @@ const PL_RES=[...Object.keys(NODE_T),'water'];
 const plResItem=res=>res==='water'?'water':NODE_T[res][0];
 const PL_RAW=new Set(PL_RES.map(plResItem));
 const PL_EPS=1e-6;
-function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{targets:[{item:'iron_plate',rate:60}],pick:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
+function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{targets:[{item:'iron_plate',rate:60}],pick:{},sup:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
 /* Several plans at once (Session 37b): PLS.list holds plans (each: name, mode, fwd/rev/pow, ticks); PL is the active one (same object).
    Older single-plan storage becomes the first plan. */
 function plNorm(o){const d=plDefault();o=o||{};return{name:typeof o.name==='string'?o.name:'',mode:['fwd','rev','pow'].includes(o.mode)?o.mode:'fwd',locked:!!o.locked,fwd:Object.assign(d.fwd,o.fwd),rev:Object.assign(d.rev,o.rev),pow:Object.assign(d.pow,o.pow),done:o.done&&typeof o.done==='object'?o.done:{},doneSig:o.doneSig||''};}
@@ -37,7 +37,7 @@ function plFix(){
  const ex=plExtractors(f.res);if(!ex.includes(f.ex))f.ex=ex[0];
  f.n=Math.max(1,Math.min(99,Math.round(+f.n||1)));f.clock=Math.max(10,Math.min(250,Math.round(+f.clock||100)));
  f.steps=(f.steps||[]).filter(s=>s&&RC[s.r]);
- const r=PL.rev;r.pick=r.pick||{};if(!Array.isArray(r.targets))r.targets=[{item:r.item||'iron_plate',rate:+r.rate||60}];delete r.item;delete r.rate;
+ const r=PL.rev;r.pick=r.pick||{};if(!r.sup||typeof r.sup!=='object')r.sup={};for(const k in r.sup)if(!IT[k]||!(+r.sup[k]>0))delete r.sup[k];if(!Array.isArray(r.targets))r.targets=[{item:r.item||'iron_plate',rate:+r.rate||60}];delete r.item;delete r.rate;
  const tg=plTargets();r.targets=r.targets.filter(t=>t&&IT[t.item]);if(!r.targets.length)r.targets=[{item:'iron_plate',rate:60}];
  for(const t of r.targets){t.rate=Math.max(0.1,Math.min(1e5,+t.rate||60));if(!tg.includes(t.item))t.item=tg.includes('iron_plate')?'iron_plate':tg[0];}
  const w=PL.pow;w.mw=Math.max(0.1,Math.min(1e6,+w.mw||100));const gens=plGens();if(!gens.includes(w.gen))w.gen=gens[0];if(!B[w.gen].fuels.includes(w.fuel))w.fuel=B[w.gen].fuels[0];w.self=w.self?1:0;
@@ -107,17 +107,19 @@ function plRev(item,rate,pick){return plRevMulti([{item,rate}],pick);}
 /* Items that no recipe makes as its main output (e.g. Heavy Oil Residue) are "byproduct-only": they're taken from the plan's byproducts first,
    and only if those don't cover the need is a recipe that makes them as a byproduct added for the rest (Session 37d; before, the planner
    picked the Plastic recipe "to make residue" and its plastic then wrongly replaced the real plastic machines). */
-function plRevMulti(targets,pick){let credit={},out=null,fb=new Set();
+/* Supplied from other factories (Session 41j): sup = {item: per minute}. That much of an item is taken first wherever it's needed, so the
+   machines and mining behind it drop out of the chain. out.sup = how much of each supply is actually used. */
+function plRevMulti(targets,pick,sup){let credit={},out=null,fb=new Set();
  for(let round=0;round<3;round++){
-  for(let k=0;k<40;k++){out=plRevOnce(targets,pick,credit,fb);const nb=out.byAll;let diff=0;for(const x of new Set([...Object.keys(nb),...Object.keys(credit)]))diff=Math.max(diff,Math.abs((nb[x]||0)-(credit[x]||0)));
+  for(let k=0;k<40;k++){out=plRevOnce(targets,pick,credit,fb,sup);const nb=out.byAll;let diff=0;for(const x of new Set([...Object.keys(nb),...Object.keys(credit)]))diff=Math.max(diff,Math.abs((nb[x]||0)-(credit[x]||0)));
    if(diff<1e-7)break;credit=nb;}
   const more=Object.keys(out.none).filter(k=>!fb.has(k)&&plProducers(k).length);if(!more.length)break;for(const k of more)fb.add(k);}
  return out;}
-function plRevOnce(targets,pick,credit,fb){
- const order=[],state={},rec={},avail=Object.assign({},credit||{}),used={};
+function plRevOnce(targets,pick,credit,fb,sup){
+ const order=[],state={},rec={},avail=Object.assign({},credit||{}),used={},ext=Object.assign({},sup||{}),supUsed={};
  const pickFor=it=>{const r=plPick(it,pick);if(!r)return null;if(Object.keys(r.o)[0]===it||pick[it]===r.id)return r;
   if(fb&&fb.has(it))return plProducers(it).sort((a,b)=>b.o[it]/b.t-a.o[it]/a.t)[0];return null;};   // fallback: the recipe that makes the most of it
- const take=(k,v)=>{const u=Math.min(v,avail[k]||0);if(u>PL_EPS){avail[k]-=u;used[k]=(used[k]||0)+u;return v-u;}return v;};
+ const take=(k,v)=>{const e=Math.min(v,+ext[k]||0);if(e>PL_EPS){ext[k]-=e;supUsed[k]=(supUsed[k]||0)+e;v-=e;}const u=Math.min(v,avail[k]||0);if(u>PL_EPS){avail[k]-=u;used[k]=(used[k]||0)+u;return v-u;}return v;};
  const visit=it=>{if(state[it]||PL_RAW.has(it))return;state[it]=1;const r=pickFor(it);if(r){rec[it]=r;for(const k in r.i)visit(k);}order.push(it);};
  for(const t of targets)visit(t.item);
  const dem={},done=new Set(),out={rows:[],raw:{},by:{},none:{},power:0,mach:{},goal:{}};
@@ -132,7 +134,7 @@ function plRevOnce(targets,pick,credit,fb){
  for(const k of Object.keys(out.raw)){out.raw[k]=take(k,out.raw[k]);if(out.raw[k]<=PL_EPS)delete out.raw[k];}
  for(const k of Object.keys(out.none)){out.none[k]=take(k,out.none[k]);if(out.none[k]<=PL_EPS)delete out.none[k];}
  for(const k in byAll){const left=byAll[k]-(used[k]||0);if(left>PL_EPS)out.by[k]=left;}
- out.used=used;out.byAll=byAll;return out;
+ out.used=used;out.byAll=byAll;out.sup=supUsed;return out;
 }
 
 /* ---------- UI ---------- */
@@ -201,15 +203,22 @@ function plFwdHtml(){
  return h+`</div>`;
 }
 function plRevHtml(){
- const r=PL.rev,o=plRevMulti(r.targets,r.pick),opts=plTargets().map(k=>plOpt(k,IT[k].n)).join('');
+ const r=PL.rev,o=plRevMulti(r.targets,r.pick,r.sup),opts=plTargets().map(k=>plOpt(k,IT[k].n)).join('');
  let h=`<div class="muted">Pick one or more end products and how many of each per minute. The planner combines them: shared parts are counted once, with all machines, raw resources and power.</div>`;
  h+=`<h4>End products</h4><div class="card">`+r.targets.map((t,i)=>`<div class="pltarget">${plSel(`r.t.${i}.item`,opts,t.item,'wide')}<div class="row"><span>Per minute</span><span>${plNum(`r.t.${i}.rate`,t.rate,0.1,100000,'any')}${r.targets.length>1?` <button class="btn chip" data-act="plTDel" data-v="${i}" title="Remove">✕</button>`:''}</span></div></div>`).join('')+`<button class="btn" data-act="plTAdd">+ Add product</button></div>`;
+ const sk=Object.keys(r.sup||{});
+ {const cand=new Set([...o.rows.map(x=>x.item),...Object.keys(o.raw),...Object.keys(o.none)].filter(k=>!(k in r.sup)));
+  h+=`<h4>From other factories</h4><div class="card"><div class="muted">Parts you already make elsewhere and bring in. They're used first, so the machines and mining behind them drop out of this plan.</div>`+
+  sk.map(k=>{const u=(o.sup&&o.sup[k])||0,g=+r.sup[k];return`<div class="row"><span>${nm(k)}</span><span>${plNum(`r.sup.${k}`,g,0.1,100000,'any')}/min <button class="btn chip" data-act="plSupDel" data-v="${k}" title="Remove">✕</button></span></div>${u<g-0.01?`<div class="muted" style="margin:-2px 0 4px">only ${fmt(u)}/min of it is needed here</div>`:''}`;}).join('')+
+  (cand.size?`<select class="wide" data-pl="r.supnew"><option value="">+ Bring in an item…</option>${[...cand].sort((a,b)=>IT[a].n.localeCompare(IT[b].n)).map(k=>plOpt(k,IT[k].n)).join('')}</select>`:'')+`</div>`;}
  h+=`<h4>Machines</h4>`;
  for(const row of o.rows){
   const ps=plProducers(row.item);
   const g=o.goal[row.item],tk='m:'+row.item;h+=`<div class="card ${plDone(tk)?'pldone':''}"><div class="row"><b>${plTickBtn(tk)} ${nm(row.item)}${g?' <span class="plgoal">🎯 end product</span>':''}</b><span>${fmt(row.rate)}/min</span></div>${g&&row.rate-g>PL_EPS?`<div class="muted">${fmt(g)} as end product + ${fmt(row.rate-g)} used by other steps</div>`:''}`;
   if(ps.length>1)h+=plSel(`r.pick.${row.item}`,plRecOpts(ps),row.r.id,'wide');else h+=`<div class="muted">${row.r.n}</div>`;
   if(o.used&&o.used[row.item]>PL_EPS)h+=`<div class="plok" style="margin-top:2px">♻ ${fmt(o.used[row.item])}/min more comes from byproducts of this factory</div>`;
+  if(o.sup&&o.sup[row.item]>PL_EPS)h+=`<div class="plok" style="margin-top:2px">⇢ ${fmt(o.sup[row.item])}/min more comes from another factory</div>`;
+  else if(!g)h+=`<button class="btn chip" style="margin:3px 0" data-act="plSupAdd" data-v="${row.item}">⇢ I make this elsewhere</button>`;
   h+=plCount(row.n,row.r.m)+plIO(row.r,row.n)+`</div>`;
  }
  const rk=Object.keys(o.raw);
@@ -261,11 +270,16 @@ function plAddStep(){
   if(rs.length){PL.fwd.steps.push({r:rs[0].id,feed:k,share:100});return true;}}
  return false;
 }
+/* add an item to "From other factories" with what the plan needs of it right now (rounded up to 0.1) */
+function plSupAdd(k){const r=PL.rev;if(!IT[k])return;const o=plRevMulti(r.targets,r.pick,r.sup),row=o.rows.find(x=>x.item===k);
+ const need=row?row.rate:(o.raw[k]||o.none[k]||0);r.sup[k]=Math.max(0.1,Math.ceil(need*10-1e-9)/10);}
 function plSet(key,v){
  const p=key.split('.');
  if(p[0]==='f'){PL.fwd[p[1]]=p[1]==='res'||p[1]==='ex'?v:+v;}
  else if(p[0]==='s'){const st=PL.fwd.steps[+p[1]];if(!st)return;if(p[2]==='share')st.share=Math.max(0,Math.min(100,+v||0));else st[p[2]]=v;}
  else if(p[0]==='w'){PL.pow[p[1]]=p[1]==='gen'||p[1]==='fuel'?v:+v;}
+ else if(p[0]==='r'&&p[1]==='sup'){const k=p.slice(2).join('.');if(+v>0)PL.rev.sup[k]=+v;else delete PL.rev.sup[k];}
+ else if(p[0]==='r'&&p[1]==='supnew'){if(v)plSupAdd(v);}
  else if(p[0]==='r'){if(p[1]==='pick')PL.rev.pick[p[2]]=v;else if(p[1]==='t'){const t=PL.rev.targets[+p[2]];if(t)t[p[3]]=p[3]==='rate'?+v:v;}}
  plFix();
 }
@@ -293,6 +307,8 @@ Object.assign(ACT,{
  plUnpinLeft:()=>{OPT.plLeft=false;OPT.plOpen=false;saveOpt();plRenderLeft();openPanel('plan');},
  plCloseLeft:()=>{OPT.plOpen=false;saveOpt();plRenderLeft();},
  plTick:k=>{plDone(k);PL.done[k]=!PL.done[k];plRefresh();},
+ plSupAdd:v=>{plSupAdd(v);plRefresh();},
+ plSupDel:v=>{delete PL.rev.sup[v];plRefresh();},
  plTAdd:()=>{const have=new Set(PL.rev.targets.map(t=>t.item)),k=plTargets().find(x=>!have.has(x))||'iron_plate';PL.rev.targets.push({item:k,rate:30});plRefresh();},
  plTDel:v=>{PL.rev.targets.splice(+v,1);plFix();plRefresh();},
  plMode:v=>{PL.mode=v;plRefresh();},

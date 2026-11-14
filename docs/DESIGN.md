@@ -239,6 +239,9 @@ Hand mining gives +5 ore from a node.
   Items remember the zone they last came from, so a gap between fences still counts as zone → zone. Efficiency badge per card.
   Tap a zone name: the map flies there and its fence pulses. Averages over the last 60 s. Since Session 38f the Stats panel shows only this
   (no Items table, no "All factories together"), with Factory size and Power at the bottom.
+- **From other factories** (Session 41j, "For a target" mode): parts (or raw resources) already made elsewhere can be entered with a rate
+  per minute ("⇢ I make this elsewhere" on a machine card adds the current need; "+ Bring in an item…"). They are used first, so the
+  machines, power and mining behind that amount drop out of the plan; supply beyond the need is shown as not needed. Saved with the plan.
 - **Several plans** (Session 37b): the planner has plan tabs (blue) above the mode buttons. Each plan keeps its own mode, settings and ticks;
   tabs are named after what they make unless renamed (✎). ＋ New plan, ✕ Delete this plan (asks), up to 12. "Plan this node" and "Plan the power"
   open their own new tab (or reuse an untouched one). Stored per device.
