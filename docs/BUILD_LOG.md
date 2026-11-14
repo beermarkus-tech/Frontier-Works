@@ -2644,3 +2644,20 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - The piano comping keeps one rhythm for the whole track (`MU.k3`).
 
 **Verified:** offline render (RMS unchanged at 0.090); new 60 s preview with the tune sent to Markus. `npm test` all PASS.
+
+## Session 43c — 2026-11-14 (Claude Code, cloud session) · Build 131
+
+**Feedback:** the melody still sounds random and goes up and down; the beat sounds like it misses a beat every other bar.
+
+**Causes:**
+- Each section picked one of three progressions, each with a different tune, so no tune was heard twice in a row; the phrases leapt.
+- Every new section restarted with two drumless bars (the intro rule applied per section, not per track).
+- The kick pattern had no beat 3, and the swung hat ghosts sounded uneven.
+
+**Built:**
+- **One tune for the whole track**, over Em7 · Am7 · Cmaj7 · B7: mostly stepwise, with the same "da-da-daaa" rhythm. It rises G–A–B, answers falling C–B–A, climbs to the high E, and comes home on B.
+- **Sections:** always whole 4-chord rounds (64 steps); the first is instrumental, then tune and instrumental alternate.
+- **Count-in:** drums and bass count in only when the track starts.
+- **Beat:** kick on 1 and 3 every bar plus a push on the "and" of 3 in every second bar; snare on 2 and 4; even eighth hats; a short snare fill only at the end of each 8-bar round.
+
+**Verified:** 90 s offline render (RMS 0.094) sent as a preview. `npm test` all PASS.
