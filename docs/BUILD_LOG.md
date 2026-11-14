@@ -2514,3 +2514,22 @@ The belts worked, the pipes didn't.
 - DESIGN.md updated.
 
 **Verified:** new smoke check reproducing the layout (refinery above a crossing row; acid junction-crossing-crossing-junction plus a junction left of the first crossing; water junction under the crossing). Acid forms one network, the refinery gets water through the crossing, and the fluids stay apart. `npm test` all PASS.
+
+## Session 41e — 2026-11-14 (Claude Code, cloud session) · Build 122
+
+**Asked:** don't connect parallel pipes directly any more; pipes should connect only through junctions.
+
+**Decision (Markus's rule, DESIGN.md updated):** a pipe tile links only at its two ends along the drawn line.
+- Front = its direction; back = straight behind, or on a bend, the side it bends from (`pipeEnds`, `pipeFace` in `js/sim.js`).
+- Junctions link on all four sides.
+- So pipes side by side stay apart, and a pipe ending at the side of another pipe (a T) doesn't join. A Pipe Junction joins or branches them.
+- Applies to pipe↔pipe, through crossing chains, and to Flow Valves.
+- 2D crossing pipe bars follow the same rule.
+
+**Also:**
+- A single tapped pipe piece turns to face its neighbours if its current axis has none (`pipeAxisOK` in `buildPath`). Dragged lines follow the finger as before.
+- Pipe descriptions updated.
+
+**Note for old saves:** factories that relied on side-by-side or T contacts between pipes will split there. A junction fixes it.
+
+**Verified:** new smoke check (parallel rows apart, straight row joins, T apart, T with a junction joins). Two older tests had single vertical pipe pieces placed pointing sideways; corrected to point along the line. `npm test` all PASS. `npm run playthrough`: all ✓, no errors.

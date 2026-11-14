@@ -466,7 +466,7 @@ function drawRouter(g,e,X,Y,s){const d=B[e.d],sub=d.sub,fl=d.fl;
  const arrow=(o,inward)=>{const cx=X+s/2+DX[o]*s*0.3,cy=Y+s/2+DY[o]*s*0.3,px=-DY[o],py=DX[o],dir=inward?-1:1,t=s*0.11;g.beginPath();g.moveTo(cx+DX[o]*t*dir,cy+DY[o]*t*dir);g.lineTo(cx-DX[o]*t*dir+px*t,cy-DY[o]*t*dir+py*t);g.lineTo(cx-DX[o]*t*dir-px*t,cy-DY[o]*t*dir-py*t);g.closePath();g.fill();};
  g.fillStyle='rgba(255,255,255,0.92)';
  if(e.k==='cross'){/* an axis with pipe pieces on both sides carries fluid: drawn as a blue pipe right through (Session 41c) */
-  const ax=(d)=>{const a=pastCross(e,d),b=pastCross(e,(d+2)&3),jb=x=>!!x&&FLB.includes(x.k);return(pipeLike(a)&&(pipeLike(b)||(jb(b)&&a.k!=='pipe')))||(pipeLike(b)&&jb(a)&&b.k!=='pipe');},hp=ax(0),vp=ax(1);
+  const ax=(d)=>{const a0=pastCross(e,d),b0=pastCross(e,(d+2)&3),a=pipeLike(a0)&&pipeFace(a0,(d+2)&3)?a0:null,b=pipeLike(b0)&&pipeFace(b0,d)?b0:null,jb=x=>!!x&&FLB.includes(x.k);return(a&&(b||(jb(b0)&&a.k!=='pipe')))||(b&&jb(a0)&&b.k!=='pipe');},hp=ax(0),vp=ax(1);
   g.fillStyle='rgba(20,24,28,0.8)';if(!hp)g.fillRect(X+s*0.18,Y+s*0.4,s*0.64,s*0.2);if(!vp)g.fillRect(X+s*0.4,Y+s*0.18,s*0.2,s*0.64);
   g.fillStyle='#6f93b8';g.strokeStyle='rgba(0,0,0,0.55)';g.lineWidth=Math.max(1,s*0.03);if(hp){g.beginPath();g.rect(X,Y+s*0.35,s,s*0.3);g.fill();g.stroke();}if(vp){g.beginPath();g.rect(X+s*0.35,Y,s*0.3,s);g.fill();g.stroke();}}
  else if(sub==='split'){arrow(e.dir);arrow((e.dir+1)&3);arrow((e.dir+3)&3);}

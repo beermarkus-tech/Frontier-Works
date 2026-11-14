@@ -68,7 +68,8 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
 
 ## 5. Logistics rules (important, intentionally simple)
 - One item per belt tile. Belt speeds: Mk1 60/min, Mk2 120, Mk3 270, Mk4 480, Mk5 780. Pipes: Mk1 300 m³/min, Mk2 600.
-- **Pipes have no direction** (agreed with Markus, Session 31). Touching pipe tiles and Pipe Junctions (also straight through a Crossing) form one
+- **Pipes have no flow direction** (agreed with Markus, Session 31). Pipe tiles join **only end to end along the drawn line** (Session 41e,
+  Markus: side-by-side pipes and a pipe ending at another pipe's side stay apart; a Pipe Junction joins or branches them). Joined pipes and junctions (also through Crossings) form one
   **fluid network**, like a power grid: one fluid per network (sticky until emptied in the pipe's panel), 10 m³ per tile, max flow set by the slowest
   pipe (Mk1 300, Mk2 600 m³/min). **Buildings join only where a Pipe Junction touches them** (Session 33, Markus's choice: plain pipes can run right
   past a machine without connecting; the junction is the dedicated entry point). Pumps, machine fluid outputs and tanks (under half full) fill the

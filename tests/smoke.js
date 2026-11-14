@@ -237,7 +237,7 @@ const server=require('./serve.js');
   const w=B.refinery.w,yc=Y+w,yj=Y+w+1;   // refinery on top, crossing row below it, junction row below that
   const r=[P('refinery',X,Y,0),
    P('crossing',X,yc,0),P('junction',X+1,yc,0),P('crossing',X+2,yc,0),P('crossing',X+3,yc,0),P('junction',X+4,yc,0),P('tank',X+5,yc,0),   // acid row: junction-crossing-crossing-junction
-   P('junction',X,yj,0),P('pipe1',X,yj+1,0),P('junction',X,yj+2,0),P('tank',X,yj+3,0),   // water: tank → junction → pipe → junction under the crossing
+   P('junction',X,yj,0),P('pipe1',X,yj+1,1),P('junction',X,yj+2,0),P('tank',X,yj+3,0),   // water: tank → junction → pipe → junction under the crossing
    P('junction',X-1,yc,0),P('incin',X-3,yc,0)];   // left end of the acid row: junction next to the first crossing, incinerator burns it
   const ref=fw.entAt(X,Y);ref.r='r_wet_alumina';tick(0.05);
   const wt=fw.entAt(X,yj+3),at=fw.entAt(X+5,yc),jA=fw.entAt(X+4,yc),jB=fw.entAt(X+1,yc),jL=fw.entAt(X-1,yc),jw=fw.entAt(X,yj);
@@ -247,6 +247,17 @@ const server=require('./serve.js');
   for(let j=-1;j<11;j++)for(let i=-4;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(x=>x===''),acidOne,apart,att,water,acidFl,waterFl,r};});
  check(`pipes through crossings: two crossings in a row join (${jx2.acidOne}), a junction feeds a refinery through a crossing (${jx2.water} water), fluids stay apart (${jx2.acidFl}/${jx2.waterFl})`,jx2.ok&&jx2.acidOne&&jx2.apart&&jx2.att&&jx2.water>=10&&jx2.acidFl==='acid'&&jx2.waterFl==='water');
+ // pipes join only end to end (Session 41e): side-by-side lines stay apart, a pipe ending at another pipe's side doesn't join, a junction does
+ const ppar=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<7&&ok;j++)for(let i=-1;i<7&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[];for(let i=0;i<5;i++){r.push(P('pipe1',X+i,Y,0),P('pipe1',X+i,Y+1,0));}   // two parallel rows
+  r.push(P('pipe1',X+2,Y+3,3));   // ends at the side of row 2 (gap row Y+2 filled below)
+  r.push(P('pipe1',X+2,Y+2,3));tick(0.05);
+  const a=fw.entAt(X,Y).net,b=fw.entAt(X,Y+1).net,t=fw.entAt(X+2,Y+3).net;const apart=a!==b,line=new Set([0,1,2,3,4].map(i=>fw.entAt(X+i,Y).net)).size===1,tee=t!==b;
+  removeEnt(fw.entAt(X+2,Y+1),false,true);P('junction',X+2,Y+1,0);tick(0.05);const joined=fw.entAt(X+2,Y+3).net===fw.entAt(X,Y+1).net&&fw.entAt(X,Y+1).net===fw.entAt(X+4,Y+1).net;
+  for(let j=-1;j<7;j++)for(let i=-1;i<7;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(x=>x===''),apart,line,tee,joined};});
+ check(`pipes join only end to end: parallel rows apart (${ppar.apart}), a straight row joins (${ppar.line}), a T without junction stays apart (${ppar.tee}), with a junction it joins (${ppar.joined})`,ppar.ok&&ppar.apart&&ppar.line&&ppar.tee&&ppar.joined);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
@@ -527,7 +538,7 @@ const server=require('./serve.js');
  const fs_=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
   for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-2;j<8&&ok;j++)for(let i=-1;i<14&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
   const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,0),P('pipe1',X+4,Y,0),P('pipe1',X+5,Y,0),P('junction',X+6,Y,0),P('refinery',X+7,Y-1,0),
-   P('pipe1',X+6,Y+1,0),P('pipe1',X+6,Y+2,0),P('pipe1',X+6,Y+3,0),P('junction',X+6,Y+4,0),P('refinery',X+7,Y+3,0),P('burner',X+10,Y+1,0),P('burner',X+10,Y+4,0)];
+   P('pipe1',X+6,Y+1,1),P('pipe1',X+6,Y+2,1),P('pipe1',X+6,Y+3,1),P('junction',X+6,Y+4,0),P('refinery',X+7,Y+3,0),P('burner',X+10,Y+1,0),P('burner',X+10,Y+4,0)];
   const tk=fw.entAt(X,Y),A=fw.entAt(X+7,Y-1),Bq=fw.entAt(X+7,Y+3),g=fw.entAt(X+10,Y+1),g2=fw.entAt(X+10,Y+4);A.r='r_plastic';Bq.r='r_plastic';tk.ft='crude';tk.amt=0;
   const cnt={};const orig=accept;accept=function(e,item){const ok=orig.apply(this,arguments);if(ok&&item==='crude')cnt[e.id]=(cnt[e.id]||0)+1;return ok;};
   try{for(let i=0;i<20*150;i++){g.fuel={coal:50};g2.fuel={coal:50};A.outb={};Bq.outb={};if(i%40===0){const nt=fw.entAt(X+3,Y).net;if(nt){nt.fluid='crude';nt.amt+=1;}}tick(0.05);}}finally{accept=orig;}

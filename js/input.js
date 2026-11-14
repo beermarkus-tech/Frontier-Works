@@ -14,7 +14,9 @@ function linePath(a,b,rot){
  for(let i=0;i<steps.length;i++){path.push({x,y,d:steps[i]});x+=DX[steps[i]];y+=DY[steps[i]];}
  path.push({x,y,d:steps[steps.length-1]});return path;
 }
-function buildPath(id,path){let fail='',ok=0;for(const p of path){const why=placeEnt(id,p.x,p.y,p.d);if(!why)ok++;if(why&&why!=='same'&&why!=='Blocked'){fail=why;if(why==='Not enough materials')break;}}if(fail)toast(fail);if(ok)sfx(ok>1?'place':'belt');else if(fail)sfx('deny');refreshTools();updInfo();}
+/* a single tapped pipe piece turns to face its neighbours (Session 41e: pipes only join at their ends) */
+function pipeAxisOK(x,y,d){for(const o of [d,(d+2)&3]){const n=entAt(x+DX[o],y+DY[o]);if(n&&(pipeLike(n)||n.k==='cross'||(n.k==='router'&&B[n.d].sub==='valve')))return true;}return false;}
+function buildPath(id,path){let fail='',ok=0;if(path.length===1&&B[id].k==='pipe'){const p=path[0];if(!pipeAxisOK(p.x,p.y,p.d)&&pipeAxisOK(p.x,p.y,(p.d+1)&3))path=[{x:p.x,y:p.y,d:(p.d+1)&3}];}for(const p of path){const why=placeEnt(id,p.x,p.y,p.d);if(!why)ok++;if(why&&why!=='same'&&why!=='Blocked'){fail=why;if(why==='Not enough materials')break;}}if(fail)toast(fail);if(ok)sfx(ok>1?'place':'belt');else if(fail)sfx('deny');refreshTools();updInfo();}
 /* Long press (≈0.45 s, no tool, finger still) on a building lifts it; dragging moves the preview, releasing places it */
 let movePrev=null;
 /* Ghost taps (phones): after a finger tap on the map opens the panel, the browser can send the same tap again as a click to whatever button

@@ -339,7 +339,7 @@ function rebuildTopo(){
   for(let i=0;i<n;i++){if(!B[pnodes[i].d].sup)continue;const dd=rectDist(C[i].x,C[i].y,e);if(dd<=B[pnodes[i].d].sup&&dd<bd){bd=dd;best=pnodes[i];}}
   if(best){best.grid.cons.push(e);e.grid=best.grid;e.pnode=best;}}
  buildNets();
- for(const v of valves){const bk=entAt(v.x-DX[v.dir],v.y-DY[v.dir]),fr=entAt(v.x+DX[v.dir],v.y+DY[v.dir]);v.va=pipeLike(bk)?bk.net:null;v.vb=pipeLike(fr)?fr.net:null;}
+ for(const v of valves){const bk=entAt(v.x-DX[v.dir],v.y-DY[v.dir]),fr=entAt(v.x+DX[v.dir],v.y+DY[v.dir]);v.va=pipeLike(bk)&&pipeFace(bk,v.dir)?bk.net:null;v.vb=pipeLike(fr)&&pipeFace(fr,(v.dir+2)&3)?fr.net:null;}
 }
 /* ---------- Fluid networks ----------
    Pipes have no direction: touching pipe tiles and Pipe Junctions (also straight through a Crossing) form one network, like a power grid.
@@ -350,13 +350,18 @@ const PIPE_CAP=10,pipeLike=e=>!!e&&(e.k==='pipe'||(e.k==='router'&&B[e.d].sub===
 function syncPipes(){for(const n of nets)for(const t of n.tiles){t.item=n.fluid;t.lv=n.cap?n.amt/n.cap:0;}}   // store contents on the tiles (save, rebuild)
 /* first piece beyond a chain of crossings (Session 41d: pipes looked through one crossing only, and never through one into a building) */
 const FLB=['mach','gen','pump','tank','incin'];
+/* pipe ends (Session 41e): a pipe only links at its two ends along the drawn line (front = dir, back = straight behind or, on a bend,
+   the side it bends from); a junction links on all four sides. So side-by-side pipes and pipes ending at another pipe's side don't join. */
+function pipeEnds(t){return t.k!=='pipe'?15:((1<<t.dir)|(1<<(t.cin!=null?((t.cin+2)&3):((t.dir+2)&3))));}
+const pipeFace=(t,d)=>!!(pipeEnds(t)&(1<<d));
 function pastCross(t,d){let n=entAt(t.x+DX[d],t.y+DY[d]),k=0;while(n&&n.k==='cross'&&k++<32)n=entAt(n.x+DX[d],n.y+DY[d]);return n;}
 function buildNets(){
  nets=[];const list=[],ix=new Map();for(const e of ents.values())if(pipeLike(e)){ix.set(e,list.length);list.push(e);e.net=null;e.pc=0;}
  const par=list.map((_,i)=>i),f=i=>par[i]===i?i:(par[i]=f(par[i])),un=(a,b)=>{par[f(a)]=f(b);};
  for(const t of list)for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(!n)continue;
-  if(pipeLike(n)){un(ix.get(t),ix.get(n));t.pc|=1<<d;}
-  else if(n.k==='cross'){const far=pastCross(t,d);if(pipeLike(far)){un(ix.get(t),ix.get(far));t.pc|=1<<d;}else if(far&&t.k!=='pipe'&&FLB.includes(far.k))t.pc|=1<<d;}   /* through crossings: to pipes, or from a junction into a building */
+  if(!pipeFace(t,d))continue;const bd=(d+2)&3;
+  if(pipeLike(n)){if(pipeFace(n,bd)){un(ix.get(t),ix.get(n));t.pc|=1<<d;}}
+  else if(n.k==='cross'){const far=pastCross(t,d);if(pipeLike(far)){if(pipeFace(far,bd)){un(ix.get(t),ix.get(far));t.pc|=1<<d;}}else if(far&&t.k!=='pipe'&&FLB.includes(far.k))t.pc|=1<<d;}   /* through crossings: to pipes, or from a junction into a building */
   else if(n.k==='router'&&B[n.d].sub==='valve'&&(d&1)===(n.dir&1))t.pc|=1<<d;   /* a pipe reaches into a valve along its axis; the valve keeps the two networks apart */
   else if(t.k!=='pipe'&&['mach','gen','pump','tank','incin'].includes(n.k))t.pc|=1<<d;}   // only a Pipe Junction is an entry point into a building
  const G=new Map();list.forEach((t,i)=>{const r=f(i);if(!G.has(r))G.set(r,[]);G.get(r).push(t);});
