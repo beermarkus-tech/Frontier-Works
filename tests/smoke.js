@@ -271,6 +271,16 @@ const server=require('./serve.js');
   const flow=Math.round(v.vf);for(let j=-1;j<3;j++)for(let i=-1;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(x=>x===''),blocked,short:want-used,flow,maxFill:+maxFill.toFixed(2)};});
  check(`Flow Valve Top up: loop gives back 60 of 100/min, valve adds ${vtop.flow}/min, returned water blocked ${vtop.blocked}×, short ${vtop.short}, pipe ahead at most ${Math.round(vtop.maxFill*100)}% full`,vtop.ok&&vtop.blocked===0&&vtop.short<=3&&vtop.flow>=35&&vtop.flow<=45&&vtop.maxFill<=0.7);
+ // pipe meters show the flow through their own tile (Session 41g): valve 60/min from the left, a tank from the right, incinerator in between
+ const pmet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<4&&ok;j++)for(let i=-1;i<15&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('tank',X,Y,0),P('junction',X+2,Y,0),P('pipe1',X+3,Y,0),P('valve',X+4,Y,0),P('pipe1',X+5,Y,0),P('pipe1',X+6,Y,0),P('junction',X+7,Y,0),P('incin',X+7,Y+1,0),P('pipe1',X+8,Y,0),P('pipe1',X+9,Y,0),P('junction',X+10,Y,0),P('tank',X+11,Y,0)];
+  const t1=fw.entAt(X,Y),t2=fw.entAt(X+11,Y),v=fw.entAt(X+4,Y),m1=fw.entAt(X+5,Y),m2=fw.entAt(X+9,Y);v.vr=60;m1.fm=1;m2.fm=1;tick(0.05);
+  for(let k=0;k<1500;k++){t1.ft='water';t1.amt=400;t2.ft='water';t2.amt=400;tick(0.05);}
+  const a=Math.round(fmRate(m1)[0]),b=Math.round(fmRate(m2)[0]),tot=Math.round(Math.max(m1.net.inR,m1.net.outR));
+  for(let j=-1;j<4;j++)for(let i=-1;i<15;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(x=>x===''),a,b,tot};});
+ check(`pipe meters read their own spot: near the valve ${pmet.a} (valve 60), near the tank ${pmet.b} (240), network total ${pmet.tot}`,pmet.ok&&Math.abs(pmet.a-60)<=4&&Math.abs(pmet.b-240)<=8);
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

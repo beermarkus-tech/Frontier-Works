@@ -2551,3 +2551,17 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - DESIGN.md updated.
 
 **Verified:** new smoke check (simulated loop returning 60 of 100/min: valve adds ~36–40/min, returned water never blocked, no shortage, pipe ahead ≤ 53% full). `npm test` all PASS.
+
+## Session 41g — 2026-11-14 (Claude Code, cloud session) · Build 124
+
+**Reported:** (screenshot) pipe flow meters are wrong: three meters near a Flow Valve all read 307.6 m³/min while the valve passes 133.
+
+**Found:** a pipe meter showed its whole network's total (`max(inR,outR)`), so every meter on one network read the same. Valve transfers weren't counted in any totals either.
+
+**Built:**
+- Pipe meters show the flow through their own tile. `pipeSide(e)` finds everything connected on one side of the metered tile (through crossings; junction-attached buildings and valves). The meter shows the net in/out of that side.
+- Per-building flows per network are exact counts over the last 30 s in 1 s steps (`n.fw`, `flowOf`). A 3–15 s running average read several % off because tanks and valves deliver in bursts, and the meter subtracts big numbers.
+- In a pipe loop (both sides joined) the network total is shown.
+- Valve transfers count on both networks. The valve panel's "Flowing now" uses the same exact count.
+
+**Verified:** tank (via valve at 60) + tank → incinerator. The meter near the valve reads 60 and the one near the second tank 240 (real: 60 / 240). New smoke check. `npm test` all PASS (one run hit a known flaky belt-rate check; it passed on rerun).

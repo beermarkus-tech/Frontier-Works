@@ -175,7 +175,8 @@ function eraseEnt(e){if(!e||!ERASE_K.includes(e.k))return 0;let n=0;const back=(
 /* Flow Meter (Session 36f): a marker on a belt/pipe tile (e.fm, saved). Belts remember item arrival times (e.fa): always the last 60 s, and on
    slow belts back to the last 60 items (max 10 min, Session 37l), and the shown value (e.fr) glides towards the measurement; the rate is the time between them (Session 37k: busy belts average over 60 s, 1–2 items/min over several minutes,
    and a belt that stops drops gradually); pipes show their network's flow. fmRate → [per minute, max per minute]. */
-function fmRate(e){if(e.k==='pipe'){const n=e.net;return[n?Math.max(n.inR,n.outR):0,(n?n.rate:e.spd)*60];}return[e.fr!=null?e.fr:fmRaw(e),e.spd*60];}
+function fmRate(e){if(e.k==='pipe'){const n=e.net;if(!n)return[0,e.spd*60];if(e._pvT!==topoVer){e._pvT=topoVer;e._pv=pipeSide(e);}const P=e._pv;let r;
+  if(!P||P.loop)r=Math.max(n.inR,n.outR);else{r=0;for(const b of P.side)r+=flowOf(n,b);r=Math.abs(r);}return[r,n.rate*60];}return[e.fr!=null?e.fr:fmRaw(e),e.spd*60];}
 function fmRaw(e){
  const a=e.fa||[],n=a.length;if(n<2)return 0;const span=Math.max(0.5,a[n-1]-a[0]),gap=Math.max(span/(n-1),e.fg||0),extra=Math.max(0,S.t-a[n-1]-gap);
 
@@ -377,8 +378,9 @@ function buildNets(){
    resin pipe used to raise the mixing warning on both, although each fluid had its own pipe. */
 function fluidHome(b,k,except){for(const m of nets)if(m!==except&&(!m.fluid||m.fluid===k)&&m.att.includes(b))return true;return false;}
 function updNets(dt){
+ const fAdd=(n,b,m)=>{const A=n.fa||(n.fa=new Map());A.set(b,(A.get(b)||0)+m);};   /* Session 41g: per-building flow, for pipe meters */
  for(const n of nets){const lim=n.rate;n.bi=Math.min(lim,n.bi+lim*dt);n.bo=Math.min(lim,n.bo+lim*dt);let got=0,sent=0;
-  let src=null;const take=(fluid,avail)=>{if(n.fluid&&n.fluid!==fluid)return 0;const m=Math.min(avail,Math.floor(n.cap-n.amt),Math.floor(n.bi));if(m<=0)return 0;n.fluid=fluid;n.amt+=m;n.bi-=m;got+=m;zNetFlow(n,src,m,true);return m;};
+  let src=null;const take=(fluid,avail)=>{if(n.fluid&&n.fluid!==fluid)return 0;const m=Math.min(avail,Math.floor(n.cap-n.amt),Math.floor(n.bi));if(m<=0)return 0;n.fluid=fluid;n.amt+=m;n.bi-=m;got+=m;fAdd(n,src,m);zNetFlow(n,src,m,true);return m;};
   for(const b of n.att){src=b;
    if(b.k==='pump'){if(b.item&&b.buf>0){if(n.fluid&&n.fluid!==b.item){if(!fluidHome(b,b.item,n))n.conflict={fluid:b.item,b,t:tickNo};continue;}b.buf-=take(b.item,b.buf);}}
    else if(b.k==='mach'){for(const k in b.outb)if(IT[k].f&&b.outb[k]>0){if(n.fluid&&n.fluid!==k){if(!fluidHome(b,k,n))n.conflict={fluid:k,b,t:tickNo};continue;}b.outb[k]-=take(k,b.outb[k]);}}
@@ -389,15 +391,30 @@ function updNets(dt){
    // fluid was short one refinery always got served first.
    const cons=n.att.filter(b=>b.k!=='pump'&&!(b.k==='tank'&&n.amt<=n.cap*0.8)&&!(b.k==='mach'&&!(b.r&&RC[b.r].i[n.fluid])));
    if(cons.length){let i=(n.rr=((n.rr||0)+1)%cons.length),stall=0;
-    while(n.amt>=1&&n.bo>=1&&stall<cons.length){if(accept(cons[i],n.fluid,0,0)){n.amt--;n.bo--;sent++;stall=0;zNetFlow(n,cons[i],1,false);}else stall++;i=(i+1)%cons.length;}}}
-  const a=Math.min(1,dt/3);n.inR+=(got/dt*60-n.inR)*a;n.outR+=(sent/dt*60-n.outR)*a;n._fl+=((n.cap?n.amt/n.cap:0)-n._fl)*Math.min(1,dt/1.2);}
+    while(n.amt>=1&&n.bo>=1&&stall<cons.length){if(accept(cons[i],n.fluid,0,0)){n.amt--;n.bo--;sent++;stall=0;fAdd(n,cons[i],-1);zNetFlow(n,cons[i],1,false);}else stall++;i=(i+1)%cons.length;}}}
+  n._got=got;n._sent=sent;n._fl+=((n.cap?n.amt/n.cap:0)-n._fl)*Math.min(1,dt/1.2);}
  /* Flow Valves (Session 41): move fluid from the network behind (va) to the one in front (vb), at most e.vr m³/min, never mixing fluids */
  for(const v of valves){const A=v.va,Bn=v.vb;let m=0;v.vwhy=null;
   if(!A||!Bn)v.vwhy='pipe';else if(A===Bn)v.vwhy='same';else if(!A.fluid||A.amt<1)v.vwhy='empty';else if(Bn.fluid&&Bn.fluid!==A.fluid&&Bn.amt>=1)v.vwhy='mix';
   else if(v.vm&&Bn.amt>=Bn.cap*0.5)v.vwhy='topped';   /* Top up mode (Session 41f): only while the pipe ahead is under half full, so fluid made inside a loop is used first */
-  else if(v.vr>0){const room=v.vm?Math.ceil(Bn.cap*0.5-Bn.amt):Bn.cap-Bn.amt;v.vacc=Math.min(v.vacc+v.vr/60*dt,Math.max(1.5,v.vr/60*dt*2));m=Math.floor(Math.min(v.vacc,A.amt,room));if(m>0){A.amt-=m;Bn.fluid=A.fluid;Bn.amt+=m;v.vacc-=m;}else if(Bn.amt>=Bn.cap-1)v.vwhy='full';}
+  else if(v.vr>0){const room=v.vm?Math.ceil(Bn.cap*0.5-Bn.amt):Bn.cap-Bn.amt;v.vacc=Math.min(v.vacc+v.vr/60*dt,Math.max(1.5,v.vr/60*dt*2));m=Math.floor(Math.min(v.vacc,A.amt,room));if(m>0){A.amt-=m;Bn.fluid=A.fluid;Bn.amt+=m;v.vacc-=m;fAdd(A,v,-m);fAdd(Bn,v,m);A._sent+=m;Bn._got+=m;}else if(Bn.amt>=Bn.cap-1)v.vwhy='full';}
   if(v.vwhy)v.vacc=0;v.vf+=(m/dt*60-v.vf)*Math.min(1,dt/3);}
+ const a=Math.min(1,dt/3);
+ /* per building: exact counts over the last 30 s in 1 s steps (tanks and valves deliver in bursts; a running average read several % off) */
+ for(const n of nets){n.inR+=(n._got/dt*60-n.inR)*a;n.outR+=(n._sent/dt*60-n.outR)*a;const W=n.fw||(n.fw=new Map()),A=n.fa||new Map();
+  for(const [b,m] of A){let rec=W.get(b);if(!rec)W.set(b,rec={cur:0,h:[]});rec.cur+=m;}A.clear();
+  n.fwT=(n.fwT||0)+dt;if(n.fwT>=1){n.fwT-=1;for(const [b,rec] of W){rec.h.push(rec.cur);rec.cur=0;if(rec.h.length>30)rec.h.shift();if(rec.h.every(x=>x===0)&&rec.h.length>=30)W.delete(b);}}}
 }
+function flowOf(n,b){const rec=n&&n.fw&&n.fw.get(b);if(!rec||!rec.h.length)return 0;let s=0;for(const x of rec.h)s+=x;return s/rec.h.length*60;}
+/* What a pipe meter shows (Session 41g): the flow through its own tile, i.e. the net in/out of everything connected on one side of it.
+   Before, every meter showed its whole network's total, so all meters on one network read the same. In a pipe loop (both sides joined) the
+   side can't be told apart: then the network total is shown. */
+function pipeSide(e){const n=e.net;if(!n)return null;const seen=new Set([e]),side=new Set();let start=null,ends=0;
+ const links=t=>{const out=[];for(let d=0;d<4;d++){if(!(t.pc&(1<<d)))continue;let x=entAt(t.x+DX[d],t.y+DY[d]);if(x&&x.k==='cross')x=pastCross(t,d);if(x)out.push(x);}return out;};
+ for(const x of links(e)){if(pipeLike(x)&&x.net===n){ends++;if(!start)start=x;}else side.add(x);}
+ if(!start)return{side:new Set(),loop:false};side.clear();
+ const q=[start];seen.add(start);while(q.length){const t=q.pop();for(const x of links(t)){if(seen.has(x))continue;seen.add(x);if(pipeLike(x)&&x.net===n)q.push(x);else side.add(x);}}
+ let loop=false;if(ends>1)for(const x of links(e))if(x!==start&&pipeLike(x)&&seen.has(x))loop=true;return{side,loop};}
 
 
 /* ================= SIMULATION ================= */
