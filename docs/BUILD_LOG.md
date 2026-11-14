@@ -2492,3 +2492,25 @@ Solid outputs keep the belt hint.
 - A junction gets its own pipe stub towards a linked crossing or valve.
 
 **Verified:** 2D screenshot. New smoke check (junction → crossing → junction with a belt across delivers 100 m³ in 20 s). `npm test` all PASS.
+
+## Session 41d — 2026-11-14 (Claude Code, cloud session) · Build 121
+
+**Reported:** (screenshot) "It's not the 2D picture." Markus's layout:
+- a yellow acid pipe runs horizontally along a row of junctions and crossings
+- a blue water pipe runs along the row below
+- water goes up from a junction through a crossing (across the acid row) into green machines
+- belts cross through the same crossings
+The belts worked, the pipes didn't.
+
+**Found:** two real gaps in `buildNets` (my 41c test only had one crossing between two junctions):
+1. A pipe looked through one crossing only. Junction → crossing → crossing → junction (both rows) never joined.
+2. A junction attached only to buildings it touched, never through a crossing to a building.
+
+**Built:**
+- `pastCross(t,d)` follows a chain of up to 32 crossings.
+- `buildNets` joins pipe pieces through chains, and a junction attaches to (and draws a stub towards) a building at the end of a chain (`att`, `pc`).
+- Each crossing axis stays separate, so two fluids can cross on one tile.
+- 2D crossing pipe bars follow chains too.
+- DESIGN.md updated.
+
+**Verified:** new smoke check reproducing the layout (refinery above a crossing row; acid junction-crossing-crossing-junction plus a junction left of the first crossing; water junction under the crossing). Acid forms one network, the refinery gets water through the crossing, and the fluids stay apart. `npm test` all PASS.

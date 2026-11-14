@@ -74,6 +74,8 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
   past a machine without connecting; the junction is the dedicated entry point). Pumps, machine fluid outputs and tanks (under half full) fill the
   network; machines and generators needing that fluid, tanks (over 80 % full) and incinerators draw from it. A second fluid is refused and marked with a red "!" (no mixing).
   The Pipe Junction connects all four sides, to pipes and to the buildings it touches. Old saves keep their pipes, with direction ignored.
+- Pipes pass through Crossings like belts do, also through several in a row, and a Pipe Junction can feed a building through a crossing
+  chain (Session 41d). Each crossing axis is separate, so two fluids can cross on one tile without mixing.
 - **Flow Valve** (Session 41, Tier 2, 6 Copper Sheet + 1 Rotor): sits between two pipes and keeps their networks apart. Moves fluid only in its
   arrow direction, at most the limit set in its panel (0–600 m³/min, default 60, 0 = shut), never mixing fluids. Use: top up a loop that
   recycles water with only as much outside water as it lacks, so the recycled water is used first.

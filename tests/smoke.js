@@ -230,6 +230,23 @@ const server=require('./serve.js');
   for(let j=-2;j<4;j++)for(let i=-1;i<9;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   return{ok:r.every(x=>x===''),one,n};});
  check(`junction → crossing → junction carries fluid (${jxc.n} m³ in 20 s, Mk1 rate = 100)`,jxc.ok&&jxc.one&&jxc.n>=90);
+ // Markus's layout (Session 41d): water from a junction goes up through a crossing into a refinery, while another fluid runs sideways
+ // through the same crossing and through two crossings in a row between junctions; the two fluids stay apart
+ const jx2=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<150&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<11&&ok;j++)for(let i=-4;i<10&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const w=B.refinery.w,yc=Y+w,yj=Y+w+1;   // refinery on top, crossing row below it, junction row below that
+  const r=[P('refinery',X,Y,0),
+   P('crossing',X,yc,0),P('junction',X+1,yc,0),P('crossing',X+2,yc,0),P('crossing',X+3,yc,0),P('junction',X+4,yc,0),P('tank',X+5,yc,0),   // acid row: junction-crossing-crossing-junction
+   P('junction',X,yj,0),P('pipe1',X,yj+1,0),P('junction',X,yj+2,0),P('tank',X,yj+3,0),   // water: tank → junction → pipe → junction under the crossing
+   P('junction',X-1,yc,0),P('incin',X-3,yc,0)];   // left end of the acid row: junction next to the first crossing, incinerator burns it
+  const ref=fw.entAt(X,Y);ref.r='r_wet_alumina';tick(0.05);
+  const wt=fw.entAt(X,yj+3),at=fw.entAt(X+5,yc),jA=fw.entAt(X+4,yc),jB=fw.entAt(X+1,yc),jL=fw.entAt(X-1,yc),jw=fw.entAt(X,yj);
+  const acidOne=jA.net===jB.net&&jB.net===jL.net,apart=jw.net!==jA.net,att=jw.net.att.includes(ref);
+  for(let k=0;k<300;k++){wt.ft='water';wt.amt=400;at.ft='acid';at.amt=400;tick(0.05);}
+  const water=ref.inb.water||0,acidFl=jL.net.fluid,waterFl=jw.net.fluid;
+  for(let j=-1;j<11;j++)for(let i=-4;i<10;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  return{ok:r.every(x=>x===''),acidOne,apart,att,water,acidFl,waterFl,r};});
+ check(`pipes through crossings: two crossings in a row join (${jx2.acidOne}), a junction feeds a refinery through a crossing (${jx2.water} water), fluids stay apart (${jx2.acidFl}/${jx2.waterFl})`,jx2.ok&&jx2.acidOne&&jx2.apart&&jx2.att&&jx2.water>=10&&jx2.acidFl==='acid'&&jx2.waterFl==='water');
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

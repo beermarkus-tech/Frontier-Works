@@ -348,12 +348,15 @@ function rebuildTopo(){
    needing that fluid, tanks (when it's over 80 % full) and incinerators draw from it. A second fluid is refused and flagged (no mixing). */
 const PIPE_CAP=10,pipeLike=e=>!!e&&(e.k==='pipe'||(e.k==='router'&&B[e.d].sub==='junc'));
 function syncPipes(){for(const n of nets)for(const t of n.tiles){t.item=n.fluid;t.lv=n.cap?n.amt/n.cap:0;}}   // store contents on the tiles (save, rebuild)
+/* first piece beyond a chain of crossings (Session 41d: pipes looked through one crossing only, and never through one into a building) */
+const FLB=['mach','gen','pump','tank','incin'];
+function pastCross(t,d){let n=entAt(t.x+DX[d],t.y+DY[d]),k=0;while(n&&n.k==='cross'&&k++<32)n=entAt(n.x+DX[d],n.y+DY[d]);return n;}
 function buildNets(){
  nets=[];const list=[],ix=new Map();for(const e of ents.values())if(pipeLike(e)){ix.set(e,list.length);list.push(e);e.net=null;e.pc=0;}
  const par=list.map((_,i)=>i),f=i=>par[i]===i?i:(par[i]=f(par[i])),un=(a,b)=>{par[f(a)]=f(b);};
  for(const t of list)for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(!n)continue;
   if(pipeLike(n)){un(ix.get(t),ix.get(n));t.pc|=1<<d;}
-  else if(n.k==='cross'){const far=entAt(n.x+DX[d],n.y+DY[d]);if(pipeLike(far)){un(ix.get(t),ix.get(far));t.pc|=1<<d;}}
+  else if(n.k==='cross'){const far=pastCross(t,d);if(pipeLike(far)){un(ix.get(t),ix.get(far));t.pc|=1<<d;}else if(far&&t.k!=='pipe'&&FLB.includes(far.k))t.pc|=1<<d;}   /* through crossings: to pipes, or from a junction into a building */
   else if(n.k==='router'&&B[n.d].sub==='valve'&&(d&1)===(n.dir&1))t.pc|=1<<d;   /* a pipe reaches into a valve along its axis; the valve keeps the two networks apart */
   else if(t.k!=='pipe'&&['mach','gen','pump','tank','incin'].includes(n.k))t.pc|=1<<d;}   // only a Pipe Junction is an entry point into a building
  const G=new Map();list.forEach((t,i)=>{const r=f(i);if(!G.has(r))G.set(r,[]);G.get(r).push(t);});
@@ -361,7 +364,7 @@ function buildNets(){
   for(const t of tiles){if(t.item)cnt[t.item]=(cnt[t.item]||0)+1;if(t.k==='pipe')rate=Math.min(rate,B[t.d].spd);}
   const fluid=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]||null;let amt=0;
   for(const t of tiles)if(t.item===fluid)amt+=t.lv!=null?t.lv*PIPE_CAP:1;   // old saves: one unit per pipe tile holding fluid
-  const att=new Set();for(const t of tiles)if(t.k!=='pipe')for(let d=0;d<4;d++){const n=entAt(t.x+DX[d],t.y+DY[d]);if(n&&['mach','gen','pump','tank','incin'].includes(n.k))att.add(n);}
+  const att=new Set();for(const t of tiles)if(t.k!=='pipe')for(let d=0;d<4;d++){let n=entAt(t.x+DX[d],t.y+DY[d]);if(n&&n.k==='cross')n=pastCross(t,d);if(n&&FLB.includes(n.k))att.add(n);}
   const n={tiles,fluid,cap:tiles.length*PIPE_CAP,amt:0,rate:isFinite(rate)?rate:5,att:[...att],bi:0,bo:0,inR:0,outR:0,_fl:0,conflict:null};n.amt=Math.min(n.cap,amt);n._fl=n.cap?n.amt/n.cap:0;
   for(const t of tiles)t.net=n;nets.push(n);}
 }
