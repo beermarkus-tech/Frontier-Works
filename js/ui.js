@@ -39,6 +39,7 @@ function updInfo(){
  else if(t==='del')h='<b>Dismantle</b><span class="hint">Tap to remove (full refund) · drag across belts, pipes & poles to clear them</span>';
  else if(t&&B[t])h=`<b>${B[t].n}</b>${costHtml(B[t].cost)}<span class="hint">${B[t].desc||''}</span>`;
  else if(UI.zoneCut)h='<b>Cut area</b><span class="hint">Drag over the part of the zone to remove · Esc cancels</span>';
+ else if(t==='paste')h=`<b>Paste settings</b><span class="hint">Tap each ${UI.clip?B[UI.clip.d].n:'building'} to give it the copied settings · the hand button or Esc stops</span>`;
  else if(t==='bppaste')h=`<b>${BPS[UI.bp]?String(BPS[UI.bp].name).replace(/</g,'&lt;'):'Blueprint'}</b>${BPS[UI.bp]?costHtml(bpCost(BPS[UI.bp])):''}<span class="hint">Tap the map to move it there · long-press inside it and drag to slide it · then Build here</span>`;
  else if(t==='zone')h='<b>Factory Zone</b><span class="hint">Drag a rectangle to mark a factory · touching a zone makes it bigger · tap a zone to rename it</span>';
  else if(UI.wireFrom)h='<b>Connect wire</b><span class="hint">Tap a pole, tower, switch or generator in range · Esc cancels</span>';
@@ -56,6 +57,16 @@ function worldsHtml(){const ids=[S.w||'home',...Object.keys(S.worlds||{})].filte
 function travel(id){const W=WORLDS[id];if(!W||id===(S.w||'home'))return;closePanel();setTool(null);const tv=$('travel');$('travelTxt').innerHTML=`${W.ic} ${W.n.toUpperCase()}<small>TRAVELLING…</small>`;
  tv.classList.add('on');requestAnimationFrame(()=>tv.classList.add('vis'));sfx('click');
  setTimeout(async()=>{switchWorld(id);try{await save();}catch(e){}setTimeout(()=>{tv.classList.remove('vis');setTimeout(()=>tv.classList.remove('on'),400);toast(`Arrived: ${W.n}`);},500);},420);}
+/* Copy / paste settings between buildings of the same type (Session 50): recipe, clock, on/off, logic-splitter rules, valve, sign text.
+   UI.clip = {d, s}. "Paste onto others" = tool 'paste' (tap each building). A recipe change refunds the old buffers like the recipe buttons. */
+const CLIP_K=['r','clock','off','lr','vr','vm','tx','tc'];
+function setRecipe(e,v){if(e.r===v)return;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run&&RC[e.r])for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;e._efT=0;e._ef=0;e._efw={};}   /* new recipe: efficiency history starts fresh (Session 39x) */
+function clipable(e){const d=B[e.d];return e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen'||e.k==='sign'||(e.k==='router'&&(d.sub==='logic'||d.sub==='valve'));}
+function clipOf(e){const s={};for(const k of CLIP_K)if(e[k]!==undefined&&e[k]!==null)s[k]=JSON.parse(JSON.stringify(e[k]));return s;}
+function clipApply(e,s){if(e.k==='mach'&&'r' in s&&s.r!==e.r&&(!s.r||(RC[s.r]&&ur(s.r))))setRecipe(e,s.r);
+ for(const k of CLIP_K){if(k==='r'||!(k in s))continue;let v=JSON.parse(JSON.stringify(s[k]));if(k==='clock')v=Math.max(0.1,Math.min(S.oc?2.5:1,v));e[k]=v;}topoDirty=true;}
+function clipHtml(e){if(!clipable(e))return'';const same=UI.clip&&UI.clip.d===e.d;
+ return`<h4>Settings</h4><div class="btnrow"><button class="btn" data-act="clipCopy">📋 Copy settings</button>${same?'<button class="btn" data-act="clipPaste">Paste settings</button><button class="btn" data-act="clipTool">Paste onto others</button>':''}</div>${UI.clip&&!same?`<div class="muted">Copied settings are from a ${B[UI.clip.d].n}: they only paste onto the same building.</div>`:''}`;}
 function setTool(t){if(t!==UI.tool)UI.bpAt=null;UI.tool=t;linePrev=null;refreshTools();updInfo();}
 function setHTML(el,h){if(el&&el.__h!==h){el.__h=h;el.innerHTML=h;}}
 
@@ -102,6 +113,7 @@ function entStatic(e){
   if(!isLine(t.k)&&t.k!=='router')return'⚠ Nothing here takes items.';return'';};
  const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
  if(e.k==='bpst')h+=stHtml(e);   /* Blueprint Station */
+ h+=clipHtml(e);   /* copy / paste settings (Session 50) */
  if(e.k==='router'&&d.sub==='valve'){const why={pipe:'⚠ Needs a pipe on both ends: behind the valve (fluid comes in) and in front (the arrow side).',same:'⚠ Both ends are the same pipe network, so the valve can do nothing. The two sides must only be connected through the valve.',mix:'⚠ The pipe in front holds a different fluid.',empty:'Nothing to pass on: the pipe behind is empty.',full:'The pipe in front is full: it takes no more right now.',topped:'Top up: the pipe ahead is at least half full, so the valve waits until it needs more.'}[e.vwhy];
   h+=`<h4>Mode</h4><div class="chips"><button class="btn chip ${e.vm?'':'on'}" data-act="valveMode" data-v="0">Fixed limit</button><button class="btn chip ${e.vm?'on':''}" data-act="valveMode" data-v="1">Top up</button></div>
    <div class="muted" style="margin:2px 0 4px">${e.vm?'Lets fluid through only while the pipe ahead is under half full (still at most the limit). For loops: what the machines give back is used first, outside fluid only fills the gap.':'Always passes up to the limit, as long as the pipe ahead has room.'}</div>
@@ -307,7 +319,10 @@ const ACT={
  home:()=>{camT.x=MW/2;camT.y=MH/2;camT.z=1.2;vel.x=vel.y=0;zAnchor=null;},
  closePanel,
  openMs:()=>openPanel('ms'),openInv:()=>openPanel('inv'),openStats:()=>openPanel('stats'),openMenu:()=>openPanel('menu'),openCodex:()=>openPanel('codex'),
- setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v){UI.recOpen=UI.recOpen===e.id?null:e.id;renderPanel(true);return;}UI.recOpen=null;for(const b of [e.inb,e.outb])for(const k in b)give(k,Math.floor(b[k]));if(e.run)for(const k in RC[e.r].i)give(k,RC[e.r].i[k]);e.inb={};e.outb={};e.run=false;e.prog=0;e.r=v;e._efT=0;e._ef=0;e._efw={};renderPanel(true);},   /* new recipe: efficiency history starts fresh (Session 39x: 'No recipe' lingered for 5 min) */
+ setRec:v=>{const e=ents.get(UI.panel.arg);if(!e)return;if(e.r===v){UI.recOpen=UI.recOpen===e.id?null:e.id;renderPanel(true);return;}UI.recOpen=null;setRecipe(e,v);renderPanel(true);},
+ clipCopy:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.clip={d:e.d,s:clipOf(e)};toast(`Copied the settings of this ${B[e.d].n}`);sfx('click');renderPanel(true);},
+ clipPaste:()=>{const e=ents.get(UI.panel.arg);if(!e||!UI.clip||UI.clip.d!==e.d)return;clipApply(e,UI.clip.s);toast('Settings pasted');sfx('place');renderPanel(true);},
+ clipTool:()=>{if(!UI.clip)return;closePanel();setTool('paste');toast(`Tap each ${B[UI.clip.d].n} to give it the copied settings`);},   /* new recipe: efficiency history starts fresh (Session 39x: 'No recipe' lingered for 5 min) */
  lsAdd:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));if(x==='any')L[k]=L[k].filter(y=>y==='over');if(!L[k].includes(x))L[k].push(x);renderPanel(true);},
  lsDel:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const [k,x]=v.split('|'),L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[k]=L[k].filter(y=>y!==x);renderPanel(true);},
  lsBlock:v=>{const e=ents.get(UI.panel.arg);if(!e)return;const L=e.lr=JSON.parse(JSON.stringify(lsRules(e)));L[v]=[];renderPanel(true);},

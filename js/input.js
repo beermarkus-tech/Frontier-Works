@@ -38,6 +38,7 @@ function tap(t){
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
  if(typeof bpTap==='function'&&bpTap(t))return;   /* blueprint tools (Session 48) */
  const tool=UI.tool;
+ if(tool==='paste'){const e=entAt(t.x,t.y);if(!e||!UI.clip)return;if(e.d!==UI.clip.d){toast(`The copied settings are for a ${B[UI.clip.d].n}`);sfx('deny');return;}clipApply(e,UI.clip.s);sparkle(e);sfx('place');toast(`Settings pasted onto this ${B[e.d].n}`);return;}   /* paste settings mode (Session 50) */
  if(tool==='del'&&stOf(t.x,t.y)){const st=stOf(t.x,t.y);if(dsgAt(st,t.x,t.y)<0)toast('To remove the station itself, use Dismantle in its panel');dsgDelAt(t);return;}   /* inside a Blueprint Station: remove design pieces */
  if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.fm){toggleMeter(e);sfx('del');toast(`Flow Meter removed. Tap again to remove the ${e.k==='pipe'?'pipe':'belt'}`);refreshTools();return;}   /* a metered tile: the first tap takes only the meter */
   if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();sfx('del');}return;}

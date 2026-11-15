@@ -364,6 +364,17 @@ const server=require('./serve.js');
   fw.switchWorld('moon');const sm2=entAt(X+2,Y);out.kept=!!sm2&&sm2.r==='r_iron_ingot'&&entAt(X,Y)&&entAt(X,Y).d==='solar'&&S.inv.iron_plate===5;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=S.ub.filter(x=>x!=='solar');return out;});
  check(`worlds: ${Object.entries(wld).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(wld).every(v=>v===true));
+ // copy / paste settings between buildings of the same type (Session 50): panel buttons and the paste-onto-others mode
+ const clp=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
+  for(let r=8;r<200&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<4&&ok;j++)for(let i=-1;i<10&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  const r=[P('smelter',X,Y,0),P('smelter',X+2,Y,0),P('smelter',X+4,Y,0),P('press',X+6,Y,0)];const a=fw.entAt(X,Y),b=fw.entAt(X+2,Y),c=fw.entAt(X+4,Y),pr=fw.entAt(X+6,Y);
+  a.r='r_copper_ingot';a.clock=0.5;a.off=true;b.r='r_iron_ingot';b.inb={iron_ore:7};const inv0=S.inv.iron_ore||0;
+  openPanel('ent',a.id);ACT.clipCopy();openPanel('ent',b.id);const btns=!!document.querySelector('#pbody [data-act="clipPaste"]')&&!!document.querySelector('#pbody [data-act="clipTool"]');ACT.clipPaste();
+  const pasted=b.r==='r_copper_ingot'&&b.clock===0.5&&b.off===true&&(S.inv.iron_ore||0)===inv0+7;   /* the old ore went back to stock */
+  ACT.clipTool();const tool=UI.tool==='paste';tap({x:X+4,y:Y});const viaTool=c.r==='r_copper_ingot'&&c.clock===0.5;tap({x:X+6,y:Y});const other=!pr.r;setTool(null);
+  for(let i=-1;i<10;i++)for(let j=-1;j<4;j++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}S.inv.iron_ore=inv0;UI.clip=null;
+  return{ok:r.every(v=>v===''),btns,pasted,tool,viaTool,other};});
+ check(`copy/paste settings: ${Object.entries(clp).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(clp).every(v=>v===true));
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

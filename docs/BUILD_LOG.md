@@ -2856,3 +2856,15 @@ I repeated the idea back first. He said "go" with my recommendations: free desig
 - `npm test` all PASS.
 
 **Next up:** step 2b, the Tier 11 parts, the Launch Pad, the colony rocket and the starter kit.
+
+## Session 50 — 2026-11-15 (Claude Code, cloud session) · Build 142
+
+**Asked:** a way to copy the settings of one machine and paste them onto another of the same type.
+
+**Built (`js/ui.js`, `js/input.js`):** a "Settings" row in the panel of machines, drills, pumps, generators, signs, logic splitters and valves.
+- 📋 Copy settings: recipe, clock, on/off, logic-splitter rules, valve limit and mode, sign text and colour (`UI.clip={d,s}`).
+- Paste settings: only shown for the same building type.
+- Paste onto others: tool `'paste'`; tap each building of that type, and the hand button or Esc stops. A different type is refused with a toast.
+- A recipe change from pasting refunds the old buffers like the recipe buttons (`setRecipe` helper, now also used by `setRec`). Clock is clamped to the allowed range.
+
+**Verified:** new smoke check (copy from a smelter, paste onto a second one: recipe, clock and off pasted and old ore refunded; paste mode applies to a third; a Press is refused). `npm test` all PASS.
