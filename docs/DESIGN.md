@@ -328,7 +328,7 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
 - **Dyson Sphere:** a Sphere Launcher on home (very high power draw, where nuclear finally matters) fires sphere segments to the sun.
   Stages (frame → panels → collectors), each needing parts from more worlds; each finished stage beams power back. It has a clear
   end: a closed, glowing sphere in a space and sky view.
-- **Blueprints** (built first): copy a rectangle (buildings, belts, pipes, incl. recipes and splitter rules) and paste it on the same
+- **Blueprints** (built in Session 48, Build 137; Blueprint button in the toolbar, key B): copy a rectangle (buildings, belts, pipes, incl. recipes and splitter rules) and paste it on the same
   world or another. **Max 24×24 tiles** to start. Pasting places only what you can afford; the rest shows as missing.
 
 ## 11. Explicitly out of scope (for now)

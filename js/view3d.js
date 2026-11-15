@@ -535,6 +535,7 @@ function v3Overlay(t){
  if(linePrev){const n=linePrev.path.length,ok=afford(B[linePrev.id].cost,n);for(const p of linePrev.path){const why=canPlace(linePrev.id,p.x,p.y),bad=why&&!(why==='Blocked'&&entAt(p.x,p.y)&&entAt(p.x,p.y).k===B[linePrev.id].k);gh.push([p.x,p.y,1,0.12,bad||!ok]);}
   const l=linePrev.path[n-1];tagAt=[l.x+0.5,0.6,l.y+0.5];tag=`${n} × ${B[linePrev.id].n}`;V3.tag.classList.toggle('bad',!ok);}
  else if(movePrev&&ents.has(movePrev.e.id)){const m=movePrev,e=m.e;gh.push([m.nx,m.ny,e.w,isLine(e.k)?0.12:Math.min(2.2,(V3.M[e.d]&&V3.M[e.d].h)||1),!m.ok]);}
+ else if(bpGhost3D(gh)){}   /* blueprint preview (Session 48) */
  else if(zonePrev){const r=zonePrev.r;gh.push([r.x0,r.y0,Math.max(r.x1-r.x0,r.y1-r.y0)+1,0.06,!!zonePrev.why]);}
  else if(hover&&tool==='fmeter'){const e=entAt(hover.x,hover.y);gh.push([hover.x,hover.y,1,0.3,!(e&&isLine(e.k))]);}
  else if(hover&&tool&&B[tool]){const d=B[tool],fp=footprint(tool,hover.x,hover.y),why=canPlace(tool,fp.x,fp.y),bad=why&&!(why==='Blocked'&&isLine(d.k)&&entAt(hover.x,hover.y)&&entAt(hover.x,hover.y).k===d.k);
@@ -593,12 +594,13 @@ function v3Input(){
    keep(g.gm,s.mx,g.my0);return;}
   const moved=Math.hypot(e.clientX-g.sx,e.clientY-g.sy);
   if(g.type==='move'){dragMove(g,hover);return;}
-  if(g.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(g.lp);const tool=UI.tool;g.type=tool&&B[tool]&&isLine(B[tool].k)?'line':tool==='del'?'del':tool==='clr'?'clr':(tool==='zone'||UI.zoneCut)?'zone':'pan';if(g.type==='clr')eraseN=0;}
+  if(g.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(g.lp);const tool=UI.tool;g.type=tool&&B[tool]&&isLine(B[tool].k)?'line':tool==='del'?'del':tool==='clr'?'clr':(tool==='zone'||UI.zoneCut)?'zone':tool==='bpcopy'?'bp':'pan';if(g.type==='clr')eraseN=0;}
   if(g.type==='orbit'){C3.yaw=g.yaw0+(e.clientX-g.sx)*0.008;C3.pitch=v3cl(g.pitch0+(e.clientY-g.sy)*0.006,C3L.pmin,C3L.pmax);return;}
   if(g.type==='pan'){const x0=C3.x,y0=C3.y;keep(g.g0,e.clientX,e.clientY);const now=performance.now(),dt=Math.max(1,now-g.lt)/1000;g.vx=g.vx*0.5+(C3.x-x0)/dt*0.5;g.vy=g.vy*0.5+(C3.y-y0)/dt*0.5;g.lt=now;}
   else if(g.type==='line'){if(hover&&g.t0)linePrev={id:UI.tool,path:linePath(g.t0,hover,UI.rot)};}
   else if(g.type==='del'){const x=hover&&entAt(hover.x,hover.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross'||x.k==='pole')){removeEnt(x,true);refreshTools();sfx('del');}}
   else if(g.type==='zone'){if(hover){g.t1=hover;zonePrev=Object.assign(zoneCheck(g.t0,hover,UI.zoneCut),{cut:UI.zoneCut});}}
+  else if(g.type==='bp'){if(hover){g.t1=hover;zonePrev=bpPrevRect(g.t0,hover);}}
   else if(g.type==='clr'){const x=hover&&entAt(hover.x,hover.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross')){const n=eraseEnt(x);eraseN+=n;if(n)sfx('erase');}}
  });
  const end=e=>{
@@ -606,6 +608,7 @@ function v3Input(){
   if(g.type==='two'){g=P.size?{type:'dead'}:null;return;}
   clearTimeout(g.lp);
   if(g.type==='zone'){const cut=UI.zoneCut;UI.zoneCut=null;zoneDrop(g.t0,g.t1||g.t0,cut);updInfo();}
+  if(g.type==='bp'){zonePrev=null;bpCapture(g.t0,g.t1||g.t0);}
   if(g.type==='clr'){if(eraseN)toast(`Erased ${eraseN} item${eraseN>1?'s':''}: back to stock`);eraseN=0;refreshTools();}
   if(g.type==='move')dropMove();
   else if(g.type==='pending'&&g.t0){mapTap={t:performance.now(),x:e.clientX,y:e.clientY};tap(g.t0);if(e.pointerType!=='mouse')calmPanel();}

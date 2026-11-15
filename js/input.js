@@ -35,6 +35,7 @@ function tap(t){
  if(UI.moveId){const e=ents.get(UI.moveId);UI.moveId=null;movePrev=null;updInfo();if(!e)return;const fp=footprint(e.d,t.x,t.y),why=moveEnt(e,fp.x,fp.y);sfx(why?'deny':'move');toast(why?why+': not moved':`${B[e.d].n} moved`);if(!why)UI.sel=e.id;return;}
  if(UI.linkFrom){const src=ents.get(UI.linkFrom),e=entAt(t.x,t.y);UI.linkFrom=null;updInfo();
   if(src&&e&&e.k==='dpad'&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast('Route not changed: tap a different Drone Pad');return;}
+ if(typeof bpTap==='function'&&bpTap(t))return;   /* blueprint tools (Session 48) */
  const tool=UI.tool;
  if(tool==='del'){const e=entAt(t.x,t.y);if(e&&e.fm){toggleMeter(e);sfx('del');toast(`Flow Meter removed. Tap again to remove the ${e.k==='pipe'?'pipe':'belt'}`);refreshTools();return;}   /* a metered tile: the first tap takes only the meter */
   if(e&&e.k!=='core'){puff(e);removeEnt(e,true);refreshTools();sfx('del');}return;}
@@ -67,18 +68,19 @@ cv.addEventListener('pointerdown',e=>{
 });
 cv.addEventListener('pointermove',e=>{
  if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
- const t=toTile(e.clientX,e.clientY);if(e.pointerType==='mouse'||G)hover=t;
+ const t=toTile(e.clientX,e.clientY);if(e.pointerType==='mouse'||G)hover=t;if(UI.tool==='bppaste'&&e.pointerType==='mouse'&&!G)UI.bpAt={x:t.x,y:t.y};   /* the blueprint outline follows the mouse */
  if(UI.moveId&&!G){const en=ents.get(UI.moveId);if(en){const fp=footprint(en.d,t.x,t.y);movePrev={e:en,nx:fp.x,ny:fp.y,ok:!canMove(en,fp.x,fp.y)};}}
  if(!G)return;
  if(G.type==='pinch'&&ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);cam.z=Math.max(zMin(),Math.min(3.5,G.z0*d/Math.max(10,G.d0)));const s=TS*cam.z,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;cam.x=G.m.fx-(mx-innerWidth/2)/s;cam.y=G.m.fy-(my-innerHeight/2)/s;clampCam();syncT();return;}
  const moved=Math.hypot(e.clientX-G.sx,e.clientY-G.sy);
  if(G.type==='move'){dragMove(G,t);return;}
- if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(G.lp);const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else if(tool==='clr'){G.type='clr';eraseN=0;}else if(tool==='zone'||UI.zoneCut)G.type='zone';else G.type='pan';}
+ if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(G.lp);const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else if(tool==='clr'){G.type='clr';eraseN=0;}else if(tool==='zone'||UI.zoneCut)G.type='zone';else if(tool==='bpcopy')G.type='bp';else G.type='pan';}
  if(G.type==='pan'){const s=TS*cam.z,now=performance.now(),dt=Math.max(1,now-G.lt)/1000;
   const nx=G.cx-(e.clientX-G.sx)/s,ny=G.cy-(e.clientY-G.sy)/s;G.vx=G.vx*0.5+((nx-cam.x)/dt)*0.5;G.vy=G.vy*0.5+((ny-cam.y)/dt)*0.5;G.lt=now;cam.x=nx;cam.y=ny;clampCam();syncT();}
  else if(G.type==='line'){const n0=linePrev?linePrev.path.length:0;linePrev={id:UI.tool,path:linePath(G.t0,t,UI.rot)};if(linePrev.path.length!==n0)sfx('belt');}
  else if(G.type==='del'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross'||x.k==='pole')){puff(x);removeEnt(x,true);refreshTools();sfx('del');}}
  else if(G.type==='zone'){G.t1=t;zonePrev=Object.assign(zoneCheck(G.t0,t,UI.zoneCut),{cut:UI.zoneCut});}
+ else if(G.type==='bp'){G.t1=t;zonePrev=bpPrevRect(G.t0,t);}
  else if(G.type==='clr'){const x=entAt(t.x,t.y);if(x&&(isLine(x.k)||x.k==='router'||x.k==='cross')){const n=eraseEnt(x);if(n){eraseN+=n;sparkle(x);sfx('erase');}}}
 });
 function endPtr(e){
@@ -86,6 +88,7 @@ function endPtr(e){
  if(G.type==='pinch'){if(ptrs.size===0)G=null;else G={type:'dead'};return;}
  clearTimeout(G.lp);
  if(G.type==='zone'){const cut=UI.zoneCut;UI.zoneCut=null;zoneDrop(G.t0,G.t1||G.t0,cut);updInfo();}
+ if(G.type==='bp'){zonePrev=null;bpCapture(G.t0,G.t1||G.t0);}
  if(G.type==='clr'){if(eraseN)toast(`Erased ${eraseN} item${eraseN>1?'s':''}: back to stock`);eraseN=0;refreshTools();}
  if(G.type==='move')dropMove();
  else if(G.type==='pending'){mapTap={t:performance.now(),x:e.clientX,y:e.clientY};tap(G.t0);if(e.pointerType!=='mouse')calmPanel();}
@@ -100,7 +103,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();vel.x=vel.y=0;const m=toTile(
 const keys=new Set();
 addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const k=e.key.toLowerCase();keys.add(k);
  if(k==='r'){if(UI.tool)ACT.rotate();else if(UI.panel&&UI.panel.kind==='ent')ACT.rotSel();}
- else if(k==='escape'){setTool(null);UI.moveId=null;UI.wireFrom=null;UI.zoneCut=null;zonePrev=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
+ else if(k==='escape'){setTool(null);UI.moveId=null;UI.wireFrom=null;UI.zoneCut=null;zonePrev=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='b')ACT.openBp();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
  else if(k==='q'&&hover){const x=entAt(hover.x,hover.y);if(x&&B[x.d].cat&&ub(x.d)){UI.cat=B[x.d].cat;UI.rot=x.dir||0;UI.rotA=UI.rot*90;buildCats();setTool(x.d);}}});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 addEventListener('blur',()=>keys.clear());

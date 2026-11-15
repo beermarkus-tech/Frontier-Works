@@ -2747,3 +2747,23 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 **Next up:** Blueprints (step 1), when Markus says go.
 
 Docs only. BUILD/VERSION bumped only to keep the build number equal to the commit count.
+
+## Session 48 — 2026-11-15 (Claude Code, cloud session) · Build 137
+
+**Asked:** "go": step 1 of the solar-project plan, Blueprints.
+
+**Built (`js/blueprint.js`, new file in `ASSETS` and the script order):**
+- **Blueprint panel:** toolbar button (clipboard icon, key B) opens the list: name (editable), size, piece count, affordable or not, "Build this", "Delete" (asks first). "＋ Copy an area" starts copying.
+- **Copy (`'bpcopy'`):** drag a rectangle, max 24×24. The preview turns red when too big, using the zone preview in 2D and 3D. Takes every piece fully inside except the Base Core, with recipe, clock, logic-splitter rules, valve limit and mode, sign text and colour, and on/off.
+- **Build (`'bppaste'`):**
+  - first tap shows the outline at that spot; a tap inside it builds, a tap elsewhere moves it; with a mouse it follows the pointer
+  - ⟳ turns it in quarter turns (positions, directions and splitter sides turn with it)
+  - 2D preview: pieces see-through, blocked tiles red; 3D: ghost boxes
+  - buildings are placed first, then belts and pipes; each piece is paid like normal placing
+  - pieces already there are kept; the summary names what was built, missing materials per building, blocked and not-yet-unlocked pieces
+- **Storage:** stored per device (localStorage, up to 40), so blueprints work on every map and, later, every world.
+- CLAUDE.md and DESIGN.md updated.
+
+**Verified:** screenshot (panel, turned preview with a blocked tile). New smoke check: 4 pieces copied, 31-wide area refused, built turned with recipe/clock/rules, rebuilding on itself keeps all 4, no materials reports what's missing. `npm test` all PASS.
+
+**Next up:** Tier 11 "Spaceflight" + the Moon (step 2), after Markus has tried blueprints.
