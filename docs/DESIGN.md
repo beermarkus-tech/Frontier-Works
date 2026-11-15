@@ -333,8 +333,18 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   A world button in the top bar (shown once a second world exists) opens the Worlds panel; Travel shows a short travel screen and saves.
   **The Moon** (256×256, no coast ring): dark maria and bright highlands, craters (rock rim, dusty floor), no water, a flat landing site
   with a Base Core; iron (mostly maria), quartz and bauxite (highlands), some copper and uranium. Black sky with stars and Home in the
-  sky in 3D, no clouds in 2D. **Solar Panel** (10 MW, 2×2, no fuel) works only on the Moon. Reaching the Moon comes with step 2b
-  (colony rocket); until then it can only be opened for testing.
+  sky in 3D, no clouds in 2D. **Solar Panel** (10 MW, 2×2, no fuel) works only on the Moon. The Moon is reached with the colony rocket
+  (step 2b, below).
+- **Tier 11 Spaceflight and the colony rocket** (Session 51, step 2b): after the Orbital Beacon (still the "you win" moment) comes
+  Tier 11 *Spaceflight* (Quantum Cores, Control Chips, Heavy Trusses, Batteries). It unlocks the **Launch Pad** (6×6, Home only,
+  150 MW while the rocket is ready), the **Solar Panel** and four parts: **Hull Plate** (Assembler), **Heat Shield** and **Rocket Fuel**
+  canisters (Blender), **Guidance Core** (Fabricator). The pad is filled by belt from any side or with *Load from stock*: rocket parts
+  (60 Hull Plates, 30 Heat Shields, 4 Guidance Cores, 200 Rocket Fuel) plus the **starter kit** it carries (plates, rods, wire, cable,
+  120 concrete, braced plates, rotors, alloy panels, circuit boards: enough for a few solar panels, drills, smelters, presses, belts and
+  poles). The rocket visibly stacks up on the pad as parts arrive; **Launch** sends it up (about 10 s, flame and smoke, 2D and 3D).
+  The first landing creates the Moon with the kit in its own stock and offers to travel there; every later launch delivers another kit
+  (the only way to send things until Orbital Freighters). The Moon has no coal or limestone: solar power, concrete from home.
+  Exact numbers in `ROCKET` (`js/data.js`). Buildings locked to one world only show in the build menu on that world.
 - **Blueprints** (Session 48; reworked 48b with Markus: designed in a station instead of copying from the factory, which was inaccurate):
   a **Blueprint Station** (12×12, needs power) is a design table. Both live in their own **Blueprints** tab (Session 48c): the station(s)
   (bigger sizes later) and the **Blueprint List** button, which opens the saved blueprints without needing a station. Building and belt tools used inside it place free

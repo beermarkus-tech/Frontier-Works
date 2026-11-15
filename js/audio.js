@@ -38,6 +38,7 @@ const SFX={
  click:t=>{auOsc('sine',1050,900,t,0.035,0.06);auNoise(t,0.012,0.04,'highpass',5000,5000,0.7);},
  deny:t=>{auOsc('square',160,150,t,0.08,0.05,1200);auOsc('square',120,110,t+0.1,0.1,0.05,1200);},
  goal:t=>{[523.25,659.25,783.99,1046.5].forEach((f,i)=>{auOsc('triangle',f,f,t+i*0.11,1.4,0.11);auOsc('sine',f*2,f*2,t+i*0.11,0.8,0.03);});auOsc('sine',130.8,130.8,t,1.6,0.18);},
+ launch:t=>{auNoise(t,9,0.32,'lowpass',160,900,0.8,'sfx');auOsc('sawtooth',38,70,t,9,0.12,260);auNoise(t+0.1,1.2,0.25,'bandpass',300,1800,1);},
  trip:t=>{for(let i=0;i<2;i++)auOsc('square',110,105,t+i*0.22,0.16,0.09,1400);auNoise(t,0.06,0.2,'highpass',2000,2000,0.7);}};
 const SFX_GAP={del:0.05,belt:0.04,erase:0.07,click:0.03,deny:0.2,trip:1};
 function sfx(name){if(!auOn('sfx'))return;if(!AU.ctx||AU.ctx.state!=='running'){auStart();if(!AU.ctx||AU.ctx.state!=='running')return;}

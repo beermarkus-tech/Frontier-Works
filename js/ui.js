@@ -27,7 +27,7 @@ const toolIcon=id=>TICON[id]||(TICON[id]=makeIcon(id));
 let toolsKey='';
 function buildCats(){$('cats').innerHTML=CATS.map(([k,n])=>`<button class="cat ${UI.cat===k?'on':''}" data-act="cat" data-v="${k}"><svg class="i" viewBox="0 0 24 24">${CAT_ICON[k]}</svg><span>${n}</span></button>`).join('');toolsKey='';buildTools();}
 function buildTools(){
- const list=Object.values(B).filter(d=>d.cat===UI.cat&&ub(d.id)),key=UI.cat+':'+list.map(d=>d.id).join(',');
+ const list=Object.values(B).filter(d=>d.cat===UI.cat&&ub(d.id)&&(!d.only||d.only===(S.w||'home'))),   /* world-locked buildings only show on their world (Session 51) */key=UI.cat+':'+list.map(d=>d.id).join(',');
  if(key!==toolsKey){toolsKey=key;const el=$('tools');
   el.innerHTML=list.map(d=>`<button class="tool" data-act="tool" data-v="${d.id}" title="${d.n}"><img src="${toolIcon(d.id)}" alt=""><span>${d.n}</span></button>`).join('')||'<span class="muted" style="padding:10px">Nothing unlocked here yet — check Goals.</span>';}
  refreshTools();updInfo();
@@ -184,6 +184,21 @@ function effHtml(e){
  if(ks.length&&pc<95){const k=ks[0];h+=`<div class="muted" style="margin-top:4px">💡 ${k==='out'?outHint(e):k==='power'?'Not enough power: add generators or reconnect this to a pole.':k.startsWith('in:')?`Not enough ${IT[k.slice(3)].n} arriving: add supply, a faster belt, or lower the clock speed.`:'Check the setup.'}</div>`;}
  return h;
 }
+/* Launch Pad panel (Session 51): what is loaded, what is missing, load from stock, launch */
+function lpadHtml(e){const need=rocketNeed(),f=lpadFrac(e);let h='';
+ if(e.lt>0)return`<h4>Launch</h4><div class="row"><span>Rocket</span><span><b>climbing… ${Math.round(e.lt/ROCKET.lt*100)}%</b></span></div><div class="bar"><i style="width:${e.lt/ROCKET.lt*100}%"></i></div><div class="muted">Its cargo lands in the ${WORLDS[ROCKET.to].n}'s stock.</div>`;
+ h+=`<h4>Colony rocket</h4><div class="row"><span>Loaded</span><span><b>${Math.round(f*100)}%</b></span></div><div class="bar"><i style="width:${f*100}%"></i></div>`;
+ const rows=(o,title)=>`<h4>${title}</h4>`+Object.keys(o).map(k=>{const have=Math.min(need[k],e.store[k]||0),want=k in ROCKET.parts&&k in ROCKET.kit?need[k]:o[k];return`<div class="row"><span>${nm(k)}</span><span class="${have>=need[k]?'plok':''}">${fmt(have)} / ${want}${(S.inv[k]||0)>0&&have<need[k]?` <small class="muted">(${fmt(S.inv[k])} in stock)</small>`:''}</span></div>`;}).join('');
+ h+=rows(ROCKET.parts,'Rocket parts')+rows(ROCKET.kit,'Starter kit (cargo)');
+ const miss=lpadMissing(e),canLoad=Object.keys(miss).some(k=>(S.inv[k]||0)>0);
+ h+=`<div class="chips" style="margin-top:8px"><button class="btn" data-act="lpadLoad" ${canLoad?'':'disabled'}>📦 Load from stock</button>`;
+ const ready=lpadReady(e);h+=`<button class="btn ${ready&&e.pw>0?'on':''}" data-act="lpadGo" ${ready&&e.pw>0?'':'disabled'}>🚀 Launch</button></div>`;
+ h+=`<div class="muted" style="margin-top:4px">${ready?(e.pw>0?'Ready for launch.':'Complete, but the pad needs power (150 MW) to launch.'):'Belt the parts in from any side, or load them from your item stock.'} The kit lands in the ${WORLDS[ROCKET.to].n}'s own stock${e.nl?` · launches so far: ${e.nl}`:' and opens the way there'}.</div>`;
+ return h;}
+function rocketLanded(first){const W=WORLDS[ROCKET.to];sfx('goal');
+ if(first){dialog(`<h2>${W.ic} The colony rocket has landed!</h2><p>Your starter kit is waiting in the ${W.n}'s stock. The ${W.n} has no coal and no limestone: power comes from Solar Panels, and concrete from home. Every further launch brings another kit.</p><button class="btn on" data-act="travel" data-v="${ROCKET.to}">Travel to the ${W.n}</button> <button class="btn" data-act="closeDlg">Later</button>`);}
+ else toast(`🚀 Rocket landed: a new starter kit is in the ${W.n}'s stock`);
+ if(typeof updTop==='function')updTop();save();}
 function entDyn(e){
  const d=B[e.d];let h='';const st=bStatus(e);
  if(e.fm){const [v,mx]=fmRate(e),u=e.k==='pipe'?' m³/min':'/min';h+=`<h4>Flow Meter</h4><div class="row"><span>Flow</span><span><b>${fmt(v)}${u}</b></span></div><div class="row"><span>Maximum here</span><span>${fmt(mx)}${u}</span></div><div class="row"><span>Used</span><span>${mx?Math.round(v/mx*100):0}%</span></div><button class="btn" data-act="meterOff" style="margin-top:6px">✕ Remove Flow Meter</button>`;}
@@ -193,6 +208,7 @@ function entDyn(e){
  if(e.k==='mach'){
   if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}${Object.keys(r.i).some(k=>!IT[k].f&&(e.inb[k]||0)<capIn(r.i[k],k)&&(S.inv[k]||0)>=1)?'<button class="btn" data-act="fillInb" style="margin-top:6px">⬆ Fill from stock</button>':''}<h4>Output buffer</h4>${bufList(e.outb)}`;}
  }
+ if(e.k==='lpad')h+=lpadHtml(e);
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
   if(e.item){const rate=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}
@@ -230,6 +246,7 @@ function invHtml(){
   h+=`<div class="card"><div>${recLine(r)}</div><button class="btn" data-act="craft" data-v="${r.id}" data-n="1" ${ok?'':'disabled'}>×1</button> <button class="btn" data-act="craft" data-v="${r.id}" data-n="10" ${afford(r.i,10)?'':'disabled'}>×10</button></div>`;}
  return h;
 }
+const lpadDone=()=>!!(S.worlds&&S.worlds[ROCKET.to])||S.w===ROCKET.to;
 function msHtml(){
  let h=`<div class="muted" style="margin-bottom:8px">Deliver parts to the Base Core (they land in your item stock), then submit them here to unlock new tech.</div>`;
  MS.forEach((m,i)=>{
@@ -239,6 +256,7 @@ function msHtml(){
   const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];
   if(un.length&&i<=S.ms+1)h+=`<div class="muted" style="margin-top:4px">Unlocks: ${un.join(', ')}${m.oc?', overclocking':''}</div>`;
   if(m.win&&i<=S.ms+1)h+=`<div class="muted">Launches the beacon — you win!</div>`;
+  if(m.goal&&i<=S.ms)h+=`<div class="muted" style="margin-top:4px">${done?'Next: ':''}${m.goal}${done&&lpadDone()?' ✓':''}</div>`;
   if(cur)h+=`<button class="btn ${afford(m.req)?'on':''}" style="margin-top:6px" data-act="submitMs" ${afford(m.req)?'':'disabled'}>Submit</button>`;
   h+=`</div>`;});
  return h;
@@ -309,7 +327,7 @@ function closeDlg(){$('dlg').classList.add('hidden');}
 const ACT={
  cat:v=>{UI.cat=v;buildCats();},
  openWorlds:()=>openPanel('worlds'),
- travel:v=>travel(v),
+ travel:v=>{closeDlg();travel(v);},
  tool:v=>{if(v==='bplist'){setTool(null);openPanel('bplib');return;}setTool(UI.tool===v?null:v);autoClose();},   /* the Blueprint List is a button, not a tool */
  pinPanel:()=>{OPT.pin=!OPT.pin;saveOpt();$('ppinBtn').classList.toggle('on',OPT.pin);toast(OPT.pin?'📌 Panel pinned: it stays open while you tap the map or build':'Panel unpinned');},
  toolNone:()=>setTool(null),
@@ -358,10 +376,12 @@ const ACT={
  handMine:()=>{const n=UI.panel.arg;give(NODE_T[n.t][0],5);toast(`+5 ${IT[NODE_T[n.t][0]].n}`);},
  submitMs:()=>{const m=MS[S.ms];if(!m||!afford(m.req))return;pay(m.req);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);if(m.oc)S.oc=true;S.ms++;sfx('goal');
   toast(`Tier ${S.ms} complete: ${m.n}!`);buildTools();renderPanel(true);
-  if(m.win){S.won=true;dialog(`<h2>🚀 Orbital Beacon launched!</h2><p>Your frontier outpost has reached orbit — every tier is complete. Thanks for playing. Feel free to keep optimising your factory.</p><button class="btn on" data-act="closeDlg">Keep building</button>`);}
+  if(m.win){S.won=true;dialog(`<h2>🚀 Orbital Beacon launched!</h2><p>Your frontier outpost has reached orbit. Next up is Tier 11, Spaceflight: build a colony rocket and reach the Moon.</p><button class="btn on" data-act="closeDlg">Keep building</button>`);}
   else{const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>Tier ${S.ms}: ${m.n}</h2><p>Unlocked: ${un.join(', ')||'—'}${m.oc?', overclocking':''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);}
   save();},
  closeDlg,
+ lpadLoad:()=>{const e=ents.get(UI.panel.arg);if(!e)return;const m=lpadMissing(e);let n=0;for(const k in m){const t=Math.min(m[k],S.inv[k]||0);if(t>0){S.inv[k]-=t;e.store[k]=(e.store[k]||0)+t;n+=t;}}toast(n?`Loaded ${n} items`:'Nothing to load from stock');renderPanel(true);},
+ lpadGo:()=>{const e=ents.get(UI.panel.arg);const why=lpadLaunch(e);if(why){toast(why);return;}sfx('launch');toast('🚀 Lift-off!');renderPanel(true);},
  openFind:()=>openPanel('find'),
  hlToggle:v=>{const T=UI.hl.types,i=T.indexOf(v);if(i>=0)T.splice(i,1);else T.push(v);hlChip();renderPanel(true);},
  hlFree:v=>{UI.hl.free=v==='1';hlChip();renderPanel(true);},

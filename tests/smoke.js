@@ -18,7 +18,7 @@ const server=require('./serve.js');
   const m=txt.match(/Burns now\s*([\d.]+)\s*Coal\/min/);return{res,ingots:(S.inv.iron_ingot||0)-before,gen:{burn:m&&+m[1],exp:+(12*Math.min(1,g._ls)).toFixed(1),chip,full:/At full load[\s\S]*12 Coal\/min/.test(txt)}};});
  check('placements',r.res.every(x=>x===''));
  check(`coal burner panel shows consumption (${r.gen.burn} coal/min now, expected ≈${r.gen.exp}; header ${r.gen.chip})`,r.gen.burn!=null&&Math.abs(r.gen.burn-r.gen.exp)<=0.2&&r.gen.full&&/⚡ \d+%/.test(r.gen.chip));check('ingots delivered ('+r.ingots+')',r.ingots>40);
- await p.click('#msBtn');await p.waitForTimeout(300);check('goals list renders',(await p.$$('#pbody .card')).length===10);
+ await p.click('#msBtn');await p.waitForTimeout(300);check('goals list renders',(await p.$$('#pbody .card')).length===await p.evaluate(()=>MS.length));
  // build number: shown in the Menu header and matching the service-worker version
  await p.evaluate(()=>ACT.openMenu());await p.waitForTimeout(150);
  const bn=await p.evaluate(()=>({b:BUILD,txt:document.getElementById('pbuild').textContent}));
@@ -94,7 +94,7 @@ const server=require('./serve.js');
     prod=p2;for(const id of ub)if(!built.has(id)&&Object.keys(B[id].cost).every(k=>prod.has(k)||boot.has(k))){built.add(id);ch=true;}}
    for(const id of ub)if(!built.has(id))bad.push(`tier ${t+1}: ${B[id].n}`);for(const k in MS[t].req)if(!prod.has(k))bad.push(`goal ${t+1}: ${IT[k].n}`);}
   return bad;});
- check('no progression dead ends in tiers 1–10'+(de.length?' ('+de.join('; ')+')':''),de.length===0);
+ check('no progression dead ends in all tiers'+(de.length?' ('+de.join('; ')+')':''),de.length===0);
  // cloud shadow picture must wrap seamlessly (a seam shows up as a straight line sliding across the map)
  const cs=await p.evaluate(()=>{const d=cloudC.getContext('2d').getImageData(0,0,128,128).data,a=(x,y)=>d[(y*128+x)*4+3];let ex=0,ey=0,inn=0;
   for(let i=0;i<128;i++){ex+=Math.abs(a(127,i)-a(0,i));ey+=Math.abs(a(i,127)-a(i,0));inn+=Math.abs(a(63,i)-a(64,i));}return{ex:ex/128,ey:ey/128,inn:inn/128};});
@@ -364,6 +364,21 @@ const server=require('./serve.js');
   fw.switchWorld('moon');const sm2=entAt(X+2,Y);out.kept=!!sm2&&sm2.r==='r_iron_ingot'&&entAt(X,Y)&&entAt(X,Y).d==='solar'&&S.inv.iron_plate===5;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=S.ub.filter(x=>x!=='solar');return out;});
  check(`worlds: ${Object.entries(wld).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(wld).every(v=>v===true));
+ // colony rocket (Session 51): Tier 11 unlocks the pad, it takes only rocket items, Load from stock, launch needs power, after the flight the
+ // Moon exists with the starter kit in its own stock, a second launch adds another kit
+ const rkt=await p.evaluate(()=>{const fw=window.__fw,out={};const t11=MS.findIndex(m=>m.n==='Spaceflight');out.tier=t11===10&&MS[t11].b.includes('lpad')&&MS[t11].b.includes('solar');
+  const hadMoon=!!(S.worlds&&S.worlds.moon);if(hadMoon)return{hadMoon:false};S.ub.push('lpad');
+  let X,Y;for(let r=12;r<150&&X==null;r+=3)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<6&&ok;j++)for(let i=0;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok&&canPlace('lpad',x,y)===''){X=x;Y=y;break;}}
+  out.placed=fw.placeEnt('lpad',X,Y,0,true)==='';const e=entAt(X,Y);tick(0.05);
+  out.accepts=accept(e,'hull_plate',0)&&!accept(e,'coal',0)&&e.store.hull_plate===1;
+  const inv0=JSON.stringify(S.inv);S.inv=rocketNeed();S.inv.hull_plate-=1;S.inv.coal=5;openPanel('ent',e.id);ACT.lpadLoad();out.loaded=lpadReady(e)&&!S.inv.hull_plate&&S.inv.coal===5;
+  out.noPower=lpadLaunch(e).startsWith('No power');e.pw=1;out.launch=lpadLaunch(e)===''&&e.lt>0&&!Object.keys(e.store).length;
+  for(let k=0;k<ROCKET.lt*20+5;k++)tick(0.05);
+  const M=S.worlds&&S.worlds.moon;out.moon=!!M&&M.WS.gen===3&&M.WS.inv.concrete===ROCKET.kit.concrete&&e.lt===0&&e.nl===1&&!document.getElementById('dlg').classList.contains('hidden');closeDlg();
+  for(const k in rocketNeed())e.store[k]=rocketNeed()[k];e.pw=1;lpadLaunch(e);for(let k=0;k<ROCKET.lt*20+5;k++)tick(0.05);out.second=M.WS.inv.concrete===2*ROCKET.kit.concrete&&e.nl===2;
+  out.moonOnly=canPlace('solar',X,Y+8)==='Only on the Moon';
+  ACT.closePanel();removeEnt(e,false,true);delete S.worlds.moon;S.inv=JSON.parse(inv0);S.ub=S.ub.filter(x=>x!=='lpad');return out;});
+ check(`colony rocket: ${Object.entries(rkt).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(rkt).every(v=>v===true));
  // copy / paste settings between buildings of the same type (Session 50): panel buttons and the paste-onto-others mode
  const clp=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
   for(let r=8;r<200&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<4&&ok;j++)for(let i=-1;i<10&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}

@@ -19,6 +19,8 @@ I('fuel','Fuel','#f0a91e',1,750);I('alumina','Alumina Solution','#bcd8ec',1);I('
 I('heavy_truss','Heavy Truss','#34466a');I('compute_module','Compute Module','#22804a');I('data_bus','Data Bus','#46c48a');I('coolant_block','Coolant Block','#5ec6f0');
 I('battery','Battery','#a6e64e');I('control_chip','Control Chip','#3ea2f5');I('turbine_core','Turbine Core','#d9622e');I('uranium_cell','Uranium Cell','#4ec43a');
 I('fuel_rod','Fuel Rod','#2ef070',0,750000);I('waste','Nuclear Waste','#b4ff3a');I('quantum_core','Quantum Core','#ff5fc8');
+/* Tier 11 Spaceflight (Session 51): colony rocket parts */
+I('hull_plate','Hull Plate','#c9d3dd');I('heat_shield','Heat Shield','#5a4a44');I('guidance_core','Guidance Core','#f0c34a');I('rocket_fuel','Rocket Fuel','#ff7a2e');
 
 const RC={}, RL=[];
 function pr(s){const o={};s.split(',').forEach(p=>{const [k,v]=p.split(':');o[k.trim()]=+v;});return o;}
@@ -32,7 +34,7 @@ const STACK={};{const st=(n,ids)=>ids.split(' ').forEach(i=>STACK[i]=n);
  st(100,'water crude heavy_residue fuel alumina acid');
  st(50,'steel_beam steel_pipe quartz_crystal alu_casing braced_plate truss_frame rotor cased_girder stator circuit_board alloy_panel heat_sink battery uranium_cell waste');
  st(20,'motor resonator heavy_truss compute_module data_bus coolant_block control_chip turbine_core fuel_rod');
- st(10,'quantum_core');}
+ st(10,'quantum_core guidance_core');st(50,'hull_plate rocket_fuel');st(20,'heat_shield');}
 const stackOf=id=>STACK[id]||(IT[id]&&IT[id].f?100:50);
 R('r_iron_ingot','Iron Ingot','smelter',2,'iron_ore:1','iron_ingot:1');
 R('r_copper_ingot','Copper Ingot','smelter',2,'copper_ore:1','copper_ingot:1');
@@ -71,6 +73,7 @@ R('r_circuit_board','Circuit Board','assembler',8,'copper_sheet:2,plastic:4','ci
 R('r_resonator','Resonator','assembler',12,'quartz_crystal:3,rubber:2','resonator:1');
 R('r_alloy_panel','Alloy Panel','assembler',6,'alu_ingot:3,copper_ingot:1','alloy_panel:4');
 R('r_heat_sink','Heat Sink','assembler',8,'alloy_panel:5,copper_sheet:3','heat_sink:1');
+R('r_hull_plate','Hull Plate','assembler',20,'alloy_panel:12,heavy_truss:1','hull_plate:2');
 R('r_insulated_cable','Insulated Cable (alt)','assembler',12,'wire:9,rubber:6','cable:20',1);
 // Refinery
 R('r_plastic','Plastic','refinery',6,'crude:3','plastic:2,heavy_residue:1');
@@ -92,10 +95,13 @@ R('r_data_bus','Data Bus','fabricator',16,'wire:50,cable:10,circuit_board:1','da
 R('r_control_chip','Control Chip','fabricator',32,'compute_module:2,data_bus:3,resonator:2,plastic:28','control_chip:1');
 R('r_turbine_core','Turbine Core','fabricator',32,'motor:4,coolant_block:3,data_bus:2,rubber:24','turbine_core:1');
 R('r_fuel_rod','Fuel Rod','fabricator',150,'uranium_cell:50,cased_girder:3,steel_beam:6','fuel_rod:1');
+R('r_guidance_core','Guidance Core','fabricator',60,'quantum_core:1,control_chip:2,resonator:6,data_bus:4','guidance_core:1');
 R('r_quantum_core','Quantum Core','fabricator',60,'control_chip:2,compute_module:3,heat_sink:6,battery:10','quantum_core:1');
 // Blender
 R('r_uranium_cell','Uranium Cell','blender',12,'uranium:10,concrete:3,acid:8','uranium_cell:5,acid:2');
 R('r_battery','Battery','blender',6,'acid:5,alumina:4,alu_casing:2','battery:2,water:3');
+R('r_heat_shield','Heat Shield','blender',16,'heat_sink:2,silica:12,acid:6','heat_shield:1');
+R('r_rocket_fuel','Rocket Fuel','blender',8,'fuel:20,alu_casing:2,acid:4','rocket_fuel:2');
 R('r_coolant_block','Coolant Block','blender',10,'heat_sink:2,rubber:2,water:10','coolant_block:1');
 
 const B={};
@@ -117,6 +123,10 @@ D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'fluid',col:'#4a7
 D('valve',{n:'Flow Valve',k:'router',sub:'valve',fl:1,cat:'fluid',col:'#3f9ad0',cost:{copper_sheet:6,rotor:1},ow:1,desc:'Lets fluid through one way only (arrow), up to a limit you set: e.g. top up a loop with outside water only as much as it lacks. Put it between two pipes.'});
 D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',cost:{iron_plate:10,iron_rod:10},desc:'Buffers 2000 items; passes them on to outgoing belts.'});
 D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'fluid',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
+D('lpad',{n:'Launch Pad',k:'lpad',w:6,pw:150,only:'home',cat:'trans',col:'#e8a23a',cost:{heavy_truss:20,cased_girder:60,concrete:400,control_chip:10},desc:'Builds and launches the colony rocket to the Moon. Belt in the rocket parts and the starter kit (or load them from your stock), then press Launch. Needs 150 MW while the rocket is ready.'});
+/* Colony rocket (Session 51, DESIGN.md section 12): parts + the starter kit it carries to the Moon (Moon has no coal or limestone) */
+const ROCKET={parts:{hull_plate:60,heat_shield:30,guidance_core:4,rocket_fuel:200},kit:{iron_plate:200,iron_rod:40,wire:200,cable:50,concrete:120,braced_plate:16,rotor:8,alloy_panel:24,circuit_board:12},lt:10,to:'moon'};
+const rocketNeed=()=>{const o=Object.assign({},ROCKET.parts);for(const k in ROCKET.kit)o[k]=(o[k]||0)+ROCKET.kit[k];return o;};
 D('dpad',{n:'Drone Pad',k:'dpad',w:3,pw:25,cap:400,cat:'trans',col:'#2fa7a0',cost:{motor:4,stator:4,cased_girder:6,cable:30},desc:'Holds 400 items. Link it to another pad and its drone flies them there (40 per trip). An unlinked pad receives drones and passes items to outgoing belts.'});
 const DRONE={cap:40,spd:10,load:1.5,unload:1.5,wait:8};   // items per trip, tiles per second, seconds to load / unload, max seconds to wait for a full load
 D('sign1',{n:'Sign S',k:'sign',w:1,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:1},desc:'A 1×1 label. Tap it to write text and pick a colour.'});
@@ -163,6 +173,7 @@ const MS=[
 {n:'Lightweight Alloys',req:{compute_module:25,data_bus:50,resonator:100,steel_pipe:500},b:['blender','drill3'],r:['r_alumina','r_wet_alumina','r_alu_scrap','r_alu_ingot','r_pure_alu','r_alu_casing','r_alloy_panel','r_heat_sink','r_acid','r_battery','r_coolant_block','r_control_chip']},
 {n:'Nuclear Age',req:{alloy_panel:300,heat_sink:100,battery:200,control_chip:20},b:['reactor','belt5'],r:['r_uranium_cell','r_fuel_rod','r_turbine_core','r_quantum_core']},
 {n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:[],win:1},
+{n:'Spaceflight',req:{quantum_core:50,control_chip:100,heavy_truss:100,battery:500},b:['lpad','solar'],r:['r_hull_plate','r_heat_shield','r_guidance_core','r_rocket_fuel'],goal:'Build a Launch Pad and launch the colony rocket to the Moon.'},
 ];
 MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
 const START_B=[...SIGNS,'zone','bpstation','bplist','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];

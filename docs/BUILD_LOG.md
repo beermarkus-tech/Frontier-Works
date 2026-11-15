@@ -2874,3 +2874,48 @@ I repeated the idea back first. He said "go" with my recommendations: free desig
 **Built:** Fuel Rod gets its own item picture ('rods' in `js/render.js`): a tilted bundle of three long rods with grey caps and glowing green bands, held by a clamp. Uranium Cell and Battery keep the short "cell" shape. 3D belts show Fuel Rods as a slim upright cylinder (`rods` in the `view3d.js` item pool).
 **Verified:** side-by-side render of Uranium Cell / Fuel Rod / Battery / Uranium; `npm test` all PASS.
 **Known issues / next up / open questions:** unchanged from Session 50 (step 2b of the solar plan waits for Markus's go).
+
+## Session 51 — 2026-11-15 (Claude Code, cloud session) · Build 144
+
+**Asked:** "go for step 2B" of the solar plan: Tier 11, the Launch Pad, the colony rocket and the starter kit.
+
+**Built:**
+- **Tier 11 "Spaceflight"** after the Orbital Beacon: needs 50 Quantum Cores, 100 Control Chips, 100 Heavy Trusses and 500 Batteries.
+  - It unlocks the Launch Pad, the Solar Panel and four new recipes.
+  - The beacon dialog no longer says "every tier is complete"; it points to Tier 11.
+- **New parts** (own icons):
+  - Hull Plate (Assembler: 12 Alloy Panels + 1 Heavy Truss → 2)
+  - Heat Shield (Blender: 2 Heat Sinks, 12 Silica, 6 acid)
+  - Rocket Fuel canisters (Blender: 20 fuel, 2 Aluminum Casings, 4 acid → 2; solid, so they go on belts)
+  - Guidance Core (Fabricator: Quantum Core, 2 Control Chips, 6 Resonators, 4 Data Buses)
+- **Launch Pad** (`lpad`, 6×6, Home only, 150 MW while the rocket is ready):
+  - takes the rocket parts and the starter kit by belt from any side, and only what's still missing
+  - panel shows loaded / needed per item, with **Load from stock** and **Launch** buttons
+  - the rocket stacks up visibly as it fills: in 2D a ghost outline is filled from the bottom; in 3D it is built in stages
+  - Launch: about 10 s climb with flame, smoke and a rumble sound
+- **Starter kit** (`ROCKET.kit`):
+  - contents: 200 iron plates, 40 rods, 200 wire, 50 cable, 120 concrete, 16 braced plates, 8 rotors, 24 alloy panels, 12 circuit boards
+  - enough for about 6 solar panels, a few drills, smelters and presses, an assembler, belts and poles
+  - the first landing creates the Moon with the kit in its stock, with a dialog: "Travel to the Moon"
+  - every further launch adds another kit (the only way to send material until Orbital Freighters)
+- **Build menu:** buildings locked to one world (Solar Panel, Launch Pad) only show on that world.
+
+**Decisions (my recommended defaults, per Markus's standing preference):**
+- **Rocket Fuel is a canister item, not a fluid.** The pad then needs no pipe connection, and the freighters can reuse it later.
+- **The kit is loaded into the pad like the parts.** You pack the cargo yourself; nothing is free.
+- **The Moon has no coal and no limestone,** so concrete must come from Home.
+
+**Verified:**
+- Screenshots of an empty pad, a 40% pad, a full pad and a launch in 2D and 3D, plus the panel.
+- New smoke check: Tier 11 unlocks; the pad only accepts rocket items; Load from stock; no launch without power; after the flight the Moon exists with the kit; a second launch adds another kit; solar is still Moon-only.
+- The goals test now counts all tiers, and the dead-end audit covers Tier 11.
+- `npm test` all PASS.
+
+**Known issues:**
+- Tier 11 numbers are first guesses; pacing for tiers 6–11 is untested.
+- 3D items for Hull Plate and Heat Shield use the generic block shape.
+- A launch pauses while you are on another world, and continues when you come back.
+
+**Next up:** step 2c: helium crystals on the Moon, the Vacuum Furnace, and background production for worlds you aren't on.
+
+**Open questions:** Is the kit too small or too big? Should later launches carry something other than the starter kit?

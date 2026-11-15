@@ -3,7 +3,7 @@
 let S, ents=new Map(), grid=new Int32Array(MW*MH), nextId=1;
 let terr, nodeAt, nodes=[], terrC, bio;
 let nets=[];   // fluid networks (pipes have no direction)
-let topoVer=0, topoDirty=true, valves=[], beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[], meters=[];
+let topoVer=0, topoDirty=true, valves=[], beltOrder=[], routers=[], crosses=[], buildings=[], pnodes=[], grids=[], pwLinks=[], pads=[], lpads=[], meters=[];
 let tickNo=0;
 const stat={p:{},c:{},hist:[],acc:0};
 
@@ -171,6 +171,7 @@ function initEnt(e,d){
   case 'storage':e.store=e.store||{};e.rr=0;break;
   case 'sign':e.tx=e.tx||'';e.tc=e.tc||0;break;
   case 'bpst':e.dsg=Array.isArray(e.dsg)?e.dsg:[];e.dn=e.dn||'';e.want=true;break;   /* Blueprint Station: design pieces + name; always draws its small power */
+  case 'lpad':e.store=e.store||{};e.lt=e.lt||0;e.nl=e.nl||0;break;   /* Launch Pad: loaded rocket parts + kit, launch timer (s, 0 = on the ground), launches so far */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
  }
@@ -295,6 +296,7 @@ function accept(e,item,dir,carry){
    if(!has(d.fuels,item))return false;const cap=item==='fuel_rod'?5:50;if((e.fuel[item]||0)>=cap)return false;e.fuel[item]=(e.fuel[item]||0)+1;return true;}
   case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
+  case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed()[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;zStat('k',e,item,1);return true;
   case 'incin':e.burnT=S.t;stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
  }
@@ -348,13 +350,13 @@ function feedsInto(sd,e,o,depth){const into=(o+2)&3;
  if(sd.k==='cross'){if((depth||0)>32)return false;const far=entAt(sd.x+DX[o],sd.y+DY[o]);return !!far&&feedsInto(far,e,o,(depth||0)+1);}   /* follows the chain to a belt, splitter or merger (Session 39y) */
  return false;}
 function rebuildTopo(){
- syncPipes();topoDirty=false;topoVer++;valves=[];beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];meters=[];
+ syncPipes();topoDirty=false;topoVer++;valves=[];beltOrder=[];routers=[];crosses=[];buildings=[];pnodes=[];grids=[];pwLinks=[];pads=[];lpads=[];meters=[];
  const lines=[];
  for(const e of ents.values())if(e.fm&&isLine(e.k))meters.push(e);
  for(const e of ents.values()){
   if(isLine(e.k))lines.push(e);else if(e.k==='router'){const sb=B[e.d].sub;if(sb==='valve')valves.push(e);else if(sb!=='junc')routers.push(e);}else if(e.k==='cross')crosses.push(e);
   else if(e.k!=='pole'){e.ports=perim(e);buildings.push(e);}
-  if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);
+  if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);if(e.k==='lpad')lpads.push(e);
   e.grid=null;if(B[e.d].pw)e.pw=0;
  }
  /* a belt bends towards a single side feeder unless a line/splitter/crossing feeds it from behind. A building behind no longer forces it straight
@@ -533,6 +535,19 @@ function updPad(e,dt){const d=B[e.d],D=e.dr,tg=padTarget(e),pw=e.pw>0;
      e.del=(e.del||0)+n;D.st=2;D.w=0;}}}}
   if(D.st===2){D.t=Math.max(0,D.t-DRONE.spd*dt/dist);if(D.t<=0){for(const k in D.c)e.store[k]=(e.store[k]||0)+D.c[k];D.c={};D.st=0;}}}
 }
+/* Launch Pad (Session 51): fill it with the rocket parts and the starter kit, then Launch (needs power). The rocket climbs for ROCKET.lt
+   seconds, then its kit lands in the Moon's stock; the first launch creates the Moon world. */
+function lpadMissing(e){const need=rocketNeed(),m={};for(const k in need){const n=need[k]-(e.store[k]||0);if(n>0)m[k]=n;}return m;}
+const lpadFrac=e=>{if(e.lt>0)return 1;const need=rocketNeed();let h=0,t=0;for(const k in need){t+=need[k];h+=Math.min(need[k],e.store[k]||0);}return t?h/t:0;};
+const lpadReady=e=>!e.lt&&!Object.keys(lpadMissing(e)).length;
+function lpadLaunch(e){if(!e||e.k!=='lpad')return 'Not a Launch Pad';if(e.lt>0)return 'Already launching';if(!lpadReady(e))return 'The rocket is not complete yet';if(!(e.pw>0))return 'No power: the pad needs 150 MW';
+ const need=rocketNeed();for(const k in need){e.store[k]-=need[k];if(e.store[k]<=0)delete e.store[k];stat.c[k]=(stat.c[k]||0)+need[k];}e.lt=0.001;return '';}
+function rocketArrive(){const to=ROCKET.to,W=WORLDS[to],kit=ROCKET.kit;S.worlds=S.worlds||{};let first=false;
+ if(S.w===to){for(const k in kit)give(k,kit[k]);return false;}
+ if(!S.worlds[to]){first=true;S.worlds[to]={WS:{seed:(Math.random()*1e9)|0,gen:W.gen,mw:W.mw,ext:W.ext,zones:[],zmap:'',cam:null,inv:{}},es:[['core',W.mw/2-2,W.mw/2-2,0]]};}
+ const inv=S.worlds[to].WS.inv=S.worlds[to].WS.inv||{};for(const k in kit)inv[k]=(inv[k]||0)+kit[k];return first;}
+function updLpad(e,dt){e.want=lpadReady(e)||e.lt>0;
+ if(e.lt>0){e.lt+=dt;if(e.lt>=ROCKET.lt){e.lt=0;e.nl=(e.nl||0)+1;const first=rocketArrive();if(typeof rocketLanded==='function')rocketLanded(first);}}}
 function updBuilding(e,dt){
  switch(e.k){
   case 'mach':{
@@ -559,6 +574,7 @@ function updBuilding(e,dt){
    break;}
   case 'tank':if(e.amt>0&&e.ft)for(let a=0;a<3&&e.amt>0;a++){if(pushOut(e,e.ft))e.amt--;else break;}break;
   case 'dpad':updPad(e,dt);break;
+  case 'lpad':updLpad(e,dt);break;
  }
 }
 function tick(dt){

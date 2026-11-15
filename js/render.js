@@ -200,6 +200,11 @@ function paintB(g,id,P,u){
   case 'fmeter':{g.fillStyle='#2a3037';g.beginPath();g.arc(P/2,P/2,W*0.46,0,7);g.fill();g.fillStyle='#e8eef2';g.beginPath();g.arc(P/2,P/2,W*0.38,0,7);g.fill();
    g.strokeStyle='#ffb547';g.lineWidth=W*0.08;g.beginPath();g.arc(P/2,P/2,W*0.28,Math.PI*0.8,Math.PI*2.2);g.stroke();g.strokeStyle='#2a3037';g.lineWidth=W*0.07;g.lineCap='round';g.beginPath();g.moveTo(P/2,P/2);g.lineTo(P/2+W*0.2,P/2-W*0.17);g.stroke();g.lineCap='butt';break;}
   case 'sign1':case 'sign2':case 'sign3':case 'sign4':case 'sign5':{box(i,i,W,W,u*0.1,col);g.fillStyle='#3a3226';const lh=W*0.12;for(let k=0;k<3;k++)g.fillRect(i+W*0.18,i+W*(0.28+k*0.2),W*(k===2?0.4:0.64),lh);break;}   // toolbar icon only; placed signs are drawn live
+  case 'lpad':{box(i,i,W,W,u*0.2,'#5d6066');g.strokeStyle='rgba(0,0,0,0.18)';g.lineWidth=Math.max(1,u*0.04);g.beginPath();for(let k=1;k<6;k++){g.moveTo(i+W*k/6,i);g.lineTo(i+W*k/6,i+W);g.moveTo(i,i+W*k/6);g.lineTo(i+W,i+W*k/6);}g.stroke();   /* Launch Pad (Session 51): concrete, hazard rim, flame pit, gantry */
+   g.save();g.beginPath();g.rect(i+W*0.04,i+W*0.04,W*0.92,W*0.92);g.rect(i+W*0.1,i+W*0.1,W*0.8,W*0.8);g.clip('evenodd');g.fillStyle='#1d1d1d';g.fillRect(i,i,W,W);g.fillStyle='#f2c230';for(let x=-W;x<W*2;x+=W*0.08){g.beginPath();g.moveTo(i+x,i+W);g.lineTo(i+x+W*0.04,i+W);g.lineTo(i+x+W*1.04,i);g.lineTo(i+x+W,i);g.fill();}g.restore();
+   circ(P*0.5,P*0.62,W*0.24,'#7a7d83');g.fillStyle='#16181b';g.beginPath();g.arc(P*0.5,P*0.62,W*0.18,0,7);g.fill();g.strokeStyle='#3a3d42';g.lineWidth=Math.max(1,u*0.08);for(let k=-2;k<=2;k++){g.beginPath();g.moveTo(P*0.5+k*W*0.06,P*0.62-W*0.16);g.lineTo(P*0.5+k*W*0.06,P*0.62+W*0.16);g.stroke();}
+   box(i+W*0.12,i+W*0.14,W*0.14,W*0.72,u*0.06,'#9a6a2a');g.strokeStyle='rgba(30,20,10,0.7)';g.lineWidth=Math.max(1,u*0.06);g.beginPath();for(let y=0.16;y<0.84;y+=0.08){g.moveTo(i+W*0.13,i+W*y);g.lineTo(i+W*0.25,i+W*(y+0.08));g.moveTo(i+W*0.25,i+W*y);g.lineTo(i+W*0.13,i+W*(y+0.08));}g.stroke();
+   box(i+W*0.25,i+W*0.36,W*0.17,W*0.05,u*0.03,'#b07a30');dots([[i+W*0.07,i+W*0.07],[i+W*0.93,i+W*0.07],[i+W*0.07,i+W*0.93],[i+W*0.93,i+W*0.93]],u*0.12,'#ff6a3a');break;}
   case 'dpad':{box(i,i,W,W,u*0.16,'#2c333b');g.strokeStyle=col;g.lineWidth=Math.max(1.5,u*0.12);g.beginPath();g.arc(P/2,P/2,W*0.34,0,7);g.stroke();
    g.strokeStyle=shade(col,-25);g.lineWidth=Math.max(1,u*0.06);g.beginPath();g.moveTo(P/2-W*0.18,P/2);g.lineTo(P/2+W*0.18,P/2);g.moveTo(P/2,P/2-W*0.18);g.lineTo(P/2,P/2+W*0.18);g.stroke();
    dots([[i+u*0.3,i+u*0.3],[P-i-u*0.3,i+u*0.3],[i+u*0.3,P-i-u*0.3],[P-i-u*0.3,P-i-u*0.3]],u*0.1,'#ffd36a');break;}
@@ -213,6 +218,7 @@ function paintB(g,id,P,u){
  }
 }
 function bStatus(e){
+ if(e.k==='lpad'){if(e.lt>0)return['#4fe08a','Launching'];if(!lpadReady(e))return['#ffd34a','Loading rocket'];if(!(e.pw>0))return['#ff5a46','No power'];return['#4fe08a','Ready for launch'];}
  if(e.k==='dpad'){const tg=padTarget(e);if(!tg)return null;if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.dr.st)return['#4fe08a',e.dr.st===1?'Drone flying out':'Drone returning'];if(!padCount(e))return['#ffd34a','Waiting for items'];if(padCount(tg)>=B[tg.d].cap)return['#ffa53a','Destination full'];return['#4fe08a','Loading'];}
  if(e.off&&(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen'))return['#8a96a0','Switched off'];
  if(e.k==='mach'){if(!e.r)return['#8a96a0','No recipe'];if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.run)return['#4fe08a','Working'];
@@ -222,8 +228,8 @@ function bStatus(e){
  return null;
 }
 /* live overlays (animation on top of sprites) */
-function isActive(e){if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;if(e.k==='incin')return e.burnT!=null&&S.t-e.burnT<1.5;return e.k==='core';}   /* incinerator: lit only for 1.5 s after it burns something (Session 39u) */
-const SMOKE={smelter:[0.74,0.28,0],foundry:[0.8,0.2,0],burner:[0.72,0.28,0],incin:[0.5,0.5,0],steam:[0.8,0.22,1],reactor:[0.4,0.46,2],refinery:[0.7,0.45,1]};
+function isActive(e){if(e.k==='lpad')return e.lt>0;if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;if(e.k==='incin')return e.burnT!=null&&S.t-e.burnT<1.5;return e.k==='core';}   /* incinerator: lit only for 1.5 s after it burns something (Session 39u) */
+const SMOKE={lpad:[0.5,0.7,2],smelter:[0.74,0.28,0],foundry:[0.8,0.2,0],burner:[0.72,0.28,0],incin:[0.5,0.5,0],steam:[0.8,0.22,1],reactor:[0.4,0.46,2],refinery:[0.7,0.45,1]};
 /* glow: a cached radial sprite per colour drawn with globalAlpha (Session 40: a new gradient per glow per frame was a main 2D cost); skipped when invisible */
 const GLOWC=new Map();
 function glow(x,y,r,c,a){if(!(a>0.01)||r<0.5)return;let sp=GLOWC.get(c);if(!sp){sp=document.createElement('canvas');sp.width=sp.height=64;const g=sp.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,rgba(c,1));gr.addColorStop(1,rgba(c,0));g.fillStyle=gr;g.fillRect(0,0,64,64);GLOWC.set(c,sp);}
@@ -306,6 +312,28 @@ function drawLOD(vis,sx,sy,s,g){g=g||ctx;
 /* Drone position for a pad: lerp between pad centres along its route, with a take-off / landing height */
 function dronePos(e){const D=e.dr,c=e.w/2;if(!D||!D.st)return{x:e.x+c,y:e.y+c,h:D&&D.w>0?0.15:0};const k=D.t;
  return{x:e.x+c+(D.tx-e.x)*k,y:e.y+c+(D.ty-e.y)*k,h:Math.min(1,Math.min(k,1-k)*9+(D.w>0?0.1:0.25))};}
+/* Colony rocket on a Launch Pad (Session 51): side view standing on the pad, built up from the bottom as parts arrive (ghost outline above),
+   then climbing with a flame and fading out high up. */
+function rocketLift(e){return e.lt>0?Math.pow(Math.max(0,e.lt-1.5),2)*0.55:0;}
+function drawRocketShape(X,Yb,w,H){const c=ctx;
+ c.fillStyle='#c9302c';c.beginPath();c.moveTo(X-w*0.5,Yb);c.lineTo(X-w*1.0,Yb+w*0.05);c.lineTo(X-w*0.5,Yb-H*0.25);c.fill();c.beginPath();c.moveTo(X+w*0.5,Yb);c.lineTo(X+w*1.0,Yb+w*0.05);c.lineTo(X+w*0.5,Yb-H*0.25);c.fill();
+ const gr=c.createLinearGradient(X-w/2,0,X+w/2,0);gr.addColorStop(0,'#9aa3ab');gr.addColorStop(0.35,'#ffffff');gr.addColorStop(1,'#8b939b');c.fillStyle=gr;c.fillRect(X-w/2,Yb-H*0.78,w,H*0.78);
+ c.beginPath();c.moveTo(X-w/2,Yb-H*0.78);c.quadraticCurveTo(X-w*0.45,Yb-H*0.95,X,Yb-H);c.quadraticCurveTo(X+w*0.45,Yb-H*0.95,X+w/2,Yb-H*0.78);c.fill();
+ c.fillStyle='#e8a23a';c.fillRect(X-w/2,Yb-H*0.42,w,H*0.04);c.fillStyle='#3a3f46';c.fillRect(X-w/2,Yb-H*0.06,w,H*0.06);
+ c.fillStyle='#2b4f7a';c.beginPath();c.arc(X,Yb-H*0.62,w*0.17,0,7);c.fill();c.strokeStyle='#5d6066';c.lineWidth=Math.max(1,w*0.05);c.stroke();}
+function drawRockets(sx,sy,s){
+ for(const e of lpads){const f=lpadFrac(e);if(f<=0||!ents.has(e.id))continue;const lift=rocketLift(e),X=sx(e.x+3),Yb=sy(e.y+4.25)-lift*s,w=s*1.0,H=s*3.9;
+  const a=Math.max(0,Math.min(1,1-(lift-25)/25));if(a<=0)continue;if(X<-4*s||X>cv.width+4*s||Yb<-H||Yb-H>cv.height+s)continue;
+  ctx.globalAlpha=0.3*Math.max(0,1-lift/8);ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(sx(e.x+3)+lift*s*0.15,sy(e.y+4.25),w*0.9,w*0.35,0,0,7);ctx.fill();ctx.globalAlpha=1;
+  if(e.lt>0){const fl=s*(0.8+Math.min(2.4,e.lt*0.6))*(0.9+0.1*Math.sin(animT*40));glow(X,Yb+fl*0.3,fl*1.2,'#ff9a30',0.85*a);
+   const fg=ctx.createLinearGradient(0,Yb,0,Yb+fl);fg.addColorStop(0,'rgba(255,250,210,'+a+')');fg.addColorStop(0.5,'rgba(255,160,40,'+0.8*a+')');fg.addColorStop(1,'rgba(255,80,20,0)');ctx.fillStyle=fg;
+   ctx.beginPath();ctx.moveTo(X-w*0.4,Yb);ctx.quadraticCurveTo(X,Yb+fl*1.4,X+w*0.4,Yb);ctx.fill();}
+  ctx.globalAlpha=a;
+  if(f<1){ctx.save();ctx.globalAlpha=0.28;drawRocketShape(X,Yb,w,H);ctx.restore();ctx.save();ctx.beginPath();ctx.rect(X-w*1.2,Yb-H*f,w*2.4,H*f+w*0.2);ctx.clip();drawRocketShape(X,Yb,w,H);ctx.restore();
+   ctx.strokeStyle='rgba(255,210,120,0.8)';ctx.lineWidth=Math.max(1,s*0.05);ctx.setLineDash([s*0.15,s*0.12]);ctx.beginPath();ctx.moveTo(X-w*0.7,Yb-H*f);ctx.lineTo(X+w*0.7,Yb-H*f);ctx.stroke();ctx.setLineDash([]);}
+  else drawRocketShape(X,Yb,w,H);
+  ctx.globalAlpha=1;}
+}
 function drawDrones(sx,sy,s,lod){
  const sel=UI.sel&&ents.get(UI.sel),src=UI.linkFrom&&ents.get(UI.linkFrom);
  for(const e of [sel,src])if(e&&e.k==='dpad'){const tg=padTarget(e),A=[sx(e.x+1.5),sy(e.y+1.5)];let Bp=null;
@@ -384,7 +412,7 @@ setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium quartz');s
 setS('ingot','iron_ingot copper_ingot steel_ingot alu_ingot alu_casing');setS('plate','iron_plate copper_sheet alloy_panel braced_plate plastic heat_sink');
 setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete rubber coolant_block');setS('girder','cased_girder');
 setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell battery');setS('rods','fuel_rod');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
-setS('gear','rotor motor stator turbine_core');setS('chip','circuit_board control_chip');setS('module','compute_module');setS('bus','data_bus');setS('orb','quantum_core');
+setS('gear','rotor motor stator turbine_core');setS('chip','circuit_board control_chip');setS('module','compute_module');setS('bus','data_bus');setS('orb','quantum_core');setS('hull','hull_plate');setS('shield','heat_shield');setS('guide','guidance_core');setS('canister','rocket_fuel');
 const ISPR=new Map();
 function itemSprite(id,px){const b=Math.max(6,Math.min(96,Math.round(bkt(px)))),key=id+'|'+b;let c=ISPR.get(key);if(c)return c;
  c=document.createElement('canvas');c.width=c.height=Math.ceil(b*1.3);const g=c.getContext('2d');g.translate(c.width/2,c.height/2);paintItem(g,id,b);c.b=b;ISPR.set(key,c);if(ISPR.size>800)ISPR.delete(ISPR.keys().next().value);return c;}
@@ -451,6 +479,17 @@ function paintItem(g,id,R){
    g.fillStyle='#e0c060';for(let k=0;k<7;k++)g.fillRect(-R*0.39+k*R*0.12,R*0.13,R*0.07,R*0.1);
    g.restore();break;}
   case 'orb':{const gr=g.createRadialGradient(0,0,0,0,0,R*0.48);gr.addColorStop(0,'#fff');gr.addColorStop(0.35,col);gr.addColorStop(1,rgba(col,0));g.fillStyle=gr;g.beginPath();g.arc(0,0,R*0.48,0,7);g.fill();g.fillStyle=rad(R*0.24);g.beginPath();g.arc(0,0,R*0.24,0,7);g.fill();fin();break;}
+  /* Tier 11 rocket parts (Session 51) */
+  case 'hull':g.beginPath();g.moveTo(-R*0.42,-R*0.22);g.quadraticCurveTo(0,-R*0.46,R*0.42,-R*0.22);g.lineTo(R*0.42,R*0.3);g.quadraticCurveTo(0,R*0.06,-R*0.42,R*0.3);g.closePath();g.fillStyle=lin(R*0.4);g.fill();fin();
+   g.fillStyle='rgba(60,70,80,0.75)';for(const x of [-0.3,-0.1,0.1,0.3]){const y=-0.3+Math.abs(x)*0.25;g.beginPath();g.arc(R*x,R*(y+0.06),R*0.035,0,7);g.arc(R*x,R*(y+0.44),R*0.035,0,7);g.fill();}break;
+  case 'shield':{g.beginPath();g.moveTo(-R*0.42,R*0.18);g.quadraticCurveTo(-R*0.4,-R*0.4,0,-R*0.4);g.quadraticCurveTo(R*0.4,-R*0.4,R*0.42,R*0.18);g.closePath();g.fillStyle=lin(R*0.4);g.fill();fin();
+   g.save();g.clip();g.strokeStyle='rgba(255,140,60,0.55)';g.lineWidth=Math.max(1,R*0.04);for(let y=-0.36;y<0.2;y+=0.14){g.beginPath();g.moveTo(-R*0.45,R*y);g.lineTo(R*0.45,R*y);g.stroke();}g.restore();
+   g.fillStyle='#8a939c';rrg(g,-R*0.46,R*0.16,R*0.92,R*0.12,R*0.04);g.fill();fin();break;}
+  case 'guide':{rrg(g,-R*0.36,-R*0.36,R*0.72,R*0.72,R*0.12);g.fillStyle='#2a3037';g.fill();fin();g.fillStyle=rad(R*0.26);g.beginPath();g.arc(0,0,R*0.26,0,7);g.fill();
+   g.fillStyle='#1d2228';g.beginPath();g.moveTo(0,-R*0.22);g.lineTo(R*0.06,0);g.lineTo(0,R*0.22);g.lineTo(-R*0.06,0);g.closePath();g.fill();g.fillStyle='#ff5a46';g.beginPath();g.moveTo(0,-R*0.22);g.lineTo(R*0.06,0);g.lineTo(-R*0.06,0);g.closePath();g.fill();
+   g.fillStyle='#c9b46a';for(const [a,b] of [[-0.36,-0.2],[-0.36,0.1],[0.3,-0.2],[0.3,0.1]])g.fillRect(R*a,R*b,R*0.06,R*0.1);break;}
+  case 'canister':{rrg(g,-R*0.26,-R*0.36,R*0.52,R*0.8,R*0.12);g.fillStyle=lin(R*0.4);g.fill();fin();g.fillStyle='#5a636c';rrg(g,-R*0.1,-R*0.46,R*0.2,R*0.12,R*0.03);g.fill();
+   g.fillStyle='#1d1d1d';g.fillRect(-R*0.26,-R*0.02,R*0.52,R*0.16);g.fillStyle='#ffe07a';g.beginPath();g.moveTo(-R*0.06,R*0.12);g.quadraticCurveTo(0,-R*0.04,R*0.06,R*0.12);g.fill();g.fillStyle='rgba(255,255,255,0.35)';g.fillRect(-R*0.18,-R*0.3,R*0.05,R*0.24);break;}
   case 'drop':g.beginPath();g.moveTo(0,-R*0.44);g.bezierCurveTo(R*0.12,-R*0.2,R*0.34,0,R*0.34,R*0.12);g.arc(0,R*0.12,R*0.34,0,Math.PI);g.bezierCurveTo(-R*0.34,0,-R*0.12,-R*0.2,0,-R*0.44);g.fillStyle=rad(R*0.4);g.fill();fin();g.fillStyle='rgba(255,255,255,0.45)';g.beginPath();g.ellipse(-R*0.12,R*0.05,R*0.05,R*0.1,0.4,0,7);g.fill();break;
   default:rrg(g,-R*0.36,-R*0.36,R*0.72,R*0.72,R*0.16);g.fillStyle=lin(R*0.36);g.fill();fin();g.fillStyle='rgba(255,255,255,0.35)';g.beginPath();g.arc(0,0,R*0.12,0,7);g.fill();
  }
@@ -570,7 +609,7 @@ function render(){
  for(const e of vis)if(!isLine(e.k)&&e.k!=='router'&&e.k!=='cross'&&e.k!=='pole')drawBuilding(e,sx(e.x),sy(e.y),s);
  }
  // drones (above buildings) and the selected pad's route
- drawDrones(sx,sy,s,lod);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
+ drawDrones(sx,sy,s,lod);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
  // particles
  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.t+=fdt;if(p.t>p.m){parts.splice(k,1);continue;}p.x+=p.vx*fdt;p.y+=p.vy*fdt;}
  for(const p of parts){if(p.x<x0-2||p.x>x1+2||p.y<y0-2||p.y>y1+2)continue;const f=p.t/p.m,al=(1-f)*(f<0.15?f/0.15:1);ctx.globalAlpha=al*(p.k?0.55:0.45);ctx.fillStyle=p.k?'#eef2f5':'#3a3a3c';ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),s*p.r*(1+f*1.8),0,7);ctx.fill();}
