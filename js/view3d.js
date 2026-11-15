@@ -585,7 +585,7 @@ function v3Input(){
   const p=v3Pick(e.clientX,e.clientY),base={sx:e.clientX,sy:e.clientY,lt:performance.now(),vx:0,vy:0,g0:p};
   if(e.button===2){g=Object.assign(base,{type:'orbit',yaw0:C3.yaw,pitch0:C3.pitch});return;}
   if(e.button===1){g=Object.assign(base,{type:'pan'});return;}
-  g=Object.assign(base,{type:'pending',t0:p});armLongPress(g,p);
+  g=Object.assign(base,{type:'pending',t0:p});armLongPress(g,p);bpArm(g,p,e.pointerType==='mouse');
  });
  el.addEventListener('pointermove',e=>{
   if(P.has(e.pointerId))P.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -596,6 +596,8 @@ function v3Input(){
    keep(g.gm,s.mx,g.my0);return;}
   const moved=Math.hypot(e.clientX-g.sx,e.clientY-g.sy);
   if(g.type==='move'){dragMove(g,hover);return;}
+  if(g.type==='bpmove'){bpDrag(g,hover);return;}
+  if(g.type==='pending'&&g.bpIn&&e.pointerType==='mouse'&&moved>5){clearTimeout(g.lp);bpGrab(g);return;}
   if(g.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(g.lp);const tool=UI.tool;g.type=tool&&B[tool]&&isLine(B[tool].k)?'line':tool==='del'?'del':tool==='clr'?'clr':(tool==='zone'||UI.zoneCut)?'zone':'pan';if(g.type==='clr')eraseN=0;}
   if(g.type==='orbit'){C3.yaw=g.yaw0+(e.clientX-g.sx)*0.008;C3.pitch=v3cl(g.pitch0+(e.clientY-g.sy)*0.006,C3L.pmin,C3L.pmax);return;}
   if(g.type==='pan'){const x0=C3.x,y0=C3.y;keep(g.g0,e.clientX,e.clientY);const now=performance.now(),dt=Math.max(1,now-g.lt)/1000;g.vx=g.vx*0.5+(C3.x-x0)/dt*0.5;g.vy=g.vy*0.5+(C3.y-y0)/dt*0.5;g.lt=now;}

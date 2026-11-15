@@ -126,7 +126,8 @@ D('sign4',{n:'Sign XL',k:'sign',w:4,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_pla
 D('sign5',{n:'Sign XXL',k:'sign',w:6,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:9},desc:'A 6×6 label for a whole district, readable even at the farthest zoom.'});
 const SIGNS=['sign1','sign2','sign3','sign4','sign5'];
 D('zone',{n:'Factory Zone',k:'zonetool',cat:'sign',col:'#ffb547',cost:{},ow:1,desc:'Drag over the map to mark one factory’s area. Touching an existing zone makes it bigger. Belts and pipes pass through the fence.'});
-D('bpstation',{n:'Blueprint Station',k:'bpst',w:12,pw:2,cat:'sign',col:'#1f5a96',cost:{iron_plate:20,wire:20},desc:'A 12×12 design table (needs power). Place buildings and belts inside it as free design pieces, set their recipes and rules, then save the design as a blueprint and build it anywhere.'});
+D('bpstation',{n:'Blueprint Station 12×12',k:'bpst',w:12,pw:2,cat:'bp',col:'#1f5a96',cost:{iron_plate:20,wire:20},desc:'A 12×12 design table (needs power). Place buildings and belts inside it as free design pieces, set their recipes and rules, then save the design as a blueprint and build it anywhere.'});
+D('bplist',{n:'Blueprint List',k:'bplisttool',cat:'bp',col:'#8fc6ff',cost:{},ow:1,desc:'Your saved blueprints: build one anywhere, or delete it. New ones are designed in a Blueprint Station.'});
 const SIGN_COL=['#e9e2cf','#ffd34a','#4fc3a1','#6fa8ff','#ff7a6a','#b48cff'];   // board colours to pick from
 D('drill1',{n:'Drill Mk1',k:'drill',w:2,rate:1,pw:5,cat:'ext',col:'#6b7f3a',cost:{iron_plate:10,concrete:10},desc:'Place over an ore node. 60/min on a normal node.'});
 D('drill2',{n:'Drill Mk2',k:'drill',w:2,rate:2,pw:12,cat:'ext',col:'#8a9a2a',cost:{braced_plate:8,truss_frame:2,concrete:20},desc:'120/min on a normal node.'});
@@ -149,7 +150,7 @@ D('pole1',{n:'Power Pole',k:'pole',link:10,sup:6,cat:'pow',col:'#c8a040',cost:{w
 D('pswitch',{n:'Power Switch',k:'pole',link:10,sup:0,cat:'pow',col:'#5be36a',cost:{iron_plate:4,wire:6},ow:1,desc:'Connects wires like a pole but powers nothing around it. Turn it off to cut everything behind it from the grid. Give it a name, e.g. the factory it feeds.'});
 D('pole2',{n:'Power Tower',k:'pole',link:24,sup:9,cat:'pow',col:'#e0c060',cost:{cable:10,braced_plate:2,concrete:5},ow:1,desc:'Links within 24 tiles, powers within 9.'});
 
-const CATS=[['log','Logistics'],['fluid','Fluids'],['ext','Extraction'],['prod','Production'],['pow','Power'],['trans','Transport'],['sign','Signs']];
+const CATS=[['log','Logistics'],['fluid','Fluids'],['ext','Extraction'],['prod','Production'],['pow','Power'],['trans','Transport'],['sign','Signs'],['bp','Blueprints']];
 const MS=[
 {n:'Field Assembly',req:{iron_plate:100,iron_rod:100,wire:100},b:['assembler','belt2','incin','fmeter','pswitch'],r:['r_braced_plate','r_rotor','r_copper_sheet']},
 {n:'Structural Works',req:{braced_plate:50,rotor:30,concrete:200,cable:100},b:['pipe1','junction','valve','wpump','tank','lsplit'],r:['r_truss_frame','r_stitched_plate','r_cast_bolts']},
@@ -163,7 +164,7 @@ const MS=[
 {n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:[],win:1},
 ];
 MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
-const START_B=[...SIGNS,'zone','bpstation','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
+const START_B=[...SIGNS,'zone','bpstation','bplist','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
 const START_R=['r_iron_ingot','r_copper_ingot','r_iron_plate','r_iron_rod','r_bolts','r_wire','r_cable','r_concrete'];
 const START_INV={coal:40,iron_plate:120,iron_rod:80,wire:120,cable:60,concrete:60,bolts:200};
 /* Biomes (new maps only; old 128×128 maps are all Greenvale). Index = value in bio[].

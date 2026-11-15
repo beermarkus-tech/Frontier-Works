@@ -4,9 +4,8 @@
    Tap a piece to set its recipe / splitter rules / valve limit / sign text, rotate or remove it; Dismantle inside the station removes pieces.
    The station's panel saves the design as a named blueprint, loads one back in to change it, and starts building one elsewhere.
    Blueprints are stored per device in localStorage (frontierworks_bp), so they work on every map (and later every world).
-   A blueprint = {name, w, h, items:[{d, x, y, dir, s}]} trimmed to its pieces. Building from one ('bppaste', UI.bp): first tap shows
-   the outline at UI.bpAt, a tap inside builds it, ⟳ (UI.rot) turns it, a mouse moves the outline; it pays like normal placing and
-   reports what's missing. */
+   A blueprint = {name, w, h, items:[{d, x, y, dir, s}]} trimmed to its pieces. Building from one ('bppaste', UI.bp): the outline (UI.bpAt) starts in the middle
+   of the view; tap / long-press-drag moves it, ⟳ (UI.rot) turns it, the bar's Build here builds it (pays, reports what's missing), Cancel stops. */
 const BP_KEY='frontierworks_bp',BP_SET=['r','clock','lr','vr','vm','tx','tc','off'];
 let BPS=[];try{const v=JSON.parse(localStorage.getItem(BP_KEY)||'[]');if(Array.isArray(v))BPS=v.filter(b=>b&&Array.isArray(b.items));}catch(e){}
 function bpSave(){try{localStorage.setItem(BP_KEY,JSON.stringify(BPS));}catch(e){toast('Blueprints could not be stored on this device');}}
@@ -63,10 +62,17 @@ function bpPaste(at){const bp=BPS[UI.bp];if(!bp)return;const L=bpLayout(bp,UI.ro
  if(ms.length)parts.push('not enough materials for '+ms.map(d=>`${B[d].n} ×${miss[d]}`).join(', '));if(blocked)parts.push(`${blocked} blocked`);if(locked)parts.push(`${locked} not unlocked yet`);
  toast(parts.join(' · '));return{ok,have,blocked,locked,miss};}
 function bpCost(bp){const c={};for(const o of bp.items){const d=B[o.d];if(!d)continue;for(const k in d.cost)c[k]=(c[k]||0)+d.cost[k];}return c;}
-/* map tap while building from a blueprint (returns true if handled) */
+/* placing (Session 48c): the outline starts in the middle of the view; a tap moves it there, a long press inside it (mouse: just drag)
+   slides it, and nothing is built until "Build here" in the bar (#bpbar: Rotate · Build here · Cancel) */
+function bpInside(t){const bp=BPS[UI.bp];if(!bp||!UI.bpAt||!t)return false;const L=bpLayout(bp,UI.rot,UI.bpAt);return t.x>=L.ox&&t.x<L.ox+L.W&&t.y>=L.oy&&t.y<L.oy+L.H;}
+function bpGrab(g){g.type='bpmove';g.off={x:g.t0.x-UI.bpAt.x,y:g.t0.y-UI.bpAt.y};}
+function bpArm(g,t,mouse){if(UI.tool!=='bppaste'||!bpInside(t))return;g.bpIn=true;if(mouse)return;
+ g.lp=setTimeout(()=>{if(g.type!=='pending')return;bpGrab(g);try{navigator.vibrate&&navigator.vibrate(18);}catch(_){}sfx('click');},380);}
+function bpDrag(g,t){if(t)UI.bpAt={x:t.x-g.off.x,y:t.y-g.off.y};}
 function bpTap(t){if(UI.tool!=='bppaste')return false;const bp=BPS[UI.bp];if(!bp){setTool(null);return true;}
- if(UI.bpAt){const L=bpLayout(bp,UI.rot,UI.bpAt);if(t.x>=L.ox&&t.x<L.ox+L.W&&t.y>=L.oy&&t.y<L.oy+L.H){bpPaste(UI.bpAt);return true;}}
- UI.bpAt={x:t.x,y:t.y};toast('Tap inside the outline to build it here · tap elsewhere to move it · ⟳ turns it');return true;}
+ if(!bpInside(t))UI.bpAt={x:t.x,y:t.y};return true;}
+function bpBar(){const el=document.getElementById('bpbar');if(el)el.classList.toggle('show',UI.tool==='bppaste'&&!!BPS[UI.bp]);}
+function bpViewMid(){const x=V3.on?C3.x:cam.x,y=V3.on?C3.y:cam.y;return{x:Math.max(0,Math.min(MW-1,Math.floor(x))),y:Math.max(0,Math.min(MH-1,Math.floor(y)))};}
 function drawBpGhost(sx,sy,s){if(UI.tool!=='bppaste'||!UI.bpAt)return;const bp=BPS[UI.bp];if(!bp)return;const L=bpLayout(bp,UI.rot,UI.bpAt);
  ctx.save();ctx.globalAlpha=0.55;const ln=[];
  for(const q of L.it){const d=B[q.d];if(!d)continue;if(isLine(d.k))ln.push({d:q.d,k:d.k,x:q.x,y:q.y,dir:q.dir,w:1,h:1,cin:null,spd:d.spd||1});else drawPiece(q,sx(q.x),sy(q.y),s);}
@@ -79,6 +85,11 @@ function bpGhost3D(gh){if(UI.tool!=='bppaste'||!UI.bpAt)return false;const bp=BP
 function stGhost3D(gh){for(const e of ents.values()){if(e.k!=='bpst'||!e.dsg||Math.abs(e.x+6-C3.x)>C3.dist*1.5+20||Math.abs(e.y+6-C3.y)>C3.dist*1.5+20)continue;
  for(const q of e.dsg){const d=B[q.d];if(!d||gh.length>900)continue;gh.push([e.x+q.x,e.y+q.y,pw1(q),isLine(d.k)?0.12:Math.min(2.2,(V3.M[q.d]&&V3.M[q.d].h)||1),false]);}}}
 /* ----- panels ----- */
+/* the Blueprint List (Blueprints tab): works without a station */
+function bplibHtml(){let h='<div class="muted">Your saved blueprints. Build one anywhere, or delete it. To design a new one or change one, use a Blueprint Station (also in the Blueprints tab).</div>';
+ if(!BPS.length)return h+'<div class="muted" style="margin-top:6px">None yet.</div>';
+ return h+BPS.map((bp,i)=>{const ok=afford(bpCost(bp));return`<div class="card"><div class="row"><b>${bpEsc(bp.name)}</b><span>${bp.w}×${bp.h} · ${bp.items.length} pieces</span></div>${costHtml(bpCost(bp))}
+  <div class="chips" style="margin-top:4px"><button class="btn chip on" data-act="bpUse" data-v="${i}">Build</button><button class="btn chip" data-act="bpDel" data-v="${i}">✕ Delete</button></div>${ok?'':'<div class="muted">Not enough materials to build it all right now.</div>'}</div>`;}).join('');}
 function stHtml(e){const on=e.pw>0,c=bpCost({items:e.dsg||[]});let h=`<h4>Design</h4>`;
  if(!on)h+=`<div class="plbad" style="margin:2px 0 6px">⚠ No power: connect the station to a pole to save or load blueprints.</div>`;
  h+=`<div class="muted">Pick a building or belt below and place it inside the blue area: it becomes a free design piece that doesn't run. Tap a piece to set its recipe or rules. Dismantle removes pieces.</div>
@@ -102,7 +113,10 @@ function dsgHtml(a){const st=ents.get(a.st),q=st&&st.dsg&&st.dsg[a.i];if(!q)retu
  return h;}
 const dsgCur=()=>{const a=UI.panel&&UI.panel.kind==='dsg'&&UI.panel.arg,st=a&&ents.get(a.st);return st&&st.dsg&&st.dsg[a.i]?{st,q:st.dsg[a.i]}:null;};
 Object.assign(ACT,{
- bpUse:v=>{if(!BPS[+v])return;UI.bp=+v;UI.rot=0;UI.rotA=0;setTool('bppaste');UI.bpAt=null;closePanel();toast('Tap where to build it');},
+ bpUse:v=>{if(!BPS[+v])return;UI.bp=+v;UI.rot=0;UI.rotA=0;setTool('bppaste');UI.bpAt=bpViewMid();closePanel();toast('Move it into place, then Build here');},
+ bpRot:()=>{ACT.rotate();},
+ bpGo:()=>{if(UI.tool==='bppaste'&&UI.bpAt)bpPaste(UI.bpAt);},
+ bpCancel:()=>{setTool(null);},
  bpDel:v=>{const i=+v;if(!BPS[i])return;dialog(`<h2>Delete “${bpEsc(BPS[i].name)}”?</h2><button class="btn warn" data-act="bpDelYes" data-v="${i}">Delete</button> <button class="btn" data-act="closeDlg">Keep</button>`);},
  bpDelYes:v=>{const i=+v;BPS.splice(i,1);bpSave();if(UI.tool==='bppaste')setTool(null);closeDlg();if(UI.panel)renderPanel(true);},
  stSave:()=>{const e=ents.get(UI.panel.arg);if(!e||e.k!=='bpst')return;if(!(e.pw>0)){toast('The station needs power');return;}let n=(e.dn||'').trim();

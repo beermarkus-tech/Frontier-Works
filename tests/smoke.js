@@ -339,6 +339,17 @@ const server=require('./serve.js');
   S.inv=JSON.parse(inv0);BPS.length=0;BPS.push(...keepBP);bpSave();setTool(null);
   return{placed,pieces:[a,b,c,d].every(v=>v===''),out:out!=='',over:over==='Blocked',free,noPw,fresh,ld,delPiece,keepSt,built:res.ok===4,turned,poor:poor.ok===0&&Object.keys(poor.miss).length>0};});
  check(`blueprint station: ${Object.entries(bpt).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(bpt).every(v=>v===true));
+ // Blueprints tab (Session 48c): station + list button; the list opens without a station; placing uses the bar (tap moves, Build here builds, Cancel stops)
+ const bpb=await p.evaluate(()=>{const fw=window.__fw,out={};UI.cat='bp';buildCats();out.tab=CATS.some(c=>c[0]==='bp')&&!!document.querySelector('#tools [data-v="bpstation"]')&&!!document.querySelector('#tools [data-v="bplist"]');
+  const keep=BPS.slice();BPS.length=0;BPS.push({name:'Two belts',w:2,h:1,items:[{d:'belt1',x:0,y:0,dir:0,s:{}},{d:'belt1',x:1,y:0,dir:0,s:{}}]});
+  ACT.tool('bplist');out.list=UI.panel&&UI.panel.kind==='bplib'&&document.getElementById('pbody').textContent.includes('Two belts')&&UI.tool!=='bplist';
+  let X,Y;for(let r=8;r<200&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-1;j<3&&ok;j++)for(let i=-2;i<4&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  ACT.bpUse('0');out.bar=document.getElementById('bpbar').classList.contains('show')&&!!UI.bpAt;
+  tap({x:X,y:Y});out.moved=UI.bpAt.x===X&&UI.bpAt.y===Y&&!fw.entAt(X,Y);   /* a tap moves the outline, builds nothing */
+  ACT.bpRot();ACT.bpRot();ACT.bpRot();ACT.bpRot();S.inv.iron_plate=(S.inv.iron_plate||0)+10;ACT.bpGo();const L=bpLayout(BPS[0],UI.rot,UI.bpAt);out.built=L.it.every(q=>{const e=fw.entAt(q.x,q.y);return e&&e.d==='belt1';});
+  ACT.bpCancel();out.cancel=UI.tool!=='bppaste'&&!document.getElementById('bpbar').classList.contains('show');
+  for(const q of L.it){const e=fw.entAt(q.x,q.y);if(e)removeEnt(e,false,true);}ACT.closePanel();BPS.length=0;BPS.push(...keep);bpSave();UI.cat='log';buildCats();return out;});
+ check(`Blueprints tab and placing bar: ${Object.entries(bpb).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(bpb).every(v=>v===true));
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
@@ -814,8 +825,8 @@ const server=require('./serve.js');
  check(`signs: sizes ${sg.sizes}, placing opens the text box, "${sg.txt}" in colour ${sg.col} is drawn and survives save/load; size changes S↔L after placing (${sg.resize})`,sg.resize&&sg.sizes==='1,2,3,4,6'&&sg.opened&&sg.txt==='Iron Works'&&sg.col===3&&sg.drawn&&sg.kept);
  // older saves get buildings added later (signs, Drone Pad) on load; signs have their own tab
  const ul=await p.evaluate(()=>{const keep=serialize();const o=JSON.parse(keep);o.S.ub=o.S.ub.filter(x=>!x.startsWith('sign')&&x!=='dpad');o.S.ms=5;load(JSON.stringify(o));
-  const r={signs:SIGNS.every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===SIGNS.length+2&&B.zone.cat==='sign'&&B.bpstation.cat==='sign'&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
-  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===SIGNS.length+2;
+  const r={signs:SIGNS.every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===SIGNS.length+1&&B.zone.cat==='sign'&&B.bpstation.cat==='bp'&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
+  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===SIGNS.length+1;
   r.trans=B.dpad.cat==='trans'&&CATS.some(c=>c[0]==='trans');UI.cat='trans';buildCats();r.transShown=!!document.querySelector('#tools [data-v="dpad"]');UI.cat='log';buildCats();load(keep);return r;});
  check(`older saves get signs and the Drone Pad on load; Signs and Transport (Drone Pad) have their own tabs (${Object.values(ul).join(',')})`,Object.values(ul).every(Boolean));
  // planner maths (pure functions, no factory state)

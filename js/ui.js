@@ -10,7 +10,7 @@ const nm=it=>dot(it)+IT[it].n;
 const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e4?(n/1e3).toFixed(1)+'k':(Math.round(n*10)/10).toString();
 function costHtml(c,mult){mult=mult||1;const ks=Object.keys(c);if(!ks.length)return'<span class="cc">free</span>';return ks.map(k=>{const ok=(S.inv[k]||0)>=c[k]*mult;return`<span class="cc ${ok?'':'bad'}" title="${IT[k].n} — have ${fmt(S.inv[k]||0)}">${dot(k)}${c[k]*mult}</span>`;}).join('');}
 function footprint(id,tx,ty){const w=B[id].w;return{x:tx-Math.floor((w-1)/2),y:ty-Math.floor((w-1)/2)};}
-const CAT_ICON={fluid:'<path d="M12 3c3.5 4.5 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.5 12 3z"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5"/>',trans:'<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7.5 6h9M12 6v4"/><rect x="8" y="10" width="8" height="5" rx="1.5"/><path d="M10 15l-1 5M14 15l1 5"/>',sign:'<rect x="3" y="4" width="18" height="11" rx="2"/><path d="M8 15v6M16 15v6M7 9h10"/>',log:'<rect x="2" y="9" width="20" height="6" rx="3"/><path d="M7 12h.01M12 12h.01M17 12h.01"/>',ext:'<path d="M14.5 3.5c3 0 6 3 6 6M3 21l9.5-9.5M8 5c3.5-2 8-1.5 11 1.5"/>',prod:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',pow:'<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>'};
+const CAT_ICON={bp:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>',fluid:'<path d="M12 3c3.5 4.5 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.5 12 3z"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5"/>',trans:'<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7.5 6h9M12 6v4"/><rect x="8" y="10" width="8" height="5" rx="1.5"/><path d="M10 15l-1 5M14 15l1 5"/>',sign:'<rect x="3" y="4" width="18" height="11" rx="2"/><path d="M8 15v6M16 15v6M7 9h10"/>',log:'<rect x="2" y="9" width="20" height="6" rx="3"/><path d="M7 12h.01M12 12h.01M17 12h.01"/>',ext:'<path d="M14.5 3.5c3 0 6 3 6 6M3 21l9.5-9.5M8 5c3.5-2 8-1.5 11 1.5"/>',prod:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',pow:'<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>'};
 const TICON={};
 function makeIcon(id){
  const S2=96,c=document.createElement('canvas');c.width=c.height=S2;const g=c.getContext('2d'),d=B[id];
@@ -39,12 +39,13 @@ function updInfo(){
  else if(t==='del')h='<b>Dismantle</b><span class="hint">Tap to remove (full refund) · drag across belts, pipes & poles to clear them</span>';
  else if(t&&B[t])h=`<b>${B[t].n}</b>${costHtml(B[t].cost)}<span class="hint">${B[t].desc||''}</span>`;
  else if(UI.zoneCut)h='<b>Cut area</b><span class="hint">Drag over the part of the zone to remove · Esc cancels</span>';
- else if(t==='bppaste')h=`<b>${BPS[UI.bp]?String(BPS[UI.bp].name).replace(/</g,'&lt;'):'Blueprint'}</b>${BPS[UI.bp]?costHtml(bpCost(BPS[UI.bp])):''}<span class="hint">Tap where to build it · tap inside the outline to build · ⟳ turns it · Esc stops</span>`;
+ else if(t==='bppaste')h=`<b>${BPS[UI.bp]?String(BPS[UI.bp].name).replace(/</g,'&lt;'):'Blueprint'}</b>${BPS[UI.bp]?costHtml(bpCost(BPS[UI.bp])):''}<span class="hint">Tap the map to move it there · long-press inside it and drag to slide it · then Build here</span>`;
  else if(t==='zone')h='<b>Factory Zone</b><span class="hint">Drag a rectangle to mark a factory · touching a zone makes it bigger · tap a zone to rename it</span>';
  else if(UI.wireFrom)h='<b>Connect wire</b><span class="hint">Tap a pole, tower, switch or generator in range · Esc cancels</span>';
  else if(UI.moveId)h='<b>Move</b><span class="hint">Pan to the new spot and tap where it should go · Esc cancels · tip: long-press a building to drag it</span>';
  else if(UI.linkFrom)h='<b>Drone route</b><span class="hint">Tap the destination Drone Pad · tap anywhere else to cancel</span>';
  else h='<span class="hint">Tap anything to inspect · drag to pan · pinch or scroll to zoom · pick a building below to place it</span>';
+ if(typeof bpBar==='function')bpBar();
  if($('info').__h!==h){$('info').__h=h;$('info').innerHTML=h;}
  $('fInspect').classList.toggle('on',!t);$('fDel').classList.toggle('on',t==='del');$('fClr').classList.toggle('on',t==='clr');$('fRot').firstElementChild.style.transform=`rotate(${UI.rotA}deg)`;
 }
@@ -62,9 +63,9 @@ function renderPanel(full){
   if(full){$('plLeftBtn').style.display='none';$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));setHTML($('pbuild'),effChip(e));return;}
  pi.style.display='none';
- const map={find:['Find resources',findHtml],inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml],zone:['Factory Zone',zoneHtml],dsg:['Design piece',dsgHtml]};
+ const map={find:['Find resources',findHtml],inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml],zone:['Factory Zone',zoneHtml],dsg:['Design piece',dsgHtml],bplib:['Blueprints',bplibHtml]};
  const [title,fn]=map[P.kind];
- if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'||P.kind==='zone'||P.kind==='dsg'))return;
+ if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'||P.kind==='zone'||P.kind==='dsg'||P.kind==='bplib'))return;
  $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display=P.kind==='menu'?'inline-flex':'none';$('plLeftBtn').style.display=P.kind==='plan'?'inline-flex':'none';
  if(P.kind==='node'){pi.src=itemIcon(NODE_T[P.arg.t][0]);pi.style.display='';}
  const st=body.scrollTop;setHTML(body,fn(P.arg));body.scrollTop=st;
@@ -288,7 +289,7 @@ function closeDlg(){$('dlg').classList.add('hidden');}
 /* ---------- actions ---------- */
 const ACT={
  cat:v=>{UI.cat=v;buildCats();},
- tool:v=>{setTool(UI.tool===v?null:v);autoClose();},
+ tool:v=>{if(v==='bplist'){setTool(null);openPanel('bplib');return;}setTool(UI.tool===v?null:v);autoClose();},   /* the Blueprint List is a button, not a tool */
  pinPanel:()=>{OPT.pin=!OPT.pin;saveOpt();$('ppinBtn').classList.toggle('on',OPT.pin);toast(OPT.pin?'📌 Panel pinned: it stays open while you tap the map or build':'Panel unpinned');},
  toolNone:()=>setTool(null),
  toolDel:()=>setTool(UI.tool==='del'?null:'del'),

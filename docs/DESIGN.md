@@ -329,12 +329,14 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   Stages (frame → panels → collectors), each needing parts from more worlds; each finished stage beams power back. It has a clear
   end: a closed, glowing sphere in a space and sky view.
 - **Blueprints** (Session 48; reworked 48b with Markus: designed in a station instead of copying from the factory, which was inaccurate):
-  a **Blueprint Station** (Signs tab, 12×12, needs power) is a design table. Building and belt tools used inside it place free
+  a **Blueprint Station** (12×12, needs power) is a design table. Both live in their own **Blueprints** tab (Session 48c): the station(s)
+  (bigger sizes later) and the **Blueprint List** button, which opens the saved blueprints without needing a station. Building and belt tools used inside it place free
   **design pieces** that don't run and cost nothing; tap a piece to set its recipe, logic-splitter rules (one rule per side), valve limit
   and mode, or sign text, rotate or remove it; Dismantle inside the station removes pieces (the station itself is removed from its panel).
   Its panel saves the design under a name (same name = replace), loads a saved blueprint back in to change it, and starts **building one
-  elsewhere**: tap where it goes (outline, blocked tiles red), tap inside to build, ⟳ turns it; it pays like normal placing and reports
-  what's missing. Blueprints are stored per device, so they work on every map and world. Bigger stations (e.g. 18×18, 24×24) can come
+  elsewhere** (also from the Blueprint List): the outline appears in the middle of the view (blocked tiles red); a tap moves it there,
+  long-press inside it and drag slides it, and a bar offers **⟳ Rotate · ✓ Build here · ✕ Cancel**; nothing is built before Build here.
+  It pays like normal placing and reports what's missing. Blueprints are stored per device, so they work on every map and world. Bigger stations (e.g. 18×18, 24×24) can come
   with later tiers.
 
 ## 11. Explicitly out of scope (for now)

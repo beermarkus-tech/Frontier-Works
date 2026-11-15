@@ -221,3 +221,8 @@ body.dockhid #dock{display:none}body.dockhid #dockShow{display:inline-flex}
 
 /* performance meter (Session 40) */
 #perf{position:fixed;left:50%;top:calc(62px + var(--sat));transform:translateX(-50%);padding:4px 10px;border-radius:10px;font:600 12px/1.3 ui-monospace,monospace;pointer-events:none;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis;z-index:12}
+
+/* blueprint placing bar (Session 48c) */
+#bpbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--dockH) + 18px + var(--sab));display:none;gap:6px;padding:6px;border-radius:14px;z-index:5}
+#bpbar.show{display:flex}
+#bpbar .btn{padding:8px 12px;font-weight:700}

@@ -68,16 +68,18 @@ cv.addEventListener('pointerdown',e=>{
  if(ptrs.size>2)return;
  const base={sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y,lt:performance.now(),lx:e.clientX,ly:e.clientY,vx:0,vy:0};
  if(e.button===1||e.button===2){G=Object.assign(base,{type:'pan'});return;}
- G=Object.assign(base,{type:'pending',t0:toTile(e.clientX,e.clientY)});armLongPress(G,G.t0);
+ G=Object.assign(base,{type:'pending',t0:toTile(e.clientX,e.clientY)});armLongPress(G,G.t0);bpArm(G,G.t0,e.pointerType==='mouse');
 });
 cv.addEventListener('pointermove',e=>{
  if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
- const t=toTile(e.clientX,e.clientY);if(e.pointerType==='mouse'||G)hover=t;if(UI.tool==='bppaste'&&e.pointerType==='mouse'&&!G)UI.bpAt={x:t.x,y:t.y};   /* the blueprint outline follows the mouse */
+ const t=toTile(e.clientX,e.clientY);if(e.pointerType==='mouse'||G)hover=t;
  if(UI.moveId&&!G){const en=ents.get(UI.moveId);if(en){const fp=footprint(en.d,t.x,t.y);movePrev={e:en,nx:fp.x,ny:fp.y,ok:!canMove(en,fp.x,fp.y)};}}
  if(!G)return;
  if(G.type==='pinch'&&ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);cam.z=Math.max(zMin(),Math.min(3.5,G.z0*d/Math.max(10,G.d0)));const s=TS*cam.z,mx=(a.x+b.x)/2,my=(a.y+b.y)/2;cam.x=G.m.fx-(mx-innerWidth/2)/s;cam.y=G.m.fy-(my-innerHeight/2)/s;clampCam();syncT();return;}
  const moved=Math.hypot(e.clientX-G.sx,e.clientY-G.sy);
  if(G.type==='move'){dragMove(G,t);return;}
+ if(G.type==='bpmove'){bpDrag(G,t);return;}
+ if(G.type==='pending'&&G.bpIn&&e.pointerType==='mouse'&&moved>5){clearTimeout(G.lp);bpGrab(G);return;}   /* mouse: drag the blueprint straight away */
  if(G.type==='pending'&&moved>(e.pointerType==='mouse'?5:9)){clearTimeout(G.lp);const tool=UI.tool;if(tool&&B[tool]&&isLine(B[tool].k))G.type='line';else if(tool==='del')G.type='del';else if(tool==='clr'){G.type='clr';eraseN=0;}else if(tool==='zone'||UI.zoneCut)G.type='zone';else G.type='pan';}
  if(G.type==='pan'){const s=TS*cam.z,now=performance.now(),dt=Math.max(1,now-G.lt)/1000;
   const nx=G.cx-(e.clientX-G.sx)/s,ny=G.cy-(e.clientY-G.sy)/s;G.vx=G.vx*0.5+((nx-cam.x)/dt)*0.5;G.vy=G.vy*0.5+((ny-cam.y)/dt)*0.5;G.lt=now;cam.x=nx;cam.y=ny;clampCam();syncT();}

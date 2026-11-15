@@ -2796,3 +2796,24 @@ I repeated the idea back first. He said "go" with my recommendations: free desig
 - Signs-tab test updated for the station
 
 `npm test` all PASS.
+
+## Session 48c — 2026-11-15 (Claude Code, cloud session) · Build 139
+
+**Asked:**
+- long-press and move a blueprint before committing it
+- a commit button instead of tapping inside the outline, plus Cancel and Rotate before committing
+- open the blueprint list without building a station first
+- a new Blueprints menu holding the station sizes (one for now) and the list
+
+**Built:**
+- **Blueprints tab** (`bp`, clipboard icon) with "Blueprint Station 12×12" (moved from Signs) and a **Blueprint List** button (`bplist`, a button rather than a tool). The list opens panel 'bplib': saved blueprints with cost, Build, Delete, and a hint that designing happens in a station.
+- **Placing:**
+  - the outline starts in the middle of the view
+  - a tap on the map moves it there and never builds
+  - long-press inside it (0.38 s, light vibration) and drag slides it; with a mouse, dragging inside it moves it straight away (2D and 3D)
+  - a bar above the menu, `#bpbar`: ⟳ Rotate · ✓ Build here · ✕ Cancel (Esc also cancels)
+  - building pays and reports as before
+  - the outline no longer follows the mouse, since it has to stay put while you go to the button
+- Docs updated.
+
+**Verified:** screenshot (tab, bar, outline). New smoke check: the tab shows both buttons; the list opens without a station; the bar shows; a tap moves without building; Rotate ×4, then Build here builds; Cancel ends and hides the bar. Signs-tab test is back to signs + zone. `npm test` all PASS.
