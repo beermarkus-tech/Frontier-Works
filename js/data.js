@@ -20,6 +20,7 @@ I('heavy_truss','Heavy Truss','#34466a');I('compute_module','Compute Module','#2
 I('battery','Battery','#a6e64e');I('control_chip','Control Chip','#3ea2f5');I('turbine_core','Turbine Core','#d9622e');I('uranium_cell','Uranium Cell','#4ec43a');
 I('fuel_rod','Fuel Rod','#2ef070',0,750000);I('waste','Nuclear Waste','#b4ff3a');I('quantum_core','Quantum Core','#ff5fc8');
 /* Tier 11 Spaceflight (Session 51): colony rocket parts */
+I('helium','Helium Crystals','#8fe6ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
 I('hull_plate','Hull Plate','#c9d3dd');I('heat_shield','Heat Shield','#5a4a44');I('guidance_core','Guidance Core','#f0c34a');I('rocket_fuel','Rocket Fuel','#ff7a2e');
 
 const RC={}, RL=[];
@@ -34,7 +35,7 @@ const STACK={};{const st=(n,ids)=>ids.split(' ').forEach(i=>STACK[i]=n);
  st(100,'water crude heavy_residue fuel alumina acid');
  st(50,'steel_beam steel_pipe quartz_crystal alu_casing braced_plate truss_frame rotor cased_girder stator circuit_board alloy_panel heat_sink battery uranium_cell waste');
  st(20,'motor resonator heavy_truss compute_module data_bus coolant_block control_chip turbine_core fuel_rod');
- st(10,'quantum_core guidance_core');st(50,'hull_plate rocket_fuel');st(20,'heat_shield');}
+ st(10,'quantum_core guidance_core');st(100,'helium');st(50,'vac_wafer');st(20,'lattice');st(50,'hull_plate rocket_fuel');st(20,'heat_shield');}
 const stackOf=id=>STACK[id]||(IT[id]&&IT[id].f?100:50);
 R('r_iron_ingot','Iron Ingot','smelter',2,'iron_ore:1','iron_ingot:1');
 R('r_copper_ingot','Copper Ingot','smelter',2,'copper_ore:1','copper_ingot:1');
@@ -96,6 +97,9 @@ R('r_control_chip','Control Chip','fabricator',32,'compute_module:2,data_bus:3,r
 R('r_turbine_core','Turbine Core','fabricator',32,'motor:4,coolant_block:3,data_bus:2,rubber:24','turbine_core:1');
 R('r_fuel_rod','Fuel Rod','fabricator',150,'uranium_cell:50,cased_girder:3,steel_beam:6','fuel_rod:1');
 R('r_guidance_core','Guidance Core','fabricator',60,'quantum_core:1,control_chip:2,resonator:6,data_bus:4','guidance_core:1');
+// Vacuum Furnace (Moon only, Session 52): things that can only be made in vacuum and low gravity
+R('r_vac_wafer','Vacuum Wafer','vfurnace',12,'silica:6,helium:2','vac_wafer:2');
+R('r_lattice','Lattice Crystal','vfurnace',16,'quartz_crystal:4,helium:4','lattice:1');
 R('r_quantum_core','Quantum Core','fabricator',60,'control_chip:2,compute_module:3,heat_sink:6,battery:10','quantum_core:1');
 // Blender
 R('r_uranium_cell','Uranium Cell','blender',12,'uranium:10,concrete:3,acid:8','uranium_cell:5,acid:2');
@@ -151,6 +155,7 @@ D('foundry',{n:'Foundry',k:'mach',mt:'foundry',w:3,pw:16,cat:'prod',col:'#8a3a2a
 D('refinery',{n:'Refinery',k:'mach',mt:'refinery',w:3,pw:30,cat:'prod',col:'#5a4a7a',cost:{motor:10,cased_girder:10,steel_pipe:30,copper_sheet:20},desc:'Processes fluids. Solid outputs go to belts, fluids to pipes.'});
 D('fabricator',{n:'Fabricator',k:'mach',mt:'fabricator',w:4,pw:55,cat:'prod',col:'#2a5a8a',cost:{motor:5,truss_frame:10,cable:50,cased_girder:10},desc:'Combines up to 4 inputs into complex parts.'});
 D('blender',{n:'Blender',k:'mach',mt:'blender',w:3,pw:75,cat:'prod',col:'#2a8a7a',cost:{motor:20,heavy_truss:5,compute_module:5,concrete:50},desc:'Mixes solids and fluids.'});
+D('vfurnace',{n:'Vacuum Furnace',k:'mach',mt:'vfurnace',w:3,pw:20,only:'moon',cat:'prod',col:'#5b6fd6',cost:{iron_plate:30,copper_sheet:20,quartz_crystal:10,cable:20},desc:'Melts and grows crystals in the Moon\u2019s vacuum, with Helium Crystals. Only works on the Moon. Built from things the Moon can make.'});
 D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('solar',{n:'Solar Panel',k:'gen',w:2,cap:10,fuels:[],solar:1,only:'moon',link:6,sup:4,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:4,circuit_board:2,wire:10},desc:'10 MW from sunlight, no fuel. Only works in the Moon\u2019s unfiltered sunlight.'});
 D('burner',{n:'Coal Burner',k:'gen',w:2,cap:30,fuels:['coal','petro_coke'],link:8,sup:5,cat:'pow',col:'#7a4a2a',cost:{iron_plate:15,iron_rod:15,wire:20},desc:'30 MW. Burns coal or petroleum coke. Also acts as a power pole.'});
@@ -173,7 +178,7 @@ const MS=[
 {n:'Lightweight Alloys',req:{compute_module:25,data_bus:50,resonator:100,steel_pipe:500},b:['blender','drill3'],r:['r_alumina','r_wet_alumina','r_alu_scrap','r_alu_ingot','r_pure_alu','r_alu_casing','r_alloy_panel','r_heat_sink','r_acid','r_battery','r_coolant_block','r_control_chip']},
 {n:'Nuclear Age',req:{alloy_panel:300,heat_sink:100,battery:200,control_chip:20},b:['reactor','belt5'],r:['r_uranium_cell','r_fuel_rod','r_turbine_core','r_quantum_core']},
 {n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:[],win:1},
-{n:'Spaceflight',req:{quantum_core:50,control_chip:100,heavy_truss:100,battery:500},b:['lpad','solar'],r:['r_hull_plate','r_heat_shield','r_guidance_core','r_rocket_fuel'],goal:'Build a Launch Pad and launch the colony rocket to the Moon.'},
+{n:'Spaceflight',req:{quantum_core:50,control_chip:100,heavy_truss:100,battery:500},b:['lpad','solar','vfurnace'],r:['r_hull_plate','r_heat_shield','r_guidance_core','r_rocket_fuel','r_vac_wafer','r_lattice'],goal:'Build a Launch Pad and launch the colony rocket to the Moon.'},
 ];
 MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
 const START_B=[...SIGNS,'zone','bpstation','bplist','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
@@ -230,10 +235,11 @@ const BIOMES=[
   pal:{ga:[118,118,124],gb:[142,142,148],gc:[166,166,172],sa:[184,182,176],ra:[196,196,200],rb:[172,172,178],sh:[60,60,68],dp:[30,30,36]},
   d2:{flower:0,stone:0.012,rock:'#c4c4ca',speck:['rgba(255,255,255,0.22)',0.35]},d3:{tree:0,bush:0,rock:0.7,rockc:'#b2b2b8'},res:{},pure:0.5,dens:1}
 ];
-const NODE_T={iron:['iron_ore','#b0705a'],copper:['copper_ore','#e0843f'],limestone:['limestone','#e6dcbc'],coal:['coal','#3a3a3a'],sulfur:['sulfur','#f0dc40'],quartz:['quartz','#f0c0ee'],bauxite:['bauxite','#c4542e'],uranium:['uranium','#80f050'],oil:['crude','#1a1420']};
+const NODE_T={iron:['iron_ore','#b0705a'],copper:['copper_ore','#e0843f'],limestone:['limestone','#e6dcbc'],coal:['coal','#3a3a3a'],sulfur:['sulfur','#f0dc40'],quartz:['quartz','#f0c0ee'],bauxite:['bauxite','#c4542e'],uranium:['uranium','#80f050'],oil:['crude','#1a1420'],helium:['helium','#8fe6ff']};
+const MOON_RES=['helium'];   /* never on Home maps (genBiome skips them) */
 const PUR=[[0.5,'Impure'],[1,'Normal'],[2,'Pure']];
 
 /* Worlds (Session 49, DESIGN.md section 12). The world you're on lives in the normal game state; the others are packed into S.worlds.
    gen 3 = Moon generator (genMoon). ext = coast ring (MAP_EXT on Home, none on the Moon). */
 const WORLDS={home:{n:'Home',ic:'🌍'},moon:{n:'Moon',ic:'🌑',gen:3,mw:256,ext:0}};
-const WKEYS=['seed','gen','mw','ext','zones','zmap','cam','inv'];   /* per-world parts of S; everything else (unlocks, tiers, settings) is shared */
+const WKEYS=['seed','gen','mw','ext','zones','zmap','cam','inv','bg'];   /* per-world parts of S; everything else (unlocks, tiers, settings) is shared */

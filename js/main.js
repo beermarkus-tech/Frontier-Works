@@ -26,7 +26,7 @@ function growIncin(){const inc=[...ents.values()].filter(e=>e.k==='incin');if(!i
   if(!at){ents.delete(e.id);refund(B.incin.cost);back++;continue;}
   e.x=at[0];e.y=at[1];e.w=e.h=2;for(let j=0;j<2;j++)for(let i=0;i<2;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
  if(back)setTimeout(()=>toast(`Incinerators are 2×2 now: ${back} had no room and went back to stock`),1500);}
-function load(str){const data=typeof str==='string'?parseSave(str):str;
+function load(str){const data=typeof str==='string'?parseSave(str):str;CORE={b:[],cur:{},acc:0};
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;
  /* Session 46: saves from before the coast ring are moved MAP_EXT tiles in (one time); the original save text is kept as a backup */
  S.w=S.w||'home';S.worlds=S.worlds||{};
@@ -47,12 +47,13 @@ function load(str){const data=typeof str==='string'?parseSave(str):str;
 /* Switching worlds (Session 49): pack the current world (its part of S + entities) into S.worlds, unpack (or create) the other and load it.
    Unlocks, tiers and settings are shared. A new world gets its map from WORLDS and a Base Core in the middle. */
 function packWorld(){const full=JSON.parse(serialize()),ws={};for(const k of WKEYS)ws[k]=full.S[k];return{WS:ws,es:full.es};}
-function switchWorld(id){if(!WORLDS[id]||id===S.w)return false;S.cam={x:cam.x,y:cam.y,z:cam.z};const pk=packWorld(),from=S.w||'home';
+let bgLast=null;
+function switchWorld(id){if(!WORLDS[id]||id===S.w)return false;S.cam={x:cam.x,y:cam.y,z:cam.z};bgLeave();const pk=packWorld(),from=S.w||'home';
  const sh={};for(const k in S)if(!WKEYS.includes(k))sh[k]=S[k];sh.worlds=Object.assign({},S.worlds||{});sh.worlds[from]=pk;sh.w=id;
  const tp=sh.worlds[id];delete sh.worlds[id];let es;
  if(tp){Object.assign(sh,JSON.parse(JSON.stringify(tp.WS)));es=tp.es;}
  else{const W=WORLDS[id];Object.assign(sh,{seed:(Math.random()*1e9)|0,gen:W.gen,mw:W.mw,ext:W.ext,zones:[],zmap:'',cam:null,inv:{}});es=[['core',W.mw/2-2,W.mw/2-2,0]];}
- load({v:2,S:sh,es});if(typeof v3Terrain==='function'&&V3.ready)V3.sig=null;if(typeof updTop==='function')updTop();return true;}
+ load({v:2,S:sh,es});bgLast=bgArrive();if(typeof v3Terrain==='function'&&V3.ready)V3.sig=null;if(typeof updTop==='function')updTop();return true;}
 async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}
 async function gunz(u8){return await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}
 const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);};

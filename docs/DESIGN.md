@@ -345,6 +345,14 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   The first landing creates the Moon with the kit in its own stock and offers to travel there; every later launch delivers another kit
   (the only way to send things until Orbital Freighters). The Moon has no coal or limestone: solar power, concrete from home.
   Exact numbers in `ROCKET` (`js/data.js`). Buildings locked to one world only show in the build menu on that world.
+- **Moon industry and background production** (Session 52, step 2c): the Moon has **Helium Crystals** nodes (only there, mostly on
+  crater floors, one next to the landing site), mined by normal drills. The **Vacuum Furnace** (3×3, 20 MW, Moon only, built from
+  things the Moon can make; unlocked with Tier 11) makes **Vacuum Wafers** (silica + helium) and **Lattice Crystals** (quartz crystals +
+  helium). They have no use yet: they are parts for the later Dyson Sphere stages. **Worlds you aren't on keep producing:** each world
+  measures what its factories deliver into its Base Core (last 5 minutes, needs at least 1 minute). When you leave, that rate is stored
+  with the world; when you come back, the time away (game time, so the speed buttons count) is paid out into its stock, and the arrival
+  message says what came in. The Worlds panel shows each world's background rates. Only Base Core deliveries count; buildings, belts
+  and crates on the inactive world stay paused as they were.
 - **Blueprints** (Session 48; reworked 48b with Markus: designed in a station instead of copying from the factory, which was inaccurate):
   a **Blueprint Station** (12×12, needs power) is a design table. Both live in their own **Blueprints** tab (Session 48c): the station(s)
   (bigger sizes later) and the **Blueprint List** button, which opens the saved blueprints without needing a station. Building and belt tools used inside it place free

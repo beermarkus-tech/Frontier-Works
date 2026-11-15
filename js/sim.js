@@ -32,7 +32,10 @@ function genMoon(seed){const r=rng((seed^0x6d6f6f6e)>>>0),n1=mkNoise(r,46),n2=mk
  add('iron',cx-8,cy-3,1);add('iron',cx-6,cy+6,1);add('quartz',cx+7,cy-6,1);add('bauxite',cx+5,cy+8,1);   /* close to the landing site */
  const odds={iron:[5,1.5],quartz:[1.2,3],bauxite:[1,3],copper:[1,0.6],uranium:[0.25,0.5]},keys=Object.keys(odds),target=Math.round(MW*MH/950);
  for(let a=0,k=0;a<target*30&&k<target;a++){const x=3+Math.floor(r()*(MW-6)),y=3+Math.floor(r()*(MH-6));if(Math.hypot(x-cx,y-cy)<15||near(x,y,4))continue;const hi=bio[y*MW+x]===EARTH_NB+1?1:0;
-  let s=0;for(const t of keys)s+=odds[t][hi];let q=r()*s,t=keys[0];for(const k2 of keys){q-=odds[k2][hi];if(q<=0){t=k2;break;}}const p=r();if(add(t,x,y,p<0.3?0:p<0.8?1:2))k++;}}
+  let s=0;for(const t of keys)s+=odds[t][hi];let q=r()*s,t=keys[0];for(const k2 of keys){q-=odds[k2][hi];if(q<=0){t=k2;break;}}const p=r();if(add(t,x,y,p<0.3?0:p<0.8?1:2))k++;}
+ /* Helium crystals (Session 52): Moon only, mostly on crater floors, placed in their own pass with their own random numbers */
+ {const r2=rng((seed^0x48656c69)>>>0),tgt=Math.round(MW*MH/7000);add('helium',cx-3,cy-10,1);
+  for(let a=0,k=0;a<tgt*60&&k<tgt;a++){const x=3+Math.floor(r2()*(MW-6)),y=3+Math.floor(r2()*(MH-6));if(Math.hypot(x-cx,y-cy)<18||near(x,y,4))continue;if(terr[y*MW+x]!==2&&r2()<0.75)continue;const p=r2();if(add('helium',x,y,p<0.3?0:p<0.8?1:2))k++;}}}
 function expandMap(E){const oW=MW,oH=MH,nW=oW+2*E,nH=oH+2*E,oT=terr,oB=bio,k=((S.seed>>>0)%1000)+7,land=(x,y)=>oT[y*oW+x]!==1?1:0;
  const lf=(get,n)=>{const a=new Float32Array(n);for(let i=0;i<n;i++){let s=0,c=0;for(let j=-5;j<=5;j++){const q=i+j;if(q<0||q>=n)continue;s+=get(q);c++;}a[i]=s/c;}return a;};
  const T=lf(x=>land(x,0),oW),Bo=lf(x=>land(x,oH-1),oW),L=lf(y=>land(0,y),oH),Ri=lf(y=>land(oW-1,y),oH);
@@ -92,7 +95,7 @@ function genBiome(seed){
  const add=(t,x,y,p)=>{const i=y*MW+x;if(nodeAt[i])return false;if(t!=='oil'&&terr[i]===1)return false;terr[i]=terr[i]===1?2:(terr[i]===3?3:terr[i]);const n={t,x,y,p};nodes.push(n);nodeAt[i]=n;return true;};
  add('iron',cx-9,cy-3,2);add('iron',cx-8,cy+6,1);add('copper',cx+8,cy-7,1);add('copper',cx+3,cy-11,0);add('limestone',cx+6,cy+8,1);add('limestone',cx-2,cy+11,1);add('coal',cx-4,cy-10,1);add('coal',cx-12,cy+1,0);
  const near=(x,y,rr)=>{for(let j=-rr;j<=rr;j++)for(let i=-rr;i<=rr;i++){const X=x+i,Y=y+j;if(X>=0&&Y>=0&&X<MW&&Y<MH&&nodeAt[Y*MW+X])return true;}return false;};
- const RES=Object.keys(NODE_T),gate={sulfur:24,quartz:24,bauxite:28,oil:24,uranium:45};
+ const RES=Object.keys(NODE_T).filter(k=>!MOON_RES.includes(k)),gate={sulfur:24,quartz:24,bauxite:28,oil:24,uranium:45};
  const tryAt=(x,y,t)=>{const i=y*MW+x,d=Math.hypot(x-cx,y-cy),Bm=BIOMES[bio[i]];if(d<12||(Math.abs(x-cx)<5&&Math.abs(y-cy)<5))return false;
   if(!t){const w=RES.map(k=>gate[k]&&d<gate[k]?0:(Bm.res[k]||0));t=RES[pick(w)];}
   if(t!=='oil'&&terr[i]===1)return false;if(t==='oil'&&terr[i]===1&&r()<0.5)return false;if(near(x,y,4))return false;
@@ -297,7 +300,7 @@ function accept(e,item,dir,carry){
   case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed()[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
-  case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;zStat('k',e,item,1);return true;
+  case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;CORE.cur[item]=(CORE.cur[item]||0)+1;zStat('k',e,item,1);return true;
   case 'incin':e.burnT=S.t;stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
  }
  return false;
@@ -577,6 +580,12 @@ function updBuilding(e,dt){
   case 'lpad':updLpad(e,dt);break;
  }
 }
+/* Background production (Session 52): what reaches this world's Base Core, in 10 s buckets over the last 5 minutes. When you leave a world
+   its measured rates are stored with it (S.bg = {r: items per second, t: game time}); when you come back the time away is paid out. */
+let CORE={b:[],cur:{},acc:0};
+function coreRates(){if(CORE.b.length<6)return null;const r={},T=CORE.b.length*10;for(const b of CORE.b)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]/=T;return r;}
+function bgLeave(){const r=coreRates();S.bg={r:r||(S.bg&&S.bg.r)||{},t:S.t,m:r?CORE.b.length*10:(S.bg&&S.bg.m)||0};}
+function bgArrive(){const B0=S.bg;if(!B0||B0.t==null)return null;const el=Math.max(0,S.t-B0.t),got={};for(const k in B0.r){const n=Math.floor(B0.r[k]*el);if(n>0){give(k,n);got[k]=n;}}B0.t=null;return{el,got};}
 function tick(dt){
  if(topoDirty)rebuildTopo();
  tickNo++;S.t+=dt;
@@ -588,6 +597,7 @@ function tick(dt){
  for(const e of crosses)updCross(e);    // splitter never waits a whole tick (Mk5 through splitters: 684 → 780/min)
  for(const e of buildings)updBuilding(e,dt);
  updNets(dt);
+ CORE.acc+=dt;if(CORE.acc>=10){CORE.acc-=10;CORE.b.push(CORE.cur);CORE.cur={};if(CORE.b.length>30)CORE.b.shift();}
  zTick(dt);stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}
 }
 function rates(){const p={},c={};for(const h of stat.hist){for(const k in h.p)p[k]=(p[k]||0)+h.p[k];for(const k in h.c)c[k]=(c[k]||0)+h.c[k];}const m=60/Math.max(1,stat.hist.length);for(const k in p)p[k]*=m;for(const k in c)c[k]*=m;return{p,c};}

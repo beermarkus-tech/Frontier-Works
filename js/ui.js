@@ -53,10 +53,15 @@ function updInfo(){
 /* worlds you have reached: travel between them (Session 49) */
 function worldsHtml(){const ids=[S.w||'home',...Object.keys(S.worlds||{})].filter((v,i,a)=>a.indexOf(v)===i&&WORLDS[v]);
  return'<div class="muted">Every world you have reached. Unlocks and tiers count everywhere; each world has its own buildings and its own stock.</div>'+ids.map(id=>{const W=WORLDS[id],here=id===(S.w||'home');
-  return`<div class="card"><div class="row"><b>${W.ic} ${W.n}</b>${here?'<span class="plok">you are here</span>':`<button class="btn chip on" data-act="travel" data-v="${id}">Travel</button>`}</div></div>`;}).join('');}
+  return`<div class="card"><div class="row"><b>${W.ic} ${W.n}</b>${here?'<span class="plok">you are here</span>':`<button class="btn chip on" data-act="travel" data-v="${id}">Travel</button>`}</div>${bgHtml(id,here)}</div>`;}).join('')
+  +'<div class="muted" style="margin-top:6px">Worlds you are not on keep producing: whatever their factories delivered into the Base Core per minute (measured over your last few minutes there) keeps arriving in that world\u2019s stock while you are away.</div>';}
+function bgHtml(id,here){const r=here?coreRates():S.worlds[id]&&S.worlds[id].WS.bg&&S.worlds[id].WS.bg.r,ks=r?Object.keys(r).filter(k=>r[k]*60>=0.05).sort((a,b)=>r[b]-r[a]):[];
+ if(here&&!r)return`<div class="muted">Measuring deliveries into the Base Core… (${Math.max(1,Math.ceil((60-CORE.b.length*10-CORE.acc)/10)*10)} s until the first estimate)</div>`;
+ if(!ks.length)return`<div class="muted">${here?'Nothing is delivered into the Base Core right now.':'Produces nothing in the background (nothing reached its Base Core).'}</div>`;
+ return`<div class="muted" style="margin:4px 0 2px">${here?'Delivered into the Base Core now:':'Keeps producing while you are away:'}</div>`+ks.slice(0,8).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(r[k]*60)}/min</span></div>`).join('')+(ks.length>8?`<div class="muted">and ${ks.length-8} more</div>`:'');}
 function travel(id){const W=WORLDS[id];if(!W||id===(S.w||'home'))return;closePanel();setTool(null);const tv=$('travel');$('travelTxt').innerHTML=`${W.ic} ${W.n.toUpperCase()}<small>TRAVELLING…</small>`;
  tv.classList.add('on');requestAnimationFrame(()=>tv.classList.add('vis'));sfx('click');
- setTimeout(async()=>{switchWorld(id);try{await save();}catch(e){}setTimeout(()=>{tv.classList.remove('vis');setTimeout(()=>tv.classList.remove('on'),400);toast(`Arrived: ${W.n}`);},500);},420);}
+ setTimeout(async()=>{switchWorld(id);try{await save();}catch(e){}setTimeout(()=>{tv.classList.remove('vis');setTimeout(()=>tv.classList.remove('on'),400);const bl=bgLast,ks=bl?Object.keys(bl.got):[];toast(ks.length?`Arrived: ${W.n} · while you were away (${fmtSec(bl.el)}): ${ks.sort((a,b)=>bl.got[b]-bl.got[a]).slice(0,3).map(k=>`+${fmt(bl.got[k])} ${IT[k].n}`).join(', ')}${ks.length>3?' …':''}`:`Arrived: ${W.n}`);},500);},420);}
 /* Copy / paste settings between buildings of the same type (Session 50): recipe, clock, on/off, logic-splitter rules, valve, sign text.
    UI.clip = {d, s}. "Paste onto others" = tool 'paste' (tap each building). A recipe change refunds the old buffers like the recipe buttons. */
 const CLIP_K=['r','clock','off','lr','vr','vm','tx','tc'];
@@ -280,7 +285,7 @@ function genInfo(g){const d=B[g];let h=`<div class="card"><b>${d.n}</b>${ub(g)?'
  h+=`<div class="muted">Fuel use follows the power actually drawn: at half load it burns half as much.${d.fuels.length>1?` It can burn ${d.fuels.map(f=>IT[f].n).join(' or ')} (uses the first it has, in this order).`:''}</div></div>`;
  return h;}
 function codexHtml(){
- const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender'];let h='';
+ const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace'];let h='';
  for(const mt of mts){const rs=RL.filter(r=>r.m===mt&&ur(r.id));if(!rs.length)continue;h+=`<h4>${B[mt].n} · ${B[mt].pw} MW</h4>`+rs.map(r=>`<div class="card"><b>${r.n}</b><br>${recLine(r)}</div>`).join('');}
  h+=`<h4>Generators (fuel at full load)</h4>`+['burner','steam','turbine','reactor'].map(genInfo).join('');
  h+=`<h4>Extraction</h4>`+['drill1','drill2','drill3','opump','wpump'].map(id=>{const d=B[id],r=d.rate*60;

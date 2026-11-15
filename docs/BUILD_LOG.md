@@ -2919,3 +2919,44 @@ I repeated the idea back first. He said "go" with my recommendations: free desig
 **Next up:** step 2c: helium crystals on the Moon, the Vacuum Furnace, and background production for worlds you aren't on.
 
 **Open questions:** Is the kit too small or too big? Should later launches carry something other than the starter kit?
+
+## Session 52 — 2026-11-15 (Claude Code, cloud session) · Build 145
+
+**Asked:** keep the rocket as built for now (how material is shipped between Moon and Home comes with the freighter routes). Continue
+with step 2c and prepare the Moon, even though Markus hasn't reached Tier 10/11 yet.
+
+**Built:**
+- **Helium Crystals.** A new Moon-only resource (`MOON_RES`) on nodes, mined by normal drills.
+  - About 9 nodes on a 256 map, mostly on crater floors, plus one next to the landing site.
+  - They are placed in their own pass with their own random numbers, so the Moon's other nodes stay where they were.
+  - `genBiome` skips Moon resources, so Home maps are unchanged (important: its top-up loop goes through every node type).
+- **Vacuum Furnace** (`vfurnace`, 3×3, 20 MW, Moon only, unlocked with Tier 11).
+  - It is built from iron plates, copper sheets, quartz crystals and cable, which the Moon can make itself.
+  - Recipes: Vacuum Wafer (6 silica + 2 helium → 2) and Lattice Crystal (4 quartz crystals + 4 helium → 1).
+  - Both are parts for the later Dyson Sphere stages and have no use yet.
+  - It has its own sprite (sealed dome with a blue glow), a 3D model and icons. It appears in the planner and the codex.
+- **Background production.**
+  - Each world counts what reaches its Base Core, over the last 5 minutes in 10 s steps.
+  - Leaving a world stores that rate with it. Coming back pays out the time away (game time) into its stock.
+  - The arrival message shows what came in, e.g. "while you were away (12 min): +3,400 Iron Plate…".
+  - The Worlds panel lists each world's background rates (and "measuring…" for the current one).
+  - Works both ways: Home keeps producing while you are on the Moon.
+
+**Decisions (recommended defaults):**
+- **Only Base Core deliveries count** as background production. It is simple, honest, and keeps the tablet fast.
+  - Inactive worlds are not simulated; their machines stay paused as they were.
+  - A world needs at least 1 minute of measuring before it gets a new rate; otherwise it keeps the old one.
+- **Vacuum Furnace at 20 MW instead of 40.** The starter kit's 6 solar panels (60 MW) can then run it plus some drills and smelters.
+
+**Verified:**
+- Moon screenshots in 2D and 3D: helium drill and furnace.
+- New smoke check: no helium and no furnace on Home; helium on the Moon including near the landing site; a furnace on solar power makes wafers; background pay-out matches the rate × time away; the Worlds panel text shows.
+- `npm test` all PASS. One random-map belt check failed once and passed on the rerun; it is unrelated.
+
+**Known issues:**
+- Solar Panels need alloy panels and circuit boards, which the Moon can't make (no water for alumina, no oil for plastic). So Moon power grows only with rocket kits until freighters exist.
+- Background production ignores power or input shortages that might have happened on the inactive world.
+
+**Next up:** step 3, Orbital Freighters (a pad on each world, routes, fuel there and back), which also settles how concrete gets to the Moon.
+
+**Open questions:** How often should a freighter fly, and how much should it carry? (Markus: "how often am I able to fly a rocket back and forth like a drone?" That gets answered with the freighter design.)

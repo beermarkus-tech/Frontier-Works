@@ -364,6 +364,18 @@ const server=require('./serve.js');
   fw.switchWorld('moon');const sm2=entAt(X+2,Y);out.kept=!!sm2&&sm2.r==='r_iron_ingot'&&entAt(X,Y)&&entAt(X,Y).d==='solar'&&S.inv.iron_plate===5;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=S.ub.filter(x=>x!=='solar');return out;});
  check(`worlds: ${Object.entries(wld).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(wld).every(v=>v===true));
+ // Moon step 2c (Session 52): helium only on the Moon, Vacuum Furnace only there and makes wafers from helium, background production
+ // pays out the time away at the measured Base Core rate
+ const mn=await p.evaluate(()=>{const fw=window.__fw,out={};out.homeNoHe=!nodes.some(n=>n.t==='helium')&&canPlace('vfurnace',MW/2+20,MH/2+20)==='Only on the Moon';
+  const inv0=S.inv.iron_plate||0;CORE.b=[...Array(6)].map(()=>({iron_plate:10}));CORE.acc=0;
+  fw.switchWorld('moon');const he=nodes.filter(n=>n.t==='helium');out.moonHe=he.length>=5&&he.some(n=>Math.hypot(n.x-MW/2,n.y-MH/2)<14);
+  let X,Y;for(let r=16;r<120&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=0;j<3&&ok;j++)for(let i=0;i<5&&ok;i++)if(canPlace('incin',x+i,y+j)!==''||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
+  out.vf=fw.placeEnt('solar',X,Y,0,true)===''&&fw.placeEnt('solar',X,Y+2,0,true)===''&&fw.placeEnt('solar',X+5,Y,0,true)===''&&fw.placeEnt('solar',X+5,Y+2,0,true)===''&&fw.placeEnt('vfurnace',X+2,Y,0,true)==='';const vf=entAt(X+2,Y);vf.r='r_vac_wafer';vf.inb={silica:12,helium:4};
+  for(let k=0;k<20*14;k++)tick(0.05);out.wafer=(vf.outb.vac_wafer||0)>=2;
+  S.t+=100;fw.switchWorld('home');out.bg=!!bgLast&&bgLast.el>=100&&S.inv.iron_plate-inv0===Math.floor(bgLast.el)&&S.bg.t===null;
+  ACT.openWorlds();out.panel=/keep producing/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
+  S.inv.iron_plate=inv0;delete S.worlds.moon;return out;});
+ check(`Moon prep: ${Object.entries(mn).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mn).every(v=>v===true));
  // colony rocket (Session 51): Tier 11 unlocks the pad, it takes only rocket items, Load from stock, launch needs power, after the flight the
  // Moon exists with the starter kit in its own stock, a second launch adds another kit
  const rkt=await p.evaluate(()=>{const fw=window.__fw,out={};const t11=MS.findIndex(m=>m.n==='Spaceflight');out.tier=t11===10&&MS[t11].b.includes('lpad')&&MS[t11].b.includes('solar');
