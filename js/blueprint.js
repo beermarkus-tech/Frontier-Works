@@ -42,9 +42,12 @@ function drawStation(e,X,Y,s){const P=e.w*s,on=e.pw>0;ctx.save();
 /* save the station's design as a blueprint (trimmed to its pieces); same name = replace */
 function stSave(st,name){if(!st.dsg||!st.dsg.length){toast('The design is empty');return null;}
  let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const q of st.dsg){const w=pw1(q);x0=Math.min(x0,q.x);y0=Math.min(y0,q.y);x1=Math.max(x1,q.x+w-1);y1=Math.max(y1,q.y+w-1);}
- const bp={name:String(name||'Blueprint').slice(0,30),w:x1-x0+1,h:y1-y0+1,items:st.dsg.map(q=>({d:q.d,x:q.x-x0,y:q.y-y0,dir:q.dir,s:JSON.parse(JSON.stringify(q.s||{}))})),t:Date.now()};
+ const bp={name:String(name||'Blueprint').slice(0,30),w:x1-x0+1,h:y1-y0+1,ox:x0,oy:y0,items:st.dsg.map(q=>({d:q.d,x:q.x-x0,y:q.y-y0,dir:q.dir,s:JSON.parse(JSON.stringify(q.s||{}))})),t:Date.now()};
  const i=BPS.findIndex(b=>b.name===bp.name);if(i>=0)BPS[i]=bp;else{BPS.unshift(bp);if(BPS.length>40)BPS.length=40;}bpSave();return bp;}
-function stLoad(st,bp){if(bp.w>st.w||bp.h>st.w)return 'Too big for this station';st.dsg=bp.items.map(o=>({d:o.d,x:o.x,y:o.y,dir:o.dir,s:JSON.parse(JSON.stringify(o.s||{}))}));st.dn=bp.name;return '';}
+function stLoad(st,bp){if(bp.w>st.w||bp.h>st.w)return 'Too big for this station';
+ /* back where it was saved (Session 48d); if that doesn't fit this station, as far in as possible */
+ const ox=Math.max(0,Math.min(st.w-bp.w,bp.ox|0)),oy=Math.max(0,Math.min(st.w-bp.h,bp.oy|0));
+ st.dsg=bp.items.map(o=>({d:o.d,x:o.x+ox,y:o.y+oy,dir:o.dir,s:JSON.parse(JSON.stringify(o.s||{}))}));st.dn=bp.name;return '';}
 /* ----- building from a blueprint ----- */
 function bpLayout(bp,rot,at){let W=bp.w,H=bp.h,it=bp.items.map(o=>Object.assign({},o,{w:(B[o.d]&&B[o.d].w)||1}));
  for(let k=0;k<(rot&3);k++){const h0=H;it=it.map(o=>Object.assign({},o,{x:h0-o.y-o.w,y:o.x,dir:(o.dir+1)&3}));[W,H]=[H,W];}

@@ -328,8 +328,8 @@ const server=require('./serve.js');
   st.dsg[0].s.r='r_iron_ingot';st.dsg[3].s.lr={l:['iron_ingot'],f:['rest'],r:[]};
   st.pw=0;openPanel('ent',st.id);const noPw=!!document.querySelector('#pbody [data-act="stSave"][disabled]');ACT.closePanel();st.pw=1;
   const bp=stSave(st,'Test line');const fresh=bp&&bp.w===5&&bp.h===2&&bp.items.length===4;
-  st.dsg=[];const ld=stLoad(st,BPS[0])===''&&st.dsg.length===4&&st.dn==='Test line'&&st.dsg[0].s.r==='r_iron_ingot';
-  setTool('del');tap({x:X+2,y:Y});const delPiece=st.dsg.length===3&&ents.has(st.id);tap({x:X+8,y:Y+8});const keepSt=ents.has(st.id);setTool(null);
+  st.dsg=[];const ld=stLoad(st,BPS[0])===''&&st.dsg.length===4&&st.dn==='Test line'&&st.dsg[0].s.r==='r_iron_ingot'&&st.dsg[0].x===1&&st.dsg[0].y===1;   /* back at the spot it was saved (Session 48d) */
+  setTool('del');tap({x:X+3,y:Y+1});const delPiece=st.dsg.length===3&&ents.has(st.id);tap({x:X+8,y:Y+8});const keepSt=ents.has(st.id);setTool(null);
   for(const k of ['smelter','belt1','lsplit'])for(const m in B[k].cost)S.inv[m]=(S.inv[m]||0)+50;
   UI.bp=0;UI.rot=1;const at={x:Q.x+3,y:Q.y+3},L=bpLayout(BPS[0],1,at),res=bpPaste(at);
   const sm=L.it.find(q=>q.d==='smelter'),ls=L.it.find(q=>q.d==='lsplit'),es=fw.entAt(sm.x,sm.y),el=fw.entAt(ls.x,ls.y);

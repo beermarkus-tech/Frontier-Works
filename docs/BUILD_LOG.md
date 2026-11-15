@@ -2817,3 +2817,11 @@ I repeated the idea back first. He said "go" with my recommendations: free desig
 - Docs updated.
 
 **Verified:** screenshot (tab, bar, outline). New smoke check: the tab shows both buttons; the list opens without a station; the bar shows; a tap moves without building; Rotate ×4, then Build here builds; Cancel ends and hides the bar. Signs-tab test is back to signs + zone. `npm test` all PASS.
+
+## Session 48d — 2026-11-15 (Claude Code, cloud session) · Build 140
+
+**Asked:** loading a blueprint into a station to change it should put it at the same position it was saved from.
+
+**Built:** `stSave` stores where the trimmed design sat in the station (`bp.ox`, `bp.oy`). `stLoad` puts the pieces back there; if that wouldn't fit the station, it moves them as far in as possible. Blueprints without a stored position load at the top-left as before.
+
+**Verified:** station smoke check extended (a design saved from (1,1) loads back at (1,1)). `npm test` all PASS.
