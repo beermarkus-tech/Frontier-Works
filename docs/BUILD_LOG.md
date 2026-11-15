@@ -2729,3 +2729,21 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 **Known issues:**
 - In 3D a faint dark line remains along the old outer edge (now out at sea). It isn't from slope, skirts or the coast strips; to look into later.
 - Devices still on an old build must update before loading a converted save from cloud sync; an old build would place everything 32 tiles off.
+
+## Session 47 — 2026-11-15 (Claude Code, cloud session) · Build 136
+
+**Discussed (no game code):** long-term motivation after tier 10. Markus has built all tiers, and nuclear power is never needed.
+
+**Agreed (DESIGN.md section 12, "Long-term plan: the solar project"):**
+- Goal: a **Dyson Sphere** around the sun, built in stages.
+- **Worlds:** Home, Moon, an ice planet and a fire planet, each with a material found nowhere else, production conditions (low gravity/vacuum, cold, heat/radiation), a special machine and its own power source.
+- **Orbital Freighters** between Launch Pads, routed like drone pads, needing fuel for the round trip.
+- **Starting a world:** a small, tight starter kit, with all unlocks kept.
+- Free travel back and forth between worlds; worlds you aren't on keep producing in the background.
+- **Blueprints** first, max 24×24.
+- **Rejected by Markus:** endless upgrade scaling, and supply contracts with rewards.
+- **Order:** Blueprints → Tier 11 "Spaceflight" + Moon → Orbital Freighters → ice and fire planets → Dyson Sphere.
+
+**Next up:** Blueprints (step 1), when Markus says go.
+
+Docs only. BUILD/VERSION bumped only to keep the build number equal to the commit count.

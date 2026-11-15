@@ -300,6 +300,37 @@ Hand mining gives +5 ore from a node.
   Exports start with `FW2:`. Saves are tied to the site's address.
 - New features must keep old saves loading.
 
+## 12. Long-term plan: the solar project (agreed with Markus, Session 47, not built yet)
+After tier 10 the game continues across several worlds towards one goal: a **Dyson Sphere** around the sun. It stays a factory game,
+with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blueprints → 2 Tier 11 "Spaceflight" + the Moon →
+3 Orbital Freighters → 4 Ice and fire planets → 5 the Dyson Sphere in stages.
+
+- **Why travel:** each world has a raw material found nowhere else and **production conditions** that make certain recipes possible
+  only there. The sphere's parts combine several worlds (e.g. a superconductor magnet: Moon crystals + ice-planet cryo-ice + home copper,
+  assembled in the cold).
+
+  | World | Look | Only here | Condition | Special machine | Local power |
+  |---|---|---|---|---|---|
+  | Home (today's map) | as now | the full existing industry | normal gravity | – | as now |
+  | Moon (first jump, small) | grey dust, craters, black sky, home planet on the horizon | helium crystals | low gravity + vacuum | Vacuum Furnace | solar, no coal |
+  | Ice planet | white-blue, frozen seas, geysers | cryo-ice, rare gases | extreme cold | Cryo Plant | geyser steam |
+  | Fire planet | black rock, lava rivers, red sky | volcanic glass, heavy metals | heat + radiation | Radiation Lab | (tbd) |
+
+  World names, materials and machines are working titles. Each world's surface must look clearly different.
+- **New worlds:** the first trip needs a **colony rocket** (the goal of tier 11). It carries a **small, tight starter kit** (contents to
+  be decided while building it). You keep everything unlocked (tiers, belt speeds, machines, recipes); only materials are local. Each
+  world adds local ores, a few local recipes and its special machine.
+- **Going back and forth:** every world you've reached can be switched to at any time; worlds you aren't looking at keep producing in
+  the background at their measured rates (keeps the tablet fast). Each world is its own map in the same save.
+- **Orbital Freighters** (like Drone Pads, between worlds): a Launch Pad on each world; a route per pad ("Moon → Home: helium
+  crystals"); real travel times (about a minute to the Moon, longer further out); large cargo; **need fuel from a fuel factory,
+  enough for the trip there and back**, plus power at launch. Visible take-off, landing and traffic in the sky (3D).
+- **Dyson Sphere:** a Sphere Launcher on home (very high power draw, where nuclear finally matters) fires sphere segments to the sun.
+  Stages (frame → panels → collectors), each needing parts from more worlds; each finished stage beams power back. It has a clear
+  end: a closed, glowing sphere in a space and sky view.
+- **Blueprints** (built first): copy a rectangle (buildings, belts, pipes, incl. recipes and splitter rules) and paste it on the same
+  world or another. **Max 24×24 tiles** to start. Pasting places only what you can afford; the rest shows as missing.
+
 ## 11. Explicitly out of scope (for now)
-Trains/rail and other vehicles beyond Cargo Drones, combat/creatures, multiplayer, accounts or cloud saves, sound.
+Trains/rail and other vehicles beyond Cargo Drones (and the planned Orbital Freighters, section 12), combat/creatures, multiplayer, accounts or cloud saves, sound.
 These can be reconsidered; record the decision here if that happens.
