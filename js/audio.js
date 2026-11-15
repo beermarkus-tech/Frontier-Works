@@ -95,7 +95,7 @@ setInterval(()=>{try{mvUpdate();}catch(e){}},150);
    Generative, original: slow pads, a soft plucked arpeggio with echo, a quiet bass and now and then a metallic swell with a bell ring.
    ~80 BPM, D minor family. Sections of 32–64 beats; the progression, arpeggio pattern and which layers play change per section; after a few
    minutes the other track follows after a ~3 s pause (Session 39n; was a 25–60 s silence). Scheduled ~0.6 s ahead every 100 ms on the 'music' bus, through a soft reverb. Stops in the background. */
-const MU={on:false,t:0,step:0,sec:null,rest:0,played:0,rev:null,dly:null,track:0,k3:null};
+const MU={on:false,t:0,step:0,sec:null,rest:0,played:0,rev:null,dly:null,track:0,n3:0};
 const MU_BPM=80,MU_PROG=[[[50,57,60,65],[46,53,57,62],[41,48,53,57],[48,55,58,64]],[[50,57,60,65],[45,52,57,60],[46,53,58,62],[43,50,55,58]],
  [[50,53,57,62],[55,58,62,65],[46,50,53,58],[45,49,52,57]],[[41,48,52,57],[43,50,53,58],[50,57,60,65],[45,52,55,60]]];
 const mf=m=>440*Math.pow(2,(m-69)/12);
@@ -112,8 +112,8 @@ function muSection(){const r=Math.random;MU.sec={prog:MU_PROG[(r()*MU_PROG.lengt
  pat:[[0,1,2,3,2,1,0,1],[0,2,1,3,0,2,3,1],[0,1,2,3,4,3,2,1],[2,1,0,1,2,3,2,3]][(r()*4)|0],oct:r()<0.5?12:24};}
 /* Two tracks (Session 39h): 0 = "Drift" (calm, 80 BPM, pads + arpeggio), 1 = "Pulse" (110 BPM, beat + bass line). After 2–3 minutes of a
    track a ~3 s pause, then the other track, forever. */
-/* Session 43: a third track, 2 "Night Shift" (92 BPM); the order is Drift → Pulse → Night Shift → Drift … */
-const muBpm=()=>[MU_BPM,110,92][MU.track]||MU_BPM,muB=()=>60/muBpm()/2;
+/* Session 43/44: a third track, 2 "Assembly Line" (100 BPM); the order is Drift → Pulse → Assembly Line → Drift … */
+const muBpm=()=>[MU_BPM,110,100][MU.track]||MU_BPM,muB=()=>60/muBpm()/2;
 function muSwitch(){MU.track=(MU.track+1)%3;MU.sec=null;MU.step=0;if(MU.dly)MU.dly.delayTime.setValueAtTime(60/muBpm()*0.75,AU.ctx.currentTime);}
 function muStep(t){const b=muB();   /* one step = an eighth note */
  if(MU.rest>0){MU.rest--;if(MU.rest===0)muSwitch();return;}if(!MU.sec||MU.step-MU.sec.start>=MU.sec.len*2){if(MU.played>120+Math.random()*60){MU.played=0;MU.rest=Math.max(1,Math.round((2.5+Math.random()*1.5)/b));MU.sec=null;return;}   /* Session 39n: 2–3 min per track, then a ~3 s pause and the other track: loops forever */MU.track===1?muSection2():MU.track===2?muSection3():muSection();}
@@ -143,48 +143,41 @@ function muPlay2(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s
   if(pos===14&&bar%2===1&&Math.random()<0.6){const f0=mf(ch[0]+31);muNote('sine',[f0,f0*2.76,f0*5.4],t,0.002,0.01,0.5,0.05,6000,0.35);}}
  const bn=s.bp[pos%8];if(i>=8){const f=mf(ch[0]-12+bn);muNote('sawtooth',[f],t,0.005,b*0.5,0.1,0.075,500+(pos%4===0?300:0));}
  if(beatsIn){const nts=[...ch,ch[1]+12,ch[2]+12],m=nts[s.pat[pos%8]%nts.length]+12;muNote('triangle',[mf(m)],t,0.004,0.02,0.32,0.05,3600,0.35);}}
-/* track 3 "Night Shift" (Session 43): slower (92 BPM) laid-back groove in E minor with seventh chords. A boom-bap beat (kick on 1 and
-   after 2, snappy snare on 2 and 4, swung shaker sixteenths), a round sub bass with walking approach notes, warm electric-piano stabs
-   on the off-beats, now and then a whistled hook that answers itself, an anvil ring at the end of phrases and faint vinyl crackle.
-   One step = an eighth note; 16 steps = two 4/4 bars; the swung sixteenth sits at 58 % of a step. */
-const MU_PROG3=[[[40,55,59,62],[45,52,55,60],[48,52,55,59],[47,51,54,57]],    /* Em7 · Am7 · Cmaj7 · B7 */
- [[40,55,59,62],[48,52,55,59],[43,50,52,55],[42,50,54,57]],                     /* Em7 · Cmaj7 · G6 · D/F# */
- [[45,52,55,60],[50,54,60,64],[43,50,54,59],[47,50,54,57]]];                    /* Am7 · D9 · Gmaj7 · Bm7 */
-/* the tune (Session 43c): one melody for the whole track, over Em7 · Am7 · Cmaj7 · B7, as [step, MIDI note, length in eighths] per chord
-   (16 steps = two bars). Mostly stepwise and singable, the same "da-da-daaa" rhythm each time: rise G-A-B, answer falling C-B-A, climb
-   up to the high E, come home on B. (43b had a different tune per section, and leaps, so it sounded random.) */
+/* track 3 "Assembly Line" (Session 44, replaces Night Shift): 100 BPM, D major, I–V–vi–IV (D · A · Bm · G), two bars per chord.
+   A machine groove that never stumbles: kick on 1 and 3, snare on 2 and 4, even hats, a sequencer bass in steady eighths, a metallic press
+   stamp on the last off-beat of every bar and a soft pneumatic hiss every two bars. One composed tune with the same "da-da-daaa,
+   da-da-daaa" rhythm in every phrase. Fixed song form, one 8-bar round per section:
+   intro → groove → tune → tune + harmony → breakdown → tune, then from groove again. One step = an eighth note. */
+const MU_PROG3=[[50,54,57],[45,49,52],[47,50,54],[43,47,50]];   /* D · A · Bm · G (root first) */
 const MU3_MEL=[
- [[0,67,2],[2,69,2],[4,71,8],[14,69,1],[15,71,1]],                 /* Em7:   G  A  B——      (A B pickup) */
- [[0,72,2],[2,71,2],[4,69,8],[14,67,1],[15,69,1]],                 /* Am7:   C  B  A——      (G A pickup) */
- [[0,71,2],[2,72,2],[4,74,4],[8,74,2],[10,76,2],[12,79,4]],        /* Cmaj7: B  C  D— D  E  G— */
- [[0,78,4],[4,76,2],[6,75,2],[8,71,8]]];                            /* B7:    F#— E  D#  B—— */
-function muSection3(){const r=Math.random,first=!(MU.sec&&MU.sec.np);
- if(first)MU.k3=r()<0.5?[1,3,6]:[0,3,5];                    /* one piano rhythm for the whole track */
- /* the same chords and tune all through the track: sections only switch between "with tune" and "instrumental" (the first one is
-    instrumental, then they take turns) and are always whole 4-chord rounds (64 steps) */
- MU.sec={prog:MU_PROG3[0],mel:MU3_MEL,len:64,start:MU.step,np:1,first,keys:MU.k3,hook:first?false:!(MU.sec&&MU.sec.hook),swing:0.58};}
+ [[0,66,2],[2,69,2],[4,74,4],[8,73,2],[10,74,2],[12,69,4]],     /* D:  F# A D—  C# D A— */
+ [[0,64,2],[2,69,2],[4,73,4],[8,71,2],[10,73,2],[12,69,4]],     /* A:  E  A C#— B C# A— */
+ [[0,66,2],[2,71,2],[4,74,4],[8,76,2],[10,74,2],[12,71,4]],     /* Bm: F# B D—  E D B— */
+ [[0,67,2],[2,71,2],[4,74,4],[8,71,2],[10,69,2],[12,67,4]]];    /* G:  G  B D—  B A G— */
+const MU3_FORM=['intro','groove','tune','tune2','break','tune'];
+function muSection3(){const first=!(MU.sec&&MU.sec.np);MU.n3=first?0:(MU.n3||0)+1;
+ const k=MU.n3<MU3_FORM.length?MU3_FORM[MU.n3]:MU3_FORM[1+((MU.n3-1)%(MU3_FORM.length-1))];
+ MU.sec={len:64,start:MU.step,np:1,part:k};}
 function muSnare(t,v){auNoise(t,0.09,v,'bandpass',1900,1500,0.9,'music');auOsc('triangle',210,150,t,0.08,v*0.55,0,'music');auNoise(t,0.02,v*0.6,'highpass',6000,6000,0.7,'music');}
-function muPlay3(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=s.prog[bar%s.prog.length],pos=i%16,half=pos%8,sw=b*s.swing,r=Math.random;
- const drums=!s.first||i>=16,last=bar%4===3;   /* drums and bass count in only when the track starts, not every section (43c) */
- /* vinyl crackle, always: a few tiny clicks */
- if(r()<0.35)auNoise(t+r()*b,0.004,0.025+r()*0.03,'highpass',3500,3500,0.7,'music');
- /* electric piano: soft sine chord with a quiet bell-like octave, on the pattern's off-beat steps (the odd ones swung) */
- if(s.keys.includes(half)){const tt=t+(half%2?b*0.08:0),fr=ch.slice(1).map(m=>mf(m+12));
-  muNote('sine',fr,tt,0.006,b*(half===s.keys[0]?1.4:0.7),1.2,0.05,2600,0.18);muNote('triangle',fr.map(f=>f*2),tt,0.003,0.03,0.6,0.012,4000,0.25);}
- /* sub bass: root on 1, octave on the "and" of 2, fifth on 3, approach note into the next chord on the last eighth */
- if(!s.first||i>=8){const nx=s.prog[(bar+1)%s.prog.length][0],root=ch[0]-12;let m=null,len=b*0.8;
-  if(pos===0||pos===8){m=root;len=b*2.2;}else if(pos===3||pos===11){m=root+12;len=b*0.5;}else if(pos===5||pos===13){m=root+7;}else if(pos===15){m=nx-12+(nx>ch[0]?-1:1);len=b*0.6;}
-  if(m!=null){const f=mf(m);muNote('sine',[f],t,0.008,len,0.25,0.2,400);muNote('triangle',[f*2],t,0.006,len*0.6,0.18,0.03,900);}}   /* the octave lets phone speakers hear it */
- if(drums){
-  /* steady groove (Session 43c): kick on 1 and 3 of every bar plus a push on the "and" of 3 in every second bar, snare on 2 and 4,
-     even eighth hats (accent on the off-beats); a short fill only at the end of each 8-bar round */
-  if(half===0||half===4||(pos===13))muKick(t,half===0?0.9:0.75);
-  if(half===2||half===6)muSnare(t,0.8);
-  if(!(last&&pos>=14))muHat(t,half%2?0.38:0.26,pos===15&&!last);
-  if(last&&pos>=14){muSnare(t,0.45+(pos-14)*0.15);muSnare(t+b*0.5,0.5+(pos-14)*0.15);}
-  if(pos===15&&last&&r()<0.7){const f0=mf(ch[0]+19);muNote('sine',[f0,f0*2.76,f0*5.4],t+sw,0.002,0.02,1.4,0.045,5000,0.5);}}   /* anvil ring */
- /* the tune: a soft whistle playing the composed phrase for the current chord */
- if(s.hook){for(const [p,m,l] of s.mel[bar%4])if(p===pos){const f=mf(m);muNote('triangle',[f,f*1.003],t+(p%2?b*0.06:0),0.025,b*l*0.85,0.35,0.05,2200,0.4);muNote('square',[f],t+(p%2?b*0.06:0),0.03,b*l*0.8,0.3,0.008,1200,0);}}}
+function muStamp(t,v){auNoise(t,0.05,v*0.7,'bandpass',900,700,2,'music');const f=mf(81);muNote('sine',[f,f*2.76,f*5.4],t,0.001,0.01,0.35,v*0.05,6000,0.15);}   /* press stamp */
+function muPlay3(t,b){const s=MU.sec,i=MU.step-s.start,bar=Math.floor(i/16),ch=MU_PROG3[bar%4],pos=i%16,half=pos%8,p=s.part;
+ const full=p!=='intro'&&p!=='break',lastBar=bar===3&&pos>=8;
+ /* sequencer bass: steady eighths, root / root / octave / root / fifth / root / octave / fifth, short and plucky */
+ const seq=[0,0,12,0,7,0,12,7][half],bf=mf(ch[0]-12+seq);muNote('sawtooth',[bf],t,0.004,b*0.45,0.08,p==='break'?0.07:0.11,half===0?1100:800);
+ /* drums */
+ if(p==='intro'){muHat(t,half%2?0.3:0.18,false);if(lastBar&&half%2===0)muKick(t,0.6+0.05*(pos-8));}           /* hats, then the kick counts in */
+ else if(p==='break'){if(half===0||half===4)muKick(t,0.55);if(pos===0&&bar%2===0)auNoise(t,1.2,0.05,'highpass',2500,1200,0.6,'music');}
+ else{if(half===0||half===4)muKick(t,1);if(half===2||half===6)muSnare(t,1.1);muHat(t,half%2?0.7:0.45,false);
+  if(half===7)muStamp(t,1);if(pos===0&&bar%2===1)auNoise(t,0.5,0.06,'highpass',3000,1800,0.6,'music');   /* pneumatic hiss */
+  if(bar===3&&pos===15)muSnare(t+b*0.5,0.5);}
+ /* chords: soft pad on each chord change, quiet in the intro */
+ if(pos===0)muNote('sawtooth',ch.map(m=>mf(m+12)).flatMap(f=>[f*0.996,f*1.004]),t,0.6,b*14,1.4,p==='intro'?0.016:0.025,900);
+ /* conveyor ticks: a quiet arpeggio of chord tones in the groove and the breakdown */
+ if(p==='groove'||p==='break'){const m=[ch[0],ch[1],ch[2],ch[1]+12][half%4]+12;muNote('triangle',[mf(m)],t,0.003,0.02,0.25,0.06,3200,0.3);}
+ /* the tune (an octave lower echo of it in the breakdown), with a harmony a third/sixth below in 'tune2' */
+ if(p==='tune'||p==='tune2'||p==='break'){for(const [q,m,l] of MU3_MEL[bar%4])if(q===pos){const f=mf(p==='break'?m-12:m);
+   muNote('square',[f,f*1.004],t,0.012,b*l*0.8,0.25,p==='break'?0.036:0.06,2000,0.3);muNote('triangle',[f*2],t,0.004,0.02,0.4,0.01,5000,0);
+   if(p==='tune2'){const h=mf(m-([4,9,11].includes((m-62+120)%12)?4:3));   /* a third below that stays in D major */muNote('square',[h],t,0.012,b*l*0.8,0.25,0.032,1600,0.2);}}}}
 function muTick(){if(!AU.ctx||AU.ctx.state!=='running')return;const play=auOn('music')&&!document.hidden;const c=AU.ctx;
  if(!play){MU.on=false;return;}muInit();if(!MU.on){MU.on=true;MU.t=c.currentTime+0.3;}
  while(MU.t<c.currentTime+0.6){const b=muB();muStep(MU.t);MU.step++;MU.played+=b;MU.t+=b;}}

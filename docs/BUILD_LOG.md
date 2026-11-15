@@ -2673,3 +2673,17 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - No game files changed. BUILD/VERSION bumped only to keep the build number equal to the commit count.
 
 **Note:** the skill is about mixing and sound categories in general. It has little on composing melodies, which was the recent music issue.
+
+## Session 44 — 2026-11-15 (Claude Code, cloud session) · Build 133
+
+**Asked:** (after the skill turned out not to help with melodies; I should have said so before installing it) try a completely new third tune, not based on Night Shift, that fits the game.
+
+**Built:** track 3 "Assembly Line" replaces Night Shift (`muSection3`, `muPlay3`, `muStamp`, `MU3_MEL`, `MU3_FORM` in `js/audio.js`).
+- **Tempo and chords:** 100 BPM, D major, I–V–vi–IV (D · A · Bm · G), two bars per chord, the same throughout.
+- **Machine groove:** kick on 1 and 3, snare on 2 and 4, even eighth hats, sequencer bass in steady eighths (root/octave/fifth pattern). A metallic press stamp on the last off-beat of every bar, and a soft pneumatic hiss every two bars.
+- **Tune:** one composed melody with the same "da-da-daaa, da-da-daaa" rhythm in every phrase: F#-A-D C#-D-A / E-A-C# B-C#-A / F#-B-D E-D-B / G-B-D B-A-G. A bright square lead with a bell octave.
+- **Fixed form:** intro (bass + hats, kick counts in) → groove (+ conveyor-tick arpeggio) → tune → tune + harmony (a third below, kept in D major) → breakdown (kick, hiss, tune an octave lower) → tune, then from groove again.
+
+**Level:** the master compressor levels it at RMS ~0.065–0.08 against Pulse's 0.095. Pulse has a kick on every beat, so this is ~2–3 dB quieter. Raising parts further only drove the compressor, so the bass was pulled back slightly for clarity instead.
+
+**Verified:** 2-minute offline render sent as a preview. `npm test` all PASS (music test: 3 tracks rotate).
