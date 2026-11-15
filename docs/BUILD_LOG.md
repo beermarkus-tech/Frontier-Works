@@ -2868,3 +2868,9 @@ I repeated the idea back first. He said "go" with my recommendations: free desig
 - A recipe change from pasting refunds the old buffers like the recipe buttons (`setRecipe` helper, now also used by `setRec`). Clock is clamped to the allowed range.
 
 **Verified:** new smoke check (copy from a smelter, paste onto a second one: recipe, clock and off pasted and old ore refunded; paste mode applies to a third; a Press is refused). `npm test` all PASS.
+
+## Session 50b — 2026-11-15 (Build 143)
+**Asked:** Fuel Rod and Uranium Cell look identical.
+**Built:** Fuel Rod gets its own item picture ('rods' in `js/render.js`): a tilted bundle of three long rods with grey caps and glowing green bands, held by a clamp. Uranium Cell and Battery keep the short "cell" shape. 3D belts show Fuel Rods as a slim upright cylinder (`rods` in the `view3d.js` item pool).
+**Verified:** side-by-side render of Uranium Cell / Fuel Rod / Battery / Uranium; `npm test` all PASS.
+**Known issues / next up / open questions:** unchanged from Session 50 (step 2b of the solar plan waits for Markus's go).

@@ -383,7 +383,7 @@ const SHAPE={};const setS=(sh,ids)=>ids.split(' ').forEach(i=>SHAPE[i]=sh);
 setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium quartz');setS('crystal','quartz_crystal');setS('reson','resonator');
 setS('ingot','iron_ingot copper_ingot steel_ingot alu_ingot alu_casing');setS('plate','iron_plate copper_sheet alloy_panel braced_plate plastic heat_sink');
 setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete rubber coolant_block');setS('girder','cased_girder');
-setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell fuel_rod battery');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
+setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell battery');setS('rods','fuel_rod');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
 setS('gear','rotor motor stator turbine_core');setS('chip','circuit_board control_chip');setS('module','compute_module');setS('bus','data_bus');setS('orb','quantum_core');
 const ISPR=new Map();
 function itemSprite(id,px){const b=Math.max(6,Math.min(96,Math.round(bkt(px)))),key=id+'|'+b;let c=ISPR.get(key);if(c)return c;
@@ -432,6 +432,8 @@ function paintItem(g,id,R){
   case 'coil':g.lineWidth=R*0.16;g.strokeStyle=out;g.beginPath();g.arc(0,0,R*0.3,0,7);g.stroke();g.lineWidth=R*0.12;g.strokeStyle=col;g.stroke();g.lineWidth=R*0.04;g.strokeStyle='rgba(255,255,255,0.4)';g.beginPath();g.arc(0,0,R*0.3,3.6,5.6);g.stroke();g.fillStyle='#222';g.beginPath();g.arc(0,0,R*0.15,0,7);g.fill();break;
   case 'block':rrg(g,-R*0.36,-R*0.3,R*0.72,R*0.64,R*0.06);g.fillStyle=shade(col,-25);g.fill();fin();rrg(g,-R*0.36,-R*0.3,R*0.72,R*0.24,R*0.06);g.fillStyle=shade(col,35);g.fill();break;
   case 'pile':for(const [x,y,r] of [[-0.16,0.08,0.22],[0.16,0.1,0.2],[0,-0.12,0.22]]){g.beginPath();g.arc(R*x,R*y,R*r,0,7);g.fillStyle=rad(R*0.3);g.fill();fin();}break;
+  case 'rods':{g.save();g.rotate(-0.35);for(const dx of [-0.2,0,0.2]){rrg(g,R*dx-R*0.075,-R*0.46,R*0.15,R*0.92,R*0.06);g.fillStyle=lin(R*0.46);g.fill();fin();g.fillStyle='#7d858d';g.fillRect(R*dx-R*0.075,-R*0.46,R*0.15,R*0.1);g.fillStyle='rgba(140,255,120,0.85)';g.fillRect(R*dx-R*0.075,-R*0.06,R*0.15,R*0.1);}   /* Fuel Rod: a bundle of three long rods with glowing bands (Session 50b) */
+   g.fillStyle='#5a636c';g.fillRect(-R*0.32,R*0.26,R*0.64,R*0.08);g.restore();break;}
   case 'cell':rrg(g,-R*0.17,-R*0.44,R*0.34,R*0.88,R*0.15);g.fillStyle=lin(R*0.44);g.fill();fin();g.fillStyle='#7d858d';g.fillRect(-R*0.17,-R*0.44,R*0.34,R*0.13);g.fillRect(-R*0.17,R*0.31,R*0.34,R*0.13);g.fillStyle='rgba(255,255,255,0.4)';g.fillRect(-R*0.1,-R*0.25,R*0.06,R*0.5);break;
   case 'barrel':rrg(g,-R*0.3,-R*0.38,R*0.6,R*0.76,R*0.1);g.fillStyle=lin(R*0.38);g.fill();fin();g.fillStyle='#1d1d1d';g.beginPath();g.arc(0,0,R*0.14,0,7);g.fill();break;
   case 'frame':g.lineWidth=R*0.14;g.strokeStyle=out;rrg(g,-R*0.34,-R*0.34,R*0.68,R*0.68,R*0.04);g.stroke();g.beginPath();g.moveTo(-R*0.34,R*0.34);g.lineTo(R*0.34,-R*0.34);g.stroke();g.lineWidth=R*0.09;g.strokeStyle=col;rrg(g,-R*0.34,-R*0.34,R*0.68,R*0.68,R*0.04);g.stroke();g.beginPath();g.moveTo(-R*0.34,R*0.34);g.lineTo(R*0.34,-R*0.34);g.stroke();break;
