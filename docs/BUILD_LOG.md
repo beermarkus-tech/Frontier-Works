@@ -2661,3 +2661,15 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 - **Beat:** kick on 1 and 3 every bar plus a push on the "and" of 3 in every second bar; snare on 2 and 4; even eighth hats; a short snare fill only at the end of each 8-bar round.
 
 **Verified:** 90 s offline render (RMS 0.094) sent as a preview. `npm test` all PASS.
+
+## Session 43d — 2026-11-15 (Claude Code, cloud session) · Build 132
+
+**Asked:** pull the "game-audio" skill from github.com/davila7/claude-code-templates (cli-tool/components/skills/creative-design/game-development/game-audio).
+
+**Done:**
+- Fetched only that folder (sparse clone) and read it first: a single `SKILL.md` of general game-audio guidance (audio categories, layering, music states and transitions, adaptive audio, 3D audio, mix levels, anti-patterns). No scripts; its allowed tools are read-only.
+- Installed as a project skill: `.claude/skills/game-audio/SKILL.md`, unchanged, plus `SOURCE.md` with the origin, commit and MIT licence notice (MIT, © 2025 Daniel Ávila).
+- It loads in sessions started after this one.
+- No game files changed. BUILD/VERSION bumped only to keep the build number equal to the commit count.
+
+**Note:** the skill is about mixing and sound categories in general. It has little on composing melodies, which was the recent music issue.
