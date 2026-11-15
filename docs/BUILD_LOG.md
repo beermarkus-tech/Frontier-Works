@@ -2767,3 +2767,32 @@ Docs only. BUILD/VERSION bumped only to keep the build number equal to the commi
 **Verified:** screenshot (panel, turned preview with a blocked tile). New smoke check: 4 pieces copied, 31-wide area refused, built turned with recipe/clock/rules, rebuilding on itself keeps all 4, no materials reports what's missing. `npm test` all PASS.
 
 **Next up:** Tier 11 "Spaceflight" + the Moon (step 2), after Markus has tried blueprints.
+
+## Session 48b — 2026-11-15 (Claude Code, cloud session) · Build 138
+
+**Asked:** Markus proposed a different blueprint design (copying existing machinery is nice but inaccurate):
+- a blueprint **building**, 12×12 to start, placed anywhere, needing electricity
+- build the content inside it piece by piece and save it under a name
+- load existing blueprints into it, change them, save them
+- no clipboard button; the building goes under Signs
+
+I repeated the idea back first. He said "go" with my recommendations: free design pieces that don't run; build-elsewhere from any station's panel; 12×12 now, bigger later. He had no saved blueprints yet, so nothing needed carrying over.
+
+**Built (`js/blueprint.js` rewritten):**
+- **Blueprint Station** (`bpstation`, k 'bpst', 12×12, 2 MW, 20 Iron Plate + 20 Wire, available from the start, Signs tab), drawn live in 2D as a blueprint-blue grid table; "NO POWER" and dimmed without power. 3D: a flat blue platform with a small console; design pieces show as ghost boxes.
+- **Designing:** building tools and dragged belt/pipe lines inside a station make design pieces (`e.dsg`, saved with `e.dn`) at no cost. Pieces must fit inside and not overlap; belts drawn over belts are replaced. Design belts show their curves.
+- **Pieces:** tapping one opens a "Design piece" panel: recipe (machines), logic-splitter rules (one per side), valve limit and mode, sign text, rotate, remove. Dismantle inside the station removes pieces; the station itself is removed from its panel.
+- **Station panel:** name field, piece count and total cost, 💾 Save blueprint (needs power; same name replaces), Clear design (asks first). Under "Your blueprints": Build elsewhere, Load to change (needs power and must fit, asks before replacing the design), Delete.
+- **Building from a blueprint:** unchanged (`bppaste`: tap shows the outline, tap inside builds, ⟳ turns it, pays, reports missing).
+- **Removed:** the copy-an-area tool, the clipboard toolbar button, key B and the old Blueprints panel.
+- DESIGN.md and CLAUDE.md updated.
+
+**Verified:** screenshot (station with a design, panel). New smoke check:
+- station placed; pieces placed, out-of-area and overlapping pieces refused
+- pieces are free and not real buildings
+- Save is disabled without power; a saved blueprint is trimmed to 5×2, and loading it back keeps the recipe
+- Dismantle removes a piece but keeps the station
+- built turned with recipe and rules; missing materials are reported
+- Signs-tab test updated for the station
+
+`npm test` all PASS.

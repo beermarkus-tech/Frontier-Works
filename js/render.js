@@ -142,7 +142,7 @@ const SPR=new Map();
 function bkt(s){return Math.max(6,Math.min(180,Math.pow(2,Math.round(Math.log2(s)*3)/3)));}
 function getSprite(id,s){const b=bkt(s),key=id+'|'+b;let c=SPR.get(key);if(c)return c;const w=B[id].w,pad=Math.ceil(b*0.35);
  c=document.createElement('canvas');c.width=c.height=Math.ceil(w*b+pad*2);const g=c.getContext('2d');g.translate(pad,pad);paintB(g,id,w*b,b);c.pad=pad;c.b=b;SPR.set(key,c);if(SPR.size>500)SPR.delete(SPR.keys().next().value);return c;}
-function blit(id,X,Y,s,alpha){const c=getSprite(id,s),k=s/c.b;if(alpha!==undefined)ctx.globalAlpha=alpha;ctx.drawImage(c,X-c.pad*k,Y-c.pad*k,c.width*k,c.height*k);ctx.globalAlpha=1;}
+function blit(id,X,Y,s,alpha){if(B[id]&&B[id].k==='bpst'){const P=B[id].w*s,a=ctx.globalAlpha;ctx.globalAlpha=alpha==null?a:alpha;ctx.fillStyle='#163d6b';ctx.fillRect(X,Y,P,P);ctx.strokeStyle='#8fc6ff';ctx.lineWidth=2;ctx.strokeRect(X+1,Y+1,P-2,P-2);ctx.globalAlpha=a;return;}const c=getSprite(id,s),k=s/c.b;if(alpha!==undefined)ctx.globalAlpha=alpha;ctx.drawImage(c,X-c.pad*k,Y-c.pad*k,c.width*k,c.height*k);ctx.globalAlpha=1;}
 function paintB(g,id,P,u){
  const d=B[id],col=d.col,lw=Math.max(1,u*0.045);
  const R=(x,y,w,h,r)=>rrg(g,x,y,w,h,r);
@@ -366,6 +366,7 @@ function drawSign(g,e,X,Y,P){const {bg,fg}=signColors(e),i=Math.max(1,P*0.06);
  g.fillStyle=fg;g.font=`700 ${L.fs}px Rajdhani,Inter,sans-serif`;g.textAlign='center';g.textBaseline='middle';const lh=L.fs*1.02,y0=Y+P/2-(L.lines.length-1)*lh/2;
  L.lines.forEach((l,k)=>g.fillText(l,X+P/2,y0+k*lh+L.fs*0.05));g.textAlign='left';}
 function drawBuilding(e,X,Y,s){
+ if(e.k==='bpst'){drawStation(e,X,Y,s);return;}   /* Blueprint Station: drawn live (a 12×12 sprite would be huge) */
  if(e.k==='sign'){drawSign(ctx,e,X,Y,e.w*s);return;}
  const P=e.w*s;let sc=1;
  if(e.born!==undefined){const t=(animT-e.born)/0.3;if(t<1)sc=0.7+0.3*easeBack(Math.max(0,t));else e.born=undefined;}

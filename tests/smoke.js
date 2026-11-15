@@ -316,22 +316,29 @@ const server=require('./serve.js');
   const strips=Array.isArray(MGC)&&MGC.length===4&&MGC.every(c=>c.width>0),sea=mgH(-MG+1,MH/2)<-3,same=terr.slice(0,2000).join(',')===before,noBuild=canPlace('belt1',-1,5)==='Out of bounds';
   return{edge,lim,strips,sea,same,noBuild};});
  check(`coast: edge can be centred (${cst.edge}), limit ${cst.lim}, coast strips ${cst.strips}, open sea outside ${cst.sea}, map unchanged ${cst.same}, no building outside ${cst.noBuild}`,Object.values(cst).every(v=>v===true));
- // blueprints (Session 48): copy an area with settings, build it turned elsewhere, pay for it, report what's missing, max 24×24
+ // blueprints (Session 48b): a Blueprint Station holds free design pieces; save them as a blueprint (needs power), load it back,
+ // build it turned elsewhere (paid), report what's missing; Dismantle inside the station removes pieces, not the station
  const bpt=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
-  for(let r=8;r<170&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=-2;j<16&&ok;j++)for(let i=-2;i<16&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
-  S.ub.push('lsplit','smelter','belt1');const keepBP=BPS.slice();BPS.length=0;
-  const r=[P('smelter',X,Y,0),P('belt1',X+2,Y,0),P('belt1',X+3,Y,0),P('lsplit',X+4,Y,0)];const m=fw.entAt(X,Y);m.r='r_iron_ingot';m.clock=0.5;fw.entAt(X+4,Y).lr={l:['iron_ingot'],f:['rest'],r:[]};
-  const big=bpCapture({x:X,y:Y},{x:X+30,y:Y+2});const bp=bpCapture({x:X,y:Y},{x:X+4,y:Y+1});
-  const inv0=JSON.stringify(S.inv);for(const k in B.smelter.cost)S.inv[k]=(S.inv[k]||0)+50;for(const k in B.belt1.cost)S.inv[k]=(S.inv[k]||0)+50;for(const k in B.lsplit.cost)S.inv[k]=(S.inv[k]||0)+50;
-  UI.bp=0;UI.rot=1;const at={x:X+8,y:Y+8},L=bpLayout(BPS[0],1,at),res=bpPaste(at);
+  const find=(w,h,skip)=>{for(let r=8;r<200;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));if(skip&&Math.abs(x-skip.x)<30&&Math.abs(y-skip.y)<30)continue;let ok=true;for(let j=-1;j<=h&&ok;j++)for(let i=-1;i<=w&&ok;i++)if(canPlace('incin',x+i,y+j)||nodeAt[(y+j)*MW+x+i])ok=false;if(ok)return{x,y};}return null;};
+  ({x:X,y:Y}=find(13,13));const Q=find(8,8,{x:X,y:Y}),Q2=find(8,8,{x:X+500,y:Y});
+  S.ub.push('lsplit','smelter','belt1','bpstation');const keepBP=BPS.slice();BPS.length=0;
+  const placed=P('bpstation',X,Y,0)==='';const st=fw.entAt(X,Y);const inv0=JSON.stringify(S.inv),inS=(S.inv.iron_plate||0);
+  const a=dsgPlace(st,'smelter',X+1,Y+1,0),b=dsgPlace(st,'belt1',X+3,Y+1,0),c=dsgPlace(st,'belt1',X+4,Y+1,0),d=dsgPlace(st,'lsplit',X+5,Y+1,0),out=dsgPlace(st,'smelter',X+11,Y+11,0),over=dsgPlace(st,'smelter',X+2,Y+1,0);
+  const free=(S.inv.iron_plate||0)===inS&&!fw.entAt(X+1,Y+1).d.startsWith('smelter');   /* design pieces cost nothing and aren't real buildings */
+  st.dsg[0].s.r='r_iron_ingot';st.dsg[3].s.lr={l:['iron_ingot'],f:['rest'],r:[]};
+  st.pw=0;openPanel('ent',st.id);const noPw=!!document.querySelector('#pbody [data-act="stSave"][disabled]');ACT.closePanel();st.pw=1;
+  const bp=stSave(st,'Test line');const fresh=bp&&bp.w===5&&bp.h===2&&bp.items.length===4;
+  st.dsg=[];const ld=stLoad(st,BPS[0])===''&&st.dsg.length===4&&st.dn==='Test line'&&st.dsg[0].s.r==='r_iron_ingot';
+  setTool('del');tap({x:X+2,y:Y});const delPiece=st.dsg.length===3&&ents.has(st.id);tap({x:X+8,y:Y+8});const keepSt=ents.has(st.id);setTool(null);
+  for(const k of ['smelter','belt1','lsplit'])for(const m in B[k].cost)S.inv[m]=(S.inv[m]||0)+50;
+  UI.bp=0;UI.rot=1;const at={x:Q.x+3,y:Q.y+3},L=bpLayout(BPS[0],1,at),res=bpPaste(at);
   const sm=L.it.find(q=>q.d==='smelter'),ls=L.it.find(q=>q.d==='lsplit'),es=fw.entAt(sm.x,sm.y),el=fw.entAt(ls.x,ls.y);
-  const turned=L.W===2&&L.H===5&&!!el&&el.dir===1&&!!es&&es.r==='r_iron_ingot'&&es.clock===0.5&&el.lr.l[0]==='iron_ingot'&&el.lr.f[0]==='rest';
-  const again=bpPaste(at);   /* same spot again: everything already there */
-  for(const k in S.inv)S.inv[k]=0;UI.rot=0;const poor=bpPaste({x:X+3,y:Y+13});
-  for(let j=-2;j<16;j++)for(let i=-2;i<16;i++){const e=fw.entAt(X+i,Y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
+  const turned=L.W===2&&L.H===5&&!!el&&el.dir===1&&!!es&&es.r==='r_iron_ingot'&&el.lr.l[0]==='iron_ingot';
+  for(const k in S.inv)S.inv[k]=0;UI.rot=0;const P2=Q2&&!(Math.abs(Q2.x-Q.x)<8&&Math.abs(Q2.y-Q.y)<8)?Q2:{x:Q.x,y:Q.y+12};const poor=bpPaste({x:P2.x+3,y:P2.y+3});
+  for(const o of [{x:X,y:Y,w:14},{x:Q.x,y:Q.y,w:9},{x:P2.x,y:P2.y,w:9}])for(let j=-1;j<o.w;j++)for(let i=-1;i<o.w;i++){const e=fw.entAt(o.x+i,o.y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   S.inv=JSON.parse(inv0);BPS.length=0;BPS.push(...keepBP);bpSave();setTool(null);
-  return{ok:r.every(v=>v===''),big:big===null,pieces:bp&&bp.items.length,built:res.ok,turned,again:again.have===4&&again.ok===0,poor:poor.ok===0&&Object.keys(poor.miss).length>0};});
- check(`blueprints: copy (${bpt.pieces} pieces), too big refused (${bpt.big}), built turned with recipe/clock/splitter rules (${bpt.built} built, ${bpt.turned}), rebuild on itself (${bpt.again}), not enough materials reported (${bpt.poor})`,bpt.ok&&bpt.big&&bpt.pieces===4&&bpt.built===4&&bpt.turned&&bpt.again&&bpt.poor);
+  return{placed,pieces:[a,b,c,d].every(v=>v===''),out:out!=='',over:over==='Blocked',free,noPw,fresh,ld,delPiece,keepSt,built:res.ok===4,turned,poor:poor.ok===0&&Object.keys(poor.miss).length>0};});
+ check(`blueprint station: ${Object.entries(bpt).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(bpt).every(v=>v===true));
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;
@@ -807,8 +814,8 @@ const server=require('./serve.js');
  check(`signs: sizes ${sg.sizes}, placing opens the text box, "${sg.txt}" in colour ${sg.col} is drawn and survives save/load; size changes S↔L after placing (${sg.resize})`,sg.resize&&sg.sizes==='1,2,3,4,6'&&sg.opened&&sg.txt==='Iron Works'&&sg.col===3&&sg.drawn&&sg.kept);
  // older saves get buildings added later (signs, Drone Pad) on load; signs have their own tab
  const ul=await p.evaluate(()=>{const keep=serialize();const o=JSON.parse(keep);o.S.ub=o.S.ub.filter(x=>!x.startsWith('sign')&&x!=='dpad');o.S.ms=5;load(JSON.stringify(o));
-  const r={signs:SIGNS.every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===SIGNS.length+1&&B.zone.cat==='sign'&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
-  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===SIGNS.length+1;
+  const r={signs:SIGNS.every(ub),dpad:ub('dpad'),tab:CATS.some(c=>c[0]==='sign')&&Object.values(B).filter(d=>d.cat==='sign').length===SIGNS.length+2&&B.zone.cat==='sign'&&B.bpstation.cat==='sign'&&!Object.values(B).some(d=>d.cat==='log'&&d.k==='sign')};
+  UI.cat='sign';buildCats();r.shown=document.querySelectorAll('#tools [data-act="tool"]').length===SIGNS.length+2;
   r.trans=B.dpad.cat==='trans'&&CATS.some(c=>c[0]==='trans');UI.cat='trans';buildCats();r.transShown=!!document.querySelector('#tools [data-v="dpad"]');UI.cat='log';buildCats();load(keep);return r;});
  check(`older saves get signs and the Drone Pad on load; Signs and Transport (Drone Pad) have their own tabs (${Object.values(ul).join(',')})`,Object.values(ul).every(Boolean));
  // planner maths (pure functions, no factory state)

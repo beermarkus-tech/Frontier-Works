@@ -154,6 +154,7 @@ function initEnt(e,d){
   case 'pole':e.trip=!!e.trip;break;
   case 'storage':e.store=e.store||{};e.rr=0;break;
   case 'sign':e.tx=e.tx||'';e.tc=e.tc||0;break;
+  case 'bpst':e.dsg=Array.isArray(e.dsg)?e.dsg:[];e.dn=e.dn||'';e.want=true;break;   /* Blueprint Station: design pieces + name; always draws its small power */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
  }
