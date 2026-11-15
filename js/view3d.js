@@ -137,8 +137,9 @@ function v3Look(){if(!V3.r)return;const nice=V3.look==='nice',r=V3.r;
  if(V3.aoP&&V3.aoP.mesh)V3.aoP.mesh.visible=nice&&V3.aoP.mesh.count>0;V3.sig=null;V3.lookAt=null;}
 
 /* ---------- terrain, water, decoration ---------- */
+function v3MgH(x,z){const h=mgH(x,z);return h>1.3?0:h>0?-0.3*(1-h/1.3):h>-3?-0.3+0.6*(h/3):Math.max(-1.5,-0.9+(h+3)*0.06);}
 function v3H(x,z){   // ground height at a mesh vertex: lakes sink, the map edge drops into the sea
- if(x<=0.01||z<=0.01||x>=MW-0.01||z>=MH-0.01)return -1.6;
+ if(x<=0.01||z<=0.01||x>=MW-0.01||z>=MH-0.01)return v3MgH(x,z);   /* the coast around the map (Session 45) */
  const isW=(x,y)=>x<0||y<0||x>=MW||y>=MH||terr[y*MW+x]===1,fx=Math.floor(x),fz=Math.floor(z),cx=x-fx,cz=z-fz;
  if(cx>0.25&&cz>0.25)return isW(fx,fz)?-0.55:0;
  const xs=cx<0.25?[fx-1,fx]:[fx],zs=cz<0.25?[fz-1,fz]:[fz];for(const a of xs)for(const b of zs)if(!isW(a,b))return 0;return -0.5;
@@ -156,6 +157,13 @@ function v3Terrain(){
  for(let cy=0;cy<NY;cy++)for(let cx=0;cx<NX;cx++){const g=new T3.PlaneGeometry(CH,CH,CH/2,CH/2);g.rotateX(-Math.PI/2);g.translate(cx*CH+CH/2,0,cy*CH+CH/2);
   const P=g.attributes.position,UV=g.attributes.uv;for(let i=0;i<P.count;i++){const x=P.getX(i),z=P.getZ(i);P.setY(i,v3H(x,z)-0.05);UV.setXY(i,x/MW,1-z/MH);}
   g.computeVertexNormals();const m=new T3.Mesh(g,V3.oMat);m.receiveShadow=true;sc.add(m);V3.coarse.push(m);}
+ // coast strips around the map (Session 45): same height rule and the 2D coast picture as texture
+ if(V3.mg)for(const m of V3.mg){sc.remove(m);m.geometry.dispose();m.material.dispose();}V3.mg=[];
+ if(MGC){if(V3.mgTex)for(const t of V3.mgTex)t.dispose();V3.mgTex=[];
+  for(const c of MGC){const tex=new T3.CanvasTexture(c);V3.mgTex.push(tex);const mat=new T3.MeshStandardMaterial({roughness:1,metalness:0,map:tex});
+   const g=new T3.PlaneGeometry(c.w,c.h,Math.ceil(c.w/2),Math.ceil(c.h/2));g.rotateX(-Math.PI/2);g.translate(c.x0+c.w/2,0,c.y0+c.h/2);
+   const P=g.attributes.position,UV=g.attributes.uv;for(let i=0;i<P.count;i++){const x=P.getX(i),z=P.getZ(i);P.setY(i,v3MgH(x,z)-0.05);UV.setXY(i,(x-c.x0)/c.w,1-(z-c.y0)/c.h);}
+   g.computeVertexNormals();const m=new T3.Mesh(g,mat);m.receiveShadow=true;sc.add(m);V3.mg.push(m);}}
  // sea floor around the island and the animated water surface
  V3.floor=new T3.Mesh(new T3.PlaneGeometry(4000,4000).rotateX(-Math.PI/2),new T3.MeshStandardMaterial({color:'#123a5e',roughness:1}));V3.floor.position.set(MW/2,-1.55,MH/2);sc.add(V3.floor);
  if(!V3.wNorm){V3.wNorm=new T3.CanvasTexture(v3Canvas(128,128,(g,w,h)=>{const im=g.createImageData(w,h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const a=2*Math.PI/w;

@@ -307,6 +307,12 @@ const server=require('./serve.js');
   openPanel('plan');const t=document.getElementById('pbody').textContent;ACT.closePanel();Object.assign(PL,JSON.parse(save));PL.locked=lk;
   return{half:!!r1&&Math.abs(r1.rate-cb/2)<1e-6&&Math.abs(o1.sup.circuit_board-cb/2)<1e-6,gone,less:cs2<cs0-1e-6,capped:Math.abs(o3.sup.circuit_board-cb)<1e-6,added,ui:t.includes('From other factories')&&t.includes('Circuit Board')};});
  check(`planner: parts from other factories (half covered: ${psup.half}, fully covered drops the step: ${psup.gone}, chain behind shrinks: ${psup.less}, extra supply capped: ${psup.capped}, button adds the need: ${psup.added}, panel: ${psup.ui})`,Object.values(psup).every(v=>v===true));
+ // coast around the map (Session 45): the edge can be pulled to the middle of the screen, sea + coast are painted outside, the map itself is untouched
+ const cst=await p.evaluate(()=>{const before=terr.slice(0,2000).join(',');cam.x=camT.x=0;cam.y=camT.y=0;cam.z=camT.z=1;clampCam();const edge=cam.x===0&&cam.y===0;
+  cam.x=camT.x=-50;clampCam();const lim=cam.x===-6;cam.x=camT.x=MW/2;cam.y=camT.y=MH/2;clampCam();
+  const strips=Array.isArray(MGC)&&MGC.length===4&&MGC.every(c=>c.width>0),sea=mgH(-MG+1,MH/2)<-3,same=terr.slice(0,2000).join(',')===before,noBuild=canPlace('belt1',-1,5)==='Out of bounds';
+  return{edge,lim,strips,sea,same,noBuild};});
+ check(`coast: edge can be centred (${cst.edge}), limit ${cst.lim}, coast strips ${cst.strips}, open sea outside ${cst.sea}, map unchanged ${cst.same}, no building outside ${cst.noBuild}`,Object.values(cst).every(v=>v===true));
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

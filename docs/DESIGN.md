@@ -45,6 +45,10 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
 - **Resources (10):** iron ore, copper ore, limestone, coal, sulfur, raw quartz, bauxite, uranium ore, crude oil (wells), water (any lake).
   Rarer resources sit further from the start (sulfur/quartz/oil ≥ 24 tiles, bauxite ≥ 28, uranium ≥ 45).
 - **Node purity:** impure ×0.5, normal ×1, pure ×2 extraction rate.
+- **Coast around the map** (Session 45): outside the map edge a 32-tile ring of scenery: the land carries on a few tiles with a wavy
+  outline (where the edge itself is land), then beach, surf, shallow and open sea; lakes touching the edge open into the sea. Nothing inside
+  the map changes and the ring can't be built on (a faint dashed line in 2D marks the limit). The camera can pull the edge to the middle of
+  the screen (6 tiles past it), so work at the coast isn't hidden under panels. 3D shows the same coast as a sloping shore.
 - **Building rules:** buildings can't sit on water; belts, pipes, poles, splitters and crossings can (bridges).
   The water pump must sit fully on water. Drills need an ore node and oil pumps an oil well inside their footprint.
 

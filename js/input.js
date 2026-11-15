@@ -3,7 +3,7 @@
 const ptrs=new Map();let G=null;
 function toTile(cx,cy){const s=TS*cam.z,fx=cam.x+(cx-innerWidth/2)/s,fy=cam.y+(cy-innerHeight/2)/s;return{x:Math.floor(fx),y:Math.floor(fy),fx,fy};}
 function zMin(){return Math.max(0.3,Math.max(innerWidth,innerHeight)/(MW*TS));}
-function clampCam(){const zm=zMin();for(const c of [cam,camT]){c.z=Math.max(zm,Math.min(3.5,c.z));const hw=innerWidth/(TS*c.z)/2,hh=innerHeight/(TS*c.z)/2;c.x=hw*2>=MW?MW/2:Math.max(hw,Math.min(MW-hw,c.x));c.y=hh*2>=MH?MH/2:Math.max(hh,Math.min(MH-hh,c.y));}}
+function clampCam(){const zm=zMin();for(const c of [cam,camT]){c.z=Math.max(zm,Math.min(3.5,c.z));const hw=innerWidth/(TS*c.z)/2,hh=innerHeight/(TS*c.z)/2;c.x=Math.max(-6,Math.min(MW+6,c.x));c.y=Math.max(-6,Math.min(MH+6,c.y));}}   /* Session 45: the map edge can be pulled to the middle of the screen */
 function syncT(){camT.x=cam.x;camT.y=cam.y;camT.z=cam.z;}
 function linePath(a,b,rot){
  const path=[];const dx=b.x-a.x,dy=b.y-a.y;let x=a.x,y=a.y;

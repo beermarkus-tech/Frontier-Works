@@ -39,7 +39,7 @@ function prepTerrain(seed){
  for(let k=0;k<8;k++)for(let c=0;c<3;c++){const a=new Float32Array(T);for(let i=0;i<T;i++)a[i]=BIOMES[bio[i]].pal[PALK[k]][c];const bl=mixed?boxBlur(a,MW,MH,3):a;for(let i=0;i<T;i++)PAL[i*24+k*3+c]=Math.round(bl[i]);}
  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=y*MW+x,b=Math.min(MW-1,x+1)-x,d=(Math.min(MH-1,y+1)-y)*MW;let u=1;for(let k=0;k<24&&u;k++){const v=PAL[i*24+k];if(PAL[(i+b)*24+k]!==v||PAL[(i+d)*24+k]!==v||PAL[(i+b+d)*24+k]!==v)u=0;}U[i]=u;}
  TF={seed,nW,Wf,Sf,Rf,Df,Gf,PAL,U};
- const op=MW>200?3:4;terrO=paintTerrain(0,0,MW,MH,op);terrO.ppt=op;terrC=terrO;
+ const op=MW>200?3:4;terrO=paintTerrain(0,0,MW,MH,op);terrO.ppt=op;terrC=terrO;prepMargin();
  // cloud shadows
  // cloud shadows: tileable noise (wraps at 128 px), so the repeated picture has no seam that slides across the map
  const tn=(r,g)=>{const v=[];for(let i=0;i<g*g;i++)v.push(r());const sm=t=>t*t*(3-2*t);return(x,y)=>{const fx=x/128*g,fy=y/128*g,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy),x0=ix%g,x1=(ix+1)%g,y0=iy%g,y1=(iy+1)%g,a=v[y0*g+x0],b=v[y0*g+x1],c=v[y1*g+x0],d=v[y1*g+x1];return a+(b-a)*tx+(c-a)*ty+(a-b-c+d)*tx*ty;};};
@@ -97,7 +97,37 @@ function getChunk(cx,cy,bake){const key=cy*1024+cx;let c=chunkC.get(key);
 /* Smaller copies of a chunk for far zoom, so the browser doesn't shrink 512 px every frame */
 function chunkMip(c,px){if(px>c.width*0.6)return c;const lvl=px>c.width*0.3?1:2,k='_m'+lvl;if(!c[k]){const m=document.createElement('canvas');m.width=m.height=c.width>>lvl;const g=m.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(c,0,0,m.width,m.height);c[k]=m;}return c[k];}
 let bakeT0=0;const bakeBudget=()=>performance.now()-bakeT0<8;   // ms of chunk painting allowed per frame
+/* Coast around the map (Session 45): scenery only, nothing inside the map changes. Outside the edge the land carries on for a few tiles
+   with a wavy outline (only where the edge itself is land), then beach, shallow water and open sea, MG tiles wide. MGH = "land height"
+   per tile corner (>0 land, <0 water, in tiles from the shore), also used for the 3D coast. Not buildable. */
+const MG=32;let MGC=null,MGH=null;
+function mgNoise(x,y,cell,k){const fx=x/cell+k*17.3,fy=y/cell-k*9.1,ix=Math.floor(fx),iy=Math.floor(fy),tx=fx-ix,ty=fy-iy,sm=t=>t*t*(3-2*t),a=hash2(ix,iy+k*997),b=hash2(ix+1,iy+k*997),c=hash2(ix,iy+1+k*997),d=hash2(ix+1,iy+1+k*997),u=sm(tx),v=sm(ty);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
+function mgH(x,y){if(!MGH)return -9;const W=MW+2*MG+1,gx=Math.max(0,Math.min(W-1.001,x+MG)),gy=Math.max(0,Math.min(MH+2*MG-0.001,y+MG)),ix=Math.floor(gx),iy=Math.floor(gy),tx=gx-ix,ty=gy-iy,
+ a=MGH[iy*W+ix],b=MGH[iy*W+ix+1],c=MGH[(iy+1)*W+ix],d=MGH[(iy+1)*W+ix+1];return a+(b-a)*tx+(c-a)*ty+(a-b-c+d)*tx*ty;}
+function prepMargin(){const W=MW+2*MG+1,H=MH+2*MG+1,k=(TF.seed%1000)|0,land=(x,y)=>terr[y*MW+x]!==1?1:0;
+ const lf=(get,n)=>{const a=new Float32Array(n);for(let i=0;i<n;i++){let s=0,c=0;for(let j=-5;j<=5;j++){const q=i+j;if(q<0||q>=n)continue;s+=get(q);c++;}a[i]=s/c;}return a;};
+ const T=lf(x=>land(x,0),MW),Bo=lf(x=>land(x,MH-1),MW),L=lf(y=>land(0,y),MH),Ri=lf(y=>land(MW-1,y),MH);
+ MGH=new Float32Array(W*H);
+ for(let gy=0;gy<H;gy++)for(let gx=0;gx<W;gx++){const x=gx-MG,y=gy-MG;if(x>=0&&x<=MW&&y>=0&&y<=MH){MGH[gy*W+gx]=9;continue;}
+  const dx=x<0?-x:x>MW?x-MW:0,dy=y<0?-y:y>MH?y-MH:0,d=Math.hypot(dx,dy),cx=Math.max(0,Math.min(MW-1,Math.floor(x))),cy=Math.max(0,Math.min(MH-1,Math.floor(y)));
+  let f;if(dx&&dy)f=((x<0?L:Ri)[cy]+(y<0?T:Bo)[cx])/2;else if(dx)f=(x<0?L:Ri)[cy];else f=(y<0?T:Bo)[cx];
+  let hv=f*(2.5+6*mgNoise(x,y,10,k)+2*mgNoise(x,y,3.3,k+1))-d;const mx=Math.max(0,Math.min(MW-1,Math.floor(x<0?-x:x>=MW?2*MW-x-0.01:x))),my=Math.max(0,Math.min(MH-1,Math.floor(y<0?-y:y>=MH?2*MH-y-0.01:y)));
+  if(terr[my*MW+mx]===1)hv=Math.min(hv,-0.8);   /* a lake at the edge opens into the sea */
+  MGH[gy*W+gx]=hv;}
+ /* painted as four strips (top, bottom, left, right) at 6 px per tile: only the ring, so memory stays small (Session 45) */
+ const P=6,op=terrO.ppt,src=terrO.getContext('2d').getImageData(0,0,terrO.width,terrO.height).data,sw=terrO.width,sh=terrO.height;
+ const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],SH=[79,155,210],DP1=[47,110,166],DP2=[23,63,102],FO=[214,236,246],SA=[217,197,143];
+ const ss=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
+ const colAt=(x,y,px,py)=>{const h=mgH(x,y),mx=x<0?-x:x>=MW?2*MW-x-0.01:x,my=y<0?-y:y>=MH?2*MH-y-0.01:y;
+   const si=(Math.min(sh-1,Math.floor(my*op))*sw+Math.min(sw-1,Math.floor(mx*op)))*4,land=[src[si]*0.9,src[si+1]*0.9,src[si+2]*0.9],n=hash2(px,py)*12-6,sand=[SA[0]+n,SA[1]+n,SA[2]+n];
+   let water=h>-3?mix(SH,DP1,Math.max(0,-h)/3):mix(DP1,DP2,Math.min(1,(-h-3)/14));water=mix(water,FO,0.55*(1-ss(-0.45,0,-h)) *ss(-0.6,-0.05,h));
+   const a=ss(-0.08,0.08,h),b=ss(1.2,1.45,h);return mix(mix(water,sand,a),land,b);};   /* soft edges between sea, beach and land */
+ const strip=(x0,y0,w,h)=>{const c=document.createElement('canvas');c.width=w*P;c.height=h*P;const g=c.getContext('2d'),im=g.createImageData(c.width,c.height),D=im.data;
+   for(let py=0;py<c.height;py++)for(let px=0;px<c.width;px++){const x=x0+(px+0.5)/P,y=y0+(py+0.5)/P,v=colAt(x,y,px+x0*P,py+y0*P),o=(py*c.width+px)*4;D[o]=v[0];D[o+1]=v[1];D[o+2]=v[2];D[o+3]=255;}
+   g.putImageData(im,0,0);c.x0=x0;c.y0=y0;c.w=w;c.h=h;return c;};
+ MGC=[strip(-MG,-MG,MW+2*MG,MG),strip(-MG,MH,MW+2*MG,MG),strip(-MG,0,MG,MH),strip(MW,0,MG,MH)];}
 function drawTerrain(ox,oy,s,W,H){
+ ctx.fillStyle='#173f66';ctx.fillRect(0,0,W,H);if(MGC){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=true;for(const c of MGC){const X=ox+c.x0*s,Y=oy+c.y0*s,w=c.w*s,h=c.h*s;if(X>W||Y>H||X+w<0||Y+h<0)continue;ctx.drawImage(c,X,Y,w,h);}ctx.imageSmoothingEnabled=sm;}   /* sea and coast around the map */
  const op=terrO.ppt;bakeT0=performance.now();
  if(s<=4.5){ctx.drawImage(terrO,ox,oy,MW*s,MH*s);return;}
  const nx=MW/CH,ny=MH/CH,cx0=Math.max(0,Math.floor(-ox/s/CH)),cx1=Math.min(nx-1,Math.floor((W-ox)/s/CH)),cy0=Math.max(0,Math.floor(-oy/s/CH)),cy1=Math.min(ny-1,Math.floor((H-oy)/s/CH));
@@ -504,6 +534,7 @@ function render(){
  const s=TS*cam.z*DPR,ox=W/2-cam.x*s,oy=H/2-cam.y*s;
  const sx=x=>ox+x*s,sy=y=>oy+y*s;
  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=s<TPX?'high':'low';drawTerrain(ox,oy,s,W,H);
+ if(s>6){ctx.save();ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.lineWidth=Math.max(1,s*0.05);ctx.setLineDash([s*0.5,s*0.35]);ctx.strokeRect(ox,oy,MW*s,MH*s);ctx.restore();}   /* where building stops */
  const x0=Math.max(0,Math.floor(-ox/s)-1),y0=Math.max(0,Math.floor(-oy/s)-1),x1=Math.min(MW,Math.ceil((W-ox)/s)+1),y1=Math.min(MH,Math.ceil((H-oy)/s)+1);
  // water shimmer (only when zoomed in enough to see it)
  if(s>=22){ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1,s*0.04);ctx.lineCap='round';

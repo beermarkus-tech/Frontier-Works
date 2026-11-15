@@ -2687,3 +2687,22 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 **Level:** the master compressor levels it at RMS ~0.065–0.08 against Pulse's 0.095. Pulse has a kick on every beat, so this is ~2–3 dB quieter. Raising parts further only drove the compressor, so the bass was pulled back slightly for clarity instead.
 
 **Verified:** 2-minute offline render sent as a preview. `npm test` all PASS (music test: 3 tracks rotate).
+
+## Session 45 — 2026-11-15 (Claude Code, cloud session) · Build 134
+
+**Asked:**
+1. Be able to pull the map beyond its boundaries: at the coast the edge stays locked to the screen edge and is covered by panels.
+2. Have ocean all around the island, with a natural coastline instead of one straight line, without destroying today's map.
+
+**Built:**
+- **Camera (`clampCam`):** the centre may go from −6 to MW+6 (and MH), so any edge or corner can be brought to the middle of the screen. 3D already allowed this.
+- **Coast ring (`prepMargin`, `mgH`, `MG=32` in `js/render.js`):** scenery outside the map only, so every tile inside is unchanged and old saves are identical.
+  - Height field `MGH` per tile corner: where the edge is land, the land carries on 2.5–10.5 tiles with a wavy outline (smoothed edge-land fraction × value noise); lakes touching the edge open into the sea.
+  - Painted as four strips (only the ring) at 6 px per tile: mirrored overview colours for the land (darkened 10 % to show it isn't buildable), beach, surf line, shallow and deep sea, with soft transitions.
+  - 2D: deep-sea fill plus the strips, drawn before the map chunks; a faint dashed line along the map edge marks the build limit.
+- **3D:** `v3H` follows the coast at the edge (`v3MgH`) instead of dropping into a straight cliff, and four coast strip meshes use the same heights with the strips as textures.
+- `canPlace` already refuses out-of-bounds tiles. DESIGN.md updated.
+
+**Verified:** screenshots (corner, edge, far zoom, 3D shore). New smoke check (edge can be centred, limit −6, 4 strips, open sea outside, map tiles unchanged, no building outside). `npm test` all PASS.
+
+**Known:** the land in the ring uses the low-res overview colours, so it looks a little softer than the map when zoomed in close.
