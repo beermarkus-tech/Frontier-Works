@@ -350,7 +350,7 @@ const ACT={
  exportSave:async()=>{$('saveTxt').value=await exportText();toast('Save exported as text below');},
  copySave:async()=>{const t=$('saveTxt');if(!t.value)t.value=await exportText();try{navigator.clipboard.writeText(t.value).then(()=>toast('Copied'),()=>{t.select();toast('Select & copy the text');});}catch(e){t.select();}},
  importSave:async()=>{const t=$('saveTxt').value.trim();if(!t)return toast('Paste a save first');try{await importText(t);toast('Save loaded');closePanel();}catch(e){toast('That save could not be read');}},
- newGameAsk:()=>dialog(`<h2>Start a new map?</h2><p>Your current factory will be replaced. New maps are ${MAP_NEW}×${MAP_NEW} tiles with seven biomes.</p><button class="btn warn" data-act="newGameGo">Yes, new map</button> <button class="btn" data-act="closeDlg">Cancel</button>`),
+ newGameAsk:()=>dialog(`<h2>Start a new map?</h2><p>Your current factory will be replaced. New maps are ${MAP_NEW+2*MAP_EXT}×${MAP_NEW+2*MAP_EXT} tiles with seven biomes.</p><button class="btn warn" data-act="newGameGo">Yes, new map</button> <button class="btn" data-act="closeDlg">Cancel</button>`),
  newGameGo:()=>{closeDlg();closePanel();newGame();lastBio=null;buildCats();save();},
 };
 document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el||el.tagName==='INPUT')return;

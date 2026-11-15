@@ -12,7 +12,24 @@ function mkNoise(r,cell){const gw=Math.ceil(MW/cell)+2,gh=Math.ceil(MH/cell)+2,v
  const sm=t=>t*t*(3-2*t);return(x,y)=>{const fx=x/cell,fy=y/cell,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy);
  const a=v[iy*gw+ix],b=v[iy*gw+ix+1],c=v[(iy+1)*gw+ix],d=v[(iy+1)*gw+ix+1];return a+(b-a)*tx+(c-a)*ty+(a-b-c+d)*tx*ty;};}
 
-function genMap(seed){if(S&&S.gen===2)genBiome(seed);else genClassic(seed);}
+/* Session 46: maps grow by S.ext tiles of coast on every side. The original map is generated exactly as before (seed, S.mw), then
+   expandMap() puts it in the middle of a bigger map and fills the ring from a deterministic coast field, so every load gives the same map.
+   prepTerrain waits until the map has its final size (GEN_DEFER). */
+let GEN_DEFER=false;
+function genMap(seed){GEN_DEFER=true;try{if(S&&S.gen===2)genBiome(seed);else genClassic(seed);}finally{GEN_DEFER=false;}if(S&&S.ext)expandMap(S.ext);prepTerrain(seed);}
+function expandMap(E){const oW=MW,oH=MH,nW=oW+2*E,nH=oH+2*E,oT=terr,oB=bio,k=((S.seed>>>0)%1000)+7,land=(x,y)=>oT[y*oW+x]!==1?1:0;
+ const lf=(get,n)=>{const a=new Float32Array(n);for(let i=0;i<n;i++){let s=0,c=0;for(let j=-5;j<=5;j++){const q=i+j;if(q<0||q>=n)continue;s+=get(q);c++;}a[i]=s/c;}return a;};
+ const T=lf(x=>land(x,0),oW),Bo=lf(x=>land(x,oH-1),oW),L=lf(y=>land(0,y),oH),Ri=lf(y=>land(oW-1,y),oH);
+ const nT=new Uint8Array(nW*nH),nB=new Uint8Array(nW*nH),nN=new Array(nW*nH).fill(null),cl=(v,n)=>Math.max(0,Math.min(n-1,v));
+ for(let Y=0;Y<nH;Y++)for(let X=0;X<nW;X++){const x=X-E,y=Y-E,o=Y*nW+X;
+  if(x>=0&&x<oW&&y>=0&&y<oH){nT[o]=oT[y*oW+x];nB[o]=oB?oB[y*oW+x]:0;continue;}
+  const px=x+0.5,py=y+0.5,dx=px<0?-px:px>oW?px-oW:0,dy=py<0?-py:py>oH?py-oH:0,d=Math.hypot(dx,dy),cx=cl(x,oW),cy=cl(y,oH);
+  const f=dx&&dy?((x<0?L:Ri)[cy]+(y<0?T:Bo)[cx])/2:dx?(x<0?L:Ri)[cy]:(y<0?T:Bo)[cx];
+  let h=f*(2.5+6*mgNoise(px,py,10,k)+2*mgNoise(px,py,3.3,k+1))-d;
+  const mx=cl(x<0?-x-1:x>=oW?2*oW-x-1:x,oW),my=cl(y<0?-y-1:y>=oH?2*oH-y-1:y,oH),mt=oT[my*oW+mx];if(mt===1)h=Math.min(h,-0.8);   /* lakes at the edge open into the sea */
+  nT[o]=h>1.3?mt:h>0?2:1;nB[o]=oB?oB[my*oW+mx]:0;}
+ for(const n of nodes){n.x+=E;n.y+=E;nN[n.y*nW+n.x]=n;}
+ terr=nT;bio=nB;nodeAt=nN;MW=nW;MH=nH;}
 function genClassic(seed){   // maps made before biomes: must stay exactly as they were
  bio=new Uint8Array(MW*MH);
  const r=rng(seed), n1=mkNoise(r,18), n2=mkNoise(r,7), n3=mkNoise(r,4);
@@ -79,9 +96,9 @@ function boxBlur(a,w,h,rad){const t=new Float32Array(a.length),o=new Float32Arra
 const biomeAt=(x,y)=>bio&&x>=0&&y>=0&&x<MW&&y<MH?BIOMES[bio[(y|0)*MW+(x|0)]]:BIOMES[0];
 function newGame(seed){
  MW=MH=MAP_NEW;
- S={pw2:1,gen:2,mw:MAP_NEW,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};
+ S={pw2:1,gen:2,mw:MAP_NEW,ext:MAP_EXT,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};
  ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
- genMap(S.seed);
+ genMap(S.seed);grid=new Int32Array(MW*MH);S.cam={x:MW/2,y:MH/2,z:1.2};   /* the map is bigger after genMap (coast ring) */
  placeEnt('core',MW/2-2,MH/2-2,0,true);
  topoDirty=true;setCam(S.cam);if(typeof zoneInit==='function')zoneInit();
 }

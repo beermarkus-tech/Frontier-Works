@@ -1,7 +1,7 @@
 'use strict';
 /* ================= DATA ================= */
 let MW=128, MH=128;   // map size: 128 for maps made before biomes, MAP_NEW for new maps (stored in the save as S.mw)
-const MAP_NEW=384, TS=24, DX=[1,0,-1,0], DY=[0,1,0,-1], ARW=['→','↓','←','↑'];
+const MAP_NEW=384, MAP_EXT=32, TS=24, DX=[1,0,-1,0], DY=[0,1,0,-1], ARW=['→','↓','←','↑'];
 const IT={};
 function I(id,n,c,f,e){IT[id]={id,n,c,f:!!f,e:e||0};}
 I('iron_ore','Iron Ore','#a0614e');I('copper_ore','Copper Ore','#d27a3a');I('limestone','Limestone','#d9cfb0');

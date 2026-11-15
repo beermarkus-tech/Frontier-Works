@@ -26,7 +26,7 @@ const TPX=16;
    Per-tile fields are prepared once per map; every random choice is hashed from the tile, so chunks match at edges. */
 const CH=32,CHMAX=48,chunkC=new Map();let TF=null,terrO=null,mapGen=0;
 const PALK=['ga','gb','gc','sa','ra','rb','sh','dp'];
-function prepTerrain(seed){
+function prepTerrain(seed){if(GEN_DEFER)return;
  mapGen++;chunkC.clear();
  const r=rng((seed^0x5bd1e995)>>>0),nA=mkNoise(r,11),nB=mkNoise(r,3.5),nW=mkNoise(r,1.3);
  const T=MW*MH,dist=new Int16Array(T).fill(999),q=[];
@@ -120,7 +120,9 @@ function prepMargin(){const W=MW+2*MG+1,H=MH+2*MG+1,k=(TF.seed%1000)|0,land=(x,y
  const ss=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
  const colAt=(x,y,px,py)=>{const h=mgH(x,y),mx=x<0?-x:x>=MW?2*MW-x-0.01:x,my=y<0?-y:y>=MH?2*MH-y-0.01:y;
    const si=(Math.min(sh-1,Math.floor(my*op))*sw+Math.min(sw-1,Math.floor(mx*op)))*4,land=[src[si]*0.9,src[si+1]*0.9,src[si+2]*0.9],n=hash2(px,py)*12-6,sand=[SA[0]+n,SA[1]+n,SA[2]+n];
-   let water=h>-3?mix(SH,DP1,Math.max(0,-h)/3):mix(DP1,DP2,Math.min(1,(-h-3)/14));water=mix(water,FO,0.55*(1-ss(-0.45,0,-h)) *ss(-0.6,-0.05,h));
+   let water=h>-3?mix(SH,DP1,Math.max(0,-h)/3):mix(DP1,DP2,Math.min(1,(-h-3)/14));
+   {const ex=Math.max(0,Math.min(MW-1,Math.floor(x))),ey=Math.max(0,Math.min(MH-1,Math.floor(y)));if(terr[ey*MW+ex]===1){   /* water at the map edge: start with its colour, fade to open sea (no seam) */
+     const dd=Math.hypot(x<0?-x:x>MW?x-MW:0,y<0?-y:y>MH?y-MH:0),ei=(Math.min(sh-1,Math.floor((ey+0.5)*op))*sw+Math.min(sw-1,Math.floor((ex+0.5)*op)))*4;water=mix([src[ei],src[ei+1],src[ei+2]],water,ss(0,10,dd));}}water=mix(water,FO,0.55*(1-ss(-0.45,0,-h)) *ss(-0.6,-0.05,h));
    const a=ss(-0.08,0.08,h),b=ss(1.2,1.45,h);return mix(mix(water,sand,a),land,b);};   /* soft edges between sea, beach and land */
  const strip=(x0,y0,w,h)=>{const c=document.createElement('canvas');c.width=w*P;c.height=h*P;const g=c.getContext('2d'),im=g.createImageData(c.width,c.height),D=im.data;
    for(let py=0;py<c.height;py++)for(let px=0;px<c.width;px++){const x=x0+(px+0.5)/P,y=y0+(py+0.5)/P,v=colAt(x,y,px+x0*P,py+y0*P),o=(py*c.width+px)*4;D[o]=v[0];D[o+1]=v[1];D[o+2]=v[2];D[o+3]=255;}

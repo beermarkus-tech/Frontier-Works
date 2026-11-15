@@ -45,6 +45,12 @@ spend the stock on new buildings → submit parts in **Goals** to unlock the nex
 - **Resources (10):** iron ore, copper ore, limestone, coal, sulfur, raw quartz, bauxite, uranium ore, crude oil (wells), water (any lake).
   Rarer resources sit further from the start (sulfur/quartz/oil ≥ 24 tiles, bauxite ≥ 28, uranium ≥ 45).
 - **Node purity:** impure ×0.5, normal ×1, pure ×2 extraction rate.
+- **Bigger maps with a real coast** (Session 46, Markus): every map is the original map plus a ring of MAP_EXT=32 tiles on each side
+  (new maps 448×448, old 384 maps → 448, classic 128 → 192). The ring comes from a deterministic coast field around the original map:
+  where the edge was land the land carries on 2.5–10.5 tiles with a wavy shore (buildable ground, beach), lakes at the edge open into the
+  sea, the rest is water. S.ext marks a converted save; older saves are moved 32 tiles in once on load (entities, wires, drone routes,
+  zones, camera), the original save text is kept in localStorage 'frontierworks_preexpand'. The scenery ring below now lies around the
+  bigger map.
 - **Coast around the map** (Session 45): outside the map edge a 32-tile ring of scenery: the land carries on a few tiles with a wavy
   outline (where the edge itself is land), then beach, surf, shallow and open sea; lakes touching the edge open into the sea. Nothing inside
   the map changes and the ring can't be built on (a faint dashed line in 2D marks the limit). The camera can pull the edge to the middle of

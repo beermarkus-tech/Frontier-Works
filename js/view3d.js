@@ -137,7 +137,9 @@ function v3Look(){if(!V3.r)return;const nice=V3.look==='nice',r=V3.r;
  if(V3.aoP&&V3.aoP.mesh)V3.aoP.mesh.visible=nice&&V3.aoP.mesh.count>0;V3.sig=null;V3.lookAt=null;}
 
 /* ---------- terrain, water, decoration ---------- */
-function v3MgH(x,z){const h=mgH(x,z);return h>1.3?0:h>0?-0.3*(1-h/1.3):h>-3?-0.3+0.6*(h/3):Math.max(-1.5,-0.9+(h+3)*0.06);}
+function v3MgH(x,z){const h=mgH(x,z),v=h>1.3?0:h>0?-0.3*(1-h/1.3):h>-3?-0.3+0.6*(h/3):Math.max(-1.5,-0.9+(h+3)*0.06);
+ const ex=Math.max(0,Math.min(MW-1,Math.floor(x))),ez=Math.max(0,Math.min(MH-1,Math.floor(z)));if(h<=0&&terr&&terr[ez*MW+ex]===1){const d=Math.hypot(x<0?-x:x>MW?x-MW:0,z<0?-z:z>MH?z-MH:0),t=Math.min(1,Math.max(0,d-2)/10);return -0.55+(Math.min(v,-0.55)+0.55)*t;}   /* sea at the edge starts at lake depth (no step) */
+ return v;}
 function v3H(x,z){   // ground height at a mesh vertex: lakes sink, the map edge drops into the sea
  if(x<=0.01||z<=0.01||x>=MW-0.01||z>=MH-0.01)return v3MgH(x,z);   /* the coast around the map (Session 45) */
  const isW=(x,y)=>x<0||y<0||x>=MW||y>=MH||terr[y*MW+x]===1,fx=Math.floor(x),fz=Math.floor(z),cx=x-fx,cz=z-fz;

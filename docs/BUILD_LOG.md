@@ -2706,3 +2706,26 @@ Tanks only delay that. Visibly filling tanks mean the real surplus is larger tha
 **Verified:** screenshots (corner, edge, far zoom, 3D shore). New smoke check (edge can be centred, limit −6, 4 strips, open sea outside, map tiles unchanged, no building outside). `npm test` all PASS.
 
 **Known:** the land in the ring uses the low-res overview colours, so it looks a little softer than the map when zoomed in close.
+
+## Session 46 — 2026-11-15 (Claude Code, cloud session) · Build 135
+
+**Asked:** the coast should be accessible (buildable), not only scenery. Markus agreed to the plan (the map grows by the coast ring and old saves are converted once) and made his own text export as a backup.
+
+**Built:**
+- **Map growth:** `genMap` now generates the original map exactly as before, at seed and `S.mw`; `prepTerrain` is deferred via `GEN_DEFER`. Then `expandMap(S.ext)` places it in the middle of a map 2×32 tiles bigger. The ring is filled from a deterministic coast field (smoothed edge-land fraction × value noise, mirrored terrain types and biomes, lakes at the edge open into the sea). Ore patches move with it. Chunk sizes stay whole (448 = 14×32, 192 = 6×32).
+- **New games:** `S.ext=MAP_EXT` (448×448); the core stays centred.
+- **Old saves** (no `S.ext`), converted once in `load()`:
+  - the original save text is stored as `frontierworks_preexpand`
+  - entities, power-wire ends (`e.pl`), drone routes (`lx`/`ly`), drones in flight (`dr.tx`/`ty`), the zone map (RLE re-laid into the bigger map) and the camera move +32
+  - a toast says the map grew
+- **Seams:** the scenery water outside starts with the colour of the map's edge water and fades to open sea over ~10 tiles. In 3D the sea floor starts at lake depth and stays flat for 2 tiles.
+- DESIGN.md updated.
+
+**Verified:**
+- Large old-format factory (1,938 entities: 452 smelters, 1,452 belts, pipes + valve, poles with wires, drone pads with a route, a sign, a flow meter, a zone) converted. Every entity sits at +32 with the same type and direction. Pipe networks 2 → 2, grids 1 → 1, wire ends 4 → 4, belt bends 16 → 16, zone tiles 4,675 → 4,675. Production over 60 s 5,190 → 5,193. Drone route and sign kept, backup stored, no page errors.
+- Smoke tests updated: new maps are 448; the old v1 save test moves the core 62 → 94 and checks wires and a zone tile.
+- `npm test` all PASS.
+
+**Known issues:**
+- In 3D a faint dark line remains along the old outer edge (now out at sea). It isn't from slope, skirts or the coast strips; to look into later.
+- Devices still on an old build must update before loading a converted save from cloud sync; an old build would place everything 32 tiles off.

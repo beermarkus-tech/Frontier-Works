@@ -27,14 +27,21 @@ function growIncin(){const inc=[...ents.values()].filter(e=>e.k==='incin');if(!i
   e.x=at[0];e.y=at[1];e.w=e.h=2;for(let j=0;j<2;j++)for(let i=0;i<2;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
  if(back)setTimeout(()=>toast(`Incinerators are 2×2 now: ${back} had no room and went back to stock`),1500);}
 function load(str){const data=typeof str==='string'?parseSave(str):str;
- S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;genMap(S.seed);ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
+ S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;
+ /* Session 46: saves from before the coast ring are moved MAP_EXT tiles in (one time); the original save text is kept as a backup */
+ const mig=!S.ext,E=MAP_EXT,oW=MW,oH=MH;if(mig){S.ext=E;try{localStorage.setItem('frontierworks_preexpand',typeof str==='string'?str:JSON.stringify(data));}catch(e){}
+  if(S.cam){S.cam.x+=E;S.cam.y+=E;}
+  if(S.zmap){const old=new Uint16Array(oW*oH);let i=0;for(const part of String(S.zmap).split(',')){const [v,c]=part.split(':').map(Number);if(!(c>0))continue;if(v)old.fill(v,i,Math.min(old.length,i+c));i+=c;}
+   const nW=oW+2*E,nu=new Uint16Array(nW*(oH+2*E));for(let y=0;y<oH;y++)nu.set(old.subarray(y*oW,(y+1)*oW),(y+E)*nW+E);const out=[];let cur=nu[0],cnt=0;for(let j=0;j<nu.length;j++){if(nu[j]===cur)cnt++;else{out.push(cur+':'+cnt);cur=nu[j];cnt=1;}}out.push(cur+':'+cnt);S.zmap=out.join(',');}}
+ genMap(S.seed);ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  for(const o0 of data.es){const o=Array.isArray(o0)?Object.assign({d:o0[0],x:o0[1],y:o0[2],dir:o0[3]},o0[4]||{}):o0;
   /* Sorting Splitter removed (Session 39ae): becomes a Logic Splitter doing the same (filter item → front, the rest → sides) */
+  if(mig){o.x+=E;o.y+=E;if(Array.isArray(o.pl))o.pl=o.pl.map(p=>[p[0]+E,p[1]+E]);if(o.lx!=null&&o.ly!=null){o.lx+=E;o.ly+=E;}if(o.dr&&o.dr.st){o.dr=Object.assign({},o.dr,{tx:(o.dr.tx||0)+E,ty:(o.dr.ty||0)+E});}}
   if(o.d==='sorter'){o.d='lsplit';o.lr=o.filter?{l:['rest'],f:[o.filter],r:['rest']}:{l:['any'],f:['any'],r:['any']};delete o.filter;}
   const d=B[o.d];if(!d)continue;
   const e=Object.assign({},o,{id:nextId++,k:d.k,w:d.w,h:d.w});initEnt(e,d);ents.set(e.id,e);for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
  if(S.ub)S.ub=S.ub.filter(id=>B[id]);growIncin();if(!S.pw2)pnMigrate();zoneInit();grantUnlocks();
- S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
+ S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);if(mig)setTimeout(()=>{if(typeof toast==='function')toast(`The map grew: ${E} tiles of new coast on every side`);},1500);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
 }
 async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}
 async function gunz(u8){return await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}

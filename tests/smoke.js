@@ -32,15 +32,18 @@ const server=require('./serve.js');
  const bm=await p.evaluate(()=>{const bc=BIOMES.map(()=>0);for(let i=0;i<MW*MH;i++)bc[bio[i]]++;const types=new Set(nodes.map(n=>n.t));
   const ur=nodes.filter(n=>n.t==='uranium'),urHot=ur.filter(n=>['frostmark','emberfield'].includes(biomeAt(n.x,n.y).id)).length;
   const c=getChunk(5,5,true);return{MW,gen:S.gen,bc,types:types.size,ur:ur.length,urHot,chunk:c&&c.width,cpx:CH*TPX,startBio:biomeAt(MW/2,MH/2).id};});
- check(`new map is ${bm.MW}×${bm.MW} with all 7 biomes (${bm.bc})`,bm.MW===384&&bm.gen===2&&bm.bc.every(v=>v>500)&&bm.startBio==='greenvale');
+ check(`new map is ${bm.MW}×${bm.MW} with all 7 biomes (${bm.bc})`,bm.MW===448&&bm.gen===2&&bm.bc.every(v=>v>500)&&bm.startBio==='greenvale');
  check(`every resource exists; uranium mostly in Frostmark/Emberfield (${bm.urHot}/${bm.ur})`,bm.types===9&&bm.urHot/bm.ur>0.6);
  check('terrain chunk paints ('+bm.chunk+'px)',bm.chunk===bm.cpx);
- const sv=await p.evaluate(()=>{const s0=serialize(),n0=nodes.length,e0=ents.size;load(s0);const same=nodes.length===n0&&ents.size===e0&&MW===384;
+ const sv=await p.evaluate(()=>{const s0=serialize(),n0=nodes.length,e0=ents.size;load(s0);const same=nodes.length===n0&&ents.size===e0&&MW===448;
   // an old save: no gen/mw fields → must come back as the classic 128 map with the same layout as before
-  const o=JSON.parse(s0);delete o.S.gen;delete o.S.mw;o.S.seed=777;o.v=1;o.es=[{d:'core',x:62,y:62,dir:0}];   // v1 format: base64 JSON, entity objects
-  load(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));const old={MW,n:nodes.length,core:[...ents.values()][0].x,iron:nodes[0].x+','+nodes[0].y,bios:new Set(bio).size};
+  // (Session 46) it is also moved MAP_EXT=32 tiles in, into a 192×192 map with a coast ring: wires and zones move along
+  const o=JSON.parse(s0);delete o.S.gen;delete o.S.mw;delete o.S.ext;o.S.seed=777;o.v=1;o.es=[{d:'core',x:62,y:62,dir:0},{d:'pole1',x:70,y:70,dir:0,pl:[[75,70]]},{d:'pole1',x:75,y:70,dir:0,pl:[[70,70]]}];   // v1 format: base64 JSON, entity objects
+  o.S.zones=[{id:1,name:'Z',c:0}];o.S.zmap='0:'+(72*128+70)+',1:1,0:'+(128*128-72*128-71);delete o.S.pw2;
+  load(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));const cr=[...ents.values()].find(e=>e.k==='core'),pa=entAt(102,102);
+  const old={MW,n:nodes.length,core:cr.x,iron:nodes[0].x+','+nodes[0].y,bios:new Set(bio.subarray(32*MW+32,33*MW+32+1)).size,wired:!!pa&&pa.k==='pole'&&pnPeers(pa).length===1,zone:zoneMap[(72+32)*MW+102]===1,ext:S.ext};
   load(s0);return{same,old,back:MW};});
- check(`save/load keeps the big map; old saves load as 128 classic (${JSON.stringify(sv.old)})`,sv.same&&sv.old.MW===128&&sv.old.core===62&&sv.old.iron==='55,61'&&sv.old.bios===1&&sv.back===384);
+ check(`save/load keeps the big map; old saves load as the 128 classic map, moved into a 192 map with a coast ring (${JSON.stringify(sv.old)})`,sv.same&&sv.old.MW===192&&sv.old.core===94&&sv.old.iron==='87,93'&&sv.old.bios===1&&sv.old.wired&&sv.old.zone&&sv.old.ext===32&&sv.back===448);
  // recipe codex: generator fuel use; top-bar planner button
  await p.evaluate(()=>ACT.openCodex());await p.waitForTimeout(150);
  const cx=await p.evaluate(()=>document.getElementById('pbody').innerText);
