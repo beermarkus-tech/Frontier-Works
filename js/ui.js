@@ -49,6 +49,13 @@ function updInfo(){
  if($('info').__h!==h){$('info').__h=h;$('info').innerHTML=h;}
  $('fInspect').classList.toggle('on',!t);$('fDel').classList.toggle('on',t==='del');$('fClr').classList.toggle('on',t==='clr');$('fRot').firstElementChild.style.transform=`rotate(${UI.rotA}deg)`;
 }
+/* worlds you have reached: travel between them (Session 49) */
+function worldsHtml(){const ids=[S.w||'home',...Object.keys(S.worlds||{})].filter((v,i,a)=>a.indexOf(v)===i&&WORLDS[v]);
+ return'<div class="muted">Every world you have reached. Unlocks and tiers count everywhere; each world has its own buildings and its own stock.</div>'+ids.map(id=>{const W=WORLDS[id],here=id===(S.w||'home');
+  return`<div class="card"><div class="row"><b>${W.ic} ${W.n}</b>${here?'<span class="plok">you are here</span>':`<button class="btn chip on" data-act="travel" data-v="${id}">Travel</button>`}</div></div>`;}).join('');}
+function travel(id){const W=WORLDS[id];if(!W||id===(S.w||'home'))return;closePanel();setTool(null);const tv=$('travel');$('travelTxt').innerHTML=`${W.ic} ${W.n.toUpperCase()}<small>TRAVELLING…</small>`;
+ tv.classList.add('on');requestAnimationFrame(()=>tv.classList.add('vis'));sfx('click');
+ setTimeout(async()=>{switchWorld(id);try{await save();}catch(e){}setTimeout(()=>{tv.classList.remove('vis');setTimeout(()=>tv.classList.remove('on'),400);toast(`Arrived: ${W.n}`);},500);},420);}
 function setTool(t){if(t!==UI.tool)UI.bpAt=null;UI.tool=t;linePrev=null;refreshTools();updInfo();}
 function setHTML(el,h){if(el&&el.__h!==h){el.__h=h;el.innerHTML=h;}}
 
@@ -63,7 +70,7 @@ function renderPanel(full){
   if(full){$('plLeftBtn').style.display='none';$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));setHTML($('pbuild'),effChip(e));return;}
  pi.style.display='none';
- const map={find:['Find resources',findHtml],inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml],zone:['Factory Zone',zoneHtml],dsg:['Design piece',dsgHtml],bplib:['Blueprints',bplibHtml]};
+ const map={find:['Find resources',findHtml],inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml],zone:['Factory Zone',zoneHtml],dsg:['Design piece',dsgHtml],bplib:['Blueprints',bplibHtml],worlds:['Worlds',worldsHtml]};
  const [title,fn]=map[P.kind];
  if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'||P.kind==='zone'||P.kind==='dsg'||P.kind==='bplib'))return;
  $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display=P.kind==='menu'?'inline-flex':'none';$('plLeftBtn').style.display=P.kind==='plan'?'inline-flex':'none';
@@ -289,6 +296,8 @@ function closeDlg(){$('dlg').classList.add('hidden');}
 /* ---------- actions ---------- */
 const ACT={
  cat:v=>{UI.cat=v;buildCats();},
+ openWorlds:()=>openPanel('worlds'),
+ travel:v=>travel(v),
  tool:v=>{if(v==='bplist'){setTool(null);openPanel('bplib');return;}setTool(UI.tool===v?null:v);autoClose();},   /* the Blueprint List is a button, not a tool */
  pinPanel:()=>{OPT.pin=!OPT.pin;saveOpt();$('ppinBtn').classList.toggle('on',OPT.pin);toast(OPT.pin?'📌 Panel pinned: it stays open while you tap the map or build':'Panel unpinned');},
  toolNone:()=>setTool(null),

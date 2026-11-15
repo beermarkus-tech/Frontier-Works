@@ -16,7 +16,23 @@ function mkNoise(r,cell){const gw=Math.ceil(MW/cell)+2,gh=Math.ceil(MH/cell)+2,v
    expandMap() puts it in the middle of a bigger map and fills the ring from a deterministic coast field, so every load gives the same map.
    prepTerrain waits until the map has its final size (GEN_DEFER). */
 let GEN_DEFER=false;
-function genMap(seed){GEN_DEFER=true;try{if(S&&S.gen===2)genBiome(seed);else genClassic(seed);}finally{GEN_DEFER=false;}if(S&&S.ext)expandMap(S.ext);prepTerrain(seed);}
+function genMap(seed){GEN_DEFER=true;try{if(S&&S.gen===3)genMoon(seed);else if(S&&S.gen===2)genBiome(seed);else genClassic(seed);}finally{GEN_DEFER=false;}if(S&&S.ext)expandMap(S.ext);prepTerrain(seed);}
+/* The Moon (Session 49): grey regolith, dark maria and bright highlands, craters (rock rim, dusty floor), no water.
+   Resources: iron (mostly maria), quartz and bauxite (highlands), a little uranium; Helium comes in step 2c. */
+function genMoon(seed){const r=rng((seed^0x6d6f6f6e)>>>0),n1=mkNoise(r,46),n2=mkNoise(r,9),n3=mkNoise(r,5),T=MW*MH,cx=MW/2,cy=MH/2;
+ terr=new Uint8Array(T);bio=new Uint8Array(T);nodeAt=new Array(T).fill(null);nodes=[];
+ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=y*MW+x,v=n1(x,y)*0.75+n2(x,y)*0.25,hi=v>0.48;bio[i]=hi?EARTH_NB+1:EARTH_NB;
+  terr[i]=hi&&n3(x,y)>0.74?3:n2(x,y)>0.72?2:0;}
+ const crater=(X,Y,R)=>{for(let y=Math.max(0,Math.floor(Y-R-2));y<Math.min(MH,Y+R+2);y++)for(let x=Math.max(0,Math.floor(X-R-2));x<Math.min(MW,X+R+2);x++){const d=Math.hypot(x+0.5-X,y+0.5-Y),i=y*MW+x;
+  if(Math.abs(d-R)<0.9+R*0.06)terr[i]=3;else if(d<R-0.9)terr[i]=2;}};
+ for(let k=0;k<Math.round(MW*MH/2600);k++){const R=3+Math.pow(r(),2.2)*16,X=R+2+r()*(MW-2*R-4),Y=R+2+r()*(MH-2*R-4);if(Math.hypot(X-cx,Y-cy)<R+16)continue;crater(X,Y,R);}
+ for(let y=-13;y<=13;y++)for(let x=-13;x<=13;x++)if(Math.hypot(x,y)<13)terr[(cy+y)*MW+cx+x]=0;   /* flat landing site */
+ const add=(t,x,y,p)=>{const i=y*MW+x;if(nodeAt[i]||terr[i]===3)return false;const n={t,x,y,p};nodes.push(n);nodeAt[i]=n;return true;};
+ const near=(x,y,rr)=>{for(let j=-rr;j<=rr;j++)for(let i=-rr;i<=rr;i++){const X=x+i,Y=y+j;if(X>=0&&Y>=0&&X<MW&&Y<MH&&nodeAt[Y*MW+X])return true;}return false;};
+ add('iron',cx-8,cy-3,1);add('iron',cx-6,cy+6,1);add('quartz',cx+7,cy-6,1);add('bauxite',cx+5,cy+8,1);   /* close to the landing site */
+ const odds={iron:[5,1.5],quartz:[1.2,3],bauxite:[1,3],copper:[1,0.6],uranium:[0.25,0.5]},keys=Object.keys(odds),target=Math.round(MW*MH/950);
+ for(let a=0,k=0;a<target*30&&k<target;a++){const x=3+Math.floor(r()*(MW-6)),y=3+Math.floor(r()*(MH-6));if(Math.hypot(x-cx,y-cy)<15||near(x,y,4))continue;const hi=bio[y*MW+x]===EARTH_NB+1?1:0;
+  let s=0;for(const t of keys)s+=odds[t][hi];let q=r()*s,t=keys[0];for(const k2 of keys){q-=odds[k2][hi];if(q<=0){t=k2;break;}}const p=r();if(add(t,x,y,p<0.3?0:p<0.8?1:2))k++;}}
 function expandMap(E){const oW=MW,oH=MH,nW=oW+2*E,nH=oH+2*E,oT=terr,oB=bio,k=((S.seed>>>0)%1000)+7,land=(x,y)=>oT[y*oW+x]!==1?1:0;
  const lf=(get,n)=>{const a=new Float32Array(n);for(let i=0;i<n;i++){let s=0,c=0;for(let j=-5;j<=5;j++){const q=i+j;if(q<0||q>=n)continue;s+=get(q);c++;}a[i]=s/c;}return a;};
  const T=lf(x=>land(x,0),oW),Bo=lf(x=>land(x,oH-1),oW),L=lf(y=>land(0,y),oH),Ri=lf(y=>land(oW-1,y),oH);
@@ -56,7 +72,7 @@ function genClassic(seed){   // maps made before biomes: must stay exactly as th
    (with warped coordinates for organic borders), then terrain thresholds and resource odds follow the biome. */
 function genBiome(seed){
  const r=rng((seed^0x2f6b1a3c)>>>0),n1=mkNoise(r,18),n2=mkNoise(r,7),n3=mkNoise(r,4),wx=mkNoise(r,40),wy=mkNoise(r,40),vx=mkNoise(r,13),vy=mkNoise(r,13);
- const T=MW*MH,cx=MW/2,cy=MH/2,NB=BIOMES.length;
+ const T=MW*MH,cx=MW/2,cy=MH/2,NB=EARTH_NB;   /* Earth biomes only (the Moon's are listed after them) */
  terr=new Uint8Array(T);bio=new Uint8Array(T);nodeAt=new Array(T).fill(null);nodes=[];
  const pick=w=>{let s=0;for(const v of w)s+=v;let q=r()*s;for(let i=0;i<w.length;i++){q-=w[i];if(q<=0)return i;}return 0;};
  const band=d=>d<55?[1,0,0,0,0,0,0]:d<115?[1,3,2,2,2,0,0]:d<170?[0,1,2,2,2,2,0.6]:[0,0,1,1,0.5,2,2.5];
@@ -85,7 +101,7 @@ function genBiome(seed){
  const target=Math.round(land/105);
  for(let a=0,k=0;a<target*25&&k<target;a++){const x=2+Math.floor(r()*(MW-4)),y=2+Math.floor(r()*(MH-4));if(r()>BIOMES[bio[y*MW+x]].dens)continue;if(tryAt(x,y))k++;}
  // every resource must exist: top up rare ones in the biomes that favour them
- for(const t of RES){let c=nodes.filter(n=>n.t===t).length;const fav=BIOMES.map((b,i)=>[b.res[t]||0,i]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]);
+ for(const t of RES){let c=nodes.filter(n=>n.t===t).length;const fav=BIOMES.slice(0,EARTH_NB).map((b,i)=>[b.res[t]||0,i]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]);
   for(let a=0;a<40000&&c<8;a++){const x=2+Math.floor(r()*(MW-4)),y=2+Math.floor(r()*(MH-4));if(fav.includes(bio[y*MW+x])&&tryAt(x,y,t))c++;}}
  prepTerrain(seed);
 }
@@ -109,7 +125,7 @@ const ub=id=>has(S.ub,id), ur=id=>has(S.ur,id);
 const entAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?null:(grid[y*MW+x]?ents.get(grid[y*MW+x]):null);
 const isLine=k=>k==='belt'||k==='pipe';
 function canPlace(id,x,y){
- const d=B[id],w=d.w;
+ const d=B[id],w=d.w;if(d.only&&d.only!==((S&&S.w)||'home'))return 'Only on the '+WORLDS[d.only].n;
  if(x<0||y<0||x+w>MW||y+w>MH)return 'Out of bounds';
  let water=0,node=null;
  for(let j=0;j<w;j++)for(let i=0;i<w;i++){const idx=(y+j)*MW+x+i;
@@ -437,7 +453,7 @@ function pipeSide(e){const n=e.net;if(!n)return null;const seen=new Set([e]),sid
 
 /* ================= SIMULATION ================= */
 function drawMW(e){const d=B[e.d];return e.want?d.pw*Math.pow(e.clock||1,1.6):0;}
-function genCan(g){const d=B[g.d];if(g.off)return false;if(d.water&&g.water<1)return false;if(g.d==='reactor'&&(g.outb.waste||0)>=50)return false;if(g.energy>0)return true;for(const f of d.fuels)if((g.fuel[f]||0)>0)return true;return false;}
+function genCan(g){const d=B[g.d];if(g.off)return false;if(d.solar)return true;if(d.water&&g.water<1)return false;if(g.d==='reactor'&&(g.outb.waste||0)>=50)return false;if(g.energy>0)return true;for(const f of d.fuels)if((g.fuel[f]||0)>0)return true;return false;}
 function powerStep(dt){
  for(const g of grids){
   let dem=0;for(const c of g.cons)dem+=drawMW(c);

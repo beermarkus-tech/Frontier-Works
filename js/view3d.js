@@ -159,6 +159,17 @@ function v3Terrain(){
  for(let cy=0;cy<NY;cy++)for(let cx=0;cx<NX;cx++){const g=new T3.PlaneGeometry(CH,CH,CH/2,CH/2);g.rotateX(-Math.PI/2);g.translate(cx*CH+CH/2,0,cy*CH+CH/2);
   const P=g.attributes.position,UV=g.attributes.uv;for(let i=0;i<P.count;i++){const x=P.getX(i),z=P.getZ(i);P.setY(i,v3H(x,z)-0.05);UV.setXY(i,x/MW,1-z/MH);}
   g.computeVertexNormals();const m=new T3.Mesh(g,V3.oMat);m.receiveShadow=true;sc.add(m);V3.coarse.push(m);}
+ // the Moon (Session 49): black sky with stars, no water, grey sea floor, Home on the horizon
+ {const moon=S&&S.gen===3;V3.sky.visible=!moon;sc.background=moon?new T3.Color('#020306'):null;V3.fogC.set(moon?'#05070c':'#c6dcea');sc.fog.color.copy(V3.fogC);   /* the Fog keeps its own copy of the colour */
+  V3.hemi.color.set(moon?0xd8dce6:0xe4f0ff);V3.hemi.groundColor.set(moon?0x3a3a40:0x5c6a4c);
+  if(!V3.stars){const N=1400,p=new Float32Array(N*3);for(let k=0;k<N;k++){const u=Math.random()*2-1,a=Math.random()*Math.PI*2,r=Math.sqrt(1-u*u);p[k*3]=r*Math.cos(a)*850;p[k*3+1]=Math.abs(u)*850;p[k*3+2]=r*Math.sin(a)*850;}
+   const g=new T3.BufferGeometry();g.setAttribute('position',new T3.BufferAttribute(p,3));V3.stars=new T3.Points(g,new T3.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false,fog:false,depthWrite:false}));V3.stars.renderOrder=-9;sc.add(V3.stars);
+   /* Home in the sky: a small painted planet (ocean, continents, ice caps, clouds) */
+   const hc=v3Canvas(256,128,(g,w,h)=>{g.fillStyle='#2f6fc0';g.fillRect(0,0,w,h);const rnd=(a,b)=>{const x=Math.sin(a*12.9898+b*78.233)*43758.5453;return x-Math.floor(x);};
+    for(let k=0;k<26;k++){const x=rnd(k,1)*w,y=h*0.2+rnd(k,2)*h*0.6,r=6+rnd(k,3)*22;g.fillStyle=k%3?'#4f8f44':'#a3925a';g.beginPath();g.ellipse(x,y,r*1.4,r,rnd(k,4)*3,0,7);g.fill();}
+    g.fillStyle='#eef4f8';g.fillRect(0,0,w,h*0.08);g.fillRect(0,h*0.92,w,h*0.08);g.globalAlpha=0.55;for(let k=0;k<40;k++){g.beginPath();g.ellipse(rnd(k,5)*w,rnd(k,6)*h,8+rnd(k,7)*20,3+rnd(k,8)*4,0,0,7);g.fill();}});
+   V3.home=new T3.Mesh(new T3.SphereGeometry(34,40,24),new T3.MeshStandardMaterial({map:new T3.CanvasTexture(hc),emissive:'#10243f',roughness:0.9,fog:false}));sc.add(V3.home);V3.homeLand=V3.home;}
+  V3.stars.visible=V3.home.visible=V3.homeLand.visible=moon;}
  // coast strips around the map (Session 45): same height rule and the 2D coast picture as texture
  if(V3.mg)for(const m of V3.mg){sc.remove(m);m.geometry.dispose();m.material.dispose();}V3.mg=[];
  if(MGC){if(V3.mgTex)for(const t of V3.mgTex)t.dispose();V3.mgTex=[];
@@ -174,6 +185,7 @@ function v3Terrain(){
   V3.wNorm.wrapS=V3.wNorm.wrapT=T3.RepeatWrapping;V3.wNorm.repeat.set(290,290);}
  V3.water=new T3.Mesh(new T3.PlaneGeometry(4000,4000).rotateX(-Math.PI/2),new T3.MeshStandardMaterial({color:'#3f93d6',transparent:true,opacity:0.58,roughness:0.12,metalness:0.05,normalMap:V3.wNorm,normalScale:new T3.Vector2(0.45,0.45),depthWrite:false}));
  V3.water.position.set(MW/2,-0.12,MH/2);V3.water.receiveShadow=true;V3.water.renderOrder=2;sc.add(V3.water);
+ if(S&&S.gen===3){V3.water.visible=false;V3.floor.material.color.set('#2c2c32');}   /* no water on the Moon */
  if(V3.grid){sc.remove(V3.grid);V3.grid.geometry.dispose();}
  V3.grid=new T3.GridHelper(MW,MW,0xffffff,0xffffff);V3.grid.position.set(MW/2,0.03,MH/2);V3.grid.material.transparent=true;V3.grid.material.opacity=0.07;V3.grid.material.depthWrite=false;V3.grid.visible=false;sc.add(V3.grid);
  // decoration candidates per biome (shown near the camera, hidden where something is built)
@@ -280,6 +292,7 @@ function v3Models(){
  {const c=B.valve.col;def('valve',[['box','#2a3037',[0,0.06,0],[0.6,0.12,0.6]],['cyl',shade(c,-20),[0,0.32,0],[0.3,1.0,0.3],{rot:[0,0,Math.PI/2]}],['box',c,[0,0.32,0],[0.42,0.42,0.42]],
   ['cyl','#8a939c',[0,0.62,0],[0.06,0.3,0.06]],['tor','#d0453a',[0,0.78,0],[0.42,0.42,0.42],{rot:[Math.PI/2,0,0]}],['box','#f0f2f4',[0.28,0.55,0],[0.16,0.04,0.08]]],[],{h:0.8});}
  def('bpstation',[['box','#163d6b',[0,0.04,0],[11.9,0.08,11.9]],['box','#8fc6ff',[0,0.085,-5.9],[11.9,0.02,0.12]],['box','#8fc6ff',[0,0.085,5.9],[11.9,0.02,0.12]],['box','#8fc6ff',[-5.9,0.085,0],[0.12,0.02,11.9]],['box','#8fc6ff',[5.9,0.085,0],[0.12,0.02,11.9]],['box','#2a3037',[-5.2,0.45,-5.2],[1.2,0.9,0.9]],['box','#7fc4ff',[-5.2,0.95,-5.45],[1,0.5,0.06]]],[],{h:0.2});   /* Blueprint Station (Session 48b) */
+ def('solar',[['box','#3a4048',[0,0.12,0],[1.9,0.24,1.9]],['cyl','#8a939c',[0,0.45,0],[0.12,0.5,0.12]],['box','#1f3f78',[0,0.72,0],[1.8,0.06,1.8],{rot:[-0.35,0,0]}]],[],{h:0.9});   /* Solar Panel (Session 49) */
  // logistics pieces (1×1, rotate with dir; front = +x)
  for(const id of ['splitter','merger','lsplit']){const c=B[id].col,mk=[];const sides=id==='merger'?[[-0.36,0],[0,-0.36],[0,0.36]]:[[0.36,0],[0,-0.36],[0,0.36]];
   for(const [x,z] of sides)mk.push(['box',shade(c,45),[x,0.44,z],[Math.abs(x)>0?0.12:0.3,0.04,Math.abs(z)>0?0.12:0.3]]);
@@ -639,6 +652,7 @@ function render3D(el){
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}
  const cm=V3.camera,nr=Math.max(0.3,C3.dist*0.02),fr=Math.max(1400,C3.dist*3+700);if(cm.near!==nr||cm.far!==fr){cm.near=nr;cm.far=fr;cm.updateProjectionMatrix();}
  V3.sky.position.copy(V3.camera.position);V3.sky.scale.setScalar(fr/1500);
+ if(V3.stars&&V3.stars.visible){const k=fr/1500,cp=V3.camera.position;V3.stars.position.copy(cp);V3.stars.scale.setScalar(k);V3.home.position.set(cp.x-200*k,cp.y+38*k,cp.z-780*k);V3.home.scale.setScalar(k);V3.home.rotation.y+=0.0006;}
  V3.scene.fog.near=C3.dist*1.4+10;V3.scene.fog.far=C3.dist*4.5+80;
  V3.smU.scale.value=V3.r.domElement.height/(2*Math.tan(22.5*Math.PI/180));
  v3Chunks();v3Decor();

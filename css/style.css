@@ -226,3 +226,10 @@ body.dockhid #dock{display:none}body.dockhid #dockShow{display:inline-flex}
 #bpbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--dockH) + 18px + var(--sab));display:none;gap:6px;padding:6px;border-radius:14px;z-index:5}
 #bpbar.show{display:flex}
 #bpbar .btn{padding:8px 12px;font-weight:700}
+
+/* travel screen between worlds (Session 49) */
+#travel{position:fixed;inset:0;z-index:19;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#16243a,#04060a);opacity:0;transition:opacity .35s}
+#travel.on{display:flex}
+#travel.vis{opacity:1}
+#travelTxt{font:800 clamp(28px,6vw,56px)/1.1 'BS Stencil',Rajdhani,sans-serif;color:#f4f1ea;letter-spacing:.04em;text-align:center}
+#travelTxt small{display:block;font:700 15px 'Big Shoulders',Rajdhani,sans-serif;letter-spacing:.3em;color:#8d9bab;margin-top:10px}

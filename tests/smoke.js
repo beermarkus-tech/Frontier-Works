@@ -29,7 +29,7 @@ const server=require('./serve.js');
  check('↻ reload button in Menu reloads the game (save kept)',rl&&await p.evaluate(()=>!!window.__fw&&window.__fw.ents().size>5));
  await p.evaluate(()=>ACT.closePanel());
  // big biome map + old saves
- const bm=await p.evaluate(()=>{const bc=BIOMES.map(()=>0);for(let i=0;i<MW*MH;i++)bc[bio[i]]++;const types=new Set(nodes.map(n=>n.t));
+ const bm=await p.evaluate(()=>{const bc=BIOMES.slice(0,EARTH_NB).map(()=>0);for(let i=0;i<MW*MH;i++)bc[bio[i]]++;const types=new Set(nodes.map(n=>n.t));
   const ur=nodes.filter(n=>n.t==='uranium'),urHot=ur.filter(n=>['frostmark','emberfield'].includes(biomeAt(n.x,n.y).id)).length;
   const c=getChunk(5,5,true);return{MW,gen:S.gen,bc,types:types.size,ur:ur.length,urHot,chunk:c&&c.width,cpx:CH*TPX,startBio:biomeAt(MW/2,MH/2).id};});
  check(`new map is ${bm.MW}×${bm.MW} with all 7 biomes (${bm.bc})`,bm.MW===448&&bm.gen===2&&bm.bc.every(v=>v>500)&&bm.startBio==='greenvale');
@@ -350,6 +350,20 @@ const server=require('./serve.js');
   ACT.bpCancel();out.cancel=UI.tool!=='bppaste'&&!document.getElementById('bpbar').classList.contains('show');
   for(const q of L.it){const e=fw.entAt(q.x,q.y);if(e)removeEnt(e,false,true);}ACT.closePanel();BPS.length=0;BPS.push(...keep);bpSave();UI.cat='log';buildCats();return out;});
  check(`Blueprints tab and placing bar: ${Object.entries(bpb).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(bpb).every(v=>v===true));
+ // worlds (Session 49): travel to the Moon (own map, biomes, no water, Base Core), solar power there only, separate stock per world,
+ // Home unchanged after the round trip, worlds survive save/load
+ const wld=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};const nHome=ents.size,invHome=JSON.stringify(S.inv),seedHome=S.seed,mwHome=MW;
+  out.go=fw.switchWorld('moon')&&S.w==='moon';out.map=MW===256&&S.gen===3&&!terr.some(t=>t===1)&&bio.every(b=>b>=EARTH_NB)&&nodes.some(n=>n.t==='iron')&&[...ents.values()].some(e=>e.k==='core');
+  out.ownStock=Object.keys(S.inv).length===0;S.ub.push('solar');
+  let X,Y;for(let r=16;r<120&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=0;j<3&&ok;j++)for(let i=0;i<5&&ok;i++)if(canPlace('solar',x+i,y+j)!==''&&canPlace('incin',x+i,y+j)!==''||nodeAt[(y+j)*MW+x+i])ok=false;if(ok&&canPlace('solar',x,y)===''&&canPlace('smelter',x+2,y)===''){X=x;Y=y;break;}}
+  out.solarOk=P('solar',X,Y,0)==='';P('smelter',X+2,Y,0);const sm=entAt(X+2,Y);sm.r='r_iron_ingot';sm.inb={iron_ore:20};for(let k=0;k<40;k++)tick(0.05);out.powered=sm.pw>0&&!!sm.run;
+  S.inv={iron_plate:5};
+  fw.switchWorld('home');out.back=S.w==='home'&&ents.size===nHome&&JSON.stringify(S.inv)===invHome&&S.seed===seedHome&&MW===mwHome&&!!S.worlds.moon;
+  out.solarHome=canPlace('solar',MW/2+20,MH/2+20)==='Only on the Moon';
+  load(serialize());out.saved=!!S.worlds.moon&&S.w==='home';
+  fw.switchWorld('moon');const sm2=entAt(X+2,Y);out.kept=!!sm2&&sm2.r==='r_iron_ingot'&&entAt(X,Y)&&entAt(X,Y).d==='solar'&&S.inv.iron_plate===5;
+  fw.switchWorld('home');delete S.worlds.moon;S.ub=S.ub.filter(x=>x!=='solar');return out;});
+ check(`worlds: ${Object.entries(wld).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(wld).every(v=>v===true));
  // pipes have no direction: tank → pipes laid "backwards" + a Pipe Junction + a corner → incinerator, one network at Mk1 rate;
  // a second fluid is refused and flagged; the network's fluid and amount survive save/load. Then: Items panel empties all crates at once
  const pnet=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true);let X,Y;

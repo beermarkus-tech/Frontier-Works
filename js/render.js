@@ -113,7 +113,7 @@ function prepMargin(){const W=MW+2*MG+1,H=MH+2*MG+1,k=(TF.seed%1000)|0,land=(x,y
   let f;if(dx&&dy)f=((x<0?L:Ri)[cy]+(y<0?T:Bo)[cx])/2;else if(dx)f=(x<0?L:Ri)[cy];else f=(y<0?T:Bo)[cx];
   let hv=f*(2.5+6*mgNoise(x,y,10,k)+2*mgNoise(x,y,3.3,k+1))-d;const mx=Math.max(0,Math.min(MW-1,Math.floor(x<0?-x:x>=MW?2*MW-x-0.01:x))),my=Math.max(0,Math.min(MH-1,Math.floor(y<0?-y:y>=MH?2*MH-y-0.01:y)));
   if(terr[my*MW+mx]===1)hv=Math.min(hv,-0.8);   /* a lake at the edge opens into the sea */
-  MGH[gy*W+gx]=hv;}
+  MGH[gy*W+gx]=S&&S.gen===3?9:hv;}   /* the Moon has no sea: its surroundings are regolith */
  /* painted as four strips (top, bottom, left, right) at 6 px per tile: only the ring, so memory stays small (Session 45) */
  const P=6,op=terrO.ppt,src=terrO.getContext('2d').getImageData(0,0,terrO.width,terrO.height).data,sw=terrO.width,sh=terrO.height;
  const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],SH=[79,155,210],DP1=[47,110,166],DP2=[23,63,102],FO=[214,236,246],SA=[217,197,143];
@@ -129,7 +129,7 @@ function prepMargin(){const W=MW+2*MG+1,H=MH+2*MG+1,k=(TF.seed%1000)|0,land=(x,y
    g.putImageData(im,0,0);c.x0=x0;c.y0=y0;c.w=w;c.h=h;return c;};
  MGC=[strip(-MG,-MG,MW+2*MG,MG),strip(-MG,MH,MW+2*MG,MG),strip(-MG,0,MG,MH),strip(MW,0,MG,MH)];}
 function drawTerrain(ox,oy,s,W,H){
- ctx.fillStyle='#173f66';ctx.fillRect(0,0,W,H);if(MGC){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=true;for(const c of MGC){const X=ox+c.x0*s,Y=oy+c.y0*s,w=c.w*s,h=c.h*s;if(X>W||Y>H||X+w<0||Y+h<0)continue;ctx.drawImage(c,X,Y,w,h);}ctx.imageSmoothingEnabled=sm;}   /* sea and coast around the map */
+ ctx.fillStyle=S&&S.gen===3?'#3a3a40':'#173f66';ctx.fillRect(0,0,W,H);if(MGC){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=true;for(const c of MGC){const X=ox+c.x0*s,Y=oy+c.y0*s,w=c.w*s,h=c.h*s;if(X>W||Y>H||X+w<0||Y+h<0)continue;ctx.drawImage(c,X,Y,w,h);}ctx.imageSmoothingEnabled=sm;}   /* sea and coast around the map */
  const op=terrO.ppt;bakeT0=performance.now();
  if(s<=4.5){ctx.drawImage(terrO,ox,oy,MW*s,MH*s);return;}
  const nx=MW/CH,ny=MH/CH,cx0=Math.max(0,Math.floor(-ox/s/CH)),cx1=Math.min(nx-1,Math.floor((W-ox)/s/CH)),cy0=Math.max(0,Math.floor(-oy/s/CH)),cy1=Math.min(ny-1,Math.floor((H-oy)/s/CH));
@@ -188,6 +188,7 @@ function paintB(g,id,P,u){
   case 'fabricator':box(i,i,W,W,u*0.2,col);g.fillStyle='#1d2228';R(P*0.14,P*0.44,P*0.72,P*0.18,u*0.05);g.fill();g.strokeStyle='rgba(255,255,255,0.12)';g.lineWidth=Math.max(1,u*0.04);for(let x=P*0.16;x<P*0.85;x+=u*0.22){g.beginPath();g.moveTo(x,P*0.45);g.lineTo(x,P*0.61);g.stroke();}
    for(const [a,b] of [[0.3,0.3],[0.7,0.3],[0.3,0.76],[0.7,0.76]])circ(P*a,P*b,u*0.24,'#c8d0d8');box(P*0.42,P*0.15,P*0.16,P*0.08,u*0.03,'#0e1a26');break;
   case 'blender':box(i,i,W,W,u*0.18,col);circ(P/2,P/2,P*0.31,'#aab6be');hole(P/2,P/2,P*0.23);pipe(P*0.2,P*0.2,P*0.32,P*0.32,u*0.12,'#8fd0c8');break;
+  case 'solar':{box(i,i,W,W,u*0.12,'#3a4048');const c=W*0.46;for(const [a,b] of [[0,0],[1,0],[0,1],[1,1]]){const x0=i+W*0.05+a*(c+W*0.02),y0=i+W*0.05+b*(c+W*0.02),gr=g.createLinearGradient(x0,y0,x0+c,y0+c);gr.addColorStop(0,'#3d6fb8');gr.addColorStop(1,'#16305e');g.fillStyle=gr;g.fillRect(x0,y0,c,c);g.strokeStyle='rgba(180,210,255,0.35)';g.lineWidth=Math.max(1,u*0.03);g.beginPath();for(let k=1;k<4;k++){g.moveTo(x0+c*k/4,y0);g.lineTo(x0+c*k/4,y0+c);g.moveTo(x0,y0+c*k/4);g.lineTo(x0+c,y0+c*k/4);}g.stroke();}break;}
   case 'burner':box(i,i,W,W,u*0.16,col);g.fillStyle='#120a06';R(P*0.24,P*0.48,P*0.52,P*0.3,u*0.08);g.fill();g.strokeStyle='#4a3a30';g.lineWidth=Math.max(1,u*0.06);for(let x=P*0.3;x<P*0.74;x+=u*0.18){g.beginPath();g.moveTo(x,P*0.5);g.lineTo(x,P*0.76);g.stroke();}circ(P*0.72,P*0.28,u*0.22,'#5a5a5a');hole(P*0.72,P*0.28,u*0.12);break;
   case 'steam':box(i,i,W,W,u*0.18,col);circ(P*0.42,P*0.54,P*0.27,'#7a8189');hole(P*0.42,P*0.54,P*0.2);circ(P*0.8,P*0.22,u*0.26,'#9aa0a6');hole(P*0.8,P*0.22,u*0.15);pipe(P*0.66,P*0.54,P*0.84,P*0.54,u*0.14,'#c0c6cc');break;
   case 'turbine':box(i,i,W,W,u*0.18,col);{const gr=g.createLinearGradient(0,P*0.34,0,P*0.66);gr.addColorStop(0,'#d8dde2');gr.addColorStop(0.5,'#8a9198');gr.addColorStop(1,'#4a5056');g.fillStyle=gr;R(P*0.16,P*0.34,P*0.7,P*0.32,P*0.16);g.fill();g.strokeStyle='rgba(0,0,0,0.5)';g.lineWidth=lw;g.stroke();}hole(P*0.3,P*0.5,P*0.13);g.fillStyle='#2a2a2a';R(P*0.78,P*0.4,P*0.08,P*0.2,u*0.04);g.fill();break;
@@ -336,7 +337,7 @@ function drawLODCached(ox,oy,s,W,H,vis,sx,sy){const C=LODC,zooming=Math.abs(s-C.
   drawLOD(list,x=>x*s-C.x0,y=>y*s-C.y0,s,g);C.s=s;C.ver=topoVer;C.t=animT;}
  ctx.drawImage(C.c,Math.round(C.x0+ox),Math.round(C.y0+oy));
 }
-function syncClouds(ox,oy){const el=document.getElementById('clouds');if(!el||!cloudC)return;
+function syncClouds(ox,oy){const el=document.getElementById('clouds');if(!el||!cloudC)return;const nm=S&&S.gen===3;if(el._moon!==nm){el._moon=nm;el.style.display=nm?'none':'';}if(nm)return;   /* no clouds on the Moon */
  if(el._src!==cloudC){el._src=cloudC;el.style.backgroundImage=`url(${cloudC.toDataURL()})`;}
  const sc=TS*cam.z,T=128*2.2*sc,bx=((animT*0.5*sc)%T),X=ox/DPR-bx+MW*sc/2-64*2.2*sc,Y=oy/DPR-bx*0.4+MH*sc/2-64*2.2*sc;
  const st=`${(X%T).toFixed(1)}px ${(Y%T).toFixed(1)}px`,sz=`${T.toFixed(1)}px`;if(el._p!==st){el._p=st;el.style.backgroundPosition=st;}if(el._s!==sz){el._s=sz;el.style.backgroundSize=sz;}}

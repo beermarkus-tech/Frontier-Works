@@ -29,7 +29,8 @@ function growIncin(){const inc=[...ents.values()].filter(e=>e.k==='incin');if(!i
 function load(str){const data=typeof str==='string'?parseSave(str):str;
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;
  /* Session 46: saves from before the coast ring are moved MAP_EXT tiles in (one time); the original save text is kept as a backup */
- const mig=!S.ext,E=MAP_EXT,oW=MW,oH=MH;if(mig){S.ext=E;try{localStorage.setItem('frontierworks_preexpand',typeof str==='string'?str:JSON.stringify(data));}catch(e){}
+ S.w=S.w||'home';S.worlds=S.worlds||{};
+ const mig=S.ext===undefined,E=MAP_EXT,oW=MW,oH=MH;   /* only saves from before the coast ring (the Moon has ext 0) */if(mig){S.ext=E;try{localStorage.setItem('frontierworks_preexpand',typeof str==='string'?str:JSON.stringify(data));}catch(e){}
   if(S.cam){S.cam.x+=E;S.cam.y+=E;}
   if(S.zmap){const old=new Uint16Array(oW*oH);let i=0;for(const part of String(S.zmap).split(',')){const [v,c]=part.split(':').map(Number);if(!(c>0))continue;if(v)old.fill(v,i,Math.min(old.length,i+c));i+=c;}
    const nW=oW+2*E,nu=new Uint16Array(nW*(oH+2*E));for(let y=0;y<oH;y++)nu.set(old.subarray(y*oW,(y+1)*oW),(y+E)*nW+E);const out=[];let cur=nu[0],cnt=0;for(let j=0;j<nu.length;j++){if(nu[j]===cur)cnt++;else{out.push(cur+':'+cnt);cur=nu[j];cnt=1;}}out.push(cur+':'+cnt);S.zmap=out.join(',');}}
@@ -43,6 +44,15 @@ function load(str){const data=typeof str==='string'?parseSave(str):str;
  if(S.ub)S.ub=S.ub.filter(id=>B[id]);growIncin();if(!S.pw2)pnMigrate();zoneInit();grantUnlocks();
  S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);if(mig)setTimeout(()=>{if(typeof toast==='function')toast(`The map grew: ${E} tiles of new coast on every side`);},1500);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
 }
+/* Switching worlds (Session 49): pack the current world (its part of S + entities) into S.worlds, unpack (or create) the other and load it.
+   Unlocks, tiers and settings are shared. A new world gets its map from WORLDS and a Base Core in the middle. */
+function packWorld(){const full=JSON.parse(serialize()),ws={};for(const k of WKEYS)ws[k]=full.S[k];return{WS:ws,es:full.es};}
+function switchWorld(id){if(!WORLDS[id]||id===S.w)return false;S.cam={x:cam.x,y:cam.y,z:cam.z};const pk=packWorld(),from=S.w||'home';
+ const sh={};for(const k in S)if(!WKEYS.includes(k))sh[k]=S[k];sh.worlds=Object.assign({},S.worlds||{});sh.worlds[from]=pk;sh.w=id;
+ const tp=sh.worlds[id];delete sh.worlds[id];let es;
+ if(tp){Object.assign(sh,JSON.parse(JSON.stringify(tp.WS)));es=tp.es;}
+ else{const W=WORLDS[id];Object.assign(sh,{seed:(Math.random()*1e9)|0,gen:W.gen,mw:W.mw,ext:W.ext,zones:[],zmap:'',cam:null,inv:{}});es=[['core',W.mw/2-2,W.mw/2-2,0]];}
+ load({v:2,S:sh,es});if(typeof v3Terrain==='function'&&V3.ready)V3.sig=null;if(typeof updTop==='function')updTop();return true;}
 async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}
 async function gunz(u8){return await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}
 const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);};
@@ -96,7 +106,7 @@ function frame(now){
 }
 let lastAff='',lastBio=null;
 function updBiome(){if(S.gen!==2||!bio)return;const x=V3.on?C3.x:cam.x,y=V3.on?C3.y:cam.y,b=biomeAt(x,y);if(b!==lastBio){if(lastBio)toast(`Entering ${b.n}: ${b.desc}`);lastBio=b;}}
-function updTop(){let d=0,c=0,tr=false;for(const g of grids){d+=g.dem;c+=g.cap;if(g.trip)tr=true;}
+function updTop(){if($('worldBtn')){const many=S&&S.worlds&&Object.keys(S.worlds).length>0;$('worldBtn').style.display=many?'':'none';const W=WORLDS[(S&&S.w)||'home'];$('worldTxt').textContent=W.ic+' '+W.n;}let d=0,c=0,tr=false;for(const g of grids){d+=g.dem;c+=g.cap;if(g.trip)tr=true;}
  $('pwv').textContent=fmt(d);$('pwc').textContent=fmt(c);$('fuse').style.display=tr?'':'none';
  const r=c>0?d/c:0,m=$('pwm');m.style.width=Math.min(100,r*100)+'%';m.style.background=tr?'#ff5a46':r>0.9?'#ffb547':'#5fe08a';
  const ms=MS[S.ms];$('msBtn').classList.toggle('ready',!!ms&&afford(ms.req));$('msTxt').textContent=ms?`Tier ${S.ms+1}`:'Complete';
@@ -113,4 +123,4 @@ UI.rotA=0;resize();
  if(V3.want)setView3D(true);
  setTimeout(()=>{const l=$('loading');l.style.opacity=0;setTimeout(()=>l.remove(),500);if(!loaded)openPanel('menu');},250);
 })();
-window.__fw={SY:typeof SY!=='undefined'?SY:null,save,SAVE,get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam,V3,C3,setView3D,v3Pick:(x,y)=>V3.ready&&(v3Cam(),v3Pick(x,y))};
+window.__fw={switchWorld,SY:typeof SY!=='undefined'?SY:null,save,SAVE,get S(){return S},ents:()=>ents,placeEnt,tick,entAt,B,RC,nodes:()=>nodes,ACT,grids:()=>grids,rates,cam:()=>cam,V3,C3,setView3D,v3Pick:(x,y)=>V3.ready&&(v3Cam(),v3Pick(x,y))};

@@ -1,7 +1,7 @@
 'use strict';
 /* ================= DATA ================= */
 let MW=128, MH=128;   // map size: 128 for maps made before biomes, MAP_NEW for new maps (stored in the save as S.mw)
-const MAP_NEW=384, MAP_EXT=32, TS=24, DX=[1,0,-1,0], DY=[0,1,0,-1], ARW=['→','↓','←','↑'];
+const MAP_NEW=384, MAP_EXT=32, EARTH_NB=7, TS=24, DX=[1,0,-1,0], DY=[0,1,0,-1], ARW=['→','↓','←','↑'];
 const IT={};
 function I(id,n,c,f,e){IT[id]={id,n,c,f:!!f,e:e||0};}
 I('iron_ore','Iron Ore','#a0614e');I('copper_ore','Copper Ore','#d27a3a');I('limestone','Limestone','#d9cfb0');
@@ -142,6 +142,7 @@ D('refinery',{n:'Refinery',k:'mach',mt:'refinery',w:3,pw:30,cat:'prod',col:'#5a4
 D('fabricator',{n:'Fabricator',k:'mach',mt:'fabricator',w:4,pw:55,cat:'prod',col:'#2a5a8a',cost:{motor:5,truss_frame:10,cable:50,cased_girder:10},desc:'Combines up to 4 inputs into complex parts.'});
 D('blender',{n:'Blender',k:'mach',mt:'blender',w:3,pw:75,cat:'prod',col:'#2a8a7a',cost:{motor:20,heavy_truss:5,compute_module:5,concrete:50},desc:'Mixes solids and fluids.'});
 D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
+D('solar',{n:'Solar Panel',k:'gen',w:2,cap:10,fuels:[],solar:1,only:'moon',link:6,sup:4,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:4,circuit_board:2,wire:10},desc:'10 MW from sunlight, no fuel. Only works in the Moon\u2019s unfiltered sunlight.'});
 D('burner',{n:'Coal Burner',k:'gen',w:2,cap:30,fuels:['coal','petro_coke'],link:8,sup:5,cat:'pow',col:'#7a4a2a',cost:{iron_plate:15,iron_rod:15,wire:20},desc:'30 MW. Burns coal or petroleum coke. Also acts as a power pole.'});
 D('steam',{n:'Steam Generator',k:'gen',w:3,cap:75,fuels:['coal','petro_coke'],water:45/(75*60),link:8,sup:5,cat:'pow',col:'#6a5a4a',cost:{rotor:10,braced_plate:10,cable:30,concrete:20},desc:'75 MW. Needs coal/coke plus 45 m³/min water.'});
 D('turbine',{n:'Fuel Turbine',k:'gen',w:3,cap:150,fuels:['fuel'],link:8,sup:5,cat:'pow',col:'#9a6a1a',cost:{motor:15,cased_girder:15,rubber:50,steel_pipe:30},desc:'150 MW. Burns liquid fuel (12 m³/min).'});
@@ -210,6 +211,18 @@ const BIOMES=[
   d2:{tuft:null,flower:0,stone:0.02,rock:'#3a3636',speck:['rgba(255,120,40,0.85)',0.02]},
   d3:{dead:0.01,rockg:0.05,rock:0.35,rockc:'#3b3736',crack:0.02},
   res:{iron:0.8,copper:0.8,limestone:1,coal:1.5,sulfur:5,quartz:1.5,bauxite:1.5,oil:1.5,uranium:4},pure:1.5,dens:1.15},
+ /* Moon biomes (Session 49): only used by genMoon; genBiome and its resource top-up look at the first EARTH_NB biomes only */
+ {id:'mare',n:'Lunar Mare',desc:'Dark, flat basalt plains. Iron-rich.',t:[0,0,0.9,0.9],
+  pal:{ga:[50,50,56],gb:[66,66,72],gc:[84,84,90],sa:[104,102,100],ra:[128,128,132],rb:[112,112,116],sh:[40,40,48],dp:[22,22,28]},
+  d2:{flower:0,stone:0.012,rock:'#8c8c92',speck:['rgba(220,220,230,0.18)',0.3]},d3:{tree:0,bush:0,rock:0.55,rockc:'#7a7a80'},res:{},pure:0.5,dens:1},
+ {id:'highland',n:'Lunar Highlands',desc:'Bright, cratered uplands. Quartz and aluminium ore.',t:[0,0,0.9,0.9],
+  pal:{ga:[118,118,124],gb:[142,142,148],gc:[166,166,172],sa:[184,182,176],ra:[196,196,200],rb:[172,172,178],sh:[60,60,68],dp:[30,30,36]},
+  d2:{flower:0,stone:0.012,rock:'#c4c4ca',speck:['rgba(255,255,255,0.22)',0.35]},d3:{tree:0,bush:0,rock:0.7,rockc:'#b2b2b8'},res:{},pure:0.5,dens:1}
 ];
 const NODE_T={iron:['iron_ore','#b0705a'],copper:['copper_ore','#e0843f'],limestone:['limestone','#e6dcbc'],coal:['coal','#3a3a3a'],sulfur:['sulfur','#f0dc40'],quartz:['quartz','#f0c0ee'],bauxite:['bauxite','#c4542e'],uranium:['uranium','#80f050'],oil:['crude','#1a1420']};
 const PUR=[[0.5,'Impure'],[1,'Normal'],[2,'Pure']];
+
+/* Worlds (Session 49, DESIGN.md section 12). The world you're on lives in the normal game state; the others are packed into S.worlds.
+   gen 3 = Moon generator (genMoon). ext = coast ring (MAP_EXT on Home, none on the Moon). */
+const WORLDS={home:{n:'Home',ic:'🌍'},moon:{n:'Moon',ic:'🌑',gen:3,mw:256,ext:0}};
+const WKEYS=['seed','gen','mw','ext','zones','zmap','cam','inv'];   /* per-world parts of S; everything else (unlocks, tiers, settings) is shared */

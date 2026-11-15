@@ -44,7 +44,7 @@ function plFix(){
 }
 
 /* Biomes where a resource is most common (new maps only) */
-const plWhere=res=>BIOMES.map(b=>[b.res[res]||0,b.n]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]).join(' and ');
+const plWhere=res=>BIOMES.slice(0,EARTH_NB).map(b=>[b.res[res]||0,b.n]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]).join(' and ');
 
 /* ---------- maths ---------- */
 const PL_GENS=['burner','steam','turbine','reactor'];

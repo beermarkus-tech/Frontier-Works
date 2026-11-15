@@ -2825,3 +2825,34 @@ I repeated the idea back first. He said "go" with my recommendations: free desig
 **Built:** `stSave` stores where the trimmed design sat in the station (`bp.ox`, `bp.oy`). `stLoad` puts the pieces back there; if that wouldn't fit the station, it moves them as far in as possible. Blueprints without a stored position load at the top-left as before.
 
 **Verified:** station smoke check extended (a design saved from (1,1) loads back at (1,1)). `npm test` all PASS.
+
+## Session 49 — 2026-11-15 (Claude Code, cloud session) · Build 141
+
+**Asked:** "go" for step 2a of the solar-project plan: the foundation for several worlds.
+
+**Built:**
+- **Several worlds in one save.** `WORLDS` (home, moon) and `WKEYS` (seed, gen, mw, ext, zones, zmap, cam, inv) in `data.js`.
+  - `switchWorld(id)` packs the current world (its WKEYS and entities) into `S.worlds[id]`, then unpacks the target or creates it (map from WORLDS, empty stock, a Base Core in the middle) through the normal `load()`.
+  - Unlocks, tiers and settings are shared; each world has its own stock.
+  - The coast-ring migration now only runs when `S.ext` is missing (the Moon has `ext:0`).
+- **The Moon** (`genMoon`, `S.gen===3`, 256×256):
+  - two new biomes appended to `BIOMES` (Lunar Mare, Lunar Highlands); `genBiome` and its resource top-up only look at the first `EARTH_NB=7`, so Home maps are unchanged
+  - craters (rock rim, dusty floor), no water, a flat landing site
+  - nodes: iron mostly in maria, quartz and bauxite in highlands, some copper and uranium
+  - 2D: no clouds; the ring around the map is regolith instead of sea
+  - 3D: black sky with stars, no water, a grey floor, dark fog, and a small painted Home planet above the northern horizon
+- **Solar Panel** (`solar`, gen, 2×2, 10 MW, no fuel, `only:'moon'`, enforced in `canPlace`; sprite and 3D model). Not unlocked yet; it comes with step 2b.
+- **UI:** a world button in the top bar (only when a second world exists) → Worlds panel → Travel (short travel screen, then save).
+
+**Fixed along the way:**
+- an accidental empty slot in the biome list (double comma)
+- the 3D fog colour (Three's Fog keeps its own copy, so the distant ground showed Earth haze)
+- far too many dark stones on the Moon (now Earth's density)
+
+**Verified:**
+- Moon screenshots in 2D (near and far) and 3D.
+- New smoke check: travel to the Moon (its own map and biomes, no water, Base Core, empty stock); solar powers a smelter there; Home is unchanged after the round trip (entities, stock, seed); solar is refused on Home; worlds survive save/load; the Moon keeps its buildings and stock.
+- Biome test counts Earth biomes only.
+- `npm test` all PASS.
+
+**Next up:** step 2b, the Tier 11 parts, the Launch Pad, the colony rocket and the starter kit.

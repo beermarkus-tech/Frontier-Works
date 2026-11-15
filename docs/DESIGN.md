@@ -328,6 +328,13 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
 - **Dyson Sphere:** a Sphere Launcher on home (very high power draw, where nuclear finally matters) fires sphere segments to the sun.
   Stages (frame → panels → collectors), each needing parts from more worlds; each finished stage beams power back. It has a clear
   end: a closed, glowing sphere in a space and sky view.
+- **Worlds, built so far** (Session 49, step 2a): the save holds several worlds. The one you're on is the normal game state; the others
+  are packed into `S.worlds` (their map seed/size, buildings, zones, camera and **own stock**). Unlocks, tiers and settings are shared.
+  A world button in the top bar (shown once a second world exists) opens the Worlds panel; Travel shows a short travel screen and saves.
+  **The Moon** (256×256, no coast ring): dark maria and bright highlands, craters (rock rim, dusty floor), no water, a flat landing site
+  with a Base Core; iron (mostly maria), quartz and bauxite (highlands), some copper and uranium. Black sky with stars and Home in the
+  sky in 3D, no clouds in 2D. **Solar Panel** (10 MW, 2×2, no fuel) works only on the Moon. Reaching the Moon comes with step 2b
+  (colony rocket); until then it can only be opened for testing.
 - **Blueprints** (Session 48; reworked 48b with Markus: designed in a station instead of copying from the factory, which was inaccurate):
   a **Blueprint Station** (12×12, needs power) is a design table. Both live in their own **Blueprints** tab (Session 48c): the station(s)
   (bigger sizes later) and the **Blueprint List** button, which opens the saved blueprints without needing a station. Building and belt tools used inside it place free
