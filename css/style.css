@@ -239,7 +239,7 @@ body.dockhid #dock{display:none}body.dockhid #dockShow{display:inline-flex}
 #calc .calhd{display:flex;align-items:center;justify-content:space-between;cursor:move;padding:0 2px 6px;font-weight:600;font-size:13px;color:var(--mut,#aab4bd)}
 #calc .calhd .btn{padding:2px 8px}
 #calc .calex{background:rgba(0,0,0,.35);border-radius:8px;padding:6px 8px 0;min-height:24px;text-align:right;font:600 18px Rajdhani,Inter,sans-serif;color:#fff;word-break:break-all}
-#calc .calres{background:rgba(0,0,0,.35);border-radius:0 0 8px 8px;margin-top:-4px;padding:0 8px 6px;min-height:18px;text-align:right;font-size:13px;color:#ffcf7a}
+#calc .calres{background:rgba(0,0,0,.35);border-radius:0 0 8px 8px;margin-top:-4px;padding:0 8px 6px;height:18px;line-height:18px;box-sizing:content-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;font-size:13px;color:#ffcf7a}   /* fixed height: the window doesn't jump when the result line is empty (Session 53b) */
 #calc .calkeys{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}
 #calc .calkeys .btn{padding:9px 0;font-size:16px;font-weight:700;touch-action:manipulation;justify-content:center}
 #calc .calkeys .op{color:#ffcf7a}

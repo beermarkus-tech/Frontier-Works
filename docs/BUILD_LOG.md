@@ -2989,3 +2989,11 @@ with step 2c and prepare the Moon, even though Markus hasn't reached Tier 10/11 
 **Known issues:** none.
 
 **Next up:** step 3, Orbital Freighters (still waiting for Markus's go).
+
+## Session 53b — 2026-11-16 (Claude Code, cloud session) · Build 147
+
+**Asked:** the calculator's second line (the result preview) shrinks when it is empty, and the whole calculator jumps with it. Make it a fixed height.
+
+**Built:** the result line now always has the same height (18 px plus padding). A very long result is cut off with "…" instead of wrapping.
+
+**Verified:** the smoke check now also confirms the result line is the same height with and without a result. `npm test` all PASS.
