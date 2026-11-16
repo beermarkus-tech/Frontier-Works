@@ -106,7 +106,7 @@ cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',e=>{
 cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!G)hover=null;});
 cv.addEventListener('wheel',e=>{e.preventDefault();vel.x=vel.y=0;const m=toTile(e.clientX,e.clientY);const dy=e.deltaMode===1?e.deltaY*30:e.deltaY;camT.z=Math.max(zMin(),Math.min(3.5,camT.z*Math.exp(-dy*0.0016)));zAnchor={sx:e.clientX,sy:e.clientY,fx:m.fx,fy:m.fy};},{passive:false});
 const keys=new Set();
-addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const k=e.key.toLowerCase();keys.add(k);
+addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(typeof calcKeyboard==='function'&&calcKeyboard(e))return;const k=e.key.toLowerCase();keys.add(k);
  if(k==='r'){if(UI.tool)ACT.rotate();else if(UI.panel&&UI.panel.kind==='ent')ACT.rotSel();}
  else if(k==='escape'){setTool(null);UI.moveId=null;UI.wireFrom=null;UI.zoneCut=null;zonePrev=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
  else if(k==='q'&&hover){const x=entAt(hover.x,hover.y);if(x&&B[x.d].cat&&ub(x.d)){UI.cat=B[x.d].cat;UI.rot=x.dir||0;UI.rotA=UI.rot*90;buildCats();setTool(x.d);}}});

@@ -2960,3 +2960,32 @@ with step 2c and prepare the Moon, even though Markus hasn't reached Tier 10/11 
 **Next up:** step 3, Orbital Freighters (a pad on each world, routes, fuel there and back), which also settles how concrete gets to the Moon.
 
 **Open questions:** How often should a freighter fly, and how much should it carry? (Markus: "how often am I able to fly a rocket back and forth like a drone?" That gets answered with the freighter design.)
+
+## Session 53 — 2026-11-16 (Claude Code, cloud session) · Build 146
+
+**Asked:** (1) How many Quantum Cores and Turbine Cores per minute are reasonable? Answered in chat, no code change.
+(2) A simple calculator in the app that can stay on screen.
+
+**Answer to (1), from the planner:**
+- Tier 10 needs 50 Turbine Cores. 104 Quantum Cores are needed in total (50 for Tier 10, 50 for Tier 11, 4 for Guidance Cores).
+- Advice: 2 Turbine Cores/min (about 780 MW; Tier 10's 50 in about 25 min) and 1 Quantum Core/min (about 1.6 GW; about 8 Fabricators, 30 Refineries, 61 Presses; all 104 in about 1¾ h).
+- Offered to lower Tier 11's Quantum Cores from 50 to 25 if it feels grindy.
+
+**Built (new file `js/calc.js`, added to `index.html` and the `sw.js` ASSETS):**
+- **Floating calculator:** opened from a new toolbar button ("+ − × =" icon, next to Find) or ☰ Menu → Tools.
+  - It stays on screen while you play; drag it by its title bar.
+  - Its position and open/closed state are remembered per device (`OPT.calc`, `OPT.calcPos`).
+- **Keys:** digits, + − × ÷, brackets, ., ⌫, C and =. The result previews in amber while you type; = turns it into the new starting number.
+  - `%` works from the keyboard only (e.g. 50%×200).
+- **Keyboard:** digits, operators, Enter and Backspace go to the calculator while it is open. Game keys (R, X, C, V…) still work.
+- **Safe arithmetic parser (`calcEval`):** no `eval`. It handles operator precedence, brackets, unary minus, % and thousands commas.
+- Results are shown with up to 8 decimals and thousands separators.
+
+**Verified:**
+- Phone screenshot (390 px wide): the toolbar still fits.
+- New smoke check: the toolbar button opens it; button presses give 12×3=36; typing 7+3 Enter gives 10; the parser handles precedence, brackets, ÷, %, unary minus, an unfinished expression and commas; closing hides it and remembers that.
+- `npm test` all PASS.
+
+**Known issues:** none.
+
+**Next up:** step 3, Orbital Freighters (still waiting for Markus's go).

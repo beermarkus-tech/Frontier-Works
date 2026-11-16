@@ -364,6 +364,14 @@ const server=require('./serve.js');
   fw.switchWorld('moon');const sm2=entAt(X+2,Y);out.kept=!!sm2&&sm2.r==='r_iron_ingot'&&entAt(X,Y)&&entAt(X,Y).d==='solar'&&S.inv.iron_plate===5;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=S.ub.filter(x=>x!=='solar');return out;});
  check(`worlds: ${Object.entries(wld).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(wld).every(v=>v===true));
+ // calculator (Session 53): toolbar button opens it, buttons and keyboard work, parser rules, closes and stays closed
+ await p.evaluate(()=>{ACT.closePanel();document.getElementById('fCalc').click();});await p.waitForTimeout(100);
+ for(const k of ['1','2','×','3','='])await p.click(`#calc [data-v="${k}"]`);const cal1=await p.evaluate(()=>CALC.ex);
+ await p.keyboard.type('7+3');await p.keyboard.press('Enter');
+ const cal=await p.evaluate(c1=>{const out={};out.btn=c1==='36';out.keys=CALC.ex==='10';out.vis=document.getElementById('calc').classList.contains('on');
+  out.parse=calcEval('2+3×4')===14&&calcEval('(2+3)×4')===20&&calcEval('10÷4')===2.5&&calcEval('50%×200')===100&&calcEval('−5+2')===-3&&calcEval('2+')===null&&calcEval('1,000×3')===3000;
+  ACT.calcClose();out.closed=!document.getElementById('calc').classList.contains('on')&&OPT.calc===false;return out;},cal1);
+ check(`calculator: ${Object.entries(cal).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(cal).every(v=>v===true));
  // Moon step 2c (Session 52): helium only on the Moon, Vacuum Furnace only there and makes wafers from helium, background production
  // pays out the time away at the measured Base Core rate
  const mn=await p.evaluate(()=>{const fw=window.__fw,out={};out.homeNoHe=!nodes.some(n=>n.t==='helium')&&canPlace('vfurnace',MW/2+20,MH/2+20)==='Only on the Moon';

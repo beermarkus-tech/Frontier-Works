@@ -308,7 +308,7 @@ function nodeHtml(n){const it=NODE_T[n.t][0],bm=biomeAt(n.x,n.y);return`<div cla
 function menuHtml(){
  const big=S.gen===2;
  return`<h4>This map</h4><div class="muted">${big?`${MW}×${MH} tiles with seven biomes.`:`${MW}×${MH} tiles, made before biomes existed. Your factory stays on it. For the big ${MAP_NEW}×${MAP_NEW} biome island, start a new map (bottom of this menu).`}</div>
- <h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button>
+ <h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button> <button class="btn" data-act="calcOpen">🧮 Calculator</button>
  <h4>View</h4><div class="chips"><button class="btn chip ${V3.on?'':'on'}" data-act="view" data-v="2d">2D map</button><button class="btn chip ${V3.on?'on':''}" data-act="view" data-v="3d">3D view</button></div>
  <div class="row"><span>Efficiency rings on buildings</span><span class="chips"><button class="btn chip ${OPT.eff?'on':''}" data-act="optEff" data-v="1">On</button><button class="btn chip ${OPT.eff?'':'on'}" data-act="optEff" data-v="0">Off</button></span></div>
  <div class="row"><span>Frame rate</span><span class="chips"><button class="btn chip ${OPT.fps30?'':'on'}" data-act="optFps" data-v="0">Full</button><button class="btn chip ${OPT.fps30?'on':''}" data-act="optFps" data-v="1">30 fps (saves battery)</button></span></div>
