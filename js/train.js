@@ -82,6 +82,7 @@ function trainTick(dt){const L=S.trains;OCC=new Map();if(!L||!L.length)return;fo
   if(c.ver!==topoVer||c.tgt!==(tr.sch[tr.si]&&tr.sch[tr.si].s))trRoute(tr);
   let free=0;const H=tr.tr[tr.tr.length-1];if(tr.hold){tr.v=0;c.want=false;continue;}
   if(c.path){if(!c.path.length)free=0.5-tr.u;else{let dist=1-tr.u;free=dist;for(let k=0;k<c.path.length;k++){const P=c.path[k],o=OCC.get(tKey(P[0],P[1]));if(o!=null&&o!==tr.id){free=dist-0.12;break;}if(k===c.path.length-1){free=dist+0.5;break;}dist+=1;free=dist;if(dist>look)break;}}}
+  if(c.path&&!c.path.length&&free<0.03){tr.u=0.5;tr.v=0;tr.st=1;tr.wt=0;continue;}   /* practically at the stop: arrive (Session 56g: braking could end a hair short and never arrive) */
   const vmax=c.pw?TRAIN.vmax:TRAIN.crawl;tr.v=Math.min(tr.v+TRAIN.acc*dt,vmax,Math.sqrt(2*TRAIN.brk*Math.max(0,free)));if(free<0.01)tr.v=0;c.want=tr.v>0.05;
   tr.u+=Math.min(tr.v*dt,Math.max(0,free));
   while(tr.u>=1&&c.path&&c.path.length){const P=c.path[0],k=tKey(P[0],P[1]),o=OCC.get(k);if(o!=null&&o!==tr.id){tr.u=1;tr.v=0;break;}

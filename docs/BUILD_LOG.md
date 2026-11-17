@@ -3191,3 +3191,13 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The `hold` flag is saved with the train.
 
 **Verified:** the smoke check confirms a newly built train is paused; the shuttle test starts it. `npm test` all PASS.
+
+## Session 56g — 2026-11-17 (Claude Code, cloud session) · Build 157
+
+**Reported:** a train meant to wait 10 s at a station instead showed "waiting for the track ahead" to that same station, and never moved on to its next stop.
+
+**Cause:** braking into a stop could leave the train a hair short of the stop point (less than 0.01 tile). Speed was then set to 0, so it never "arrived", and its wait never started.
+
+**Fixed:** within 0.03 tile of the stop point, the train snaps onto it and arrives.
+
+**Verified:** the smoke check now puts a train 0.008 tile before its stop and confirms it arrives in one tick. `npm test` all PASS.
