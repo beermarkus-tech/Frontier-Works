@@ -385,8 +385,8 @@ A train is a big drone on rails: large, steady flows over long distances inside 
 **trains = long distance, about 1,000 items per wagon**, freighters = between worlds.
 - **Tracks are one-way** (arrow, like belts), drawn by dragging; a turn becomes a smooth curve. Lines are loops, or two parallel tracks
   for there and back. That rules out head-on blockages, so **no signals** are needed. Any track tile can be joined from the side (merge);
-  a **Rail Switch** splits a line: straight on plus one short branch at its side (it lines up with the track by itself; Rotate swaps the
-  branch between left and right; Session 56c).
+  a **Rail Switch** has a main line plus one short branch at its side, in four kinds (Rotate cycles): split off right, split off left,
+  join from right, join from left (Session 56c/e). It lines up with the track by itself.
 - **Trains pick their own way** to their next stop over switches (shortest path), and **reserve the track ahead**: a train brakes behind
   another one and waits; several trains share a network automatically.
 - **Train Stop** (a track piece with a name; several stops may share a name, the nearest is used). The locomotive halts on the stop tile;

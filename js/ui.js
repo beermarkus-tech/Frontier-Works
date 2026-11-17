@@ -340,7 +340,7 @@ const ACT={
  toolNone:()=>setTool(null),
  toolDel:()=>setTool(UI.tool==='del'?null:'del'),
  toolClr:()=>setTool(UI.tool==='clr'?null:'clr'),
- rotate:()=>{if(UI.tool==='rswitch'){UI.swSide=UI.swSide===2?1:2;toast(`Switch branch: ${UI.swSide===2?'left':'right'}`);updInfo();sfx('rotate');return;}UI.rot=(UI.rot+1)&3;UI.rotA=(UI.rotA||0)+90;updInfo();sfx('rotate');},
+ rotate:()=>{if(UI.tool==='rswitch'){UI.swSide=(UI.swSide||1)%4+1;toast(`Switch: ${SW_TXT[UI.swSide]}`);updInfo();sfx('rotate');return;}UI.rot=(UI.rot+1)&3;UI.rotA=(UI.rotA||0)+90;updInfo();sfx('rotate');},
  home:()=>{camT.x=MW/2;camT.y=MH/2;camT.z=1.2;vel.x=vel.y=0;zAnchor=null;},
  closePanel,
  openMs:()=>openPanel('ms'),openInv:()=>openPanel('inv'),openStats:()=>openPanel('stats'),openMenu:()=>openPanel('menu'),openCodex:()=>openPanel('codex'),
@@ -377,7 +377,7 @@ const ACT={
  valveMode:v=>{const e=ents.get(UI.panel.arg);if(e){e.vm=v==='1'?1:0;renderPanel(true);}},
  valveAdj:v=>{const e=ents.get(UI.panel.arg);if(e){e.vr=Math.max(0,Math.min(600,e.vr+(+v)));renderPanel(true);}},
  valveSet:v=>{const e=ents.get(UI.panel.arg);if(e){e.vr=Math.max(0,Math.min(600,+v));renderPanel(true);}},
- rotSel:()=>{const e=ents.get(UI.panel.arg);if(e&&e.d==='rswitch'){e.bs=e.bs===2?1:2;topoDirty=true;sfx('rotate');toast(`Branch now on the ${e.bs===2?'left':'right'}`);return;}if(e){const d0=e.dir;e.dir=(e.dir+1)&3;for(let k=0;k<3&&beltBlocked(e);k++)e.dir=(e.dir+1)&3;if(beltBlocked(e))e.dir=(d0+1)&3;topoDirty=true;sfx('rotate');}},   /* belts skip pointing into pipes/junctions/tanks */
+ rotSel:()=>{const e=ents.get(UI.panel.arg);if(e&&e.d==='rswitch'){e.bs=(e.bs||1)%4+1;topoDirty=true;sfx('rotate');toast(`Switch: ${SW_TXT[e.bs]}`);return;}if(e){const d0=e.dir;e.dir=(e.dir+1)&3;for(let k=0;k<3&&beltBlocked(e);k++)e.dir=(e.dir+1)&3;if(beltBlocked(e))e.dir=(d0+1)&3;topoDirty=true;sfx('rotate');}},   /* belts skip pointing into pipes/junctions/tanks */
  resetFuse:()=>{for(const g of grids)if(g.trip){for(const n of g.nodes)n.trip=false;g.trip=false;}toast('Fuse reset');},
  craft:(v,el)=>{const r=RC[v],n=+el.dataset.n;if(!afford(r.i,n))return;for(const k in r.i)S.inv[k]-=r.i[k]*n;for(const k in r.o)give(k,r.o[k]*n);renderPanel(true);buildTools();},
  handMine:()=>{const n=UI.panel.arg;give(NODE_T[n.t][0],5);toast(`+5 ${IT[NODE_T[n.t][0]].n}`);},

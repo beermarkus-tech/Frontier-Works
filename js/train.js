@@ -10,11 +10,14 @@ const TRC=new Map();let OCC=new Map(),BAYADJ=new Map(),RCOMP=[],railList=[];
 const tKey=(x,y)=>y*MW+x;
 const railAt=(x,y)=>{const e=entAt(x,y);return e&&e.k==='rail'?e:null;};
 const rSub=e=>B[e.d].sub||'';
-function canEnter(n,od){return rSub(n)==='switch'?n.dir===od:n.dir!==((od+2)&3);}
+/* Rail Switch (Session 56c/e): main line straight on + one branch at a side. e.bs: 1 branch out right, 2 out left (split),
+   3 branch in from the right, 4 in from the left (merge). Rotate cycles through the four. */
+const swBranch=t=>(t.bs===2||t.bs===4)?(t.dir+3)&3:(t.dir+1)&3;   /* the side the branch is on */
+const swMerge=t=>t.bs===3||t.bs===4;
+const SW_TXT={1:'splits off to the right',2:'splits off to the left',3:'joins from the right',4:'joins from the left'};
+function canEnter(n,od){if(rSub(n)==='switch')return od===n.dir||(swMerge(n)&&od===((swBranch(n)+2)&3));return n.dir!==((od+2)&3);}
 /* tiles a train can drive to from track piece t: [entity, direction] */
-/* Rail Switch (Session 56c): main line straight on + one branch on side e.bs (1 = right, 2 = left); Rotate swaps the side */
-const swBranch=t=>t.bs===2?(t.dir+3)&3:(t.dir+1)&3;
-function rsucc(t){const out=[],dirs=rSub(t)==='switch'?[t.dir,swBranch(t)]:[t.dir];
+function rsucc(t){const out=[],dirs=rSub(t)==='switch'&&!swMerge(t)?[t.dir,swBranch(t)]:[t.dir];
  for(const od of dirs){const n=railAt(t.x+DX[od],t.y+DY[od]);if(n&&canEnter(n,od))out.push([n,od]);}return out;}
 const dirTo=(a,b)=>b[0]>a[0]?0:b[1]>a[1]?1:b[0]<a[0]?2:3;
 function stopNewName(){let k=1;const names=new Set([...ents.values()].filter(e=>e.k==='rail'&&rSub(e)==='stop').map(e=>e.tx));while(names.has('Station '+k))k++;return 'Station '+k;}
@@ -149,7 +152,7 @@ document.addEventListener('input',ev=>{const el=ev.target;if(!el.dataset||el.dat
  const old=e.tx,nw=el.value.slice(0,30)||old;if(nw===old)return;e.tx=nw;if(S.trains&&!stopNames().includes(old))for(const tr of S.trains)for(const s of tr.sch)if(s.s===old)s.s=nw;for(const c of TRC.values())c.ver=-1;});
 
 /* ---------- 2D drawing ---------- */
-function railSegs(e){if(rSub(e)==='switch')return[[e.x,e.y,e.dir,e.dir],[e.x,e.y,e.dir,swBranch(e)]];return[[e.x,e.y,e.cin!=null?e.cin:e.dir,e.dir]];}
+function railSegs(e){if(rSub(e)==='switch'){const b=swBranch(e);return[[e.x,e.y,e.dir,e.dir],swMerge(e)?[e.x,e.y,(b+2)&3,e.dir]:[e.x,e.y,e.dir,b]];}return[[e.x,e.y,e.cin!=null?e.cin:e.dir,e.dir]];}
 function drawRails(list,sx,sy,s){if(!list.length)return;const moon=moonLook(),bed=new Path2D(),sl=new Path2D(),rl=new Path2D(),mid=new Path2D();
  const off=(T,t,o)=>{const p=tilePt(T,t),q=tilePt(T,Math.min(1,t+0.02)),r=tilePt(T,Math.max(0,t-0.02)),dx=q[0]-r[0],dy=q[1]-r[1],l=Math.hypot(dx,dy)||1;return[sx(p[0]-dy/l*o),sy(p[1]+dx/l*o)];};
  const line=(P,T,o)=>{for(let k=0;k<=8;k++){const p=off(T,k/8,o);if(k)P.lineTo(p[0],p[1]);else P.moveTo(p[0],p[1]);}};

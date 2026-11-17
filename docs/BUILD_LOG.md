@@ -3163,3 +3163,15 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Cause:** a stop placed at the end of a track (or beside it) with the Rotate direction pointing elsewhere was fed from its side, so it was drawn as a curve. Tapping a stop onto existing track was already fine.
 
 **Fixed:** a Train Stop is always straight. If it is fed only from the side and nothing continues ahead, it turns to line up with the incoming track. The smoke check places a stop at a track end facing the wrong way and confirms it ends up straight. `npm test` all PASS.
+
+## Session 56e — 2026-11-17 (Claude Code, cloud session) · Build 155
+
+**Asked:** switches come in four kinds, not two: forward left/right (split) and backward left/right (a side track joining in).
+
+**Built:**
+- `e.bs` now has four values: 1 split right, 2 split left, 3 join from the right, 4 join from the left.
+- A joining switch lets trains in from the back and from its branch side, and sends them straight on; it draws its branch curving in.
+- Rotate (in the panel, or while placing) cycles through all four, with a toast naming the kind.
+- The short stub shows on the branch side while nothing is connected there.
+
+**Verified:** the smoke check cycles a switch through split right → split left → join from the right (one exit; accepts from back and side) → … → back to split right. `npm test` all PASS.
