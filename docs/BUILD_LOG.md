@@ -3155,3 +3155,11 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - **Reported:** after deleting a train, a new one couldn't be placed ("Another train is on that track"). The tile-occupancy map was only refreshed while at least one train existed, so a deleted last train left its tiles marked. It is now reset every tick, and removing a train clears its tiles at once.
 - The smoke check now deletes a train and builds a new one at the same stop.
 - **Test fix:** the blueprint check's "build elsewhere" spot could land inside the Blueprint Station on some random maps, where pieces are free, so `poor` failed now and then. It now searches for a free spot away from the station after the first paste.
+
+## Session 56d — 2026-11-17 (Claude Code, cloud session) · Build 154
+
+**Reported:** a Train Stop became a curved piece when placed.
+
+**Cause:** a stop placed at the end of a track (or beside it) with the Rotate direction pointing elsewhere was fed from its side, so it was drawn as a curve. Tapping a stop onto existing track was already fine.
+
+**Fixed:** a Train Stop is always straight. If it is fed only from the side and nothing continues ahead, it turns to line up with the incoming track. The smoke check places a stop at a track end facing the wrong way and confirms it ends up straight. `npm test` all PASS.

@@ -380,6 +380,7 @@ const server=require('./serve.js');
   out.tier6=MS[5].b.includes('rail')&&MS[5].b.includes('cbay');out.built=out.build===''&&!!tr&&tr.n===2;delete out.build;delete out.sch;
   for(let k=0;k<1300;k++)tick(0.05);out.delivered=(__T.bb.store.iron_plate||0)>=700;
   {const B2=__T.Bs,d0=B2.dir;B2.dir=(d0+2)&3;topoDirty=true;tick(0.05);out.autoTurn=B2.dir===d0;P('rail',B2.x,B2.y,d0);out.keepStop=entAt(B2.x,B2.y)===B2;}
+  {const ex=__T.x1+1,ey=__T.y0-3;P('rail',ex-2,ey,0);P('rail',ex-1,ey,0);P('tstop',ex,ey,1);tick(0.05);const so=entAt(ex,ey);out.stopStraight=so.dir===0&&so.cin==null;for(const q of [ex-2,ex-1,ex])removeEnt(entAt(q,ey),false,true);tick(0.05);}
   {const sx=__T.x0+4,sy=__T.y0,inv0=JSON.stringify(S.inv);P('rswitch',sx,sy,2);tick(0.05);const w=entAt(sx,sy);out.swAlign=w.d==='rswitch'&&w.dir===0&&w.bs===1&&rsucc(w).length===1;openPanel('ent',w.id);ACT.rotSel();tick(0.05);out.swSide=w.bs===2&&swBranch(w)===3;ACT.closePanel();P('rail',sx,sy,0);out.swKeep=entAt(sx,sy).d==='rswitch';}out.power=TRC.get(tr.id).pw===true;
   const c=trCars(tr)[0];const at=trainAt(Math.floor(c.x),Math.floor(c.y));out.tap=at===tr;openPanel('train',tr.id);out.panel=/schedule/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
   const n0=S.trains.length,id0=tr.id;load(serialize());tick(0.05);out.saved=S.trains.length===n0&&S.trains[0].id===id0;

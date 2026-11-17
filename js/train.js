@@ -33,7 +33,8 @@ function trainTopo(){railList=[];BAYADJ=new Map();RCOMP=[];
  /* curves for drawing: a plain track piece fed only from one side bends (e.cin = travel direction coming in) */
  for(const e of railList){e.cin=null;if(rSub(e)==='switch')continue;const fed=[];
   for(let d=0;d<4;d++){const n=railAt(e.x-DX[d],e.y-DY[d]);if(n&&rsucc(n).some(([m])=>m===e))fed.push(d);}
-  if(fed.length&&!fed.includes(e.dir))e.cin=fed[0];}
+  if(fed.length&&!fed.includes(e.dir))e.cin=fed[0];
+  if(e.cin!=null&&rSub(e)==='stop'&&!rsucc(e).length){e.dir=e.cin;e.cin=null;}}   /* a stop is always straight: one fed from the side with nothing ahead lines up with the incoming track (Session 56d) */
  /* connected track networks and their power */
  let cid=0;for(const e of railList){if(e._rc>=0)continue;const q=[e];e._rc=cid;while(q.length){const a=q.pop();for(let d=0;d<4;d++){const n=railAt(a.x+DX[d],a.y+DY[d]);if(n&&n._rc<0){n._rc=cid;q.push(n);}}}RCOMP.push({grid:null});cid++;}
  for(const p of pnodes){const r=B[p.d].sup;if(!r||!p.grid)continue;const C=cen(p);
