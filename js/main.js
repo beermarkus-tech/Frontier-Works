@@ -110,7 +110,7 @@ function updBiome(){if(S.gen!==2||!bio)return;const x=V3.on?C3.x:cam.x,y=V3.on?C
 function updTop(){if($('worldBtn')){const many=S&&S.worlds&&Object.keys(S.worlds).length>0;$('worldBtn').style.display=many?'':'none';const W=WORLDS[(S&&S.w)||'home'];$('worldTxt').textContent=W.ic+' '+W.n;}let d=0,c=0,tr=false;for(const g of grids){d+=g.dem;c+=g.cap;if(g.trip)tr=true;}
  $('pwv').textContent=fmt(d);$('pwc').textContent=fmt(c);$('fuse').style.display=tr?'':'none';
  const r=c>0?d/c:0,m=$('pwm');m.style.width=Math.min(100,r*100)+'%';m.style.background=tr?'#ff5a46':r>0.9?'#ffb547':'#5fe08a';
- const ms=MS[S.ms];$('msBtn').classList.toggle('ready',!!ms&&afford(ms.req));$('msTxt').textContent=ms?`Tier ${S.ms+1}`:'Complete';
+ const ms=MS[S.ms];$('msBtn').classList.toggle('ready',!!ms&&afford(ms.req));$('msTxt').textContent=ms?`Tier ${S.ms+1}`:(typeof lpadDone==='function'&&!lpadDone()?'🚀 Rocket':'Complete');
  const aff=Object.values(B).filter(x=>x.cat===UI.cat&&ub(x.id)).map(x=>afford(x.cost)?1:0).join('');if(aff!==lastAff){lastAff=aff;refreshTools();}
  updInfo();
 }

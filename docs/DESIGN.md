@@ -335,12 +335,13 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   with a Base Core; iron (mostly maria), quartz and bauxite (highlands), some copper and uranium. Black sky with stars and Home in the
   sky in 3D, no clouds in 2D. **Solar Panel** (10 MW, 2×2, no fuel) works only on the Moon. The Moon is reached with the colony rocket
   (step 2b, below).
-- **Tier 11 Spaceflight and the colony rocket** (Session 51, step 2b): after the Orbital Beacon (still the "you win" moment) comes
-  Tier 11 *Spaceflight*. The Orbital Beacon (Tier 10) unlocks four rocket parts: **Hull Plate** (Assembler), **Heat Shield** and
-  **Rocket Fuel** canisters (Blender), **Guidance Core** (Fabricator). Tier 11 asks for a first batch of them (40 / 20 / 5 / 100; Session 55,
-  so the tier means building new lines instead of repeating Tier 10) and unlocks the **Launch Pad** (6×6, Home only, 150 MW while the rocket is
-  ready), the **Solar Panel** and the Vacuum Furnace. The pad is filled by belt from any side or with *Load from stock*: rocket parts
-  (60 Hull Plates, 30 Heat Shields, 4 Guidance Cores, 200 Rocket Fuel) plus the **starter kit** it carries (plates, rods, wire, cable,
+- **The colony rocket** (Session 51, step 2b; Session 57: **Tier 11 removed** with Markus, it meant a second huge factory right after
+  Tier 10): the Orbital Beacon (Tier 10, still the "you win" moment) unlocks four rocket parts, the **Launch Pad** (6×6, Home only,
+  150 MW while the rocket is ready), the **Solar Panel** and the Vacuum Furnace. The next goal is the launch itself. Parts, kept simple
+  from things a Tier-10 factory already makes: **Hull Plate** (Assembler: Alloy Panels + Steel Beams), **Heat Shield** (Blender),
+  **Guidance Core** (Fabricator: **1 Quantum Core + 1 Control Chip**, the Quantum Core is the heart of the ship), **Rocket Fuel** canisters
+  (Blender: fuel + Aluminum Casing). The pad is filled by belt from any side or with *Load from stock*: rocket parts
+  (30 Hull Plates, 15 Heat Shields, 2 Guidance Cores, 60 Rocket Fuel; about a tenth of Tier 10) plus the **starter kit** it carries (plates, rods, wire, cable,
   120 concrete, braced plates, rotors, alloy panels, circuit boards: enough for a few solar panels, drills, smelters, presses, belts and
   poles). The rocket visibly stacks up on the pad as parts arrive; **Launch** sends it up (about 10 s, flame and smoke, 2D and 3D).
   The first landing creates the Moon with the kit in its own stock and offers to travel there; every later launch delivers another kit
@@ -412,7 +413,8 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 3. **Each tier brings a little:** about 3–6 new parts, one new machine or mechanic, at most one new raw material. The goal mostly asks for
    the newest parts plus one bulk item from earlier, and should mean **building something new**, not waiting for more of the same.
 4. **Cost grows steadily:** a tier's goal costs roughly 2× the previous one in raw ore (not 10×). Measured Session 55: 300 · 1.6k · 1.6k ·
-   4.2k · 7.2k · 15.7k · 8.3k · 8.3k · 14.5k · 110k (Quantum Cores; Markus enjoyed that line, it stays) · Tier 11 reworked to about 25k.
+   4.2k · 7.2k · 15.7k · 8.3k · 8.3k · 14.5k · 110k (Quantum Cores; Markus enjoyed that line, it stays). Tier 11 removed in Session 57:
+   right after a big tier the next goal should be small (the rocket is about a tenth of Tier 10).
 5. **Pacing target:** about 10 min for Tier 1, 45 min for Tier 5, 2 h for Tier 10 with a sensible factory.
 6. **No annoying recipes:** no tiny amounts from long far chains, no huge grinds of one item, no by-product without a use.
 7. **Alternative recipes are trade-offs** (fewer machines but more power, or a local resource), never strictly better.

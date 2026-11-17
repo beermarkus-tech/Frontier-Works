@@ -411,9 +411,9 @@ const server=require('./serve.js');
   ACT.openWorlds();out.panel=/keep producing/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
   S.inv.iron_plate=inv0;delete S.worlds.moon;return out;});
  check(`Moon prep: ${Object.entries(mn).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mn).every(v=>v===true));
- // colony rocket (Session 51): Tier 11 unlocks the pad, it takes only rocket items, Load from stock, launch needs power, after the flight the
+ // colony rocket (Session 51): Tier 10 unlocks the pad (Tier 11 removed in Session 57), it takes only rocket items, Load from stock, launch needs power, after the flight the
  // Moon exists with the starter kit in its own stock, a second launch adds another kit
- const rkt=await p.evaluate(()=>{const fw=window.__fw,out={};const t11=MS.findIndex(m=>m.n==='Spaceflight');out.tier=t11===10&&MS[t11].b.includes('lpad')&&MS[t11].b.includes('solar');
+ const rkt=await p.evaluate(()=>{const fw=window.__fw,out={};const t10=MS.findIndex(m=>m.n==='Orbital Beacon');out.tier=t10===MS.length-1&&MS[t10].b.includes('lpad')&&MS[t10].b.includes('solar')&&MS[t10].r.includes('r_rocket_fuel');
   const hadMoon=!!(S.worlds&&S.worlds.moon);if(hadMoon)return{hadMoon:false};S.ub.push('lpad');
   let X,Y;for(let r=12;r<150&&X==null;r+=3)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<6&&ok;j++)for(let i=0;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok&&canPlace('lpad',x,y)===''){X=x;Y=y;break;}}
   out.placed=fw.placeEnt('lpad',X,Y,0,true)==='';const e=entAt(X,Y);tick(0.05);

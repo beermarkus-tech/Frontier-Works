@@ -3201,3 +3201,21 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Fixed:** within 0.03 tile of the stop point, the train snaps onto it and arrives.
 
 **Verified:** the smoke check now puts a train 0.008 tile before its stop and confirms it arrives in one tick. `npm test` all PASS.
+
+## Session 57 — 2026-11-17 (Claude Code, cloud session) · Build 158
+
+**Asked:** Tier 11 is far too much right after the big Tier 10 factory (four new production lines, Heavy Trusses, Guidance Cores that are almost a second Quantum Core factory). Tune it down or drop it; the Quantum Core could be the heart of the ship. Markus accepted the proposal.
+
+**Built (data only; Markus hadn't built any rocket-part lines, so nothing in his factory changes):**
+- **Tier 11 removed.** Tier 10, Orbital Beacon, stays the "you win" moment. It now unlocks the Launch Pad, Solar Panel, Vacuum Furnace, the four rocket parts and the two Vacuum Furnace recipes.
+  - The next goal is the launch itself: the Goals card shows "Next: Build a Launch Pad and launch the colony rocket…", and the top bar shows "🚀 Rocket" until the Moon is reached.
+  - Saves that are past all tiers simply count as complete, with everything unlocked.
+- **Simpler rocket parts:**
+  - Hull Plate = 6 Alloy Panels + 2 Steel Beams → 1 (Assembler, 12 s); no more Heavy Truss.
+  - **Guidance Core = 1 Quantum Core + 1 Control Chip** (Fabricator, 30 s).
+  - Rocket Fuel = 10 fuel + 1 Aluminum Casing → 2 (Blender, 6 s); no acid.
+  - Heat Shield is unchanged.
+- **Smaller rocket:** 30 Hull Plates, 15 Heat Shields, 2 Guidance Cores, 60 Rocket Fuel (was 60 / 30 / 4 / 200), plus the starter kit. That is roughly a tenth of Tier 10.
+- The design document (sections 12 and 14) is updated.
+
+**Verified:** the colony-rocket smoke check now checks the unlocks on Tier 10, the last tier. The dead-end audit passes. `npm test` all PASS.

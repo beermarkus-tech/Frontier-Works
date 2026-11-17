@@ -500,7 +500,7 @@ function paintItem(g,id,R){
    g.fillStyle='rgba(30,40,70,0.9)';g.fillRect(-R*0.08,R*0.32,R*0.16,R*0.08);break;}
   case 'lattice':{const pts=[[0,-0.42],[0.36,-0.21],[0.36,0.21],[0,0.42],[-0.36,0.21],[-0.36,-0.21]];g.beginPath();pts.forEach(([a,b],k)=>g[k?'lineTo':'moveTo'](R*a,R*b));g.closePath();g.fillStyle=rad(R*0.42);g.fill();fin();
    g.strokeStyle='rgba(255,255,255,0.6)';g.lineWidth=Math.max(1,R*0.035);g.beginPath();for(let k=0;k<3;k++){const [a,b]=pts[k],[c,d]=pts[k+3];g.moveTo(R*a,R*b);g.lineTo(R*c,R*d);}g.stroke();g.fillStyle='#fff';g.beginPath();g.arc(0,0,R*0.07,0,7);g.fill();break;}
-  /* Tier 11 rocket parts (Session 51) */
+  /* rocket parts (Session 51) */
   case 'hull':g.beginPath();g.moveTo(-R*0.42,-R*0.22);g.quadraticCurveTo(0,-R*0.46,R*0.42,-R*0.22);g.lineTo(R*0.42,R*0.3);g.quadraticCurveTo(0,R*0.06,-R*0.42,R*0.3);g.closePath();g.fillStyle=lin(R*0.4);g.fill();fin();
    g.fillStyle='rgba(60,70,80,0.75)';for(const x of [-0.3,-0.1,0.1,0.3]){const y=-0.3+Math.abs(x)*0.25;g.beginPath();g.arc(R*x,R*(y+0.06),R*0.035,0,7);g.arc(R*x,R*(y+0.44),R*0.035,0,7);g.fill();}break;
   case 'shield':{g.beginPath();g.moveTo(-R*0.42,R*0.18);g.quadraticCurveTo(-R*0.4,-R*0.4,0,-R*0.4);g.quadraticCurveTo(R*0.4,-R*0.4,R*0.42,R*0.18);g.closePath();g.fillStyle=lin(R*0.4);g.fill();fin();
