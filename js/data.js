@@ -177,8 +177,8 @@ const MS=[
 {n:'Electronics',req:{plastic:300,rubber:300,circuit_board:100,heavy_truss:20},b:[],r:['r_compute_module','r_data_bus','r_quartz_crystal','r_silica','r_resonator']},
 {n:'Lightweight Alloys',req:{compute_module:25,data_bus:50,resonator:100,steel_pipe:500},b:['blender','drill3'],r:['r_alumina','r_wet_alumina','r_alu_scrap','r_alu_ingot','r_pure_alu','r_alu_casing','r_alloy_panel','r_heat_sink','r_acid','r_battery','r_coolant_block','r_control_chip']},
 {n:'Nuclear Age',req:{alloy_panel:300,heat_sink:100,battery:200,control_chip:20},b:['reactor','belt5'],r:['r_uranium_cell','r_fuel_rod','r_turbine_core','r_quantum_core']},
-{n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:[],win:1},
-{n:'Spaceflight',req:{quantum_core:50,control_chip:100,heavy_truss:100,battery:500},b:['lpad','solar','vfurnace'],r:['r_hull_plate','r_heat_shield','r_guidance_core','r_rocket_fuel','r_vac_wafer','r_lattice'],goal:'Build a Launch Pad and launch the colony rocket to the Moon.'},
+{n:'Orbital Beacon',req:{turbine_core:50,quantum_core:50,fuel_rod:10},b:[],r:['r_hull_plate','r_heat_shield','r_guidance_core','r_rocket_fuel'],win:1},   /* Session 55: unlocks the rocket parts, so Tier 11 is about building their lines */
+{n:'Spaceflight',req:{hull_plate:40,heat_shield:20,guidance_core:5,rocket_fuel:100},b:['lpad','solar','vfurnace'],r:['r_vac_wafer','r_lattice'],goal:'Build a Launch Pad and launch the colony rocket to the Moon.'},
 ];
 MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
 const START_B=[...SIGNS,'zone','bpstation','bplist','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];

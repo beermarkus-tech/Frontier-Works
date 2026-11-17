@@ -3041,3 +3041,28 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Known issues:**
 - Machines now differ only by shape, which is harder at far zoom. The far-zoom simplified view still uses each building's colour.
 - Solar Panel cells are grey too.
+
+## Session 55 — 2026-11-17 (Claude Code, cloud session) · Build 150
+
+**Asked:**
+- Discussion: water and concrete on the Moon. Markus agreed to the mix: ice in dark craters, sintered regolith blocks, Moon concrete from regolith + water, oil stays Earth-only. Not built yet.
+- Trains: Markus agreed to all recommendations (one-way tracks, electric, Tier 6, Moon maglev look, after the freighters). Not built yet.
+- A balance analysis of tiers 6–11 without changing recipes. Then: "Change tier 11."
+
+**Analysis (measured with the planner, raw ore for each tier goal):** 300 · 1.6k · 1.6k · 4.2k · 7.2k · 15.7k · 8.3k · 8.3k · 14.5k · 110k · 169k (the rocket itself: 29k).
+- Tiers 1–5 rise evenly. Tier 6 is a bump and tiers 7–8 a dip (only matters for new games).
+- Tier 10 jumps 7.5× because of the Quantum Cores. Markus enjoyed building that line, so it stays.
+- Tier 11 cost six times the rocket and mostly repeated Tier 10's parts: just waiting.
+- The Fission Reactor makes power effectively unlimited late in the game (Markus has 50 GW spare). Plan: give future machines and the sphere large power demands instead of weakening the reactor.
+
+**Built (goals and unlocks only; no recipe changed, so factories are unaffected):**
+- **Tier 10, Orbital Beacon, now unlocks the four rocket-part recipes.** Saves already past Tier 10 get them on load (`grantUnlocks`).
+- **Tier 11, Spaceflight, now asks for** 40 Hull Plates, 20 Heat Shields, 5 Guidance Cores and 100 Rocket Fuel (about 25k ore). It still unlocks the Launch Pad, Solar Panel, Vacuum Furnace and the two Vacuum Furnace recipes.
+- The beacon dialog names the unlocked rocket parts.
+
+**Verified:** the dead-end audit passes (Tier 11's items can be made with Tier 10's unlocks). Colony rocket and Moon checks still PASS. `npm test` all PASS.
+
+**Next up:**
+- Orbital Freighters, with the Moon water/concrete mix.
+- Then trains.
+- The balance rulebook and an all-tier measuring tool.

@@ -336,9 +336,10 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   sky in 3D, no clouds in 2D. **Solar Panel** (10 MW, 2×2, no fuel) works only on the Moon. The Moon is reached with the colony rocket
   (step 2b, below).
 - **Tier 11 Spaceflight and the colony rocket** (Session 51, step 2b): after the Orbital Beacon (still the "you win" moment) comes
-  Tier 11 *Spaceflight* (Quantum Cores, Control Chips, Heavy Trusses, Batteries). It unlocks the **Launch Pad** (6×6, Home only,
-  150 MW while the rocket is ready), the **Solar Panel** and four parts: **Hull Plate** (Assembler), **Heat Shield** and **Rocket Fuel**
-  canisters (Blender), **Guidance Core** (Fabricator). The pad is filled by belt from any side or with *Load from stock*: rocket parts
+  Tier 11 *Spaceflight*. The Orbital Beacon (Tier 10) unlocks four rocket parts: **Hull Plate** (Assembler), **Heat Shield** and
+  **Rocket Fuel** canisters (Blender), **Guidance Core** (Fabricator). Tier 11 asks for a first batch of them (40 / 20 / 5 / 100; Session 55,
+  so the tier means building new lines instead of repeating Tier 10) and unlocks the **Launch Pad** (6×6, Home only, 150 MW while the rocket is
+  ready), the **Solar Panel** and the Vacuum Furnace. The pad is filled by belt from any side or with *Load from stock*: rocket parts
   (60 Hull Plates, 30 Heat Shields, 4 Guidance Cores, 200 Rocket Fuel) plus the **starter kit** it carries (plates, rods, wire, cable,
   120 concrete, braced plates, rotors, alloy panels, circuit boards: enough for a few solar panels, drills, smelters, presses, belts and
   poles). The rocket visibly stacks up on the pad as parts arrive; **Launch** sends it up (about 10 s, flame and smoke, 2D and 3D).

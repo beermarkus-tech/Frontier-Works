@@ -381,7 +381,7 @@ const ACT={
  handMine:()=>{const n=UI.panel.arg;give(NODE_T[n.t][0],5);toast(`+5 ${IT[NODE_T[n.t][0]].n}`);},
  submitMs:()=>{const m=MS[S.ms];if(!m||!afford(m.req))return;pay(m.req);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);if(m.oc)S.oc=true;S.ms++;sfx('goal');
   toast(`Tier ${S.ms} complete: ${m.n}!`);buildTools();renderPanel(true);
-  if(m.win){S.won=true;dialog(`<h2>🚀 Orbital Beacon launched!</h2><p>Your frontier outpost has reached orbit. Next up is Tier 11, Spaceflight: build a colony rocket and reach the Moon.</p><button class="btn on" data-act="closeDlg">Keep building</button>`);}
+  if(m.win){S.won=true;dialog(`<h2>🚀 Orbital Beacon launched!</h2><p>Your frontier outpost has reached orbit. Rocket parts are unlocked: Hull Plates, Heat Shields, Guidance Cores and Rocket Fuel. Build their lines for Tier 11, Spaceflight, then the colony rocket to reach the Moon.</p><button class="btn on" data-act="closeDlg">Keep building</button>`);}
   else{const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>Tier ${S.ms}: ${m.n}</h2><p>Unlocked: ${un.join(', ')||'—'}${m.oc?', overclocking':''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);}
   save();},
  closeDlg,
