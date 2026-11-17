@@ -375,7 +375,7 @@ const server=require('./serve.js');
  P('burner',ax-7,y0-4,0);P('burner',bx+5,y1+2,0);entAt(ax-7,y0-4).fuel={coal:50};entAt(bx+5,y1+2).fuel={coal:50};
  tick(0.05);window.__T={x0,y0,x1,y1,ax,bx,A,Bs,ba,bb};out.bad=bad;out.curve=entAt(x1,y0).cin===0;
  S.inv=Object.assign(S.inv,{motor:10,circuit_board:10,steel_beam:40,iron_plate:200,bolts:100});
- const why=trainBuild(A,2);out.build=why;const tr=S.trains&&S.trains[S.trains.length-1];if(tr)tr.sch[0].c='t10';out.sch=tr&&tr.sch.map(s=>s.s+':'+s.c).join(',');
+ const why=trainBuild(A,2);out.build=why;const tr=S.trains&&S.trains[S.trains.length-1];if(tr){out.paused=tr.hold===1;tr.sch[0].c='t10';tr.hold=0;}out.sch=tr&&tr.sch.map(s=>s.s+':'+s.c).join(',');
  
   out.tier6=MS[5].b.includes('rail')&&MS[5].b.includes('cbay');out.built=out.build===''&&!!tr&&tr.n===2;delete out.build;delete out.sch;
   for(let k=0;k<1300;k++)tick(0.05);out.delivered=(__T.bb.store.iron_plate||0)>=700;

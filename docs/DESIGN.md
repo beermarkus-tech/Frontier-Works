@@ -394,7 +394,8 @@ A train is a big drone on rails: large, steady flows over long distances inside 
   Load: belts fill the bay, the bay fills the wagon; Unload: the wagon empties into the bay, belts carry it away).
 - **Trains** = a locomotive and 1–4 cargo wagons, built from a Train Stop's panel (paid from stock, appears on the track behind the stop).
   Schedule: a list of stops, each with a condition (until full, until empty, wait N seconds); the default is a shuttle "load here until
-  full → unload at the other stop until empty". Tap a train for its cargo, status and schedule; it can be removed (refunded).
+  full → unload at the other stop until empty". A new train starts **paused** (its panel opens): set the schedule, then ▶ Start; Pause stops it at
+  the next moment (Session 56f). Tap a train for its cargo, status and schedule; it can be removed (refunded).
 - **Power: electric on both worlds.** A power pole whose supply area touches any tile of a track network powers that whole network; a
   moving train draws about 15 MW from that grid, a waiting one nothing. Without power trains crawl slowly instead of stopping dead.
 - **Look:** Earth: rails on a concrete bed, boxy locomotive and wagons. Moon: a single raised white guideway beam (maglev style) and

@@ -57,7 +57,7 @@ function tilePt(T,t){const [x,y,i,o]=T,en=(i+2)&3,ax=x+0.5+DX[en]*0.5,ay=y+0.5+D
 function trPos(tr,d){const T=tr.tr;let k=T.length-1;if(d<=tr.u)return tilePt(T[k],tr.u-d);d-=tr.u;k--;while(k>0&&d>1){d-=1;k--;}if(k<0)return tilePt(T[0],0);return tilePt(T[k],Math.max(0,1-d));}
 /* cars: k = 0 locomotive, 1… wagons; front and back points */
 function trCars(tr){const out=[];for(let k=0;k<=tr.n;k++){const f=trPos(tr,k*TRAIN.car+0.08),b=trPos(tr,k*TRAIN.car+1.82);out.push({k,f,b,x:(f[0]+b[0])/2,y:(f[1]+b[1])/2,a:Math.atan2(f[1]-b[1],f[0]-b[0])});}return out;}
-function trainAt(x,y){if(!S.trains)return null;for(const tr of S.trains)for(const c of trCars(tr))if(Math.hypot(c.x-(x+0.5),c.y-(y+0.5))<0.95)return tr;return null;}
+function trainAt(x,y){if(!S.trains)return null;let best=null,bd=0.95;for(const tr of S.trains)for(const c of trCars(tr)){const d=Math.hypot(c.x-(x+0.5),c.y-(y+0.5));if(d<bd){bd=d;best=tr;}}return best;}   /* the car nearest the finger (Session 56f) */
 
 /* ---------- routes ---------- */
 function trc(tr){let c=TRC.get(tr.id);if(!c){c={ver:-1,path:null,tgt:null,msg:'',pw:false,want:false,xa:0};TRC.set(tr.id,c);}return c;}
@@ -77,9 +77,10 @@ function condMet(tr){const s=tr.sch[tr.si];if(!s)return false;if(tr.wt<1.5)retur
 function trainTick(dt){const L=S.trains;OCC=new Map();if(!L||!L.length)return;for(const tr of L)for(const [x,y] of trTiles(tr))OCC.set(tKey(x,y),tr.id);
  const look=TRAIN.vmax*TRAIN.vmax/(2*TRAIN.brk)+2;
  for(const tr of L){const c=trc(tr);
+  if(tr.hold&&tr.st===1){c.want=false;continue;}   /* paused at a stop (new trains start paused, Session 56f) */
   if(tr.st===1){tr.wt+=dt;c.want=false;trTransfer(tr,dt,c);if(condMet(tr)){tr.si=(tr.si+1)%tr.sch.length;tr.st=0;tr.wt=0;c.ver=-1;}continue;}
   if(c.ver!==topoVer||c.tgt!==(tr.sch[tr.si]&&tr.sch[tr.si].s))trRoute(tr);
-  let free=0;const H=tr.tr[tr.tr.length-1];
+  let free=0;const H=tr.tr[tr.tr.length-1];if(tr.hold){tr.v=0;c.want=false;continue;}
   if(c.path){if(!c.path.length)free=0.5-tr.u;else{let dist=1-tr.u;free=dist;for(let k=0;k<c.path.length;k++){const P=c.path[k],o=OCC.get(tKey(P[0],P[1]));if(o!=null&&o!==tr.id){free=dist-0.12;break;}if(k===c.path.length-1){free=dist+0.5;break;}dist+=1;free=dist;if(dist>look)break;}}}
   const vmax=c.pw?TRAIN.vmax:TRAIN.crawl;tr.v=Math.min(tr.v+TRAIN.acc*dt,vmax,Math.sqrt(2*TRAIN.brk*Math.max(0,free)));if(free<0.01)tr.v=0;c.want=tr.v>0.05;
   tr.u+=Math.min(tr.v*dt,Math.max(0,free));
@@ -109,7 +110,7 @@ function trainBuild(stop,n){n=Math.max(1,Math.min(TRAIN.maxW,n|0));if(!stop||rSu
  const seq=list.slice().reverse(),T=seq.map((e,k)=>{const o=k<seq.length-1?dirTo([e.x,e.y],[seq[k+1].x,seq[k+1].y]):stop.dir;return[e.x,e.y,o,o];});
  for(let k=1;k<T.length;k++)T[k][2]=T[k-1][3];
  const id=S.trains.reduce((m,t)=>Math.max(m,t.id),0)+1,other=stopNames().find(x=>x!==stop.tx);
- S.trains.push({id,nm:'Train '+id,n,tr:T,u:0.5,v:0,sch:[{s:stop.tx,c:'full'}].concat(other?[{s:other,c:'empty'}]:[]),si:0,st:1,wt:0,cg:Array.from({length:n},()=>({}))});return '';}
+ S.trains.push({id,nm:'Train '+id,n,tr:T,u:0.5,v:0,sch:[{s:stop.tx,c:'full'}].concat(other?[{s:other,c:'empty'}]:[]),si:0,st:1,wt:0,hold:1,cg:Array.from({length:n},()=>({}))});return '';}
 function trainRemove(tr,silent){const i=S.trains.indexOf(tr);if(i<0)return;for(const [x,y] of trTiles(tr))if(OCC.get(tKey(x,y))===tr.id)OCC.delete(tKey(x,y));S.trains.splice(i,1);TRC.delete(tr.id);refund(trCost(tr.n));for(const w of tr.cg)for(const k in w)give(k,w[k]);if(!silent)toast(`${tr.nm} removed: cost and cargo back in stock`);}
 
 /* ---------- panels ---------- */
@@ -128,23 +129,24 @@ function trainDyn(e){
  if(e.k==='rail'){const c=RCOMP[e._rc];return`<div class="row"><span>Track power</span><span>${c&&c.grid?'connected':'<span style="color:#ff8a6a">none: put a power pole near the track</span>'}</span></div>`;}
  return '';}
 function trById(id){return(S.trains||[]).find(t=>t.id===id);}
-function trainStatus(tr){const c=trc(tr),s=tr.sch[tr.si];if(tr.st===1)return['#4fe08a',`At ${s?s.s:'a stop'}: ${s?condTxt[s.c]:''}`];if(c.msg)return['#ffa53a',c.msg];if(tr.v<0.05)return['#ffd34a',`Waiting for the track ahead (to ${s?s.s:'?'})`];return[c.pw?'#4fe08a':'#ffa53a',`${c.pw?'Driving':'No track power: crawling'} to ${s?s.s:'?'}`];}
-function trainHtml(id){const tr=trById(id);if(!tr)return'<div class="muted">This train is gone.</div>';const names=stopNames();
+function trainStatus(tr){const c=trc(tr),s=tr.sch[tr.si];if(tr.hold)return['#ffd34a','Paused: check the schedule, then press ▶ Start'];if(tr.st===1)return['#4fe08a',`At ${s?s.s:'a stop'}: ${s?condTxt[s.c]:''}`];if(c.msg)return['#ffa53a',c.msg];if(tr.v<0.05)return['#ffd34a',`Waiting for the track ahead (to ${s?s.s:'?'})`];return[c.pw?'#4fe08a':'#ffa53a',`${c.pw?'Driving':'No track power: crawling'} to ${s?s.s:'?'}`];}
+function trainHtml(id){const tr=trById(id);if(!tr)return'<div class="muted">This train is gone.</div>';const names=stopNames();if($('ptitle'))$('ptitle').textContent=tr.nm;
  return`<div id="trdyn">${trainDynHtml(tr)}</div><h4>Schedule</h4><div class="muted" style="margin-bottom:4px">The train drives to each stop in turn and leaves when the condition is met.</div>`+
   tr.sch.map((s,i)=>`<div class="card"><div class="row"><b>${i===tr.si?'▶ ':''}${i+1}.</b><button class="btn chip" data-act="trDel" data-v="${i}" title="Remove stop">✕</button></div>
    <select class="wide" data-act="trSchS" data-v="${i}">${(names.includes(s.s)?names:[s.s,...names]).map(n=>`<option ${n===s.s?'selected':''}>${n.replace(/</g,'&lt;')}</option>`).join('')}</select>
    <select class="wide" data-act="trSchC" data-v="${i}" style="margin-top:4px">${Object.keys(condTxt).map(k=>`<option value="${k}" ${k===s.c?'selected':''}>${condTxt[k]}</option>`).join('')}</select></div>`).join('')+
-  `<div class="chips" style="margin-top:6px"><button class="btn chip" data-act="trAdd" ${names.length?'':'disabled'}>+ Add stop</button><button class="btn chip" data-act="trGo">⏭ Leave now</button><button class="btn chip" data-act="trRemove">🗑 Remove train</button></div>`;}
+  `<div class="chips" style="margin-top:6px">${tr.hold?'<button class="btn chip on" data-act="trHold" data-v="0">▶ Start</button>':'<button class="btn chip" data-act="trHold" data-v="1">⏸ Pause</button>'}<button class="btn chip" data-act="trAdd" ${names.length?'':'disabled'}>+ Add stop</button><button class="btn chip" data-act="trGo">⏭ Leave now</button><button class="btn chip" data-act="trRemove">🗑 Remove train</button></div>`;}
 function trainDynHtml(tr){const st=trainStatus(tr);
  return`<div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div><div class="row"><span>Speed</span><span>${(tr.v*60/1).toFixed(0)} tiles/min</span></div>`+
   tr.cg.map((w,i)=>{const t=wagonLoad(w),ks=Object.keys(w).filter(k=>w[k]>0);return`<div class="row"><span>Wagon ${i+1}</span><span>${t}/${TRAIN.cap}</span></div><div class="bar"><i style="width:${t/TRAIN.cap*100}%"></i></div>${ks.length?`<div class="muted">${ks.map(k=>w[k]+' '+IT[k].n).join(', ')}</div>`:''}`;}).join('');}
 setInterval(()=>{if(UI.panel&&UI.panel.kind==='train'){const tr=trById(UI.panel.arg);const el=$('trdyn');if(tr&&el)setHTML(el,trainDynHtml(tr));}},250);
 Object.assign(ACT,{
- trBuild:v=>{const e=ents.get(UI.panel&&UI.panel.arg);const why=trainBuild(e,+v);if(why){toast(why);sfx('deny');return;}sfx('place');toast('🚂 Train built: tap it to set its schedule');renderPanel(true);},
+ trBuild:v=>{const e=ents.get(UI.panel&&UI.panel.arg);const why=trainBuild(e,+v);if(why){toast(why);sfx('deny');return;}sfx('place');const nt=S.trains[S.trains.length-1];toast(`🚂 ${nt.nm} built: set its schedule, then press ▶ Start`);openPanel('train',nt.id);},
+ trHold:v=>{const tr=trById(UI.panel.arg);if(!tr)return;tr.hold=v==='1'?1:0;if(!tr.hold){tr.wt=0;trc(tr).ver=-1;}renderPanel(true);},
  bayMode:v=>{const e=ents.get(UI.panel&&UI.panel.arg);if(e&&e.k==='cbay'){e.bm=v==='1'?1:0;renderPanel(true);}},
  trAdd:()=>{const tr=trById(UI.panel.arg);if(!tr)return;const n=stopNames();if(!n.length)return;tr.sch.push({s:n[0],c:'empty'});renderPanel(true);},
  trDel:v=>{const tr=trById(UI.panel.arg);if(!tr)return;tr.sch.splice(+v,1);if(tr.si>=tr.sch.length)tr.si=0;trc(tr).ver=-1;renderPanel(true);},
- trGo:()=>{const tr=trById(UI.panel.arg);if(!tr||!tr.sch.length)return;if(tr.st===1){tr.si=(tr.si+1)%tr.sch.length;tr.st=0;tr.wt=0;}trc(tr).ver=-1;renderPanel(true);},
+ trGo:()=>{const tr=trById(UI.panel.arg);if(!tr||!tr.sch.length)return;tr.hold=0;if(tr.st===1){tr.si=(tr.si+1)%tr.sch.length;tr.st=0;tr.wt=0;}trc(tr).ver=-1;renderPanel(true);},
  trRemove:()=>{const tr=trById(UI.panel.arg);if(!tr)return;trainRemove(tr);closePanel();}});
 document.addEventListener('change',ev=>{const el=ev.target,a=el.dataset&&el.dataset.act;if(a!=='trSchS'&&a!=='trSchC')return;const tr=UI.panel&&trById(UI.panel.arg);if(!tr)return;const s=tr.sch[+el.dataset.v];if(!s)return;
  if(a==='trSchS')s.s=el.value;else s.c=el.value;trc(tr).ver=-1;renderPanel(true);});

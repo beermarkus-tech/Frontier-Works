@@ -3175,3 +3175,19 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The short stub shows on the branch side while nothing is connected there.
 
 **Verified:** the smoke check cycles a switch through split right → split left → join from the right (one exit; accepts from back and side) → … → back to split right. `npm test` all PASS.
+
+## Session 56f — 2026-11-17 (Claude Code, cloud session) · Build 156
+
+**Reported:** a train added to an existing track started moving at once and seemed to copy the older train's plan, although Markus had given it its own.
+
+**Causes:**
+- A new train started straight away with its default plan ("this stop until full, then the other stop"). A stocked Cargo Bay fills it, so it leaves.
+- Tapping a train picked the *first* train within reach, not the nearest. With two trains close together, the panel (and the schedule edits) could belong to the other train. The panel title just said "Train".
+
+**Fixed:**
+- **New trains start paused.** Their panel opens right after building, with the default plan pre-filled. The status reads "Paused: check the schedule, then press ▶ Start". The panel has **▶ Start / ⏸ Pause** (Leave now also un-pauses).
+- **Tapping picks the car nearest the finger.**
+- **The panel title shows the train's name** ("Train 3"), and the selected train is outlined in yellow (as before).
+- The `hold` flag is saved with the train.
+
+**Verified:** the smoke check confirms a newly built train is paused; the shuttle test starts it. `npm test` all PASS.
