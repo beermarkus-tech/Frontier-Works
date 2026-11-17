@@ -649,13 +649,14 @@ function render(){
  // previews
  if(linePrev){const fake=linePrev.path.map((p,k,arr)=>{const prev=arr[k-1];const o={x:p.x,y:p.y,dir:p.d,d:linePrev.id,k:B[linePrev.id].k,spd:B[linePrev.id].spd,cin:null};if(prev&&prev.d!==p.d)o.cin=prev.d;return o;});
   const bad=fake.filter(f=>{const why=canPlace(linePrev.id,f.x,f.y);return why&&!(why==='Blocked'&&entAt(f.x,f.y)&&entAt(f.x,f.y).k===B[linePrev.id].k);});
-  drawLines(fake,sx,sy,s,0.7);for(const f of bad){ctx.fillStyle='rgba(255,70,50,0.45)';ctx.fillRect(sx(f.x),sy(f.y),s,s);}
+  if(B[linePrev.id].k==='rail'){ctx.globalAlpha=0.75;drawRails(fake,sx,sy,s);ctx.globalAlpha=1;}else drawLines(fake,sx,sy,s,0.7);for(const f of bad){   /* track shows while dragging (Session 56c) */ctx.fillStyle='rgba(255,70,50,0.45)';ctx.fillRect(sx(f.x),sy(f.y),s,s);}
   const n=fake.length,cost=B[linePrev.id].cost;const last=fake[n-1];const okA=afford(cost,n);ctx.font=`600 ${12*DPR}px Inter,system-ui,sans-serif`;const txt=`${n} × ${B[linePrev.id].n}`;const tw=ctx.measureText(txt).width;const lx=sx(last.x+0.5)-tw/2-8*DPR,ly=sy(last.y)-26*DPR;ctx.fillStyle=okA?'rgba(14,20,27,0.85)':'rgba(120,30,20,0.9)';rr(lx,ly,tw+16*DPR,20*DPR,8*DPR);ctx.fill();ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.fillText(txt,lx+8*DPR,ly+10*DPR);}
  else if(hover&&(tool==='zone'||UI.zoneCut)&&!zonePrev){ctx.strokeStyle=UI.zoneCut?'#ff9a5a':'#6ef08a';ctx.lineWidth=2*DPR;rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();}
  else if(hover&&tool==='fmeter'){const e=entAt(hover.x,hover.y),ok=e&&isLine(e.k);ctx.strokeStyle=ok?'#6ef08a':'#ff5a46';ctx.lineWidth=2*DPR;rr(sx(hover.x),sy(hover.y),s,s,s*0.15);ctx.stroke();if(ok&&!e.fm)blit('fmeter',sx(hover.x)+s*0.25,sy(hover.y)+s*0.25,s*0.5,0.8);}
- else if(hover&&tool&&B[tool]){const d=B[tool],fp=footprint(tool,hover.x,hover.y),why=canPlace(tool,fp.x,fp.y),bad=why&&!(why==='Blocked'&&isLine(d.k)&&entAt(hover.x,hover.y)&&entAt(hover.x,hover.y).k===d.k);
+ else if(hover&&tool&&B[tool]){const d=B[tool],fp=footprint(tool,hover.x,hover.y),why=canPlace(tool,fp.x,fp.y),bad=why&&!(why==='Blocked'&&(isLine(d.k)||d.k==='rail')&&entAt(hover.x,hover.y)&&entAt(hover.x,hover.y).k===d.k);
   const X=sx(fp.x),Y=sy(fp.y),P=d.w*s;
-  if(isLine(d.k)){const o=entAt(fp.x,fp.y);drawLines([{x:fp.x,y:fp.y,dir:o&&o.k===d.k?o.dir:UI.rot,d:tool,k:d.k,spd:d.spd,cin:null}],sx,sy,s,0.75);}
+  if(d.k==='rail'){const o=entAt(fp.x,fp.y);ctx.globalAlpha=0.75;drawRails([{x:fp.x,y:fp.y,dir:o&&o.k==='rail'?o.dir:UI.rot,d:tool,k:'rail',cin:null,bs:UI.swSide||1}],sx,sy,s);ctx.globalAlpha=1;}
+  else if(isLine(d.k)){const o=entAt(fp.x,fp.y);drawLines([{x:fp.x,y:fp.y,dir:o&&o.k===d.k?o.dir:UI.rot,d:tool,k:d.k,spd:d.spd,cin:null}],sx,sy,s,0.75);}
   else if(d.k==='router'||d.k==='cross'){ctx.globalAlpha=0.75;drawRouter(ctx,{d:tool,k:d.k,dir:UI.rot},X,Y,s);ctx.globalAlpha=1;}
   else if(d.k==='pole'){ctx.globalAlpha=0.8;drawPole(ctx,{d:tool},X,Y,s);ctx.globalAlpha=1;{const nb=pnNearest({d:tool,k:'pole',x:fp.x,y:fp.y,w:1,h:1});if(nb){const C=cen(nb);ctx.strokeStyle='rgba(255,211,74,0.9)';ctx.lineWidth=Math.max(1.5,s*0.06);ctx.beginPath();ctx.moveTo(X+s/2,Y+s/2);ctx.lineTo(sx(C.x),sy(C.y));ctx.stroke();}}ctx.strokeStyle='rgba(255,215,90,0.6)';ctx.setLineDash([5*DPR,5*DPR]);ctx.beginPath();ctx.arc(X+s/2,Y+s/2,d.link*s,0,7);ctx.stroke();ctx.setLineDash([]);}
   else blit(tool,X,Y,s,0.7);

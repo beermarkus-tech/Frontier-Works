@@ -12,7 +12,9 @@ const railAt=(x,y)=>{const e=entAt(x,y);return e&&e.k==='rail'?e:null;};
 const rSub=e=>B[e.d].sub||'';
 function canEnter(n,od){return rSub(n)==='switch'?n.dir===od:n.dir!==((od+2)&3);}
 /* tiles a train can drive to from track piece t: [entity, direction] */
-function rsucc(t){const out=[],dirs=rSub(t)==='switch'?[t.dir,(t.dir+3)&3,(t.dir+1)&3]:[t.dir];
+/* Rail Switch (Session 56c): main line straight on + one branch on side e.bs (1 = right, 2 = left); Rotate swaps the side */
+const swBranch=t=>t.bs===2?(t.dir+3)&3:(t.dir+1)&3;
+function rsucc(t){const out=[],dirs=rSub(t)==='switch'?[t.dir,swBranch(t)]:[t.dir];
  for(const od of dirs){const n=railAt(t.x+DX[od],t.y+DY[od]);if(n&&canEnter(n,od))out.push([n,od]);}return out;}
 const dirTo=(a,b)=>b[0]>a[0]?0:b[1]>a[1]?1:b[0]<a[0]?2:3;
 function stopNewName(){let k=1;const names=new Set([...ents.values()].filter(e=>e.k==='rail'&&rSub(e)==='stop').map(e=>e.tx));while(names.has('Station '+k))k++;return 'Station '+k;}
@@ -27,6 +29,7 @@ function trainTopo(){railList=[];BAYADJ=new Map();RCOMP=[];
  /* a stop or track piece placed against the flow (nothing leads in, nothing leads on) turns round if that connects it (Session 56b) */
  const fedBy=e=>{for(let d=0;d<4;d++){const n=railAt(e.x-DX[d],e.y-DY[d]);if(n&&rsucc(n).some(([m])=>m===e))return true;}return false;};
  for(const e of railList){if(rSub(e)==='switch'||fedBy(e)||rsucc(e).length)continue;const d0=e.dir;e.dir=(d0+2)&3;if(!(fedBy(e)&&rsucc(e).length))e.dir=d0;}
+ for(const e of railList){if(rSub(e)!=='switch'||fedBy(e))continue;const d0=e.dir;let ok=false;for(const d of [d0,(d0+1)&3,(d0+2)&3,(d0+3)&3]){e.dir=d;if(fedBy(e)){ok=true;break;}}if(!ok)e.dir=d0;}   /* a switch lines up with the track that leads into it */
  /* curves for drawing: a plain track piece fed only from one side bends (e.cin = travel direction coming in) */
  for(const e of railList){e.cin=null;if(rSub(e)==='switch')continue;const fed=[];
   for(let d=0;d<4;d++){const n=railAt(e.x-DX[d],e.y-DY[d]);if(n&&rsucc(n).some(([m])=>m===e))fed.push(d);}
@@ -67,7 +70,7 @@ function condMet(tr){const s=tr.sch[tr.si];if(!s)return false;if(tr.wt<1.5)retur
  if(s.c==='full')return tr.cg.every(w=>wagonLoad(w)>=TRAIN.cap);if(s.c==='empty')return tr.cg.every(w=>wagonLoad(w)<=0);const t=+String(s.c).slice(1)||10;return tr.wt>=t;}
 
 /* ---------- simulation (every tick, after buildings) ---------- */
-function trainTick(dt){const L=S.trains;if(!L||!L.length)return;OCC=new Map();for(const tr of L)for(const [x,y] of trTiles(tr))OCC.set(tKey(x,y),tr.id);
+function trainTick(dt){const L=S.trains;OCC=new Map();if(!L||!L.length)return;for(const tr of L)for(const [x,y] of trTiles(tr))OCC.set(tKey(x,y),tr.id);
  const look=TRAIN.vmax*TRAIN.vmax/(2*TRAIN.brk)+2;
  for(const tr of L){const c=trc(tr);
   if(tr.st===1){tr.wt+=dt;c.want=false;trTransfer(tr,dt,c);if(condMet(tr)){tr.si=(tr.si+1)%tr.sch.length;tr.st=0;tr.wt=0;c.ver=-1;}continue;}
@@ -97,14 +100,13 @@ function trainBuild(stop,n){n=Math.max(1,Math.min(TRAIN.maxW,n|0));if(!stop||rSu
  while(list.length<need){const cur=list[list.length-1],back=cur.cin!=null?(cur.cin+2)&3:(cur.dir+2)&3;let p=null;
   for(const d of [back,0,1,2,3]){const m=railAt(cur.x+DX[d],cur.y+DY[d]);if(m&&!seen.has(m)&&rsucc(m).some(([q])=>q===cur)){p=m;break;}}
   if(!p)return `Needs ${need} tiles of track leading into this stop`;list.push(p);seen.add(p);}
- for(const e of list)if(OCC.get(tKey(e.x,e.y))!=null)return 'Another train is on that track';
  if(S.trains.some(tr=>trTiles(tr).some(([x,y])=>list.some(e=>e.x===x&&e.y===y))))return 'Another train is on that track';
  const cost=trCost(n);if(!afford(cost))return 'Not enough materials';pay(cost);
  const seq=list.slice().reverse(),T=seq.map((e,k)=>{const o=k<seq.length-1?dirTo([e.x,e.y],[seq[k+1].x,seq[k+1].y]):stop.dir;return[e.x,e.y,o,o];});
  for(let k=1;k<T.length;k++)T[k][2]=T[k-1][3];
  const id=S.trains.reduce((m,t)=>Math.max(m,t.id),0)+1,other=stopNames().find(x=>x!==stop.tx);
  S.trains.push({id,nm:'Train '+id,n,tr:T,u:0.5,v:0,sch:[{s:stop.tx,c:'full'}].concat(other?[{s:other,c:'empty'}]:[]),si:0,st:1,wt:0,cg:Array.from({length:n},()=>({}))});return '';}
-function trainRemove(tr,silent){const i=S.trains.indexOf(tr);if(i<0)return;S.trains.splice(i,1);TRC.delete(tr.id);refund(trCost(tr.n));for(const w of tr.cg)for(const k in w)give(k,w[k]);if(!silent)toast(`${tr.nm} removed: cost and cargo back in stock`);}
+function trainRemove(tr,silent){const i=S.trains.indexOf(tr);if(i<0)return;for(const [x,y] of trTiles(tr))if(OCC.get(tKey(x,y))===tr.id)OCC.delete(tKey(x,y));S.trains.splice(i,1);TRC.delete(tr.id);refund(trCost(tr.n));for(const w of tr.cg)for(const k in w)give(k,w[k]);if(!silent)toast(`${tr.nm} removed: cost and cargo back in stock`);}
 
 /* ---------- panels ---------- */
 function trainStatic(e){
@@ -146,7 +148,7 @@ document.addEventListener('input',ev=>{const el=ev.target;if(!el.dataset||el.dat
  const old=e.tx,nw=el.value.slice(0,30)||old;if(nw===old)return;e.tx=nw;if(S.trains&&!stopNames().includes(old))for(const tr of S.trains)for(const s of tr.sch)if(s.s===old)s.s=nw;for(const c of TRC.values())c.ver=-1;});
 
 /* ---------- 2D drawing ---------- */
-function railSegs(e){if(rSub(e)==='switch'){const ex=rsucc(e).map(([,d])=>d);return(ex.length?ex:[e.dir]).map(o=>[e.x,e.y,e.dir,o]);}return[[e.x,e.y,e.cin!=null?e.cin:e.dir,e.dir]];}
+function railSegs(e){if(rSub(e)==='switch')return[[e.x,e.y,e.dir,e.dir],[e.x,e.y,e.dir,swBranch(e)]];return[[e.x,e.y,e.cin!=null?e.cin:e.dir,e.dir]];}
 function drawRails(list,sx,sy,s){if(!list.length)return;const moon=moonLook(),bed=new Path2D(),sl=new Path2D(),rl=new Path2D(),mid=new Path2D();
  const off=(T,t,o)=>{const p=tilePt(T,t),q=tilePt(T,Math.min(1,t+0.02)),r=tilePt(T,Math.max(0,t-0.02)),dx=q[0]-r[0],dy=q[1]-r[1],l=Math.hypot(dx,dy)||1;return[sx(p[0]-dy/l*o),sy(p[1]+dx/l*o)];};
  const line=(P,T,o)=>{for(let k=0;k<=8;k++){const p=off(T,k/8,o);if(k)P.lineTo(p[0],p[1]);else P.moveTo(p[0],p[1]);}};
@@ -161,7 +163,9 @@ function drawRails(list,sx,sy,s){if(!list.length)return;const moon=moonLook(),be
   if(rSub(e)==='stop'){const d=e.dir,px=X+s*0.5+DY[d]*s*0.5,py=Y+s*0.5-DX[d]*s*0.5;ctx.fillStyle='#e05a3a';ctx.beginPath();ctx.arc(px,py,s*0.16,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(1,s*0.05);ctx.stroke();
    ctx.strokeStyle='#e05a3a';ctx.lineWidth=Math.max(1.5,s*0.1);ctx.beginPath();const ax=X+s*0.5-DY[d]*s*0.45,ay=Y+s*0.5+DX[d]*s*0.45;ctx.moveTo(ax,ay);ctx.lineTo(px,py);ctx.stroke();
    if(s>=12&&e.tx){const fs=Math.max(9*DPR,s*0.32);ctx.font=`700 ${fs}px Inter,system-ui,sans-serif`;const w=ctx.measureText(e.tx).width+fs*0.8;ctx.fillStyle='rgba(10,14,18,0.8)';rr(px-w/2,py-s*0.25-fs*1.5,w,fs*1.35,fs*0.6);ctx.fill();ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.tx,px,py-s*0.25-fs*0.8);ctx.textAlign='left';}}
-  else if(rSub(e)==='switch'){ctx.fillStyle='#d0a040';ctx.beginPath();ctx.arc(X+s*0.5,Y+s*0.5,s*0.13,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=1;ctx.stroke();}}}
+  else if(rSub(e)==='switch'){const b=swBranch(e);if(!railAt(e.x+DX[b],e.y+DY[b])){const cx=X+s*0.5+DX[b]*s*0.5,cy=Y+s*0.5+DY[b]*s*0.5,ex=cx+DX[b]*s*0.45,ey=cy+DY[b]*s*0.45;ctx.lineCap='butt';
+    ctx.strokeStyle=moon?'#e9ecef':'#6f6b63';ctx.lineWidth=moon?s*0.5:s*0.78;ctx.globalAlpha=0.8;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();if(!moon){ctx.strokeStyle='#c9ced4';ctx.lineWidth=Math.max(1,s*0.07);ctx.beginPath();for(const o of [-0.21,0.21]){ctx.moveTo(cx-DY[b]*s*o,cy+DX[b]*s*o);ctx.lineTo(ex-DY[b]*s*o,ey+DX[b]*s*o);}ctx.stroke();}ctx.globalAlpha=1;}   /* short branch stub showing where the side track leaves */
+   ctx.fillStyle='#d0a040';ctx.beginPath();ctx.arc(X+s*0.5,Y+s*0.5,s*0.13,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=1;ctx.stroke();}}}
 function drawTrains(sx,sy,s){if(!S.trains||!S.trains.length)return;const moon=moonLook(),sel=UI.panel&&UI.panel.kind==='train'?UI.panel.arg:null;
  for(const tr of S.trains)for(const c of trCars(tr)){const X=sx(c.x),Y=sy(c.y);if(X<-3*s||Y<-3*s||X>cv.width+3*s||Y>cv.height+3*s)continue;const len=Math.hypot(c.f[0]-c.b[0],c.f[1]-c.b[1])*s,w=s*0.72;
   ctx.save();ctx.translate(X,Y);ctx.rotate(c.a);ctx.fillStyle='rgba(0,0,0,0.3)';rr(-len/2+s*0.08,-w/2+s*0.1,len,w,moon?w/2:s*0.12);ctx.fill();

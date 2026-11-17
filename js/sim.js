@@ -177,7 +177,7 @@ function initEnt(e,d){
   case 'bpst':e.dsg=Array.isArray(e.dsg)?e.dsg:[];e.dn=e.dn||'';e.want=true;break;   /* Blueprint Station: design pieces + name; always draws its small power */
   case 'lpad':e.store=e.store||{};e.lt=e.lt||0;e.nl=e.nl||0;break;   /* Launch Pad: loaded rocket parts + kit, launch timer (s, 0 = on the ground), launches so far */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
-  case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();break;   /* trains (js/train.js) */
+  case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();if(d.sub==='switch')e.bs=e.bs||((typeof UI!=='undefined'&&UI.swSide)||1);break;   /* trains (js/train.js) */
   case 'cbay':e.store=e.store||{};e.bm=e.bm||0;e.rr=0;break;   /* Cargo Bay: bm 0 = Load, 1 = Unload */
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
  }

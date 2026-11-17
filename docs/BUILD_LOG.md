@@ -3130,3 +3130,28 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - **Arrows:** Train Stops now show the direction arrow too.
 
 **Verified:** the trains smoke check now also turns a stop round on purpose (it turns back by itself) and drags track over a stop (the stop stays). `npm test` all PASS.
+
+## Session 56c — 2026-11-17 (Claude Code, cloud session) · Build 153
+
+**Reported:**
+- The Rail Switch only turned in one direction. It should line up by itself and look like a switch right away, with a short section leading away; Rotate should swap that section's side.
+- Track wasn't visible while dragging, only after lifting the finger.
+
+**Built:**
+- **Rail Switch redone:**
+  - It has a main line (straight on) plus **one branch** on a side (`e.bs`: 1 right, 2 left, saved).
+  - It always draws the branch curve, plus a short stub beyond the tile while nothing is connected there.
+  - It **lines up with the track leading into it** by itself.
+  - Rotate in its panel swaps the branch side. While placing a new switch, the Rotate button picks the side for it ("Switch branch: left/right").
+  - Trains choose straight on or the branch, whichever leads to their next stop.
+- **Dragging track** now shows the rails (curves included) while the finger is down, like belts. A single tap preview also shows rails.
+
+**Verified:**
+- Screenshot of a switch on a straight track (branch and stub) and of a drag preview with a curve.
+- The smoke check now also confirms: a switch placed the wrong way lines up; it has one branch on the right; Rotate swaps it to the left; dragging track over it keeps it.
+- `npm test` all PASS.
+
+**Also in this push (same Build 153):**
+- **Reported:** after deleting a train, a new one couldn't be placed ("Another train is on that track"). The tile-occupancy map was only refreshed while at least one train existed, so a deleted last train left its tiles marked. It is now reset every tick, and removing a train clears its tiles at once.
+- The smoke check now deletes a train and builds a new one at the same stop.
+- **Test fix:** the blueprint check's "build elsewhere" spot could land inside the Blueprint Station on some random maps, where pieces are free, so `poor` failed now and then. It now searches for a free spot away from the station after the first paste.

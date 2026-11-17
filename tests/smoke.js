@@ -334,7 +334,7 @@ const server=require('./serve.js');
   UI.bp=0;UI.rot=1;const at={x:Q.x+3,y:Q.y+3},L=bpLayout(BPS[0],1,at),res=bpPaste(at);
   const sm=L.it.find(q=>q.d==='smelter'),ls=L.it.find(q=>q.d==='lsplit'),es=fw.entAt(sm.x,sm.y),el=fw.entAt(ls.x,ls.y);
   const turned=L.W===2&&L.H===5&&!!el&&el.dir===1&&!!es&&es.r==='r_iron_ingot'&&el.lr.l[0]==='iron_ingot';
-  for(const k in S.inv)S.inv[k]=0;UI.rot=0;const P2=Q2&&!(Math.abs(Q2.x-Q.x)<8&&Math.abs(Q2.y-Q.y)<8)?Q2:{x:Q.x,y:Q.y+12};const poor=bpPaste({x:P2.x+3,y:P2.y+3});
+  for(const k in S.inv)S.inv[k]=0;UI.rot=0;const P2=find(8,8,{x:X,y:Y})||{x:Q.x,y:Q.y+12};   /* a free spot away from the station (found after the first paste, so it never overlaps it) */const poor=bpPaste({x:P2.x+3,y:P2.y+3});
   for(const o of [{x:X,y:Y,w:14},{x:Q.x,y:Q.y,w:9},{x:P2.x,y:P2.y,w:9}])for(let j=-1;j<o.w;j++)for(let i=-1;i<o.w;i++){const e=fw.entAt(o.x+i,o.y+j);if(e&&e.k!=='core')removeEnt(e,false,true);}
   S.inv=JSON.parse(inv0);BPS.length=0;BPS.push(...keepBP);bpSave();setTool(null);
   return{placed,pieces:[a,b,c,d].every(v=>v===''),out:out!=='',over:over==='Blocked',free,noPw,fresh,ld,delPiece,keepSt,built:res.ok===4,turned,poor:poor.ok===0&&Object.keys(poor.miss).length>0};});
@@ -379,10 +379,12 @@ const server=require('./serve.js');
  
   out.tier6=MS[5].b.includes('rail')&&MS[5].b.includes('cbay');out.built=out.build===''&&!!tr&&tr.n===2;delete out.build;delete out.sch;
   for(let k=0;k<1300;k++)tick(0.05);out.delivered=(__T.bb.store.iron_plate||0)>=700;
-  {const B2=__T.Bs,d0=B2.dir;B2.dir=(d0+2)&3;topoDirty=true;tick(0.05);out.autoTurn=B2.dir===d0;P('rail',B2.x,B2.y,d0);out.keepStop=entAt(B2.x,B2.y)===B2;}out.power=TRC.get(tr.id).pw===true;
+  {const B2=__T.Bs,d0=B2.dir;B2.dir=(d0+2)&3;topoDirty=true;tick(0.05);out.autoTurn=B2.dir===d0;P('rail',B2.x,B2.y,d0);out.keepStop=entAt(B2.x,B2.y)===B2;}
+  {const sx=__T.x0+4,sy=__T.y0,inv0=JSON.stringify(S.inv);P('rswitch',sx,sy,2);tick(0.05);const w=entAt(sx,sy);out.swAlign=w.d==='rswitch'&&w.dir===0&&w.bs===1&&rsucc(w).length===1;openPanel('ent',w.id);ACT.rotSel();tick(0.05);out.swSide=w.bs===2&&swBranch(w)===3;ACT.closePanel();P('rail',sx,sy,0);out.swKeep=entAt(sx,sy).d==='rswitch';}out.power=TRC.get(tr.id).pw===true;
   const c=trCars(tr)[0];const at=trainAt(Math.floor(c.x),Math.floor(c.y));out.tap=at===tr;openPanel('train',tr.id);out.panel=/schedule/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
   const n0=S.trains.length,id0=tr.id;load(serialize());tick(0.05);out.saved=S.trains.length===n0&&S.trains[0].id===id0;
-  const t2=S.trains[0],tl=trTiles(t2)[1],inv=S.inv.steel_beam||0;removeEnt(entAt(tl[0],tl[1]),false,true);tick(0.05);out.removed=S.trains.length===0&&(S.inv.steel_beam||0)>inv;
+  {const t1=S.trains[0];trainRemove(t1,true);Object.assign(S.inv,{motor:10,circuit_board:10,steel_beam:40,iron_plate:200,bolts:100});const rw=trainBuild(entAt(__T.A.x,__T.A.y),2);out.rebuild=rw===''&&S.trains.length===1;if(rw)out.rebuildWhy=rw;}
+  const t2=S.trains[0];if(t2){const tl=trTiles(t2)[1],inv=S.inv.steel_beam||0;removeEnt(entAt(tl[0],tl[1]),false,true);tick(0.05);out.removed=S.trains.length===0&&(S.inv.steel_beam||0)>inv;}
   for(const e of [...ents.values()])if(e.k==='rail'||e.k==='cbay'||e.d==='burner')removeEnt(e,false,true);S.ub=S.ub.filter(x=>!['rail','rswitch','tstop','cbay'].includes(x));return out;});
  check(`trains: ${Object.entries(trn).map(([k,v])=>k+'='+v).join(' ')}`,Object.entries(trn).every(([k,v])=>k==='bad'?v===0:v===true));
  // calculator (Session 53): toolbar button opens it, buttons and keyboard work, parser rules, closes and stays closed
