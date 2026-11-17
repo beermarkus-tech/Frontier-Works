@@ -208,6 +208,13 @@ function paintB(g,id,P,u){
   case 'fmeter':{g.fillStyle='#2a3037';g.beginPath();g.arc(P/2,P/2,W*0.46,0,7);g.fill();g.fillStyle='#e8eef2';g.beginPath();g.arc(P/2,P/2,W*0.38,0,7);g.fill();
    g.strokeStyle='#ffb547';g.lineWidth=W*0.08;g.beginPath();g.arc(P/2,P/2,W*0.28,Math.PI*0.8,Math.PI*2.2);g.stroke();g.strokeStyle='#2a3037';g.lineWidth=W*0.07;g.lineCap='round';g.beginPath();g.moveTo(P/2,P/2);g.lineTo(P/2+W*0.2,P/2-W*0.17);g.stroke();g.lineCap='butt';break;}
   case 'sign1':case 'sign2':case 'sign3':case 'sign4':case 'sign5':{box(i,i,W,W,u*0.1,col);g.fillStyle='#3a3226';const lh=W*0.12;for(let k=0;k<3;k++)g.fillRect(i+W*0.18,i+W*(0.28+k*0.2),W*(k===2?0.4:0.64),lh);break;}   // toolbar icon only; placed signs are drawn live
+  case 'rail':case 'rswitch':case 'tstop':{g.fillStyle='#6f6b63';g.fillRect(i,i+W*0.18,W,W*0.64);g.strokeStyle='#4e3f33';g.lineWidth=W*0.1;g.beginPath();for(const x of [0.15,0.5,0.85]){g.moveTo(i+W*x,i+W*0.2);g.lineTo(i+W*x,i+W*0.8);}g.stroke();   /* toolbar icons (Session 56); placed track is drawn by drawRails */
+   g.strokeStyle='#c9ced4';g.lineWidth=W*0.07;g.beginPath();g.moveTo(i,i+W*0.32);g.lineTo(i+W,i+W*0.32);g.moveTo(i,i+W*0.68);g.lineTo(i+W,i+W*0.68);g.stroke();
+   if(id==='rswitch'){g.strokeStyle='#d0a040';g.lineWidth=W*0.09;g.beginPath();g.moveTo(i+W*0.2,i+W*0.5);g.quadraticCurveTo(i+W*0.6,i+W*0.5,i+W*0.75,i+W*0.05);g.stroke();}
+   if(id==='tstop'){g.fillStyle='#e05a3a';g.beginPath();g.arc(i+W*0.5,i+W*0.5,W*0.2,0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=W*0.05;g.stroke();}
+   if(id==='rail'){g.fillStyle='#fff';g.beginPath();g.moveTo(i+W*0.78,i+W*0.5);g.lineTo(i+W*0.55,i+W*0.38);g.lineTo(i+W*0.55,i+W*0.62);g.fill();}break;}
+  case 'cbay':{box(i,i,W,W,u*0.16,col);g.fillStyle='#2b3138';g.fillRect(i+W*0.12,i+W*0.12,W*0.76,W*0.42);g.fillStyle='#c9a040';for(let k=0;k<3;k++)g.fillRect(i+W*(0.18+k*0.24),i+W*0.18,W*0.16,W*0.3);   /* Cargo Bay (Session 56): crates under a loading arm */
+   g.strokeStyle='#f2c230';g.lineWidth=W*0.07;g.beginPath();g.moveTo(i+W*0.15,i+W*0.75);g.lineTo(i+W*0.85,i+W*0.75);g.stroke();box(i+W*0.62,i+W*0.62,W*0.24,W*0.24,u*0.05,'#9aa3ab');break;}
   case 'lpad':{box(i,i,W,W,u*0.2,'#5d6066');g.strokeStyle='rgba(0,0,0,0.18)';g.lineWidth=Math.max(1,u*0.04);g.beginPath();for(let k=1;k<6;k++){g.moveTo(i+W*k/6,i);g.lineTo(i+W*k/6,i+W);g.moveTo(i,i+W*k/6);g.lineTo(i+W,i+W*k/6);}g.stroke();   /* Launch Pad (Session 51): concrete, hazard rim, flame pit, gantry */
    g.save();g.beginPath();g.rect(i+W*0.04,i+W*0.04,W*0.92,W*0.92);g.rect(i+W*0.1,i+W*0.1,W*0.8,W*0.8);g.clip('evenodd');g.fillStyle='#1d1d1d';g.fillRect(i,i,W,W);g.fillStyle='#f2c230';for(let x=-W;x<W*2;x+=W*0.08){g.beginPath();g.moveTo(i+x,i+W);g.lineTo(i+x+W*0.04,i+W);g.lineTo(i+x+W*1.04,i);g.lineTo(i+x+W,i);g.fill();}g.restore();
    circ(P*0.5,P*0.62,W*0.24,'#7a7d83');g.fillStyle='#16181b';g.beginPath();g.arc(P*0.5,P*0.62,W*0.18,0,7);g.fill();g.strokeStyle='#3a3d42';g.lineWidth=Math.max(1,u*0.08);for(let k=-2;k<=2;k++){g.beginPath();g.moveTo(P*0.5+k*W*0.06,P*0.62-W*0.16);g.lineTo(P*0.5+k*W*0.06,P*0.62+W*0.16);g.stroke();}
@@ -310,7 +317,7 @@ function drawLOD(vis,sx,sy,s,g){g=g||ctx;
  const signs=[],G=new Map(),add=(c,x,y,w,h)=>{let p=G.get(c);if(!p){p=new Path2D();G.set(c,p);}p.rect(x,y,w,h);},rim=new Path2D(),dots=new Map();
  for(const e of vis){const d=B[e.d],X=sx(e.x),Y=sy(e.y);
   if(e.k==='pipe'){const c='#6f93b8';let m=e.pc||((1<<e.dir)|(1<<((e.dir+2)&3)));add(c,X+s*0.32,Y+s*0.32,s*0.36,s*0.36);if(m&1)add(c,X+s*0.5,Y+s*0.32,s*0.5+0.6,s*0.36);if(m&4)add(c,X,Y+s*0.32,s*0.5,s*0.36);if(m&2)add(c,X+s*0.32,Y+s*0.5,s*0.36,s*0.5+0.6);if(m&8)add(c,X+s*0.32,Y,s*0.36,s*0.5);continue;}
-  if(isLine(e.k)){const c=d.col,h=e.dir===0||e.dir===2;if(h)add(c,X,Y+s*0.32,s+0.6,s*0.36);else add(c,X+s*0.32,Y,s*0.36,s+0.6);continue;}
+  if(isLine(e.k)||e.k==='rail'){const c=e.k==='rail'?(moonLook()?'#d9dde2':'#8a8478'):d.col,h=e.dir===0||e.dir===2;if(h)add(c,X,Y+s*0.32,s+0.6,s*0.36);else add(c,X+s*0.32,Y,s*0.36,s+0.6);continue;}
   if(e.k==='pole'){add(d.col,X+s*0.3,Y+s*0.3,s*0.4,s*0.4);continue;}
   if(e.k==='sign'){signs.push([e,X,Y]);continue;}
   const W=e.w*s;rim.rect(X+0.5,Y+0.5,W-1,W-1);add(e.k==='router'||e.k==='cross'?d.col:shade(d.col,-10),X+s*0.12,Y+s*0.12,W-s*0.24,W-s*0.24);
@@ -611,6 +618,7 @@ function render(){
  const lod=TS*cam.z<12||vis.length>6000;   // far out or very busy: simple blocks instead of detailed sprites
  drawZoneTint(sx,sy,s);
  if(lod)drawLODCached(ox,oy,s,W,H,vis,sx,sy);
+ if(!lod&&typeof drawRails==='function')drawRails(vis.filter(e=>e.k==='rail'),sx,sy,s);   /* track under belts (Session 56) */
  if(!lod){drawLines(vis.filter(e=>isLine(e.k)),sx,sy,s);
  for(const e of vis)if(e.k==='router'||e.k==='cross')drawRouter(ctx,e,sx(e.x),sy(e.y),s);
  // items
@@ -620,8 +628,9 @@ function render(){
   else if(e.k==='router'&&e.item&&!IT[e.item].f)drawItem(e.item,sx(e.x+0.5),sy(e.y+0.5),isz*0.85);
   else if(e.k==='cross'){if(e.hs&&!IT[e.hs].f)drawItem(e.hs,sx(e.x+0.5),sy(e.y+0.5),isz*0.8);if(e.vs&&!IT[e.vs].f)drawItem(e.vs,sx(e.x+0.5),sy(e.y+0.5),isz*0.8);}
  }
- for(const e of vis)if(!isLine(e.k)&&e.k!=='router'&&e.k!=='cross'&&e.k!=='pole')drawBuilding(e,sx(e.x),sy(e.y),s);
+ for(const e of vis)if(!isLine(e.k)&&e.k!=='router'&&e.k!=='cross'&&e.k!=='pole'&&e.k!=='rail')drawBuilding(e,sx(e.x),sy(e.y),s);
  }
+ if(typeof drawTrains==='function')drawTrains(sx,sy,s);   /* trains above buildings (Session 56) */
  // drones (above buildings) and the selected pad's route
  drawDrones(sx,sy,s,lod);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
  // particles

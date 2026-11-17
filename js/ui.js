@@ -86,9 +86,9 @@ function renderPanel(full){
   if(full){$('plLeftBtn').style.display='none';$('ptitle').textContent=B[e.d].n;$('pbuild').textContent='';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display='none';pi.src=toolIcon(e.d);pi.style.display='';body.__h=null;body.innerHTML=entStatic(e)+'<div id="pdyn"></div>';}
   setHTML($('pdyn'),entDyn(e));setHTML($('pbuild'),effChip(e));return;}
  pi.style.display='none';
- const map={find:['Find resources',findHtml],inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml],zone:['Factory Zone',zoneHtml],dsg:['Design piece',dsgHtml],bplib:['Blueprints',bplibHtml],worlds:['Worlds',worldsHtml]};
+ const map={find:['Find resources',findHtml],inv:['Items & Crafting',invHtml],ms:['Goals',msHtml],stats:['Production',statsHtml],menu:['Menu',menuHtml],node:['Resource Node',nodeHtml],codex:['Recipe Codex',codexHtml],plan:['Production Planner',planHtml],zone:['Factory Zone',zoneHtml],dsg:['Design piece',dsgHtml],bplib:['Blueprints',bplibHtml],worlds:['Worlds',worldsHtml],train:['Train',trainHtml]};
  const [title,fn]=map[P.kind];
- if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'||P.kind==='zone'||P.kind==='dsg'||P.kind==='bplib'))return;
+ if(!full&&(P.kind==='menu'||P.kind==='codex'||P.kind==='plan'||P.kind==='zone'||P.kind==='dsg'||P.kind==='bplib'||P.kind==='train'))return;
  $('ptitle').textContent=title;$('pbuild').textContent=P.kind==='menu'?'Build '+BUILD:'';$('ppinBtn').classList.toggle('on',!!OPT.pin);$('preload').style.display=P.kind==='menu'?'inline-flex':'none';$('plLeftBtn').style.display=P.kind==='plan'?'inline-flex':'none';
  if(P.kind==='node'){pi.src=itemIcon(NODE_T[P.arg.t][0]);pi.style.display='';}
  const st=body.scrollTop;setHTML(body,fn(P.arg));body.scrollTop=st;
@@ -118,6 +118,7 @@ function entStatic(e){
   if(!isLine(t.k)&&t.k!=='router')return'⚠ Nothing here takes items.';return'';};
  const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
  if(e.k==='bpst')h+=stHtml(e);   /* Blueprint Station */
+ if(typeof trainStatic==='function')h+=trainStatic(e);   /* Train Stop, Cargo Bay (Session 56) */
  h+=clipHtml(e);   /* copy / paste settings (Session 50) */
  if(e.k==='router'&&d.sub==='valve'){const why={pipe:'⚠ Needs a pipe on both ends: behind the valve (fluid comes in) and in front (the arrow side).',same:'⚠ Both ends are the same pipe network, so the valve can do nothing. The two sides must only be connected through the valve.',mix:'⚠ The pipe in front holds a different fluid.',empty:'Nothing to pass on: the pipe behind is empty.',full:'The pipe in front is full: it takes no more right now.',topped:'Top up: the pipe ahead is at least half full, so the valve waits until it needs more.'}[e.vwhy];
   h+=`<h4>Mode</h4><div class="chips"><button class="btn chip ${e.vm?'':'on'}" data-act="valveMode" data-v="0">Fixed limit</button><button class="btn chip ${e.vm?'on':''}" data-act="valveMode" data-v="1">Top up</button></div>
@@ -214,6 +215,7 @@ function entDyn(e){
   if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}${Object.keys(r.i).some(k=>!IT[k].f&&(e.inb[k]||0)<capIn(r.i[k],k)&&(S.inv[k]||0)>=1)?'<button class="btn" data-act="fillInb" style="margin-top:6px">⬆ Fill from stock</button>':''}<h4>Output buffer</h4>${bufList(e.outb)}`;}
  }
  if(e.k==='lpad')h+=lpadHtml(e);
+ if(typeof trainDyn==='function')h+=trainDyn(e);
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
   if(e.item){const rate=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}

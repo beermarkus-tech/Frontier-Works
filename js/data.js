@@ -127,6 +127,12 @@ D('junction',{n:'Pipe Junction',k:'router',sub:'junc',fl:1,cat:'fluid',col:'#4a7
 D('valve',{n:'Flow Valve',k:'router',sub:'valve',fl:1,cat:'fluid',col:'#3f9ad0',cost:{copper_sheet:6,rotor:1},ow:1,desc:'Lets fluid through one way only (arrow), up to a limit you set: e.g. top up a loop with outside water only as much as it lacks. Put it between two pipes.'});
 D('storage',{n:'Storage Crate',k:'storage',w:2,cap:2000,cat:'log',col:'#7a6040',cost:{iron_plate:10,iron_rod:10},desc:'Buffers 2000 items; passes them on to outgoing belts.'});
 D('tank',{n:'Fluid Tank',k:'tank',w:2,cap:400,cat:'fluid',col:'#3a6a90',cost:{copper_sheet:20,braced_plate:4},desc:'Buffers 400 m³ of one fluid.'});
+/* Trains (Session 56, DESIGN.md section 13): one-way track pieces (k 'rail'), Cargo Bays, trains built from a Train Stop */
+D('rail',{n:'Rail',k:'rail',cat:'trans',col:'#8f8576',cost:{iron_rod:2,iron_plate:1},desc:'One-way train track: drag to lay it, the arrow is the driving direction. Turns become curves. Trains can join a track from the side; use a Rail Switch to split one.'});
+D('rswitch',{n:'Rail Switch',k:'rail',sub:'switch',cat:'trans',col:'#d0a040',cost:{iron_plate:4,iron_rod:4,cable:2},desc:'Splits a track: trains entering from the back can leave to the front, left or right, onto track leading away. Each train picks the way to its next stop.'});
+D('tstop',{n:'Train Stop',k:'rail',sub:'stop',cat:'trans',col:'#e05a3a',cost:{iron_plate:10,cable:5},desc:'A named track piece where trains halt (the locomotive stops on it, the wagons line up behind). Build trains from its panel. Put Cargo Bays beside the track behind it: 2 tiles per wagon.'});
+D('cbay',{n:'Cargo Bay',k:'cbay',w:2,pw:5,cap:800,cat:'trans',col:'#6f8a52',cost:{iron_plate:20,iron_rod:20,cable:10},desc:'Beside a track behind a Train Stop: loads the wagon next to it (Load: belts fill the bay) or unloads it (Unload: belts carry it away). Holds 800 items. Needs power.'});
+const TRAIN={cap:1000,vmax:16,acc:2.5,brk:4,pw:15,crawl:1.5,xfer:40,car:2,maxW:4,loco:{motor:4,circuit_board:4,steel_beam:10,iron_plate:20},wagon:{steel_beam:4,iron_plate:20,bolts:20}};
 D('lpad',{n:'Launch Pad',k:'lpad',w:6,pw:150,only:'home',cat:'trans',col:'#e8a23a',cost:{heavy_truss:20,cased_girder:60,concrete:400,control_chip:10},desc:'Builds and launches the colony rocket to the Moon. Belt in the rocket parts and the starter kit (or load them from your stock), then press Launch. Needs 150 MW while the rocket is ready.'});
 /* Colony rocket (Session 51, DESIGN.md section 12): parts + the starter kit it carries to the Moon (Moon has no coal or limestone) */
 const ROCKET={parts:{hull_plate:60,heat_shield:30,guidance_core:4,rocket_fuel:200},kit:{iron_plate:200,iron_rod:40,wire:200,cable:50,concrete:120,braced_plate:16,rotor:8,alloy_panel:24,circuit_board:12},lt:10,to:'moon'};
@@ -173,7 +179,7 @@ const MS=[
 {n:'Steam Power',req:{truss_frame:25,rotor:50,copper_sheet:100,cable:200},b:['steam','pole2','drill2']},
 {n:'Steelworks',req:{truss_frame:50,braced_plate:100,concrete:500,cable:300},b:['foundry','belt3'],r:['r_steel_ingot','r_steel_beam','r_steel_pipe','r_cased_girder','r_stator','r_motor','r_steel_rod','r_iron_alloy'],oc:1},
 {n:'Heavy Industry',req:{motor:50,cased_girder:100,stator:100,steel_pipe:300},b:['fabricator','dpad'],r:['r_heavy_truss','r_iron_wire','r_steel_rotor']},
-{n:'Petrochemistry',req:{heavy_truss:10,motor:100,steel_beam:300,cased_girder:200},b:['opump','refinery','turbine','pipe2','belt4'],r:['r_plastic','r_rubber','r_fuel','r_residual_fuel','r_petro_coke','r_residual_plastic','r_residual_rubber','r_wet_concrete','r_circuit_board','r_coke_steel','r_insulated_cable']},
+{n:'Petrochemistry',req:{heavy_truss:10,motor:100,steel_beam:300,cased_girder:200},b:['opump','refinery','turbine','pipe2','belt4','rail','rswitch','tstop','cbay'],r:['r_plastic','r_rubber','r_fuel','r_residual_fuel','r_petro_coke','r_residual_plastic','r_residual_rubber','r_wet_concrete','r_circuit_board','r_coke_steel','r_insulated_cable']},
 {n:'Electronics',req:{plastic:300,rubber:300,circuit_board:100,heavy_truss:20},b:[],r:['r_compute_module','r_data_bus','r_quartz_crystal','r_silica','r_resonator']},
 {n:'Lightweight Alloys',req:{compute_module:25,data_bus:50,resonator:100,steel_pipe:500},b:['blender','drill3'],r:['r_alumina','r_wet_alumina','r_alu_scrap','r_alu_ingot','r_pure_alu','r_alu_casing','r_alloy_panel','r_heat_sink','r_acid','r_battery','r_coolant_block','r_control_chip']},
 {n:'Nuclear Age',req:{alloy_panel:300,heat_sink:100,battery:200,control_chip:20},b:['reactor','belt5'],r:['r_uranium_cell','r_fuel_rod','r_turbine_core','r_quantum_core']},
@@ -242,4 +248,4 @@ const PUR=[[0.5,'Impure'],[1,'Normal'],[2,'Pure']];
 /* Worlds (Session 49, DESIGN.md section 12). The world you're on lives in the normal game state; the others are packed into S.worlds.
    gen 3 = Moon generator (genMoon). ext = coast ring (MAP_EXT on Home, none on the Moon). */
 const WORLDS={home:{n:'Home',ic:'🌍'},moon:{n:'Moon',ic:'🌑',gen:3,mw:256,ext:0}};
-const WKEYS=['seed','gen','mw','ext','zones','zmap','cam','inv','bg'];   /* per-world parts of S; everything else (unlocks, tiers, settings) is shared */
+const WKEYS=['seed','gen','mw','ext','zones','zmap','cam','inv','bg','trains'];   /* per-world parts of S; everything else (unlocks, tiers, settings) is shared */

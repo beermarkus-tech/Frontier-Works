@@ -364,6 +364,26 @@ const server=require('./serve.js');
   fw.switchWorld('moon');const sm2=entAt(X+2,Y);out.kept=!!sm2&&sm2.r==='r_iron_ingot'&&entAt(X,Y)&&entAt(X,Y).d==='solar'&&S.inv.iron_plate===5;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=S.ub.filter(x=>x!=='solar');return out;});
  check(`worlds: ${Object.entries(wld).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(wld).every(v=>v===true));
+ // trains (Session 56): a loop with two stops and Cargo Bays, a train shuttles plates from one to the other on track power, the train panel,
+ // save/load keeps the train, removing track under a train takes it off (refunded), Tier 6 unlocks trains
+ const trn=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};S.ub.push('rail','rswitch','tstop','cbay');
+ const W=30,H=12;let X0,Y0;for(let r=6;r<170&&X0==null;r+=3)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=-5;j<H+5&&ok;j++)for(let i=-8;i<W+8&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){X0=x;Y0=y;break;}}
+ const x0=X0,y0=Y0,x1=X0+W,y1=Y0+H;let bad=0;const R=(x,y,d,id)=>{if(P(id||'rail',x,y,d))bad++;};
+ for(let x=x0;x<x1;x++)R(x,y0,0);for(let y=y0;y<y1;y++)R(x1,y,1);for(let x=x1;x>x0;x--)R(x,y1,2);for(let y=y1;y>y0;y--)R(x0,y,3);
+ const ax=x0+12,bx=x1-12;R(ax,y0,0,'tstop');R(bx,y1,2,'tstop');const A=entAt(ax,y0),Bs=entAt(bx,y1);A.tx='Mine';Bs.tx='Works';
+ R(ax-3,y0-2,0,'cbay');R(bx+2,y1+1,0,'cbay');const ba=entAt(ax-3,y0-2),bb=entAt(bx+2,y1+1);bb.bm=1;ba.store={iron_plate:800};
+ P('burner',ax-7,y0-4,0);P('burner',bx+5,y1+2,0);entAt(ax-7,y0-4).fuel={coal:50};entAt(bx+5,y1+2).fuel={coal:50};
+ tick(0.05);window.__T={x0,y0,x1,y1,ax,bx,A,Bs,ba,bb};out.bad=bad;out.curve=entAt(x1,y0).cin===0;
+ S.inv=Object.assign(S.inv,{motor:10,circuit_board:10,steel_beam:40,iron_plate:200,bolts:100});
+ const why=trainBuild(A,2);out.build=why;const tr=S.trains&&S.trains[S.trains.length-1];if(tr)tr.sch[0].c='t10';out.sch=tr&&tr.sch.map(s=>s.s+':'+s.c).join(',');
+ 
+  out.tier6=MS[5].b.includes('rail')&&MS[5].b.includes('cbay');out.built=out.build===''&&!!tr&&tr.n===2;delete out.build;delete out.sch;
+  for(let k=0;k<1300;k++)tick(0.05);out.delivered=(__T.bb.store.iron_plate||0)>=700;out.power=TRC.get(tr.id).pw===true;
+  const c=trCars(tr)[0];const at=trainAt(Math.floor(c.x),Math.floor(c.y));out.tap=at===tr;openPanel('train',tr.id);out.panel=/schedule/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
+  const n0=S.trains.length,id0=tr.id;load(serialize());tick(0.05);out.saved=S.trains.length===n0&&S.trains[0].id===id0;
+  const t2=S.trains[0],tl=trTiles(t2)[1],inv=S.inv.steel_beam||0;removeEnt(entAt(tl[0],tl[1]),false,true);tick(0.05);out.removed=S.trains.length===0&&(S.inv.steel_beam||0)>inv;
+  for(const e of [...ents.values()])if(e.k==='rail'||e.k==='cbay'||e.d==='burner')removeEnt(e,false,true);S.ub=S.ub.filter(x=>!['rail','rswitch','tstop','cbay'].includes(x));return out;});
+ check(`trains: ${Object.entries(trn).map(([k,v])=>k+'='+v).join(' ')}`,Object.entries(trn).every(([k,v])=>k==='bad'?v===0:v===true));
  // calculator (Session 53): toolbar button opens it, buttons and keyboard work, parser rules, closes and stays closed
  await p.evaluate(()=>{ACT.closePanel();document.getElementById('fCalc').click();});await p.waitForTimeout(100);
  for(const k of ['1','2','×','3','='])await p.click(`#calc [data-v="${k}"]`);const cal1=await p.evaluate(()=>CALC.ex);

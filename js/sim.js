@@ -132,7 +132,7 @@ function canPlace(id,x,y){
  if(x<0||y<0||x+w>MW||y+w>MH)return 'Out of bounds';
  let water=0,node=null;
  for(let j=0;j<w;j++)for(let i=0;i<w;i++){const idx=(y+j)*MW+x+i;
-  if(grid[idx]){const o=ents.get(grid[idx]);if(!(isLine(d.k)&&o.k===d.k))return 'Blocked';}
+  if(grid[idx]){const o=ents.get(grid[idx]);if(!((isLine(d.k)||d.k==='rail')&&o.k===d.k))return 'Blocked';}
   if(terr[idx]===1)water++; if(nodeAt[idx]&&!node)node=nodeAt[idx];}
  if(d.k==='pump'&&d.water){if(water<w*w)return 'Must sit fully on water';}
  else if(!d.ow&&water>0&&!(d.k==='pump'&&d.oil))return 'Cannot build on water';
@@ -176,6 +176,8 @@ function initEnt(e,d){
   case 'bpst':e.dsg=Array.isArray(e.dsg)?e.dsg:[];e.dn=e.dn||'';e.want=true;break;   /* Blueprint Station: design pieces + name; always draws its small power */
   case 'lpad':e.store=e.store||{};e.lt=e.lt||0;e.nl=e.nl||0;break;   /* Launch Pad: loaded rocket parts + kit, launch timer (s, 0 = on the ground), launches so far */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
+  case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();break;   /* trains (js/train.js) */
+  case 'cbay':e.store=e.store||{};e.bm=e.bm||0;e.rr=0;break;   /* Cargo Bay: bm 0 = Load, 1 = Unload */
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
  }
  e.pw=0;e.want=false;
@@ -297,6 +299,7 @@ function accept(e,item,dir,carry){
   case 'gen':{const d=B[e.d];
    if(item==='water'&&d.water){if(e.water>=100)return false;e.water++;return true;}
    if(!has(d.fuels,item))return false;const cap=item==='fuel_rod'?5:50;if((e.fuel[item]||0)>=cap)return false;e.fuel[item]=(e.fuel[item]||0)+1;return true;}
+  case 'cbay':{if(fl||e.bm)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed()[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
@@ -358,7 +361,7 @@ function rebuildTopo(){
  for(const e of ents.values())if(e.fm&&isLine(e.k))meters.push(e);
  for(const e of ents.values()){
   if(isLine(e.k))lines.push(e);else if(e.k==='router'){const sb=B[e.d].sub;if(sb==='valve')valves.push(e);else if(sb!=='junc')routers.push(e);}else if(e.k==='cross')crosses.push(e);
-  else if(e.k!=='pole'){e.ports=perim(e);buildings.push(e);}
+  else if(e.k!=='pole'&&e.k!=='rail'){e.ports=perim(e);buildings.push(e);}
   if(e.k==='pole'||e.k==='gen')pnodes.push(e);if(e.k==='dpad')pads.push(e);if(e.k==='lpad')lpads.push(e);
   e.grid=null;if(B[e.d].pw)e.pw=0;
  }
@@ -379,6 +382,7 @@ function rebuildTopo(){
   for(let i=0;i<n;i++){if(!B[pnodes[i].d].sup)continue;const dd=rectDist(C[i].x,C[i].y,e);if(dd<=B[pnodes[i].d].sup&&dd<bd){bd=dd;best=pnodes[i];}}
   if(best){best.grid.cons.push(e);e.grid=best.grid;e.pnode=best;}}
  buildNets();
+ if(typeof trainTopo==='function')trainTopo();
  for(const v of valves){const bk=entAt(v.x-DX[v.dir],v.y-DY[v.dir]),fr=entAt(v.x+DX[v.dir],v.y+DY[v.dir]);v.va=pipeLike(bk)&&pipeFace(bk,v.dir)?bk.net:null;v.vb=pipeLike(fr)&&pipeFace(fr,(v.dir+2)&3)?fr.net:null;}
 }
 /* ---------- Fluid networks ----------
@@ -461,13 +465,13 @@ function drawMW(e){const d=B[e.d];return e.want?d.pw*Math.pow(e.clock||1,1.6):0;
 function genCan(g){const d=B[g.d];if(g.off)return false;if(d.solar)return true;if(d.water&&g.water<1)return false;if(g.d==='reactor'&&(g.outb.waste||0)>=50)return false;if(g.energy>0)return true;for(const f of d.fuels)if((g.fuel[f]||0)>0)return true;return false;}
 function powerStep(dt){
  for(const g of grids){
-  let dem=0;for(const c of g.cons)dem+=drawMW(c);
+  let dem=0;for(const c of g.cons)dem+=drawMW(c);if(typeof trainDemand==='function')dem+=trainDemand(g);
   let cap=0;for(const ge of g.gens){ge.can=genCan(ge);if(ge.can)cap+=B[ge.d].cap;}
   let tr=g.nodes.some(x=>x.trip);
   if(!tr&&cap>0&&dem>cap+1e-6){for(const x of g.nodes)x.trip=true;tr=true;toast('⚠ Power fuse tripped — demand exceeds supply');if(typeof sfx==='function')sfx('trip');}
   g.trip=tr;g.dem=dem;g.cap=cap;
   const ok=!tr&&cap>0&&dem<=cap+1e-6;
-  for(const c of g.cons)c.pw=ok?1:0;
+  for(const c of g.cons)c.pw=ok?1:0;if(typeof trainPower==='function')trainPower(g,ok);
   const load=ok&&cap>0?dem/cap:0;g.prod=ok?dem:0;
   for(const ge of g.gens){ge.load=ge.can?load:0;ge._ls=(ge._ls||0)+(ge.load-(ge._ls||0))*Math.min(1,dt/4);if(ok&&ge.can&&load>0)burn(ge,B[ge.d].cap*load*dt);}   // _ls: load averaged over ~4 s, for the panel
  }
@@ -572,6 +576,7 @@ function updBuilding(e,dt){
    effTrack(e,dt,!item?'none':e.want&&e.pw>0?'work':!e.want?'out':'power');   // a full buffer (want false) is 'Output full', never 'No power'
    break;}
   case 'gen':if(e.outb.waste>0)for(let a=0;a<2&&e.outb.waste>0;a++){if(pushOut(e,'waste'))e.outb.waste--;else break;}break;
+  case 'cbay':e.want=true;if(!e.bm)break;/* falls through: an unloading bay passes items on like a crate */
   case 'storage':{const ks=Object.keys(e.store);if(!ks.length)break;
    for(let a=0;a<2;a++){let moved=false;for(let k=0;k<ks.length;k++){const it=ks[(e.si=(e.si||0)+1)%ks.length];if(e.store[it]>0&&pushOut(e,it)){if(--e.store[it]<=0)delete e.store[it];moved=true;break;}}if(!moved)break;}
    break;}
@@ -596,6 +601,7 @@ function tick(dt){
  for(const e of routers)updRouter(e);   // after the belts (Session 37j): the tile in front has already moved on this tick, so a
  for(const e of crosses)updCross(e);    // splitter never waits a whole tick (Mk5 through splitters: 684 → 780/min)
  for(const e of buildings)updBuilding(e,dt);
+ if(typeof trainTick==='function')trainTick(dt);
  updNets(dt);
  CORE.acc+=dt;if(CORE.acc>=10){CORE.acc-=10;CORE.b.push(CORE.cur);CORE.cur={};if(CORE.b.length>30)CORE.b.shift();}
  zTick(dt);stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}

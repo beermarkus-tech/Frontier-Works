@@ -368,6 +368,64 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   It pays like normal placing and reports what's missing. Blueprints are stored per device, so they work on every map and world. Bigger stations (e.g. 18×18, 24×24) can come
   with later tiers.
 
+- **Moon water and concrete (agreed with Markus, Session 55, not built yet).** Shipping heavy bulk (concrete, water) by rocket makes
+  no sense, so the Moon makes its own base materials; freighters carry what the Moon truly can't make (plastic, circuit boards, rocket
+  fuel, maybe hydrogen) and bring precious Moon goods home (helium, wafers, lattice crystals): trade, not a concrete delivery service.
+  - **Ice in dark craters:** a few rare Ice deposits on dark crater floors, far from the landing site, mined by drills; an Ice Melter (or a
+    Smelter recipe) makes water. Reaching ice is a reason to expand (later: trains from the far craters).
+  - **Regolith:** a Regolith Excavator digs anywhere (no node needed).
+  - **Sintered blocks (no water):** Vacuum Furnace, regolith → blocks that count as concrete; about 2× Earth's effort (power). Works from day one.
+  - **Moon concrete ("lunarcrete"):** regolith + water → concrete, cheaper on power once water flows.
+  - Water also makes alumina → aluminium → Solar Panels possible on the Moon (fixes the power bottleneck). **Oil/plastic stays Earth-only**
+    for good, so worlds keep trading and travel keeps its point.
+  - Optional later: ilmenite reduction (iron ore + hydrogen from Earth → water + iron) in the Vacuum Furnace.
+
+## 13. Trains (agreed with Markus, Session 55; Phase 1 built in Session 56)
+A train is a big drone on rails: large, steady flows over long distances inside one world. Belts = short, drones = medium (40 per trip),
+**trains = long distance, about 1,000 items per wagon**, freighters = between worlds.
+- **Tracks are one-way** (arrow, like belts), drawn by dragging; a turn becomes a smooth curve. Lines are loops, or two parallel tracks
+  for there and back. That rules out head-on blockages, so **no signals** are needed. Any track tile can be joined from the side (merge);
+  a **Rail Switch** splits a line (front / left / right).
+- **Trains pick their own way** to their next stop over switches (shortest path), and **reserve the track ahead**: a train brakes behind
+  another one and waits; several trains share a network automatically.
+- **Train Stop** (a track piece with a name; several stops may share a name, the nearest is used). The locomotive halts on the stop tile;
+  its wagons line up behind it. **Cargo Bays** (2×2) beside the track behind the stop load or unload the wagon next to them (mode
+  Load: belts fill the bay, the bay fills the wagon; Unload: the wagon empties into the bay, belts carry it away).
+- **Trains** = a locomotive and 1–4 cargo wagons, built from a Train Stop's panel (paid from stock, appears on the track behind the stop).
+  Schedule: a list of stops, each with a condition (until full, until empty, wait N seconds); the default is a shuttle "load here until
+  full → unload at the other stop until empty". Tap a train for its cargo, status and schedule; it can be removed (refunded).
+- **Power: electric on both worlds.** A power pole whose supply area touches any tile of a track network powers that whole network; a
+  moving train draws about 15 MW from that grid, a waiting one nothing. Without power trains crawl slowly instead of stopping dead.
+- **Look:** Earth: rails on a concrete bed, boxy locomotive and wagons. Moon: a single raised white guideway beam (maglev style) and
+  rounded white capsules, built from materials the Moon can make (no concrete). Same mechanics on both worlds.
+- **Unlock:** Tier 6 (Petrochemistry); saves past Tier 6 get it on load.
+- **Phases:** 1 = tracks, curves, switches, merges, stops, Cargo Bays, trains with schedules, power, 2D/3D, Earth/Moon look.
+  2 = Rail Underpass (belts/pipes under a track), Rail Crossing (track over track), fluid wagons, trains in blueprints.
+  Later maybe: two-way track with signals.
+
+## 14. Balance rulebook (agreed with Markus, Session 55)
+Balance as we go, against these rules, measured with the planner/playtest tool; Markus's playtesting is the final judge.
+1. **Base materials stay simple on every world:** one input, one machine, one step (concrete, plates, ingots, wire).
+2. **Complexity grows slowly:** parts 2 inputs, components 3, top parts at most 4; chains get about one step deeper every two tiers.
+3. **Each tier brings a little:** about 3–6 new parts, one new machine or mechanic, at most one new raw material. The goal mostly asks for
+   the newest parts plus one bulk item from earlier, and should mean **building something new**, not waiting for more of the same.
+4. **Cost grows steadily:** a tier's goal costs roughly 2× the previous one in raw ore (not 10×). Measured Session 55: 300 · 1.6k · 1.6k ·
+   4.2k · 7.2k · 15.7k · 8.3k · 8.3k · 14.5k · 110k (Quantum Cores; Markus enjoyed that line, it stays) · Tier 11 reworked to about 25k.
+5. **Pacing target:** about 10 min for Tier 1, 45 min for Tier 5, 2 h for Tier 10 with a sensible factory.
+6. **No annoying recipes:** no tiny amounts from long far chains, no huge grinds of one item, no by-product without a use.
+7. **Alternative recipes are trade-offs** (fewer machines but more power, or a local resource), never strictly better.
+8. **New worlds:** the same base material may get a local recipe of at most about 2× Earth's effort (one extra input or more power, never a
+   whole new chain). Each world: one raw material found only there, 2–3 local recipes, one special machine; exports are valuable per
+   kilo. Some things stay Earth-only (oil/plastic) so worlds trade.
+9. **Power:** the Fission Reactor makes power plentiful after Tier 9 (Markus had 50 GW spare). Don't weaken it; give later machines and the
+   Dyson Sphere large power demands on purpose.
+10. **Dyson Sphere stages** need special parts from several worlds, fixed amounts, a clear end. No endless scaling.
+
+## 15. Where to start next (kept up to date)
+- **Trains Phase 1 is built (Session 56).** Markus should try it on his phone first: track loop, two stops, Cargo Bays, a train.
+- **Next:** Orbital Freighters (section 12) together with the Moon water/concrete mix above (ice craters, regolith, sintered blocks, Moon
+  concrete). Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in blueprints). Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
+
 ## 11. Explicitly out of scope (for now)
-Trains/rail and other vehicles beyond Cargo Drones (and the planned Orbital Freighters, section 12), combat/creatures, multiplayer, accounts or cloud saves, sound.
+Other vehicles beyond Cargo Drones, trains (section 13) and the planned Orbital Freighters (section 12), combat/creatures, multiplayer, accounts or cloud saves, sound.
 These can be reconsidered; record the decision here if that happens.

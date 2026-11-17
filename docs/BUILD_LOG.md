@@ -3066,3 +3066,55 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Orbital Freighters, with the Moon water/concrete mix.
 - Then trains.
 - The balance rulebook and an all-tier measuring tool.
+
+## Session 56 — 2026-11-17 (Claude Code, cloud session) · Build 151
+
+**Asked:** "Go for trains, and make sure everything we've discussed is noted in our design document, so you can tell me where to kick off next time."
+
+**Design document:**
+- **Section 12:** the Moon water/concrete plan (ice in dark craters, Regolith Excavator, sintered blocks, Moon concrete, oil stays Earth-only, freighters as trade).
+- **New section 13, Trains:** the agreed design and its phases.
+- **New section 14, Balance rulebook:** the rules from Session 55, with the measured tier costs.
+- **New section 15, Where to start next.**
+- Section 11 (out of scope) no longer lists trains.
+
+**Built: Trains Phase 1** (new file `js/train.js`, plus hooks in sim/ui/input/render/view3d; unlocked with Tier 6, so saves past it get it on load)
+- **Track pieces** (Transport tab):
+  - **Rail:** one-way, dragged like belts, with a direction arrow; turns become curves.
+  - **Rail Switch:** trains leave front, left or right onto track leading away.
+  - **Train Stop:** a named track piece, with a red post and a name tag. Several stops may share a name; the nearest one is used.
+  - Any track can be joined from the side (merge).
+- **Cargo Bay** (2×2, 5 MW, holds 800):
+  - placed beside the track behind a stop (2 tiles per wagon)
+  - **Load:** belts fill the bay, the bay fills the wagon next to it
+  - **Unload:** the wagon empties into the bay, which passes items to belts like a crate
+  - transfer speed: 40 items/s per bay
+- **Trains:** built from a Train Stop's panel with 1–4 wagons (cost: loco 4 Motors, 4 Circuit Boards, 10 Steel Beams, 20 plates; wagon 4 Steel Beams, 20 plates, 20 bolts).
+  - They appear on the track leading into the stop.
+  - **Panel** (tap a train): status, speed, cargo per wagon, and the schedule (stop + condition: until full, until empty, wait 10/30/60 s; add, remove, Leave now, Remove train with refund).
+  - **Default schedule:** this stop until full, then another stop until empty.
+- **Driving:**
+  - The shortest route over switches (BFS), recomputed whenever the track changes.
+  - Speed up to 16 tiles/s, speeding up and braking smoothly.
+  - It reserves the tiles it covers and brakes for the train ahead. It halts with the locomotive on the stop.
+- **Power:** a pole whose supply area touches a track network powers the whole network. A moving train draws 15 MW; without power it crawls at 1.5 tiles/s.
+- **Look:**
+  - Earth 2D: concrete bed, sleepers, steel rails, a red loco and grey wagons with a cargo colour bar.
+  - Earth 3D: a track bed with rails and boxy cars.
+  - Moon: a white guideway beam and rounded white capsules, in 2D and 3D. Moon-buildable costs for the track; the loco needs parts from Home.
+- **Safety:** a train whose track is removed is taken off and refunded, cargo included.
+- Trains are saved per world (`S.trains`, a WKEY).
+
+**Verified:**
+- A browser run: a 30×12 loop with stops "Mine" and "Works", bays and burners. The train loads at Mine, drives the loop, unloads at Works, and delivered all 800 plates over two trips.
+- Screenshots: 2D near and far, 3D Earth, Moon 2D and 3D, train and stop panels.
+- New smoke check: Tier 6 unlock, curve detection, build, delivery, track power, tapping a train, panel, save/load keeps it, removing track under it refunds it.
+- `npm test` all PASS.
+
+**Known issues:**
+- Trains cut curves slightly differently in 3D, where cars are straight boxes.
+- Placing a train needs straight-ish track behind the stop (it follows the track backwards, so curves are fine).
+- A schedule refers to stop *names*: renaming a stop updates the schedules.
+- The far-zoom view shows track as thin strips and doesn't draw trains.
+
+**Next up:** Markus tries trains on his phone. Then Orbital Freighters with the Moon water/concrete mix (DESIGN.md section 15).

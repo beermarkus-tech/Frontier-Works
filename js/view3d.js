@@ -102,7 +102,7 @@ function v3Init(){
  {const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,6,32,32,32);gr.addColorStop(0,'rgba(0,0,0,0.6)');gr.addColorStop(0.55,'rgba(0,0,0,0.34)');gr.addColorStop(1,'rgba(0,0,0,0)');
   g.fillStyle=gr;g.fillRect(0,0,64,64);const t=new T3.CanvasTexture(cv);
   V3.aoP=v3Pool(new T3.PlaneGeometry(1,1).rotateX(-Math.PI/2),new T3.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),{order:1});}
- v3Models();v3Lines();v3ItemsInit();v3SmokeInit();v3Overlays();
+ v3Models();v3Lines();if(typeof v3TrainInit==='function')v3TrainInit();v3ItemsInit();v3SmokeInit();v3Overlays();
  v3Terrain();
  v3Input();addEventListener('resize',v3Resize);v3Resize();v3Quality();
  V3.ready=true;
@@ -306,6 +306,10 @@ function v3Models(){
     ['cone','#ffa040',[0,-0.35,Z],[0.75,1.7,0.75],{rot:[Math.PI,0,0],glow:1,an:e=>({dy:rocketLift(e)*1.3,sy:e.lt>0?1:0.0001})}]],{smoke:[[0,0.6,Z,2]],h:5.5});}
  {const c=B.vfurnace.col;def('vfurnace',[...base(3),['box',c,[0,0.5,0],[2.6,0.55,2.6]],['sph','#c4cad6',[0,0.9,0],[1.9,1.6,1.9]],['cyl','#8a93a3',[1.0,1.0,-1.0],[0.3,1.0,0.3]],['cyl','#8a93a3',[-1.0,1.0,-1.0],[0.3,1.0,0.3]],['box',shade(c,-30),[0,0.8,0],[2.65,0.08,2.65]]],
   [['sph','#8fb0ff',[0,1.25,0.92],[0.42,0.42,0.12],{glow:1}]],{h:1.8});}   /* Vacuum Furnace (Session 52) */
+ /* trains (Session 56): track itself is drawn by v3TrackLayout; these are the extra parts */
+ def('tstop',[['cyl','#59616a',[0.42,0.6,-0.42],[0.07,1.2,0.07]],['box','#e05a3a',[0.42,1.2,-0.42],[0.06,0.3,0.5]]],[],{h:1.3});
+ def('rswitch',[['box','#3a4048',[0.4,0.1,0.4],[0.18,0.2,0.18]],['box','#d0a040',[0.4,0.3,0.4],[0.05,0.3,0.05],{rot:[0,0,0.4]}]],[],{h:0.5});
+ {const c=B.cbay.col;def('cbay',[...base(2),['box',c,[0,0.45,0.25],[1.7,0.45,1.1]],['box','#c9a040',[-0.45,0.85,0.25],[0.4,0.35,0.4]],['box','#c9a040',[0.1,0.85,0.25],[0.4,0.35,0.4]],['cyl','#9aa3ab',[0.65,0.9,-0.55],[0.12,1.3,0.12]],['box','#f2c230',[0.3,1.5,-0.55],[0.8,0.1,0.12]]],[],{h:1.6});}
  def('solar',[['box','#3a4048',[0,0.12,0],[1.9,0.24,1.9]],['cyl','#8a939c',[0,0.45,0],[0.12,0.5,0.12]],['box','#1f3f78',[0,0.72,0],[1.8,0.06,1.8],{rot:[-0.35,0,0]}]],[],{h:0.9});   /* Solar Panel (Session 49) */
  // logistics pieces (1×1, rotate with dir; front = +x)
  for(const id of ['splitter','merger','lsplit']){const c=B[id].col,mk=[];const sides=id==='merger'?[[-0.36,0],[0,-0.36],[0,0.36]]:[[0.36,0],[0,-0.36],[0,0.36]];
@@ -440,12 +444,13 @@ function v3Layout(){
  const railN=[0,0,0],railL=[[],[],[]];
  for(const id in L.belts)L.belts[id].forEach((list,k)=>{const ms=v3PoolN(V3.belt[id].pools[k],list.length);list.forEach((e,i)=>ms.setMatrixAt(i,lineM(e)));railN[k]+=list.length;railL[k].push(...list);});
  railL.forEach((list,k)=>{const ms=v3PoolN(V3.rail[k],list.length);list.forEach((e,i)=>{ms.setMatrixAt(i,lineM(e));ms.setColorAt(i,T.c.set(B[e.d].col));});});
+ if(typeof v3TrackLayout==='function')v3TrackLayout(lineM);   /* train track (Session 56) */
  {const arms=[];for(const e of L.pipes){const m=e.pc||((1<<e.dir)|(1<<((e.dir+2)&3)));for(let d=0;d<4;d++)if(m&(1<<d))arms.push([e,d]);}
   for(const e of (L.type.junction||[])){const m=e.pc||0;for(let d=0;d<4;d++)if(m&(1<<d))arms.push([e,d]);}
   const am=v3PoolN(V3.pipeArm,arms.length);arms.forEach(([e,d],i)=>{T.e.set(0,-d*Math.PI/2,0);T.q.setFromEuler(T.e);am.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q,T.s.set(1,1,1)));am.setColorAt(i,T.c.set(B[e.d].col));});
   const jm=v3PoolN(V3.pipeJoint,L.pipes.length);L.pipes.forEach((e,i)=>jm.setMatrixAt(i,T.m.compose(T.v.set(e.x+0.5,0,e.y+0.5),T.q.identity(),T.s.set(1,1,1))));}
  v3PoolN(V3.led,L.led.length);
- {const nice=V3.look==='nice',sh=nice?[...ents.values()].filter(e=>!isLine(e.k)&&e.k!=='sign'):[],am=v3PoolN(V3.aoP,sh.length);
+ {const nice=V3.look==='nice',sh=nice?[...ents.values()].filter(e=>!isLine(e.k)&&e.k!=='sign'&&e.k!=='rail'):[],am=v3PoolN(V3.aoP,sh.length);
   sh.forEach((e,i)=>{const k=e.w*1.45+(e.w===1?0.25:0);am.setMatrixAt(i,T.m.compose(T.v.set(e.x+e.w/2,0.025,e.y+e.w/2),T.q.identity(),T.s.set(k,1,k)));});am.visible=nice&&sh.length>0;}
  // power wires
  const pos=[],col=[],cA=new T3.Color('#22201d'),cT=new T3.Color('#ff4a3a'),top=e=>{const m=V3.M[e.d];return[e.x+e.w/2,m&&m.wire||1.3,e.y+e.h/2];};
@@ -660,7 +665,7 @@ function render3D(el){
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
- v3WorldTint();v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Signs();v3Meters();v3Zones();v3ZoneLabels();v3Overlay(t);
+ v3WorldTint();v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();if(typeof v3Trains==='function')v3Trains();v3Signs();v3Meters();v3Zones();v3ZoneLabels();v3Overlay(t);
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}
