@@ -378,7 +378,8 @@ const server=require('./serve.js');
  const why=trainBuild(A,2);out.build=why;const tr=S.trains&&S.trains[S.trains.length-1];if(tr)tr.sch[0].c='t10';out.sch=tr&&tr.sch.map(s=>s.s+':'+s.c).join(',');
  
   out.tier6=MS[5].b.includes('rail')&&MS[5].b.includes('cbay');out.built=out.build===''&&!!tr&&tr.n===2;delete out.build;delete out.sch;
-  for(let k=0;k<1300;k++)tick(0.05);out.delivered=(__T.bb.store.iron_plate||0)>=700;out.power=TRC.get(tr.id).pw===true;
+  for(let k=0;k<1300;k++)tick(0.05);out.delivered=(__T.bb.store.iron_plate||0)>=700;
+  {const B2=__T.Bs,d0=B2.dir;B2.dir=(d0+2)&3;topoDirty=true;tick(0.05);out.autoTurn=B2.dir===d0;P('rail',B2.x,B2.y,d0);out.keepStop=entAt(B2.x,B2.y)===B2;}out.power=TRC.get(tr.id).pw===true;
   const c=trCars(tr)[0];const at=trainAt(Math.floor(c.x),Math.floor(c.y));out.tap=at===tr;openPanel('train',tr.id);out.panel=/schedule/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
   const n0=S.trains.length,id0=tr.id;load(serialize());tick(0.05);out.saved=S.trains.length===n0&&S.trains[0].id===id0;
   const t2=S.trains[0],tl=trTiles(t2)[1],inv=S.inv.steel_beam||0;removeEnt(entAt(tl[0],tl[1]),false,true);tick(0.05);out.removed=S.trains.length===0&&(S.inv.steel_beam||0)>inv;

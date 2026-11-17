@@ -150,6 +150,7 @@ function placeEnt(id,x,y,dir,free){
  let carry=null;
  const old=d.w===1?entAt(x,y):null;
  if(old){ if(old.d===id&&old.dir===dir)return 'same'; }
+ if(old&&d.k==='rail'&&!d.sub&&old.k==='rail'&&B[old.d].sub){if(old.dir===dir)return 'same';old.dir=dir;topoDirty=true;return '';}   /* drawing plain track over a stop or switch keeps it and only sets its direction (Session 56b) */
  if(!free){ let c=d.cost; if(!afford(c))return 'Not enough materials'; }
  let cfm=0;if(old){carry=old.item;cfm=old.fm&&isLine(d.k);removeEnt(old,true,true);}
  if(!free)pay(d.cost);

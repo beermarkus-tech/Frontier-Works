@@ -24,6 +24,9 @@ const wagonLoad=w=>{let t=0;for(const k in w)t+=w[k];return t;};
 /* ---------- topology (end of rebuildTopo) ---------- */
 function trainTopo(){railList=[];BAYADJ=new Map();RCOMP=[];
  for(const e of ents.values()){if(e.k==='rail'){railList.push(e);e._rc=-1;}}
+ /* a stop or track piece placed against the flow (nothing leads in, nothing leads on) turns round if that connects it (Session 56b) */
+ const fedBy=e=>{for(let d=0;d<4;d++){const n=railAt(e.x-DX[d],e.y-DY[d]);if(n&&rsucc(n).some(([m])=>m===e))return true;}return false;};
+ for(const e of railList){if(rSub(e)==='switch'||fedBy(e)||rsucc(e).length)continue;const d0=e.dir;e.dir=(d0+2)&3;if(!(fedBy(e)&&rsucc(e).length))e.dir=d0;}
  /* curves for drawing: a plain track piece fed only from one side bends (e.cin = travel direction coming in) */
  for(const e of railList){e.cin=null;if(rSub(e)==='switch')continue;const fed=[];
   for(let d=0;d<4;d++){const n=railAt(e.x-DX[d],e.y-DY[d]);if(n&&rsucc(n).some(([m])=>m===e))fed.push(d);}
@@ -57,7 +60,7 @@ function trRoute(tr){const c=trc(tr),s=tr.sch[tr.si];c.tgt=s?s.s:null;c.ver=topo
  const n0=railAt(H[0]+DX[H[3]],H[1]+DY[H[3]]);if(!n0||!canEnter(n0,H[3])){c.msg='End of the track';return;}
  const par=new Map([[n0,null]]),q=[n0];let goal=null;
  for(let qi=0;qi<q.length&&!goal;qi++){const a=q[qi];if(rSub(a)==='stop'&&a.tx===s.s){goal=a;break;}for(const [n] of rsucc(a))if(!par.has(n)){par.set(n,a);q.push(n);}}
- if(!goal){c.msg=`No route to ${s.s}`;return;}
+ if(!goal){const tg=railList.filter(e=>rSub(e)==='stop'&&e.tx===s.s);c.msg=!tg.length?`No stop called ${s.s}`:`No route to ${s.s}: the track arrows don't lead there`;return;}
  const p=[];for(let a=goal;a;a=par.get(a))p.push([a.x,a.y]);c.path=p.reverse();}
 const condTxt={full:'until full',empty:'until empty',t10:'wait 10 s',t30:'wait 30 s',t60:'wait 60 s'};
 function condMet(tr){const s=tr.sch[tr.si];if(!s)return false;if(tr.wt<1.5)return false;
@@ -153,7 +156,7 @@ function drawRails(list,sx,sy,s){if(!list.length)return;const moon=moonLook(),be
  ctx.lineCap='butt';
  if(moon){ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=s*0.6;ctx.save();ctx.translate(s*0.08,s*0.1);ctx.stroke(bed);ctx.restore();ctx.strokeStyle='#e9ecef';ctx.lineWidth=s*0.5;ctx.stroke(bed);ctx.strokeStyle='#a9b0b8';ctx.lineWidth=Math.max(1,s*0.08);ctx.stroke(mid);}
  else{ctx.strokeStyle='#6f6b63';ctx.lineWidth=s*0.78;ctx.stroke(bed);ctx.strokeStyle='#4e3f33';ctx.lineWidth=Math.max(1,s*0.13);ctx.stroke(sl);ctx.strokeStyle='#c9ced4';ctx.lineWidth=Math.max(1,s*0.07);ctx.stroke(rl);}
- if(s>=16){ctx.fillStyle=moon?'rgba(90,100,110,0.55)':'rgba(255,255,255,0.32)';for(const e of list){if(rSub(e))continue;const T=railSegs(e)[0],p=tilePt(T,0.5),q=tilePt(T,0.62),a=Math.atan2(q[1]-p[1],q[0]-p[0]);ctx.save();ctx.translate(sx(p[0]),sy(p[1]));ctx.rotate(a);ctx.beginPath();ctx.moveTo(s*0.12,0);ctx.lineTo(-s*0.07,-s*0.1);ctx.lineTo(-s*0.07,s*0.1);ctx.fill();ctx.restore();}}
+ if(s>=16){ctx.fillStyle=moon?'rgba(90,100,110,0.55)':'rgba(255,255,255,0.32)';for(const e of list){if(rSub(e)==='switch')continue;const T=railSegs(e)[0],p=tilePt(T,0.5),q=tilePt(T,0.62),a=Math.atan2(q[1]-p[1],q[0]-p[0]);ctx.save();ctx.translate(sx(p[0]),sy(p[1]));ctx.rotate(a);ctx.beginPath();ctx.moveTo(s*0.12,0);ctx.lineTo(-s*0.07,-s*0.1);ctx.lineTo(-s*0.07,s*0.1);ctx.fill();ctx.restore();}}
  for(const e of list){const X=sx(e.x),Y=sy(e.y);
   if(rSub(e)==='stop'){const d=e.dir,px=X+s*0.5+DY[d]*s*0.5,py=Y+s*0.5-DX[d]*s*0.5;ctx.fillStyle='#e05a3a';ctx.beginPath();ctx.arc(px,py,s*0.16,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(1,s*0.05);ctx.stroke();
    ctx.strokeStyle='#e05a3a';ctx.lineWidth=Math.max(1.5,s*0.1);ctx.beginPath();const ax=X+s*0.5-DY[d]*s*0.45,ay=Y+s*0.5+DX[d]*s*0.45;ctx.moveTo(ax,ay);ctx.lineTo(px,py);ctx.stroke();

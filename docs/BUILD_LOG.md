@@ -3118,3 +3118,15 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The far-zoom view shows track as thin strips and doesn't draw trains.
 
 **Next up:** Markus tries trains on his phone. Then Orbital Freighters with the Moon water/concrete mix (DESIGN.md section 15).
+
+## Session 56b — 2026-11-17 (Claude Code, cloud session) · Build 152
+
+**Reported:** "No route to Station 2" (screenshot). The loop runs clockwise, but Station 2 on the bottom track faced east, against the flow. Its red post sat on the wrong side. Trains treat that like a one-way street the wrong way round.
+
+**Fixed:**
+- **Auto-turn:** a track piece or stop that is placed against the flow turns round by itself (on every track change), if that connects it. "Against the flow" means nothing leads into it and it leads nowhere. Switches are left alone. This also repairs existing saves, including Markus's.
+- **Dragging plain track over a Train Stop or Switch** no longer replaces it; it only sets its direction.
+- **Clearer message:** "No route to X: the track arrows don't lead there", or "No stop called X".
+- **Arrows:** Train Stops now show the direction arrow too.
+
+**Verified:** the trains smoke check now also turns a stop round on purpose (it turns back by itself) and drags track over a stop (the stop stays). `npm test` all PASS.
