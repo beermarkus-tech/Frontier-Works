@@ -141,11 +141,10 @@ function drawTerrain(ox,oy,s,W,H){
 const SPR=new Map();
 function bkt(s){return Math.max(6,Math.min(180,Math.pow(2,Math.round(Math.log2(s)*3)/3)));}
 /* Moon look (Session 54, Markus chose "white with colour accents"): on the Moon buildings are painted white against the sun. Shapes and details
-   stay; plain/grey parts become white (dark holes stay darkish), strongly coloured parts keep their colour, a bit stronger. Used for 2D sprites
+   stay; colours become white and greys by brightness (Session 54b: Markus switched to the all-white option C, real white, stronger greys). Used for 2D sprites
    (pixel pass, cached separately) and 3D vertex colours (v3WorldTint). */
 const moonLook=()=>!!(S&&S.w==='moon');
-function moonTint(r,g,b){const L=0.3*r+0.59*g+0.11*b,mx=Math.max(r,g,b),mn=Math.min(r,g,b),s=mx>0.02?(mx-mn)/mx:0,w=1-Math.pow(1-Math.min(1,L),3.2),k=Math.max(0,Math.min(1,(s-0.3)/0.25));
- const acc=c=>Math.max(0,Math.min(1,(L+(c-L)*1.35)*1.06));return[w*0.98+(acc(r)-w*0.98)*k,w*0.99+(acc(g)-w*0.99)*k,w+(acc(b)-w)*k];}
+function moonTint(r,g,b){const L=0.3*r+0.59*g+0.11*b,v=Math.max(0,Math.min(1,(L-0.08)/0.42)),o=0.16+0.84*(1-(1-v)*(1-v));return[o,o,o];}   /* Session 54b: monochrome (option C, stronger): bright and mid parts pure white, darker details clear greys, holes near-black */
 function moonCanvas(c){const g=c.getContext('2d'),d=g.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){if(a[i+3]<200)continue;const o=moonTint(a[i]/255,a[i+1]/255,a[i+2]/255);a[i]=o[0]*255;a[i+1]=o[1]*255;a[i+2]=o[2]*255;}g.putImageData(d,0,0);}
 function getSprite(id,s){const b=bkt(s),mn=moonLook(),key=id+'|'+b+(mn?'|m':'');let c=SPR.get(key);if(c)return c;const w=B[id].w,pad=Math.ceil(b*0.35);
  c=document.createElement('canvas');c.width=c.height=Math.ceil(w*b+pad*2);const g=c.getContext('2d');g.translate(pad,pad);paintB(g,id,w*b,b);if(mn)moonCanvas(c);c.pad=pad;c.b=b;SPR.set(key,c);if(SPR.size>500)SPR.delete(SPR.keys().next().value);return c;}

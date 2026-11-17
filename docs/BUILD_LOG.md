@@ -3023,3 +3023,21 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Known issues:**
 - The thin semi-transparent edge of each sprite isn't whitened (it stays a dark outline, which looks fine).
 - Animated overlays drawn live (the press plate, assembler arms) keep their Home colours.
+
+## Session 54b — 2026-11-17 (Claude Code, cloud session) · Build 149
+
+**Asked:** switch the Moon buildings to the monochrome option C instead, with stronger white ("real white") and stronger grey.
+
+**Built:**
+- `moonTint` is now monochrome: brightness is mapped with a contrast curve. Everything from mid brightness up becomes pure white (#fff); darker details become clear greys; holes and outlines go near-black (about 16%).
+- No colour remains on Moon buildings, apart from live lights, glows, item badges, belts and signs.
+- 2D and 3D use the same mapping.
+
+**Verified:**
+- Moon screenshots in 2D and 3D.
+- The smoke check now confirms that grey and red both turn neutral white/grey, and that dark holes stay dark.
+- `npm test` all PASS.
+
+**Known issues:**
+- Machines now differ only by shape, which is harder at far zoom. The far-zoom simplified view still uses each building's colour.
+- Solar Panel cells are grey too.

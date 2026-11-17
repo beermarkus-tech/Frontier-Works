@@ -378,7 +378,7 @@ const server=require('./serve.js');
  const mn=await p.evaluate(()=>{const fw=window.__fw,out={};out.homeNoHe=!nodes.some(n=>n.t==='helium')&&canPlace('vfurnace',MW/2+20,MH/2+20)==='Only on the Moon';
   const inv0=S.inv.iron_plate||0;CORE.b=[...Array(6)].map(()=>({iron_plate:10}));CORE.acc=0;
   const spH=getSprite('smelter',40);fw.switchWorld('moon');const he=nodes.filter(n=>n.t==='helium');
-  {const spM=getSprite('smelter',40),g=moonTint(0.27,0.3,0.34),rd=moonTint(0.69,0.31,0.16);out.moonLook=spM!==spH&&g[0]>0.62&&g[2]>0.62&&rd[0]>0.75&&rd[2]<0.2;}out.moonHe=he.length>=5&&he.some(n=>Math.hypot(n.x-MW/2,n.y-MH/2)<14);
+  {const spM=getSprite('smelter',40),g=moonTint(0.27,0.3,0.34),rd=moonTint(0.69,0.31,0.16);out.moonLook=spM!==spH&&g[0]>0.75&&g[0]===g[2]&&rd[0]>0.9&&rd[0]===rd[2]&&moonTint(0.05,0.05,0.06)[0]<0.25;}out.moonHe=he.length>=5&&he.some(n=>Math.hypot(n.x-MW/2,n.y-MH/2)<14);
   let X,Y;for(let r=16;r<120&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=0;j<3&&ok;j++)for(let i=0;i<5&&ok;i++)if(canPlace('incin',x+i,y+j)!==''||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
   out.vf=fw.placeEnt('solar',X,Y,0,true)===''&&fw.placeEnt('solar',X,Y+2,0,true)===''&&fw.placeEnt('solar',X+5,Y,0,true)===''&&fw.placeEnt('solar',X+5,Y+2,0,true)===''&&fw.placeEnt('vfurnace',X+2,Y,0,true)==='';const vf=entAt(X+2,Y);vf.r='r_vac_wafer';vf.inb={silica:12,helium:4};
   for(let k=0;k<20*14;k++)tick(0.05);out.wafer=(vf.outb.vac_wafer||0)>=2;
