@@ -254,8 +254,19 @@ function invHtml(){
  return h;
 }
 const lpadDone=()=>!!(S.worlds&&S.worlds[ROCKET.to])||S.w===ROCKET.to;
-function msHtml(){
- let h=`<div class="muted" style="margin-bottom:8px">Deliver parts to the Base Core (they land in your item stock), then submit them here to unlock new tech.</div>`;
+/* Goals panel (Session 58): the goals of the world you're on; a switch shows the other world's list (Home tiers / Moon goals) */
+function wgHtml(w){const L=WGOALS[w],k=(S.wms&&S.wms[w])||0,here=(S.w||'home')===w,W=WORLDS[w];
+ let h=`<div class="muted" style="margin-bottom:8px">${W.ic} ${W.n} goals: deliver things made on the ${W.n} to its Base Core (its own stock), then hand them in here.${here?'':` <b>Hand-ins happen on the ${W.n}.</b>`}</div>`;
+ L.forEach((m,i)=>{const done=i<k,cur=i===k;h+=`<div class="card ${done?'done':''} ${cur?'cur':''}"><b>${done?'✓ ':''}${W.n} ${i+1}: ${m.n}</b><div class="muted" style="margin:2px 0 4px">${m.why}</div>`;
+  if(!done&&i<=k+1)h+=Object.keys(m.req).map(q=>{const have=here?Math.min(S.inv[q]||0,m.req[q]):0;return`<div class="row"><span>${nm(q)}</span><span>${here?fmt(have)+' / ':''}${m.req[q]}</span></div>${here?`<div class="bar"><i style="width:${have/m.req[q]*100}%"></i></div>`:''}`;}).join('');
+  const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];if(un.length&&i<=k+1)h+=`<div class="muted" style="margin-top:4px">Unlocks: ${un.join(', ')}</div>`;
+  if(m.next&&i<=k)h+=`<div class="muted" style="margin-top:4px">${done?'Next: ':'Then: '}${m.next}</div>`;
+  if(cur&&here)h+=`<button class="btn ${afford(m.req)?'on':''}" style="margin-top:6px" data-act="submitWg" ${afford(m.req)?'':'disabled'}>Hand in</button>`;
+  h+=`</div>`;});return h;}
+function msHtml(){const cw=S.w||'home',view=UI.gview&&(UI.gview==='home'||WGOALS[UI.gview])?UI.gview:cw,others=['home',...Object.keys(WGOALS)].filter(w=>w==='home'||(S.worlds&&S.worlds[w])||cw===w);
+ let tabs=others.length>1?`<div class="chips" style="margin-bottom:8px">${others.map(w=>`<button class="btn chip ${w===view?'on':''}" data-act="gview" data-v="${w}">${WORLDS[w].ic} ${w==='home'?'Home tiers':WORLDS[w].n+' goals'}</button>`).join('')}</div>`:'';
+ if(view!=='home')return tabs+wgHtml(view);
+ let h=tabs+`<div class="muted" style="margin-bottom:8px">Deliver parts to the Base Core (they land in your item stock), then submit them here to unlock new tech.${cw!=='home'?' <b>Tiers are handed in on Home.</b>':''}</div>`;
  MS.forEach((m,i)=>{
   const done=i<S.ms,cur=i===S.ms;
   h+=`<div class="card ${done?'done':''} ${cur?'cur':''}"><b>${done?'✓ ':''}Tier ${i+1}: ${m.n}</b>`;
@@ -264,7 +275,7 @@ function msHtml(){
   if(un.length&&i<=S.ms+1)h+=`<div class="muted" style="margin-top:4px">Unlocks: ${un.join(', ')}${m.oc?', overclocking':''}</div>`;
   if(m.win&&i<=S.ms+1)h+=`<div class="muted">Launches the beacon — you win!</div>`;
   if(m.goal&&i<=S.ms)h+=`<div class="muted" style="margin-top:4px">${done?'Next: ':''}${m.goal}${done&&lpadDone()?' ✓':''}</div>`;
-  if(cur)h+=`<button class="btn ${afford(m.req)?'on':''}" style="margin-top:6px" data-act="submitMs" ${afford(m.req)?'':'disabled'}>Submit</button>`;
+  if(cur&&cw==='home')h+=`<button class="btn ${afford(m.req)?'on':''}" style="margin-top:6px" data-act="submitMs" ${afford(m.req)?'':'disabled'}>Submit</button>`;
   h+=`</div>`;});
  return h;
 }
@@ -287,7 +298,7 @@ function genInfo(g){const d=B[g];let h=`<div class="card"><b>${d.n}</b>${ub(g)?'
  h+=`<div class="muted">Fuel use follows the power actually drawn: at half load it burns half as much.${d.fuels.length>1?` It can burn ${d.fuels.map(f=>IT[f].n).join(' or ')} (uses the first it has, in this order).`:''}</div></div>`;
  return h;}
 function codexHtml(){
- const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace'];let h='';
+ const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace','imelt'];let h='';
  for(const mt of mts){const rs=RL.filter(r=>r.m===mt&&ur(r.id));if(!rs.length)continue;h+=`<h4>${B[mt].n} · ${B[mt].pw} MW</h4>`+rs.map(r=>`<div class="card"><b>${r.n}</b><br>${recLine(r)}</div>`).join('');}
  h+=`<h4>Generators (fuel at full load)</h4>`+['burner','steam','turbine','reactor'].map(genInfo).join('');
  h+=`<h4>Extraction</h4>`+['drill1','drill2','drill3','opump','wpump'].map(id=>{const d=B[id],r=d.rate*60;
@@ -387,6 +398,9 @@ const ACT={
   else{const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>Tier ${S.ms}: ${m.n}</h2><p>Unlocked: ${un.join(', ')||'—'}${m.oc?', overclocking':''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);}
   save();},
  closeDlg,
+ gview:v=>{UI.gview=v;renderPanel(true);},
+ submitWg:()=>{const w=S.w||'home',L=WGOALS[w];if(!L)return;S.wms=S.wms||{};const k=S.wms[w]||0,m=L[k];if(!m||!afford(m.req))return;pay(m.req);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);S.wms[w]=k+1;sfx('goal');
+  const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>${WORLDS[w].ic} ${WORLDS[w].n} ${k+1}: ${m.n}</h2><p>${un.length?'Unlocked: '+un.join(', ')+'.':''} ${L[k+1]?'Next goal: '+L[k+1].n+'.':m.next||''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);buildTools();renderPanel(true);if(typeof updTop==='function')updTop();save();},
  lpadLoad:()=>{const e=ents.get(UI.panel.arg);if(!e)return;const m=lpadMissing(e);let n=0;for(const k in m){const t=Math.min(m[k],S.inv[k]||0);if(t>0){S.inv[k]-=t;e.store[k]=(e.store[k]||0)+t;n+=t;}}toast(n?`Loaded ${n} items`:'Nothing to load from stock');renderPanel(true);},
  lpadGo:()=>{const e=ents.get(UI.panel.arg);const why=lpadLaunch(e);if(why){toast(why);return;}sfx('launch');toast('🚀 Lift-off!');renderPanel(true);},
  openFind:()=>openPanel('find'),

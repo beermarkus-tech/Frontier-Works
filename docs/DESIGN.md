@@ -369,7 +369,17 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   It pays like normal placing and reports what's missing. Blueprints are stored per device, so they work on every map and world. Bigger stations (e.g. 18×18, 24×24) can come
   with later tiers.
 
-- **Moon water and concrete (agreed with Markus, Session 55, not built yet).** Shipping heavy bulk (concrete, water) by rocket makes
+- **Moon goals (Session 58, built).** The Moon's purpose: become self-sufficient in bulk, make what Earth can't (helium, vacuum
+  wafers, lattice crystals), and send it home for the Dyson Sphere. The Goals panel shows the goals of the world you're on (a switch
+  shows the other world's list; hand-ins happen on that world, from its own stock); the top bar shows "🌑 Goal N" there.
+  1 **Foothold** (iron plates, copper sheets, wire) → Regolith Excavator (digs anywhere) + Sintered Blocks (Vacuum Furnace: regolith → concrete).
+  2 **Ice Prospecting** (concrete, quartz crystals, vacuum wafers) → Ice Melter (ice → water) + Moon Concrete (regolith + water).
+  3 **Lunar Power** (lattice crystals, wafers, concrete) → Wafer Circuit Board (wafer + copper sheet) + Lunar Aluminum (bauxite + water):
+    with Assemblers the Moon makes its own Alloy Panels, circuit boards and so Solar Panels.
+  4 **Export Ready** (a stockpile of helium, wafers, lattice crystals) → next: Orbital Freighters.
+  Ice lies on dark crater floors at least 45 tiles from the landing site (own generator pass). Complex machines (Refinery, Fabricator…)
+  still need steel/motors from Home: more rocket launches now, freighters later. Numbers in `WGOALS` (`js/data.js`).
+- **Moon water and concrete (agreed with Markus, Session 55; built in Session 58 as the Moon goals above).** Shipping heavy bulk (concrete, water) by rocket makes
   no sense, so the Moon makes its own base materials; freighters carry what the Moon truly can't make (plastic, circuit boards, rocket
   fuel, maybe hydrogen) and bring precious Moon goods home (helium, wafers, lattice crystals): trade, not a concrete delivery service.
   - **Ice in dark craters:** a few rare Ice deposits on dark crater floors, far from the landing site, mined by drills; an Ice Melter (or a
@@ -427,8 +437,9 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 
 ## 15. Where to start next (kept up to date)
 - **Trains Phase 1 is built (Session 56).** Markus should try it on his phone first: track loop, two stops, Cargo Bays, a train.
-- **Next:** Orbital Freighters (section 12) together with the Moon water/concrete mix above (ice craters, regolith, sintered blocks, Moon
-  concrete). Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in blueprints). Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
+- **Moon goals are built (Session 58).** Markus plays them on the Moon.
+- **Next:** Orbital Freighters (section 12), unlocked by Moon goal 4. Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
+  blueprints). Then the all-tier measuring tool, also checking the Moon goals. Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
 
 ## 11. Explicitly out of scope (for now)
 Other vehicles beyond Cargo Drones, trains (section 13) and the planned Orbital Freighters (section 12), combat/creatures, multiplayer, accounts or cloud saves, sound.

@@ -3219,3 +3219,39 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The design document (sections 12 and 14) is updated.
 
 **Verified:** the colony-rocket smoke check now checks the unlocks on Tier 10, the last tier. The dead-end audit passes. `npm test` all PASS.
+
+## Session 58 — 2026-11-17 (Claude Code, cloud session) · Build 159
+
+**Asked:** Markus reached the Moon. He wanted guidance there like the tiers on Earth (the Goals panel showing the Moon's goals) and a purpose for the Moon. He agreed to the proposal.
+
+**Built:**
+- **World goals (`WGOALS`, progress `S.wms`):** four Moon goals, each delivered from the Moon's own stock.
+  1. **Foothold:** 200 iron plates, 100 copper sheets, 200 wire. Unlocks the Regolith Excavator and Sintered Blocks.
+  2. **Ice Prospecting:** 300 concrete, 100 quartz crystals, 50 vacuum wafers. Unlocks the Ice Melter and Moon Concrete.
+  3. **Lunar Power:** 100 lattice crystals, 200 wafers, 500 concrete. Unlocks the Wafer Circuit Board and Lunar Aluminum.
+  4. **Export Ready:** 1,000 helium, 300 wafers, 100 lattice crystals. Next: Orbital Freighters.
+- **Goals panel:**
+  - It shows the current world's goals, with a "🌍 Home tiers / 🌑 Moon goals" switch.
+  - Each card shows a one-line "why", progress bars, unlocks and a Hand in button. You can only hand in on that world.
+  - The top bar shows "🌑 Goal N" on the Moon. Tiers can only be submitted on Home.
+- **New Moon content:**
+  - **Regolith Excavator:** `rexc`, a 2×2 drill that needs no node, digs Regolith at 60/min, 8 MW, Moon only, built from Moon materials.
+  - **Ice Melter:** `imelt`, 2×2, 6 MW, Moon only; 2 Ice → 10 Water.
+  - **Ice nodes:** at least 5 on dark crater floors at least 45 tiles from the landing site, placed in their own generator pass, so existing Moon maps keep their other nodes.
+  - **Vacuum Furnace recipes:** Sintered Blocks (4 regolith → 1 concrete), Moon Concrete (3 regolith + 4 water → 2), Wafer Circuit Board (1 wafer + 2 copper sheets → 2), Lunar Aluminum (4 bauxite + 6 water → 2 ingots).
+  - Sprites, 3D models and item icons. The planner and codex know the Ice Melter.
+- Design document: the Moon goals section, and "where to start next" (Orbital Freighters).
+
+**Verified:**
+- Screenshot of the Moon Goals panel.
+- New smoke check:
+  - every Moon goal can be made from Moon resources with what is unlocked by then (audit)
+  - ice sits far away on crater floors
+  - the excavator digs without a node
+  - Sintered Blocks make concrete; the Ice Melter makes water
+  - the panel shows Foothold with an active Hand in button; handing in unlocks and the top bar shows Goal 2
+- `npm test` all PASS. The "power wires & switch" check failed once on a random map and passed on two reruns; it is unrelated and existed before.
+
+**Known issues:**
+- Goal amounts are first guesses.
+- Moon machines needing steel or motors (Refinery, Fabricator, Assembler parts such as rotors are fine) still come from Home kits.

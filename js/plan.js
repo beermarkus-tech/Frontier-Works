@@ -6,7 +6,7 @@
    - rev ("For a target"): wanted item per minute → every machine and raw resource needed.
    Plans are kept in their own localStorage key, separate from the game save. */
 const PLAN_KEY='frontierworks_plan';
-const PL_MACH=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace'];
+const PL_MACH=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace','imelt'];
 const PL_RES=[...Object.keys(NODE_T),'water'];
 const plResItem=res=>res==='water'?'water':NODE_T[res][0];
 const PL_RAW=new Set(PL_RES.map(plResItem));

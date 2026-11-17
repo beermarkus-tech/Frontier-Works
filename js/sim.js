@@ -35,7 +35,10 @@ function genMoon(seed){const r=rng((seed^0x6d6f6f6e)>>>0),n1=mkNoise(r,46),n2=mk
   let s=0;for(const t of keys)s+=odds[t][hi];let q=r()*s,t=keys[0];for(const k2 of keys){q-=odds[k2][hi];if(q<=0){t=k2;break;}}const p=r();if(add(t,x,y,p<0.3?0:p<0.8?1:2))k++;}
  /* Helium crystals (Session 52): Moon only, mostly on crater floors, placed in their own pass with their own random numbers */
  {const r2=rng((seed^0x48656c69)>>>0),tgt=Math.round(MW*MH/7000);add('helium',cx-3,cy-10,1);
-  for(let a=0,k=0;a<tgt*60&&k<tgt;a++){const x=3+Math.floor(r2()*(MW-6)),y=3+Math.floor(r2()*(MH-6));if(Math.hypot(x-cx,y-cy)<18||near(x,y,4))continue;if(terr[y*MW+x]!==2&&r2()<0.75)continue;const p=r2();if(add('helium',x,y,p<0.3?0:p<0.8?1:2))k++;}}}
+  for(let a=0,k=0;a<tgt*60&&k<tgt;a++){const x=3+Math.floor(r2()*(MW-6)),y=3+Math.floor(r2()*(MH-6));if(Math.hypot(x-cx,y-cy)<18||near(x,y,4))continue;if(terr[y*MW+x]!==2&&r2()<0.75)continue;const p=r2();if(add('helium',x,y,p<0.3?0:p<0.8?1:2))k++;}}
+ /* Ice (Session 58): only on dark crater floors, far from the landing site; own pass, own random numbers */
+ {const r3=rng((seed^0x49636521)>>>0),tgt=Math.max(5,Math.round(MW*MH/9000));
+  for(let a=0,k=0;a<tgt*400&&k<tgt;a++){const x=3+Math.floor(r3()*(MW-6)),y=3+Math.floor(r3()*(MH-6));if(Math.hypot(x-cx,y-cy)<45||terr[y*MW+x]!==2||near(x,y,4))continue;const p=r3();if(add('ice',x,y,p<0.3?0:p<0.8?1:2))k++;}}}
 function expandMap(E){const oW=MW,oH=MH,nW=oW+2*E,nH=oH+2*E,oT=terr,oB=bio,k=((S.seed>>>0)%1000)+7,land=(x,y)=>oT[y*oW+x]!==1?1:0;
  const lf=(get,n)=>{const a=new Float32Array(n);for(let i=0;i<n;i++){let s=0,c=0;for(let j=-5;j<=5;j++){const q=i+j;if(q<0||q>=n)continue;s+=get(q);c++;}a[i]=s/c;}return a;};
  const T=lf(x=>land(x,0),oW),Bo=lf(x=>land(x,oH-1),oW),L=lf(y=>land(0,y),oH),Ri=lf(y=>land(oW-1,y),oH);
@@ -136,7 +139,7 @@ function canPlace(id,x,y){
   if(terr[idx]===1)water++; if(nodeAt[idx]&&!node)node=nodeAt[idx];}
  if(d.k==='pump'&&d.water){if(water<w*w)return 'Must sit fully on water';}
  else if(!d.ow&&water>0&&!(d.k==='pump'&&d.oil))return 'Cannot build on water';
- if(d.k==='drill'&&(!node||node.t==='oil'))return 'Needs an ore node underneath';
+ if(d.k==='drill'&&!d.reg&&(!node||node.t==='oil'))return 'Needs an ore node underneath';
  if(d.k==='pump'&&d.oil&&(!node||node.t!=='oil'))return 'Needs an oil well underneath';
  return '';
 }
@@ -569,7 +572,7 @@ function updBuilding(e,dt){
    break;}
   case 'drill':case 'pump':{
    const d=B[e.d];let item=null,rate=0;
-   if(d.water){item='water';rate=d.rate;}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
+   if(d.water){item='water';rate=d.rate;}else if(d.reg){item='regolith';rate=d.rate;}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
    e.item=item;e.want=!!item&&e.buf<10&&!e.off;
    if(e.off){if(item&&e.buf>0&&pushOut(e,item))e.buf--;break;}
    if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;zStat('p',e,item,1);}}

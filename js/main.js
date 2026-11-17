@@ -15,6 +15,7 @@ function serialize(){syncPipes();const es=[];
 function parseSave(str){str=String(str).trim();return JSON.parse(str[0]==='{'?str:decodeURIComponent(escape(atob(str))));}
 /* Older saves store the unlock lists from when they were made; new buildings/recipes (signs, Drone Pad, …) are added on load */
 function grantUnlocks(){S.ub=S.ub||[];S.ur=S.ur||[];const b=[...START_B],r=[...START_R];for(let i=0;i<Math.min(S.ms||0,MS.length);i++){b.push(...MS[i].b);r.push(...MS[i].r);}
+ for(const w in WGOALS){const n=(S.wms&&S.wms[w])||0;for(let i=0;i<Math.min(n,WGOALS[w].length);i++){b.push(...WGOALS[w][i].b);r.push(...WGOALS[w][i].r);}}   /* world goals (Session 58) */
  for(const x of b)if(!S.ub.includes(x))S.ub.push(x);for(const x of r)if(!S.ur.includes(x))S.ur.push(x);if((S.ms||0)>=4)S.oc=true;}
 /* Build 44: the Incinerator became 2×2. Older saves hold 1×1 ones. Rebuild the grid: everything else first, then each incinerator takes a free
    2×2 that includes its old tile (own corner first), or goes back to stock if boxed in. Idempotent: a real 2×2 one keeps its corner. */
@@ -53,7 +54,7 @@ function switchWorld(id){if(!WORLDS[id]||id===S.w)return false;S.cam={x:cam.x,y:
  const tp=sh.worlds[id];delete sh.worlds[id];let es;
  if(tp){Object.assign(sh,JSON.parse(JSON.stringify(tp.WS)));es=tp.es;}
  else{const W=WORLDS[id];Object.assign(sh,{seed:(Math.random()*1e9)|0,gen:W.gen,mw:W.mw,ext:W.ext,zones:[],zmap:'',cam:null,inv:{}});es=[['core',W.mw/2-2,W.mw/2-2,0]];}
- load({v:2,S:sh,es});bgLast=bgArrive();if(typeof v3Terrain==='function'&&V3.ready)V3.sig=null;if(typeof updTop==='function')updTop();return true;}
+ load({v:2,S:sh,es});bgLast=bgArrive();if(typeof UI!=='undefined')UI.gview=null;if(typeof v3Terrain==='function'&&V3.ready)V3.sig=null;if(typeof updTop==='function')updTop();return true;}
 async function gz(str){if(typeof CompressionStream==='undefined')return null;return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}
 async function gunz(u8){return await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}
 const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);};
@@ -110,7 +111,8 @@ function updBiome(){if(S.gen!==2||!bio)return;const x=V3.on?C3.x:cam.x,y=V3.on?C
 function updTop(){if($('worldBtn')){const many=S&&S.worlds&&Object.keys(S.worlds).length>0;$('worldBtn').style.display=many?'':'none';const W=WORLDS[(S&&S.w)||'home'];$('worldTxt').textContent=W.ic+' '+W.n;}let d=0,c=0,tr=false;for(const g of grids){d+=g.dem;c+=g.cap;if(g.trip)tr=true;}
  $('pwv').textContent=fmt(d);$('pwc').textContent=fmt(c);$('fuse').style.display=tr?'':'none';
  const r=c>0?d/c:0,m=$('pwm');m.style.width=Math.min(100,r*100)+'%';m.style.background=tr?'#ff5a46':r>0.9?'#ffb547':'#5fe08a';
- const ms=MS[S.ms];$('msBtn').classList.toggle('ready',!!ms&&afford(ms.req));$('msTxt').textContent=ms?`Tier ${S.ms+1}`:(typeof lpadDone==='function'&&!lpadDone()?'🚀 Rocket':'Complete');
+ const ms=MS[S.ms];$('msBtn').classList.toggle('ready',!!ms&&afford(ms.req));const wg=WGOALS[S.w||'home'];if(wg){const k=(S.wms&&S.wms[S.w])||0,g=wg[k];$('msBtn').classList.toggle('ready',!!g&&afford(g.req));$('msTxt').textContent=g?`${WORLDS[S.w].ic} Goal ${k+1}`:`${WORLDS[S.w].ic} Done`;}
+ else $('msTxt').textContent=ms?`Tier ${S.ms+1}`:(typeof lpadDone==='function'&&!lpadDone()?'🚀 Rocket':'Complete');
  const aff=Object.values(B).filter(x=>x.cat===UI.cat&&ub(x.id)).map(x=>afford(x.cost)?1:0).join('');if(aff!==lastAff){lastAff=aff;refreshTools();}
  updInfo();
 }

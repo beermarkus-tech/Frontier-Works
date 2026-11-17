@@ -193,6 +193,11 @@ function paintB(g,id,P,u){
   case 'refinery':box(i,i,W,W,u*0.18,col);pipe(P*0.3,P*0.32,P*0.7,P*0.45,u*0.14,'#a0a8b0');pipe(P*0.3,P*0.7,P*0.7,P*0.45,u*0.14,'#a0a8b0');circ(P*0.3,P*0.32,u*0.42,'#c4ccd4');circ(P*0.3,P*0.7,u*0.42,'#c4ccd4');circ(P*0.7,P*0.45,u*0.6,'#9ba3ab');circ(P*0.7,P*0.45,u*0.3,'#7d858d');break;
   case 'fabricator':box(i,i,W,W,u*0.2,col);g.fillStyle='#1d2228';R(P*0.14,P*0.44,P*0.72,P*0.18,u*0.05);g.fill();g.strokeStyle='rgba(255,255,255,0.12)';g.lineWidth=Math.max(1,u*0.04);for(let x=P*0.16;x<P*0.85;x+=u*0.22){g.beginPath();g.moveTo(x,P*0.45);g.lineTo(x,P*0.61);g.stroke();}
    for(const [a,b] of [[0.3,0.3],[0.7,0.3],[0.3,0.76],[0.7,0.76]])circ(P*a,P*b,u*0.24,'#c8d0d8');box(P*0.42,P*0.15,P*0.16,P*0.08,u*0.03,'#0e1a26');break;
+  case 'rexc':{box(i,i,W,W,u*0.16,col);circ(P/2,P*0.48,P*0.3,'#6d7178');g.fillStyle='#3a3d42';g.beginPath();g.arc(P/2,P*0.48,P*0.21,0,7);g.fill();   /* Regolith Excavator (Session 58): bucket wheel over a dig pit */
+   g.strokeStyle='#d0d4d8';g.lineWidth=Math.max(1,u*0.08);for(let k=0;k<8;k++){const a=k*Math.PI/4;g.beginPath();g.moveTo(P/2+Math.cos(a)*P*0.12,P*0.48+Math.sin(a)*P*0.12);g.lineTo(P/2+Math.cos(a)*P*0.27,P*0.48+Math.sin(a)*P*0.27);g.stroke();}
+   g.fillStyle='#f2c230';g.fillRect(i+W*0.08,P-i-W*0.14,W*0.84,W*0.07);break;}
+  case 'imelt':{box(i,i,W,W,u*0.16,col);circ(P*0.42,P*0.5,P*0.28,'#c4d6e2');g.fillStyle='#1e4d6e';g.beginPath();g.arc(P*0.42,P*0.5,P*0.19,0,7);g.fill();   /* Ice Melter (Session 58): heated tank */
+   g.fillStyle='#d4f1ff';for(const [a,b] of [[0.36,0.44],[0.47,0.55],[0.4,0.58]])g.fillRect(P*a,P*b,P*0.07,P*0.07);box(P*0.72,P*0.24,P*0.14,P*0.52,u*0.04,'#9aa3ab');break;}
   case 'vfurnace':{box(i,i,W,W,u*0.18,col);circ(P*0.5,P*0.5,P*0.3,'#c4cad6',40);g.fillStyle='#0c1022';g.beginPath();g.arc(P*0.5,P*0.5,P*0.22,0,7);g.fill();   /* Vacuum Furnace (Session 52): sealed dome chamber with a viewport */
    g.strokeStyle='rgba(160,190,255,0.35)';g.lineWidth=Math.max(1,u*0.05);g.beginPath();g.arc(P*0.5,P*0.5,P*0.16,0,7);g.stroke();for(const [a,b] of [[0.2,0.2],[0.8,0.2],[0.2,0.8],[0.8,0.8]])circ(P*a,P*b,u*0.16,'#8a93a3');pipe(P*0.8,P*0.2,P*0.66,P*0.34,u*0.1,'#9fb0d0');break;}
   case 'blender':box(i,i,W,W,u*0.18,col);circ(P/2,P/2,P*0.31,'#aab6be');hole(P/2,P/2,P*0.23);pipe(P*0.2,P*0.2,P*0.32,P*0.32,u*0.12,'#8fd0c8');break;
@@ -265,6 +270,8 @@ function drawLive(e,X,Y,s){
    if(id==='fabricator'){for(let k=0;k<4;k++){const on=act>0.5&&((animT*3+k)|0)%3===0;ctx.fillStyle=on?'#59f0a0':'#1d3a2c';ctx.fillRect(X+P*(0.44+k*0.035),Y+P*0.17,P*0.022,P*0.04);}}break;}
   case 'refinery':glow(X+P*0.7,Y+P*0.45,s*0.4,'#ff4040',0.25+0.35*(Math.sin(animT*3+e.id)>0.6?1:0));if(act>0.2)glow(X+P*0.7,Y+P*0.45,s*0.3,'#ffd060',act*0.4);break;
   case 'blender':blades(X+P/2,Y+P/2,P*0.2,2,a*4,'#7ad6c8',P*0.04);break;
+  case 'imelt':glow(X+P*0.42,Y+P*0.5,P*0.24,'#ff9a50',act*0.45);break;
+  case 'rexc':blades(X+P/2,Y+P*0.48,P*0.24,8,a*3,'#d0d4d8',P*0.025);break;
   case 'vfurnace':glow(X+P*0.5,Y+P*0.5,P*0.26,'#8fb0ff',act*(0.6+0.25*Math.sin(animT*5+e.id)));if(act>0.05){ctx.fillStyle=rgba('#cfe0ff',act*0.7);ctx.beginPath();ctx.arc(X+P*0.5,Y+P*0.5,P*0.07,0,7);ctx.fill();}break;
   case 'steam':blades(X+P*0.42,Y+P*0.54,P*0.18,6,a*10,'#c4cad0',P*0.03);break;
   case 'turbine':blades(X+P*0.3,Y+P*0.5,P*0.11,8,a*18,'#d0d6dc',P*0.02);if(act>0.1)glow(X+P*0.86,Y+P*0.5,P*0.16,'#ffa040',act*0.6);break;
@@ -424,7 +431,7 @@ function drawBuilding(e,X,Y,s){
 
 /* ---------- items ---------- */
 const SHAPE={};const setS=(sh,ids)=>ids.split(' ').forEach(i=>SHAPE[i]=sh);
-setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium quartz');setS('crystal','quartz_crystal');setS('reson','resonator');setS('crystal','helium');setS('wafer','vac_wafer');setS('lattice','lattice');
+setS('ore','iron_ore copper_ore limestone coal sulfur bauxite uranium quartz');setS('crystal','quartz_crystal');setS('reson','resonator');setS('crystal','helium ice');setS('pile','regolith');setS('wafer','vac_wafer');setS('lattice','lattice');
 setS('ingot','iron_ingot copper_ingot steel_ingot alu_ingot alu_casing');setS('plate','iron_plate copper_sheet alloy_panel braced_plate plastic heat_sink');
 setS('rod','iron_rod');setS('beam','steel_beam');setS('pipe','steel_pipe');setS('bolts','bolts');setS('coil','wire cable');setS('block','concrete rubber coolant_block');setS('girder','cased_girder');
 setS('pile','silica petro_coke polymer_resin alu_scrap');setS('cell','uranium_cell battery');setS('rods','fuel_rod');setS('barrel','waste');setS('frame','truss_frame heavy_truss');
