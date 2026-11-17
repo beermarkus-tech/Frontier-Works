@@ -2997,3 +2997,29 @@ with step 2c and prepare the Moon, even though Markus hasn't reached Tier 10/11 
 **Built:** the result line now always has the same height (18 px plus padding). A very long result is cut off with "…" instead of wrapping.
 
 **Verified:** the smoke check now also confirms the result line is the same height with and without a result. `npm test` all PASS.
+
+## Session 54 — 2026-11-17 (Claude Code, cloud session) · Build 148
+
+**Asked:** on the Moon, buildings should be white (against solar radiation): the same shapes and textures, only a whiter colour scheme. Show proposals first.
+
+**Proposals (picture in chat):**
+- A, Lunar White: pale tints. This was my recommendation.
+- B, white with colour accents.
+- C, all white.
+
+Markus chose **B, with whiter whites and stronger colour accents**.
+
+**Built:**
+- **`moonTint`:** grey and plain parts are lifted towards white (with a soft curve, so holes and outlines stay darkish). Strongly coloured parts (saturation above about 0.3) keep their colour with 35% more saturation and a little more brightness.
+- **2D:** building sprites made on the Moon get this pass once and are cached separately (`|m`), so Home sprites are untouched.
+- **3D:** `v3WorldTint()` recolours the models' vertex colours in place when the world changes, and restores the originals on Home. Glowing parts are left alone.
+- Belts, pipes, signs, lights, items and the toolbar icons keep their normal colours.
+
+**Verified:**
+- Moon screenshots in 2D and 3D: solar panels, Vacuum Furnace, drill, smelter, press, assembler, fabricator, crate, pole.
+- The smoke check now also confirms that the Moon uses its own sprites, grey turns near-white, and red stays red.
+- `npm test` all PASS.
+
+**Known issues:**
+- The thin semi-transparent edge of each sprite isn't whitened (it stays a dark outline, which looks fine).
+- Animated overlays drawn live (the press plate, assembler arms) keep their Home colours.

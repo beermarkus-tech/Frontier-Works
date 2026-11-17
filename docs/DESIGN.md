@@ -353,6 +353,9 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   with the world; when you come back, the time away (game time, so the speed buttons count) is paid out into its stock, and the arrival
   message says what came in. The Worlds panel shows each world's background rates. Only Base Core deliveries count; buildings, belts
   and crates on the inactive world stay paused as they were.
+- **Moon look** (Session 54, Markus's choice from three proposals: "white with colour accents", whiter and stronger): on the Moon all
+  buildings are painted white against the sun, in 2D and 3D. Shapes, details and textures stay; plain and grey parts become white
+  (holes stay dark), strongly coloured parts keep their colour, slightly stronger. Home is unchanged. Belts, pipes and signs keep their colours.
 - **Blueprints** (Session 48; reworked 48b with Markus: designed in a station instead of copying from the factory, which was inaccurate):
   a **Blueprint Station** (12×12, needs power) is a design table. Both live in their own **Blueprints** tab (Session 48c): the station(s)
   (bigger sizes later) and the **Blueprint List** button, which opens the saved blueprints without needing a station. Building and belt tools used inside it place free

@@ -235,6 +235,11 @@ function v3Decor(){
    Each building type: static parts merged into one geometry (vertex colours) + animated parts (own InstancedMesh).
    Part: [geo, colour, [x,y,z], [sx,sy,sz], opts]; opts: rot [rx,ry,rz], pivot [x,y,z], an(e,ph,act,t)→{dx,dy,dz,rx,ry,rz,sy},
    glow (unlit, brightness follows activity) or cf(e,act,t)→hex for per-building colour. Origin = footprint centre. */
+/* Moon look (Session 54): recolour the building models' vertex colours in place when the world changes (originals kept in userData.c0) */
+function v3WorldTint(){const mn=moonLook();if(!V3.M||V3.tint===mn)return;V3.tint=mn;
+ for(const id in V3.M){const m=V3.M[id];const geos=[m.geo,...(m.parts||[]).filter(p=>!p.glow).map(p=>p.pool.geo)];
+  for(const g of geos){const at=g&&g.getAttribute('color');if(!at)continue;if(!g.userData.c0)g.userData.c0=at.array.slice();const o=g.userData.c0,a=at.array;
+   for(let i=0;i<a.length;i+=3){if(mn){const t=moonTint(o[i],o[i+1],o[i+2]);a[i]=t[0];a[i+1]=t[1];a[i+2]=t[2];}else{a[i]=o[i];a[i+1]=o[i+1];a[i+2]=o[i+2];}}at.needsUpdate=true;}}}
 function v3Models(){
  const M={},bolts=w=>V3.look!=='nice'?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>['cyl6','#8a939c',[a*w*0.43,0.245,b*w*0.43],[0.09,0.05,0.09]]),
   base=(w,col)=>[['box','#2a3037',[0,0.11,0],[w*0.95,0.22,w*0.95]],['box',col?shade(col,-40):'#3b434c',[0,0.235,0],[w*0.85,0.03,w*0.85]],...bolts(w)];
@@ -311,7 +316,7 @@ function v3Models(){
  // build: merge statics, create pools for animated parts
  const G=V3.G,m4=new T3.Matrix4(),q=new T3.Quaternion(),eu=new T3.Euler();
  const pm=(pos,scl,rot)=>{eu.set(...(rot||[0,0,0]));q.setFromEuler(eu);return new T3.Matrix4().compose(new T3.Vector3(...pos),q.clone(),new T3.Vector3(...scl));};
- V3.M=M;
+ V3.M=M;V3.tint=null;
  for(const id in M){const m=M[id];if(!B[id])continue;
   const nice=V3.look==='nice';m.geo=v3Merge(m.st.map(([g,c,pos,scl,o])=>nice&&g==='box'&&Math.min(scl[0],scl[1],scl[2])>=0.08?{g:v3RBox(scl[0],scl[1],scl[2]),c:v3col(c),m:pm(pos,[1,1,1],o&&o.rot)}:{g:G[g],c:v3col(c),m:pm(pos,scl,o&&o.rot)}));m.pool=v3Pool(m.geo,V3.mat,{cast:1,recv:1});
   m.parts=m.an.map(([g,c,pos,scl,o])=>{o=o||{};const geo=v3Merge([{g:G[g],c:v3col(o.glow||o.cf?'#ffffff':c),m:pm([0,0,0],scl,o.rot)}]);
@@ -655,7 +660,7 @@ function render3D(el){
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
- v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Signs();v3Meters();v3Zones();v3ZoneLabels();v3Overlay(t);
+ v3WorldTint();v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();v3Signs();v3Meters();v3Zones();v3ZoneLabels();v3Overlay(t);
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}

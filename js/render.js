@@ -140,8 +140,15 @@ function drawTerrain(ox,oy,s,W,H){
 }
 const SPR=new Map();
 function bkt(s){return Math.max(6,Math.min(180,Math.pow(2,Math.round(Math.log2(s)*3)/3)));}
-function getSprite(id,s){const b=bkt(s),key=id+'|'+b;let c=SPR.get(key);if(c)return c;const w=B[id].w,pad=Math.ceil(b*0.35);
- c=document.createElement('canvas');c.width=c.height=Math.ceil(w*b+pad*2);const g=c.getContext('2d');g.translate(pad,pad);paintB(g,id,w*b,b);c.pad=pad;c.b=b;SPR.set(key,c);if(SPR.size>500)SPR.delete(SPR.keys().next().value);return c;}
+/* Moon look (Session 54, Markus chose "white with colour accents"): on the Moon buildings are painted white against the sun. Shapes and details
+   stay; plain/grey parts become white (dark holes stay darkish), strongly coloured parts keep their colour, a bit stronger. Used for 2D sprites
+   (pixel pass, cached separately) and 3D vertex colours (v3WorldTint). */
+const moonLook=()=>!!(S&&S.w==='moon');
+function moonTint(r,g,b){const L=0.3*r+0.59*g+0.11*b,mx=Math.max(r,g,b),mn=Math.min(r,g,b),s=mx>0.02?(mx-mn)/mx:0,w=1-Math.pow(1-Math.min(1,L),3.2),k=Math.max(0,Math.min(1,(s-0.3)/0.25));
+ const acc=c=>Math.max(0,Math.min(1,(L+(c-L)*1.35)*1.06));return[w*0.98+(acc(r)-w*0.98)*k,w*0.99+(acc(g)-w*0.99)*k,w+(acc(b)-w)*k];}
+function moonCanvas(c){const g=c.getContext('2d'),d=g.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){if(a[i+3]<200)continue;const o=moonTint(a[i]/255,a[i+1]/255,a[i+2]/255);a[i]=o[0]*255;a[i+1]=o[1]*255;a[i+2]=o[2]*255;}g.putImageData(d,0,0);}
+function getSprite(id,s){const b=bkt(s),mn=moonLook(),key=id+'|'+b+(mn?'|m':'');let c=SPR.get(key);if(c)return c;const w=B[id].w,pad=Math.ceil(b*0.35);
+ c=document.createElement('canvas');c.width=c.height=Math.ceil(w*b+pad*2);const g=c.getContext('2d');g.translate(pad,pad);paintB(g,id,w*b,b);if(mn)moonCanvas(c);c.pad=pad;c.b=b;SPR.set(key,c);if(SPR.size>500)SPR.delete(SPR.keys().next().value);return c;}
 function blit(id,X,Y,s,alpha){if(B[id]&&B[id].k==='bpst'){const P=B[id].w*s,a=ctx.globalAlpha;ctx.globalAlpha=alpha==null?a:alpha;ctx.fillStyle='#163d6b';ctx.fillRect(X,Y,P,P);ctx.strokeStyle='#8fc6ff';ctx.lineWidth=2;ctx.strokeRect(X+1,Y+1,P-2,P-2);ctx.globalAlpha=a;return;}const c=getSprite(id,s),k=s/c.b;if(alpha!==undefined)ctx.globalAlpha=alpha;ctx.drawImage(c,X-c.pad*k,Y-c.pad*k,c.width*k,c.height*k);ctx.globalAlpha=1;}
 function paintB(g,id,P,u){
  const d=B[id],col=d.col,lw=Math.max(1,u*0.045);
