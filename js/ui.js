@@ -226,7 +226,7 @@ function entDyn(e){
  if(typeof freightDyn==='function')h+=freightDyn(e);
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
-  if(e.item){const rate=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}
+  if(e.item){const rate=(d.water||d.reg?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;   /* the Regolith Excavator digs at its full rate anywhere (Session 61b) */h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}
   h+=effHtml(e);
   h+=`<div class="muted" style="margin-top:6px">Connect a belt/pipe pointing away from the drill.</div>`;}
  if(e.k==='gen'){

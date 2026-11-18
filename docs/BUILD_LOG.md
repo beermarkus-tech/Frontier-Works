@@ -3497,3 +3497,11 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - While the Factory Zone tool, zone cutting or a zone's panel is in use, they show anyway (`zHidden()`).
 
 **Verified:** new smoke check for the menu switch, hiding, the zone tool still showing them, and showing again. `npm test` all PASS.
+
+## Session 61b — 2026-11-18 (Claude Code, cloud session) · Build 174
+
+**Reported:** the Regolith Excavator's panel didn't show its output rate like a drill.
+
+**Cause:** the rate was computed from the ore node underneath; the excavator has none, so it came out as 0.
+
+**Fixed:** it now shows its full rate (60/min at 100% clock, scaled by the clock). The Moon goals smoke check opens its panel and looks for "Output rate 60/min". `npm test` all PASS.
