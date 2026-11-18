@@ -3274,3 +3274,11 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The circle uses the real rule: buildings whose nearest edge lies within `sup` tiles of the node's centre.
 
 **Verified:** screenshots of a selected Solar Panel (circle) and of placing one (own circle, other circles, wire line). `npm test` all PASS.
+
+## Session 58d — 2026-11-18 (Claude Code, cloud session) · Build 162
+
+**Reported:** after switching off a whole factory with Power Switches, the top-left power indicator froze at 72.9 / 60 MW.
+
+**Cause:** the top bar (and the Stats panel) summed the demand of every power network, including the sections cut off by switches. Machines there still want power, so their unmet demand kept being counted although no generator serves it. The solar network itself wasn't overloaded (no fuse warning).
+
+**Fixed:** both totals now only count networks that have generators. The power-switch smoke check now also confirms that a switched-off machine's demand drops out of the total. `npm test` all PASS.

@@ -287,7 +287,7 @@ function factoryHtml(){let b=0,l=0,po=0,it=0,m=0;for(const e of ents.values()){i
  return`<h4>Factory size</h4><div class="row"><span>Objects</span><span><b>${ents.size.toLocaleString()}</b></span></div><div class="row"><span>Buildings (machines)</span><span>${b.toLocaleString()} (${m.toLocaleString()})</span></div><div class="row"><span>Belts & pipes</span><span>${l.toLocaleString()}</span></div><div class="row"><span>Power poles</span><span>${po.toLocaleString()}</span></div><div class="row"><span>Items moving on belts & pipes</span><span>${it.toLocaleString()}</span></div><div class="row"><span>Save size</span><span>${SAVE.bytes?fmtKB(SAVE.bytes):'—'}</span></div>`;}
 /* Stats = factories only (Session 38f): zone cards, then factory size and power at the bottom */
 function statsHtml(){
- let tot=0,cap=0;for(const g of grids){tot+=g.dem;cap+=g.cap;}
+ let tot=0,cap=0;for(const g of grids){if(!g.gens.length)continue;tot+=g.dem;cap+=g.cap;}
  return zoneDashHtml()+factoryHtml()+`<h4>Power</h4><div class="row"><span>Grids</span><span>${grids.length}</span></div><div class="row"><span>Consumption / capacity</span><span>${fmt(tot)} / ${fmt(cap)} MW</span></div>`;
 }
 const fmtSec=s=>s>=120?Math.round(s/60)+' min':(s<10?s.toFixed(1).replace('.0',''):Math.round(s))+' s';

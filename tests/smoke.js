@@ -680,7 +680,8 @@ const server=require('./serve.js');
   out.chain=pnLinked(A,sw)&&pnLinked(sw,Bp)&&!pnLinked(A,Bp)&&sm.grid===g.grid&&sm.pw===1;
   if(!out.chain)out.dbg=[pnLinked(g,A),pnLinked(A,sw),pnLinked(sw,Bp),pnLinked(A,Bp),sm.grid===g.grid,sm.pw,pnPeers(A).map(e=>e.d+'@'+(e.x-X)+','+(e.y-Y)).join('/'),sm.pnode&&(sm.pnode.d+'@'+(sm.pnode.x-X)+','+(sm.pnode.y-Y))].join(';');
   out.load=Math.abs(swLoad(sw)-B.smelter.pw)<0.01;
-  ACT.swToggle(sw.id);run(10);out.off=sw.off===true&&sm.grid!==g.grid&&sm.pw===0&&!g.grid.trip;
+  const topSum=()=>grids.filter(q=>q.gens.length).reduce((a,q)=>a+q.dem,0),before=topSum();
+  ACT.swToggle(sw.id);run(10);out.off=sw.off===true&&sm.grid!==g.grid&&sm.pw===0&&!g.grid.trip;out.topOff=sm.grid.gens.length===0&&sm.grid.dem>0&&topSum()<before;
   sw.tx='Iron Works';const sv=serialize();load(sv);const sw2=fw.entAt(X+12,Y);run(2);out.saved=sw2.off===true&&sw2.tx==='Iron Works'&&pnLinked(fw.entAt(X+6,Y),sw2);if(!out.saved)out.dbg2=[sw2.off,sw2.tx,JSON.stringify(sw2.pl),fw.entAt(X+6,Y)&&fw.entAt(X+6,Y).d].join(';');
   ACT.swToggle(sw2.id);run(10);out.on=fw.entAt(X+19,Y+2).pw===1;
   // panel lists the switch with its name
