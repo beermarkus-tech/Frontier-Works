@@ -288,6 +288,8 @@ Hand mining gives +5 ore from a node.
   sagging power wires, status lights, soft sun shadows.
 - **3D quality: High / Low** in ☰ Menu (Low: no shadows, lower resolution). If High runs slowly the game suggests Low.
 
+- **Factory zones can be hidden** (Session 61): ☰ Menu → View → Show/Hide; per device; the zone tool shows them anyway.
+
 ## 9. Art direction
 - Top-down, soft lighting from the top-left, drop shadows, dark metal bases with a coloured machine body per type.
 - Everything is drawn in code (Canvas 2D for the map, Three.js shapes for 3D). There are no image assets except the app icons.

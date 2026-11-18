@@ -50,9 +50,11 @@ Object.assign(ACT,{
   for(let i=0;i<zoneMap.length;i++)if(zoneMap[i]===z.id)zoneMap[i]=0;zoneSave();zoneRebuild();closePanel();toast('Zone deleted');}});
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='zoneName'&&UI.panel&&UI.panel.kind==='zone'){const z=zoneById(UI.panel.arg);if(z){z.name=el.value.slice(0,30)||'Factory';zoneVer++;}}});
 /* 2D drawing: tint under everything placed, fence + name tags on top */
-function drawZoneTint(sx,sy,s){if(!zoneRuns.length)return;const W=cv.width,H=cv.height;
+/* Show/hide factory zones (Session 61, ☰ Menu → View): hidden zones still exist and still count; the zone tool always shows them */
+const zHidden=()=>!!OPT.zhide&&UI.tool!=='zone'&&!UI.zoneCut&&!(UI.panel&&UI.panel.kind==='zone');
+function drawZoneTint(sx,sy,s){if(!zoneRuns.length||zHidden())return;const W=cv.width,H=cv.height;
  for(const [x,y,n,v] of zoneRuns){const X=sx(x),Y=sy(y);if(Y>H||Y+s<0||X>W||X+n*s<0)continue;ctx.fillStyle=zoneCol(zoneById(v));ctx.globalAlpha=0.08;ctx.fillRect(X,Y,n*s,s);}ctx.globalAlpha=1;}
-function drawZoneFence(sx,sy,s){if(!zoneEdges.length&&!zonePrev)return;const W=cv.width,H=cv.height,lw=Math.max(1.5,s*0.07);
+function drawZoneFence(sx,sy,s){if(!zoneEdges.length&&!zonePrev)return;if(zHidden()&&!zonePrev)return;const W=cv.width,H=cv.height,lw=Math.max(1.5,s*0.07);
  for(const [x0,y0,x1,y1,v] of zoneEdges){const X0=sx(x0),Y0=sy(y0),X1=sx(x1),Y1=sy(y1);if(Math.max(X0,X1)<-s||Math.min(X0,X1)>W+s||Math.max(Y0,Y1)<-s||Math.min(Y0,Y1)>H+s)continue;
   const c=zoneCol(zoneById(v)),hl=UI.hlZone&&UI.hlZone.id===v&&performance.now()-UI.hlZone.t<6000;if(hl){ctx.strokeStyle=c;ctx.globalAlpha=0.35+0.3*Math.sin(performance.now()/150);ctx.lineWidth=lw*5;ctx.beginPath();ctx.moveTo(X0,Y0);ctx.lineTo(X1,Y1);ctx.stroke();ctx.globalAlpha=1;}
   ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=lw*1.8;ctx.beginPath();ctx.moveTo(X0,Y0);ctx.lineTo(X1,Y1);ctx.stroke();

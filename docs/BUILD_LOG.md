@@ -3485,3 +3485,15 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Screenshots in 2D and 3D on the Moon.
 - New smoke check: the array alone gives a 60 MW grid; the reactor gives 1500 MW with helium and water and burns fuel under load; both are refused on Home.
 - `npm test` all PASS.
+
+## Session 61 — 2026-11-18 (Claude Code, cloud session) · Build 173
+
+**Asked:** a way to show or hide the factory zones.
+
+**Built:**
+- ☰ Menu → View → **Factory zones: Show / Hide**, saved per device in `OPT.zhide`.
+- Hidden means no tint, fences or name labels, in 2D and 3D.
+- Zones still exist and still count: dashboard, stats and efficiency are unchanged.
+- While the Factory Zone tool, zone cutting or a zone's panel is in use, they show anyway (`zHidden()`).
+
+**Verified:** new smoke check for the menu switch, hiding, the zone tool still showing them, and showing again. `npm test` all PASS.

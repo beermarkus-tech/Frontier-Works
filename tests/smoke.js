@@ -390,6 +390,9 @@ const server=require('./serve.js');
   const t2=S.trains[0];if(t2){const tl=trTiles(t2)[1],inv=S.inv.steel_beam||0;removeEnt(entAt(tl[0],tl[1]),false,true);tick(0.05);out.removed=S.trains.length===0&&(S.inv.steel_beam||0)>inv;}
   for(const e of [...ents.values()])if(e.k==='rail'||e.k==='cbay'||e.d==='burner')removeEnt(e,false,true);S.ub=S.ub.filter(x=>!['rail','rswitch','tstop','cbay'].includes(x));return out;});
  check(`trains: ${Object.entries(trn).map(([k,v])=>k+'='+v).join(' ')}`,Object.entries(trn).every(([k,v])=>k==='bad'?v===0:v===true));
+ // show/hide factory zones (Session 61): the Menu switch hides tint, fence and labels; the zone tool still shows them
+ const zh=await p.evaluate(()=>{const out={};openPanel('menu');out.btn=!!document.querySelector('#pbody [data-act="optZones"]');ACT.optZones('0');out.hidden=OPT.zhide===true&&zHidden();setTool('zone');out.toolShows=!zHidden();setTool(null);ACT.optZones('1');out.shown=!OPT.zhide&&!zHidden();ACT.closePanel();return out;});
+ check(`zones show/hide: ${Object.entries(zh).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(zh).every(v=>v===true));
  // calculator (Session 53): toolbar button opens it, buttons and keyboard work, parser rules, closes and stays closed
  await p.evaluate(()=>{ACT.closePanel();document.getElementById('fCalc').click();});await p.waitForTimeout(100);
  for(const k of ['1','2','×','3','='])await p.click(`#calc [data-v="${k}"]`);const cal1=await p.evaluate(()=>CALC.ex);

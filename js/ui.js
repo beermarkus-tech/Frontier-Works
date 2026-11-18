@@ -334,6 +334,7 @@ function menuHtml(){
  return`<h4>This map</h4><div class="muted">${big?`${MW}×${MH} tiles with seven biomes.`:`${MW}×${MH} tiles, made before biomes existed. Your factory stays on it. For the big ${MAP_NEW}×${MAP_NEW} biome island, start a new map (bottom of this menu).`}</div>
  <h4>Tools</h4><button class="btn" data-act="openPlan">📐 Production planner</button> <button class="btn" data-act="openCodex">📖 Recipe codex</button> <button class="btn" data-act="calcOpen">🧮 Calculator</button>
  <h4>View</h4><div class="chips"><button class="btn chip ${V3.on?'':'on'}" data-act="view" data-v="2d">2D map</button><button class="btn chip ${V3.on?'on':''}" data-act="view" data-v="3d">3D view</button></div>
+ <div class="row"><span>Factory zones</span><span class="chips"><button class="btn chip ${OPT.zhide?'':'on'}" data-act="optZones" data-v="1">Show</button><button class="btn chip ${OPT.zhide?'on':''}" data-act="optZones" data-v="0">Hide</button></span></div>
  <div class="row"><span>Efficiency rings on buildings</span><span class="chips"><button class="btn chip ${OPT.eff?'on':''}" data-act="optEff" data-v="1">On</button><button class="btn chip ${OPT.eff?'':'on'}" data-act="optEff" data-v="0">Off</button></span></div>
  <div class="row"><span>Frame rate</span><span class="chips"><button class="btn chip ${OPT.fps30?'':'on'}" data-act="optFps" data-v="0">Full</button><button class="btn chip ${OPT.fps30?'on':''}" data-act="optFps" data-v="1">30 fps (saves battery)</button></span></div>
  <div class="row"><span>Performance meter</span><span class="chips"><button class="btn chip ${OPT.perf?'on':''}" data-act="optPerf" data-v="1">On</button><button class="btn chip ${OPT.perf?'':'on'}" data-act="optPerf" data-v="0">Off</button></span></div>
@@ -421,6 +422,7 @@ const ACT={
  hlNode:()=>{const n=UI.panel.arg;UI.hl.types=[n.t];hlChip();toast(`Highlighting ${hlNodes().length} ${IT[NODE_T[n.t][0]].n} nodes`);},
  hlFly:()=>{const nr=hlNearest(hlNodes());if(!nr)return;const x=nr.n.x+0.5,y=nr.n.y+0.5;if(V3.on)v3Go({x,y,dist:Math.min(C3.dist,40)});else{camT.x=x;camT.y=y;camT.z=Math.max(camT.z,1);vel.x=vel.y=0;zAnchor=null;}},
  clockStep:v=>{const e=UI.panel&&ents.get(UI.panel.arg);if(!e)return;const mx=S.oc?250:100,c=Math.max(10,Math.min(mx,Math.round(e.clock*100)+(+v)));e.clock=c/100;const st=$('pbody').scrollTop;renderPanel(true);$('pbody').scrollTop=st;},
+ optZones:v=>{OPT.zhide=v==='0';saveOpt();renderPanel(true);toast(OPT.zhide?'Factory zones hidden (they still exist; the zone tool shows them)':'Factory zones shown');},
  optEff:v=>{OPT.eff=v==='1';saveOpt();renderPanel(true);},
  planNode:()=>{const n=UI.panel.arg;planFrom(n.t,n.p,null,1);},
  planDrill:()=>{const e=ents.get(UI.panel.arg);if(!e)return;planFrom(d3res(e),e.node?e.node.p:1,e.d,e.clock||1);},
