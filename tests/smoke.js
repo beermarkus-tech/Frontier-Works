@@ -13,7 +13,8 @@ const server=require('./serve.js');
   const n=fw.nodes(),iron=n.find(x=>x.t==='iron'&&x.p===2),coal=n.find(x=>x.t==='coal'&&x.p===1),P=(...a)=>fw.placeEnt(...a);
   const res=[P('drill1',iron.x,iron.y,0),P('belt1',iron.x+2,iron.y,0),P('belt1',iron.x+3,iron.y,0),P('smelter',iron.x+4,iron.y,0)];fw.entAt(iron.x+4,iron.y).r='r_iron_ingot';
   res.push(P('belt1',iron.x+6,iron.y+1,0),P('drill1',coal.x,coal.y,0),P('belt1',coal.x-1,coal.y,2),P('burner',coal.x-3,coal.y,0));fw.entAt(coal.x-3,coal.y).fuel.coal=10;
-  res.push(P('pole1',MW/2-7,MH/2-7,0),P('pole1',MW/2-7,MH/2,0));const before=S.inv.iron_ingot||0;for(let i=0;i<20*120;i++)fw.tick(0.05);
+  res.push(P('pole1',MW/2-7,MH/2-7,0),P('pole1',MW/2-7,MH/2,0));for(const [x,y] of [[MW/2-7,MH/2-7],[MW/2-7,MH/2]]){const e=fw.entAt(x,y),o=pnNearest(e);if(o)pnLink(e,o);}   /* wired by hand since Session 58e (no automatic wires) */
+  const before=S.inv.iron_ingot||0;for(let i=0;i<20*120;i++)fw.tick(0.05);
   const g=fw.entAt(coal.x-3,coal.y);fw.ACT.closePanel();openPanel('ent',g.id);const txt=document.getElementById('pbody').innerText,chip=document.getElementById('pbuild').textContent;fw.ACT.closePanel();
   const m=txt.match(/Burns now\s*([\d.]+)\s*Coal\/min/);return{res,ingots:(S.inv.iron_ingot||0)-before,gen:{burn:m&&+m[1],exp:+(12*Math.min(1,g._ls)).toFixed(1),chip,full:/At full load[\s\S]*12 Coal\/min/.test(txt)}};});
  check('placements',r.res.every(x=>x===''));
@@ -667,15 +668,17 @@ const server=require('./serve.js');
   const PN=[...ents.values()].filter(isPN);   // no other poles/generators within wire range of the test area (they would take the wires)
   for(let r=10;r<170&&X==null;r+=2)for(let a=0;a<64;a++){const x=Math.round(MW/2+r*Math.cos(a/10)),y=Math.round(MH/2+r*Math.sin(a/10));let ok=PN.every(e=>e.x<x-28||e.x>x+52||e.y<y-28||e.y>y+40);for(let j=-2;j<14&&ok;j++)for(let i=-2;i<26&&ok;i++)if(canPlace('incin',x+i,y+j))ok=false;if(ok){X=x;Y=y;break;}}
   // 1) a cluster of 6 poles all in range of each other + a burner: one wire per new node → 6 wires (old rule: a web of ~15)
-  P('burner',X,Y+8,0);for(const [i,j] of [[4,8],[6,8],[4,10],[6,10],[5,12],[8,9]])P('pole1',X+i,Y+j,0);tick(0.05);
-  const cl=pnodes.filter(e=>e.y>=Y+8&&e.y<Y+14&&e.x>=X&&e.x<X+12);out.tree=pwLinks.filter(([a,b])=>cl.includes(a)&&cl.includes(b)).length===cl.length-1&&new Set(cl.map(e=>e.grid)).size===1;
+  P('burner',X,Y+8,0);S.inv.wire=(S.inv.wire||0)+50;S.inv.concrete=(S.inv.concrete||0)+20;setTool('pole1');tap({x:X+4,y:Y+8});const pa=fw.entAt(X+4,Y+8);tap({x:X+10,y:Y+8});const pb=fw.entAt(X+10,Y+8);tap({x:X+10,y:Y+12});const pc=fw.entAt(X+10,Y+12);
+  tap({x:X+24,y:Y+12});const far=!fw.entAt(X+24,Y+12);tap({x:X+10,y:Y+12});tick(0.05);   /* Session 58e: tap start, tap end; the line continues; too far is refused; tapping the last pole finishes; nothing wires itself */
+  out.tree=!!pa&&!!pb&&!!pc&&pnLinked(pa,pb)&&pnLinked(pb,pc)&&!pnLinked(pa,pc)&&far&&!UI.wireStart&&pnPeers(pa).length===1;setTool(null);
+  const cl=pnodes.filter(e=>e.y>=Y+8&&e.y<Y+14&&e.x>=X&&e.x<X+12);
   // 2) migration: strip wires (old save), load → tree with the same single grid
   const o=JSON.parse(serialize());delete o.S.pw2;for(const e of o.es)if(e[4])delete e[4].pl;load(JSON.stringify(o));tick(0.05);
   const cl2=pnodes.filter(e=>e.y>=Y+8&&e.y<Y+14&&e.x>=X&&e.x<X+12);out.migrated=!!S.pw2&&pwLinks.filter(([a,b])=>cl2.includes(a)&&cl2.includes(b)).length===cl2.length-1&&new Set(cl2.map(e=>e.grid)).size===1;
   for(const e of cl2)removeEnt(e,false,true);
   // 3) switch: burner — pole A — switch — pole B — smelter (only reachable through the switch)
   P('burner',X,Y,0);P('pole1',X+6,Y,0);P('pswitch',X+12,Y,0);P('pole1',X+18,Y,0);P('smelter',X+19,Y+2,0);
-  const g=fw.entAt(X,Y),A=fw.entAt(X+6,Y),sw=fw.entAt(X+12,Y),Bp=fw.entAt(X+18,Y),sm=fw.entAt(X+19,Y+2);sm.r='r_iron_ingot';sm.inb={iron_ore:50};
+  const g=fw.entAt(X,Y),A=fw.entAt(X+6,Y),sw=fw.entAt(X+12,Y),Bp=fw.entAt(X+18,Y),sm=fw.entAt(X+19,Y+2);out.noAuto=!pnPeers(A).length;pnLink(g,A);pnLink(A,sw);pnLink(sw,Bp);sm.r='r_iron_ingot';sm.inb={iron_ore:50};
   const run=n=>{for(let i=0;i<n;i++){g.fuel={coal:50};sm.inb.iron_ore=50;tick(0.05);}};run(40);
   out.chain=pnLinked(A,sw)&&pnLinked(sw,Bp)&&!pnLinked(A,Bp)&&sm.grid===g.grid&&sm.pw===1;
   if(!out.chain)out.dbg=[pnLinked(g,A),pnLinked(A,sw),pnLinked(sw,Bp),pnLinked(A,Bp),sm.grid===g.grid,sm.pw,pnPeers(A).map(e=>e.d+'@'+(e.x-X)+','+(e.y-Y)).join('/'),sm.pnode&&(sm.pnode.d+'@'+(sm.pnode.x-X)+','+(sm.pnode.y-Y))].join(';');
@@ -689,7 +692,7 @@ const server=require('./serve.js');
   // 4) removing the switch: pole B is left without wire → rewires to the nearest in range (none within 10 except… A is 12 away) → stays unwired
   // so instead remove pole A: the burner (8 range) and switch (10) are 6 apart from A; switch rewires to the burner? (distance 11 > 10) → no; place a pole between first
   P('pole1',X+7,Y+4,0);const mid=fw.entAt(X+7,Y+4);removeEnt(fw.entAt(X+6,Y),true,true);tick(0.05);
-  out.rewire=fw.entAt(X+19,Y+2).grid===fw.entAt(X,Y).grid&&pwLinks.length>0;
+  out.rewire=fw.entAt(X+19,Y+2).grid!==fw.entAt(X,Y).grid;   /* Session 58e: removing a pole no longer re-routes lines */
   // 5) manual wire: connect B directly to mid by hand, then cut it
   P('pole1',X+16,Y+6,0);const Q=fw.entAt(X+16,Y+6),swQ=fw.entAt(X+12,Y);const pre=pnLinked(Q,swQ);openPanel('ent',Q.id);ACT.pnWire();tap({x:X+12,y:Y});out.manual=!pre&&pnLinked(Q,swQ);
   openPanel('ent',Q.id);ACT.pnCut(String(swQ.id));out.cut=!pnLinked(Q,swQ);ACT.closePanel();

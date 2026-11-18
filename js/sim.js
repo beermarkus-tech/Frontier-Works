@@ -163,7 +163,7 @@ function placeEnt(id,x,y,dir,free){
  if(cfm&&afford(B.fmeter.cost)){pay(B.fmeter.cost);e.fm=1;e.fa=[];}   // the meter stays on an upgraded belt
  ents.set(e.id,e);e.born=animT;
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(y+j)*MW+x+i]=e.id;
- if(isPN(e)&&S.pw2)pnAuto(e);
+ if(isPN(e)&&S.pw2&&e.k==='gen'){for(const p of perim(e)){const o=entAt(p.x,p.y);if(o&&o.k==='gen'&&o!==e){pnLink(e,o);break;}}}   /* no automatic wires (Session 58e, Markus): only a generator touching another generator joins it, so solar fields stay one network */
  topoDirty=true;return '';
 }
 function initEnt(e,d){
@@ -204,7 +204,7 @@ function moveEnt(e,nx,ny){const why=canMove(e,nx,ny);if(why)return why;if(nx===e
  for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(oy+j)*MW+ox+i]=0;e.x=nx;e.y=ny;for(let j=0;j<w;j++)for(let i=0;i<w;i++)grid[(ny+j)*MW+nx+i]=e.id;
  if(e.k==='dpad')for(const o of ents.values())if(o.k==='dpad'&&o.lx===ox&&o.ly===oy){o.lx=nx;o.ly=ny;}
  initEnt(e,B[e.d]);e.born=animT;topoDirty=true;
- if(peers){pnAuto(e);for(const p of peers)if(!pnPeers(p).length)pnAuto(p);pnHeal(peers);}return '';}
+ if(peers){for(const p of peers)if(ents.has(p.id)&&pnRange(e,p))pnLink(e,p);}return '';}   /* a moved node keeps the wires still in reach; nothing is added (Session 58e) */
 /* Eraser (Session 36d): empty a building's contents without removing it. Items go back to the item stock, fluids drain away
    (a pipe or junction empties its whole network). Storage (crates, tanks, pads, Core) is left alone. Returns the number of items/units removed. */
 const ERASE_K=['belt','pipe','router','cross','mach','drill','pump','gen'];
@@ -260,7 +260,7 @@ function removeEnt(e,ref,silent){
  const peers=isPN(e)?pnPeers(e):null;if(peers)for(const p of peers)pnUnlink(e,p);
  for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=0;
  ents.delete(e.id);
- if(peers&&S.pw2){for(const p of peers)if(!pnPeers(p).length)pnAuto(p);pnHeal(peers);}
+ /* removing a node only removes its wires; lines are not re-routed automatically (Session 58e) */
  if(ref){refund(B[e.d].cost);
   if(!silent&&e.item)give(e.item,1);
   if(e.k==='cross'){if(e.hs)give(e.hs,1);if(e.vs)give(e.vs,1);}

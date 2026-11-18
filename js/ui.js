@@ -72,7 +72,7 @@ function clipApply(e,s){if(e.k==='mach'&&'r' in s&&s.r!==e.r&&(!s.r||(RC[s.r]&&u
  for(const k of CLIP_K){if(k==='r'||!(k in s))continue;let v=JSON.parse(JSON.stringify(s[k]));if(k==='clock')v=Math.max(0.1,Math.min(S.oc?2.5:1,v));e[k]=v;}topoDirty=true;}
 function clipHtml(e){if(!clipable(e))return'';const same=UI.clip&&UI.clip.d===e.d;
  return`<h4>Settings</h4><div class="btnrow"><button class="btn" data-act="clipCopy">📋 Copy settings</button>${same?'<button class="btn" data-act="clipPaste">Paste settings</button><button class="btn" data-act="clipTool">Paste onto others</button>':''}</div>${UI.clip&&!same?`<div class="muted">Copied settings are from a ${B[UI.clip.d].n}: they only paste onto the same building.</div>`:''}`;}
-function setTool(t){if(t!==UI.tool)UI.bpAt=null;UI.tool=t;linePrev=null;refreshTools();updInfo();}
+function setTool(t){if(t!==UI.tool){UI.bpAt=null;UI.wireStart=null;}UI.tool=t;linePrev=null;refreshTools();updInfo();}
 function setHTML(el,h){if(el&&el.__h!==h){el.__h=h;el.innerHTML=h;}}
 
 /* ---------- panels ---------- */

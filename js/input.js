@@ -29,6 +29,17 @@ function armLongPress(g,t0){if(UI.tool||UI.moveId||UI.linkFrom)return;const en=t
   try{navigator.vibrate&&navigator.vibrate(18);}catch(_){}sfx('click');toast(`Moving ${B[en.d].n}: drag and let go`);},450);}
 function dragMove(g,t){if(!t)return;const nx=t.x+g.mv.dx,ny=t.y+g.mv.dy;movePrev={e:g.mv.e,nx,ny,ok:!canMove(g.mv.e,nx,ny)};}
 function dropMove(){const m=movePrev;movePrev=null;if(!m)return;if(!ents.has(m.e.id))return;const why=moveEnt(m.e,m.nx,m.ny);if(why){toast(why+': not moved');sfx('deny');}else{sfx('move');UI.sel=m.e.id;refreshTools();}}
+/* Power lines (Session 58e, Markus): with a pole tool, the first tap picks the start (an existing pole/switch/generator, or places a new pole),
+   the second tap the end (an existing node, or a new pole within reach); a wire joins them and the end becomes the next start.
+   Tapping the current start again (or another tool / Esc) finishes the line. No wires are made automatically. */
+function poleTap(t,tool){const d=B[tool],hit=entAt(t.x,t.y),start=UI.wireStart&&ents.get(UI.wireStart);
+ const place=()=>{const fp=footprint(tool,t.x,t.y),why=placeEnt(tool,fp.x,fp.y,0);if(why){toast(why==='same'?'Already a pole there':why);sfx('deny');return null;}sfx('place');refreshTools();return entAt(fp.x,fp.y);};
+ if(!start){const s0=isPN(hit)?hit:hit?null:place();if(!s0){if(hit){toast(`Start a line on a pole, switch or generator`);sfx('deny');}return;}UI.wireStart=s0.id;toast('Line started: tap where it goes next (tap this pole again to finish)');updInfo();return;}
+ if(hit===start){UI.wireStart=null;toast('Line finished');updInfo();return;}
+ if(isPN(hit)){if(!pnRange(start,hit)){toast(`Too far for a wire: ${B[start.d].n} reaches ${Math.max(B[start.d].link||0,B[hit.d].link||0)} tiles`);sfx('deny');return;}if(!pnLinked(start,hit))pnLink(start,hit);sfx('belt');UI.wireStart=hit.id;updInfo();return;}
+ if(hit){toast('Blocked: tap empty ground or a pole');sfx('deny');return;}
+ const fp=footprint(tool,t.x,t.y),probe={d:tool,k:'pole',x:fp.x,y:fp.y,w:1,h:1};if(!pnRange(start,probe)){toast(`Too far: a wire reaches ${Math.max(B[start.d].link||0,d.link||0)} tiles`);sfx('deny');return;}
+ const n=place();if(!n)return;pnLink(start,n);UI.wireStart=n.id;updInfo();}
 function tap(t){
  if(UI.wireFrom){const a=ents.get(UI.wireFrom),b=entAt(t.x,t.y);UI.wireFrom=null;updInfo();if(!a)return;
   if(!isPN(b)||b===a)toast('That is not a pole, tower, switch or generator');else if(!pnRange(a,b))toast('Too far for a wire (out of range)');else if(pnLinked(a,b))toast('Already connected');else{pnLink(a,b);toast('Wire added');}
@@ -46,6 +57,7 @@ function tap(t){
  if(tool==='zone'){const v=zoneAt(t.x,t.y);if(v)openPanel('zone',v);else toast('Drag to draw a factory zone');return;}
  if(tool==='fmeter'){const e=entAt(t.x,t.y),r=toggleMeter(e);toast(r==='on'?'Flow Meter on: the rate settles over 30 s':r==='off'?'Flow Meter taken off (refunded)':r);refreshTools();return;}
  if(tool==='clr'){const e=entAt(t.x,t.y);if(!e)return;if(!ERASE_K.includes(e.k)){toast(`The eraser leaves ${B[e.d].n} alone (it's storage)`);return;}const n=eraseEnt(e);sparkle(e);sfx('erase');toast(n?`Emptied ${B[e.d].n}: ${n} back to stock (fluids drain away)`:`${B[e.d].n} was already empty`);refreshTools();return;}
+ if(tool&&B[tool]&&B[tool].k==='pole'){poleTap(t,tool);return;}   /* power lines: tap start, tap end (Session 58e) */
  if(tool&&B[tool]){const d=B[tool];
   if(isLine(d.k)||d.k==='rail'){const o=entAt(t.x,t.y);buildPath(tool,[{x:t.x,y:t.y,d:o&&o.k===d.k?o.dir:UI.rot}]);return;}   // tapping an existing belt/pipe upgrades it in place, keeping its direction
   const fp=footprint(tool,t.x,t.y),st=d.k!=='bpst'&&stOf(fp.x,fp.y);if(st){const w2=dsgPlace(st,tool,fp.x,fp.y,UI.rot);if(w2){toast(w2);sfx('deny');}else sfx('place');return;}   /* inside a Blueprint Station: a design piece */
@@ -109,7 +121,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();vel.x=vel.y=0;const m=toTile(
 const keys=new Set();
 addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(typeof calcKeyboard==='function'&&calcKeyboard(e))return;const k=e.key.toLowerCase();keys.add(k);
  if(k==='r'){if(UI.tool)ACT.rotate();else if(UI.panel&&UI.panel.kind==='ent')ACT.rotSel();}
- else if(k==='escape'){setTool(null);UI.moveId=null;UI.wireFrom=null;UI.zoneCut=null;zonePrev=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
+ else if(k==='escape'){if(UI.wireStart){UI.wireStart=null;toast('Line finished');}setTool(null);UI.moveId=null;UI.wireFrom=null;UI.zoneCut=null;zonePrev=null;movePrev=null;autoClose();}else if(k==='x'||k==='delete')ACT.toolDel();else if(k==='c')ACT.toolClr();else if(k==='h')ACT.home();else if(k==='v')ACT.toggle3d();
  else if(k==='q'&&hover){const x=entAt(hover.x,hover.y);if(x&&B[x.d].cat&&ub(x.d)){UI.cat=B[x.d].cat;UI.rot=x.dir||0;UI.rotA=UI.rot*90;buildCats();setTool(x.d);}}});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 addEventListener('blur',()=>keys.clear());

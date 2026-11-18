@@ -3282,3 +3282,35 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Cause:** the top bar (and the Stats panel) summed the demand of every power network, including the sections cut off by switches. Machines there still want power, so their unmet demand kept being counted although no generator serves it. The solar network itself wasn't overloaded (no fuse warning).
 
 **Fixed:** both totals now only count networks that have generators. The power-switch smoke check now also confirms that a switched-off machine's demand drops out of the total. `npm test` all PASS.
+
+## Session 58e — 2026-11-18 (Claude Code, cloud session) · Build 163
+
+**Asked:** draw power lines by tapping twice, start point then end point, with no automatic connections to nearby poles, so lines stay clean.
+
+**Built (`poleTap` in `js/input.js`):**
+- **Drawing a line** (Power Pole, Power Tower or Power Switch tool):
+  - **First tap:** the start, either an existing pole, switch or generator, or empty ground (places a new pole).
+  - **Second tap:** an existing node, or empty ground within wire reach (places a new pole). A wire joins them, and the end becomes the next start, so lines chain.
+  - **Finishing:** tap the current start again, press Esc, or choose another tool.
+- **Messages:** "too far" (with the reach in tiles) and "blocked" when a tap doesn't work.
+- **Preview:** the current start is outlined in yellow and its reach shown as a dashed circle. A line runs to the finger: yellow when in reach, red dashed when too far.
+- **No automatic wires:**
+  - Placing a pole never wires it.
+  - Removing a pole only removes its wires; nothing is re-routed.
+  - A moved node keeps only the wires still in reach.
+  - **Exception (my default):** a generator placed touching another generator joins it, so solar fields stay one network without wiring each panel.
+- The Power Pole and Power Tower descriptions explain the taps.
+
+**Verified:**
+- Screenshot of a line being drawn: a chain of three poles, start highlighted, preview line.
+- Power smoke check rewritten:
+  - tap, tap, tap makes a chain with exactly two wires
+  - a tap too far away places nothing; tapping the last pole again finishes
+  - a pole placed next to a burner is not wired to it
+  - the switch chain is now wired by hand
+  - removing a pole no longer re-routes lines
+- The starter-factory test wires its two poles by hand.
+- `npm test` all PASS.
+
+**Known issues:**
+- Poles inside a pasted blueprint aren't wired anymore. Wire them with the pole tool or "Connect to…".

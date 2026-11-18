@@ -27,8 +27,8 @@ and keep the game playable after every commit.
 ## Architecture
 - Classic `<script>` files sharing one global scope, loaded in order: data → sim → render → ui → plan → zones → blueprint → view3d → input → pwa → audio → sync → main (Three.js is injected by `view3d.js` on first 3D use). Top-level `const`/`let` are visible across files; don't redeclare names.
 - Sim runs at fixed 20 ticks/s (`tick(0.05)` in `js/sim.js`). Belts hold one item per tile; `beltOrder` processes downstream first. Buildings push output only into belts/pipes pointing away from them; input is any belt/pipe pointing into them.
-- Power: wires are saved per node (`e.pl` = corners of linked poles/generators/switches, both ends). A new node wires itself to the nearest node in range
-  (`pnAuto`); removing/moving one rewires orphans and bridges splits (`pnHeal`). Old saves without `S.pw2` are reduced once to a spanning tree (`pnMigrate`).
+- Power: wires are saved per node (`e.pl` = corners of linked poles/generators/switches, both ends). No automatic wires (Session 58e): pole tools draw lines with `poleTap`
+  (input.js; `UI.wireStart` = current start, tap start then end, chain continues); only a generator touching a generator links on placement; removing a node drops its wires, moving keeps those in reach (`pnAuto`/`pnHeal` remain unused). Old saves without `S.pw2` are reduced once to a spanning tree (`pnMigrate`).
   Power Switch (`pswitch`, k 'pole', sup 0): `e.off` cuts its wires, `e.tx` = name. Consumers attach to the nearest node with supply range (`e.pnode`).
   Demand > capacity trips the fuse (`trip` flag on nodes).
 - Map: `MW`/`MH` are variables (128 for old saves, `MAP_NEW`=384 for new). `genClassic` must never change (old saves rely on it); biome maps use `genBiome` + `BIOMES` in `data.js`.
