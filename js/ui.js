@@ -118,7 +118,8 @@ function entStatic(e){
   if(!isLine(t.k)&&t.k!=='router')return'⚠ Nothing here takes items.';return'';};
  const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
  if(e.k==='bpst')h+=stHtml(e);   /* Blueprint Station */
- if(typeof trainStatic==='function')h+=trainStatic(e);   /* Train Stop, Cargo Bay (Session 56) */
+ if(typeof trainStatic==='function')h+=trainStatic(e);
+ if(typeof roverStatic==='function')h+=roverStatic(e);   /* Train Stop, Cargo Bay (Session 56) */
  h+=clipHtml(e);   /* copy / paste settings (Session 50) */
  if(e.k==='router'&&d.sub==='valve'){const why={pipe:'⚠ Needs a pipe on both ends: behind the valve (fluid comes in) and in front (the arrow side).',same:'⚠ Both ends are the same pipe network, so the valve can do nothing. The two sides must only be connected through the valve.',mix:'⚠ The pipe in front holds a different fluid.',empty:'Nothing to pass on: the pipe behind is empty.',full:'The pipe in front is full: it takes no more right now.',topped:'Top up: the pipe ahead is at least half full, so the valve waits until it needs more.'}[e.vwhy];
   h+=`<h4>Mode</h4><div class="chips"><button class="btn chip ${e.vm?'':'on'}" data-act="valveMode" data-v="0">Fixed limit</button><button class="btn chip ${e.vm?'on':''}" data-act="valveMode" data-v="1">Top up</button></div>
@@ -217,6 +218,7 @@ function entDyn(e){
  }
  if(e.k==='lpad')h+=lpadHtml(e);
  if(typeof trainDyn==='function')h+=trainDyn(e);
+ if(typeof roverDyn==='function')h+=roverDyn(e);
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
   if(e.item){const rate=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}

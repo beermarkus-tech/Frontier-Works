@@ -3351,3 +3351,29 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Verified:** screenshot with no hover after two taps; the start pole is ringed. `npm test` all PASS.
 
 **Open question:** Moon Rovers. A proposal was sent (Rover Depot, 200 items per trip, 6 tiles/s, drives around obstacles, tyre tracks, Moon goal 2). Waiting for Markus's go.
+
+## Session 59 — 2026-11-18 (Claude Code, cloud session) · Build 167
+
+**Asked:** Moon Rovers for transport between far-away places ("belts are fun, but rovers would be more fun"). The proposal was accepted as described.
+
+**Built (new file `js/rover.js`, hooks in sim/ui/input/render/view3d):**
+- **Rover Depot** (`rdepot`): 3×3, 10 MW (recharging), holds 600, Moon only, unlocked by Moon goal 2 (saves past it get it on load). It is built from Moon materials plus 10 concrete.
+  - Belts deliver into it; an unlinked depot passes goods on to belts.
+  - Panel: "Send to…" (tap another depot), Unlink, "+ Add a rover / − Remove one" (up to 3; extra rovers cost 20 iron plates, 10 copper sheets, 20 wire), per-rover status, route length, round trip, throughput, delivered so far.
+- **Rovers** (`ROVER`): 200 items per trip, about 6 tiles/s (slower in turns), 2 s to load and unload; they wait up to 10 s for a full load.
+  - The route is found with A* (8 directions) around buildings and crater rims, then straightened and its corners rounded. Belts, pipes and track can be crossed.
+  - Rovers pass through each other. If there is no route, the panel says so and a red dashed line shows it.
+  - The depot needs power to send rovers; driving needs none.
+- **Look:**
+  - 2D: six-wheeled white rovers with a cargo bed in the cargo's colour, a dashed route line for the selected depot, tyre tracks that fade over 2 minutes, and dust puffs.
+  - 3D: a white rover model with a coloured cargo block, bouncing slightly on the move; a depot with three garage bays and a charging lamp.
+
+**Verified:**
+- A browser run: two depots 40 tiles apart. The rover delivered all 400 plates in two trips; route finding took a few ms.
+- Screenshots in 2D (route line, tracks, depot panel) and 3D.
+- New smoke check: Moon-only, Moon goal 2 unlock, route found, delivery, tracks, panel, an extra rover costs materials, save/load keeps rovers and route.
+- `npm test` all PASS.
+
+**Known issues:**
+- Tyre tracks are 2D only and aren't saved.
+- Rovers ignore each other. Very long routes (over about 200 tiles around big crater fields) may need a second depot in between.

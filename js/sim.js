@@ -180,6 +180,7 @@ function initEnt(e,d){
   case 'storage':e.store=e.store||{};e.rr=0;break;
   case 'sign':e.tx=e.tx||'';e.tc=e.tc||0;break;
   case 'bpst':e.dsg=Array.isArray(e.dsg)?e.dsg:[];e.dn=e.dn||'';e.want=true;break;   /* Blueprint Station: design pieces + name; always draws its small power */
+  case 'rdepot':e.store=e.store||{};e.rr=0;e.rn=e.rn||1;e.rv=Array.isArray(e.rv)?e.rv:[];break;   /* Rover Depot (js/rover.js) */
   case 'lpad':e.store=e.store||{};e.lt=e.lt||0;e.nl=e.nl||0;break;   /* Launch Pad: loaded rocket parts + kit, launch timer (s, 0 = on the ground), launches so far */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
   case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();if(d.sub==='switch')e.bs=e.bs||((typeof UI!=='undefined'&&UI.swSide)||1);break;   /* trains (js/train.js) */
@@ -269,6 +270,7 @@ function removeEnt(e,ref,silent){
   for(const b of [e.inb,e.outb,e.store,e.fuel])if(b)for(const k in b)give(k,Math.floor(b[k]));
   if((e.k==='drill')&&e.node&&e.buf)give(NODE_T[e.node.t][0],e.buf);
   if(e.k==='dpad'&&e.dr)for(const k in e.dr.c)give(k,e.dr.c[k]);
+  if(e.k==='rdepot'){for(const r of e.rv||[])for(const k in r.c)give(k,r.c[k]);for(let i=1;i<(e.rn||1);i++)refund(ROVER.cost);}
  }
  topoDirty=true;
 }
@@ -306,7 +308,7 @@ function accept(e,item,dir,carry){
    if(item==='water'&&d.water){if(e.water>=100)return false;e.water++;return true;}
    if(!has(d.fuels,item))return false;const cap=item==='fuel_rod'?5:50;if((e.fuel[item]||0)>=cap)return false;e.fuel[item]=(e.fuel[item]||0)+1;return true;}
   case 'cbay':{if(fl||e.bm)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}
-  case 'storage':case 'dpad':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
+  case 'storage':case 'dpad':case 'rdepot':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed()[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;CORE.cur[item]=(CORE.cur[item]||0)+1;zStat('k',e,item,1);return true;
@@ -389,6 +391,7 @@ function rebuildTopo(){
   if(best){best.grid.cons.push(e);e.grid=best.grid;e.pnode=best;}}
  buildNets();
  if(typeof trainTopo==='function')trainTopo();
+ if(typeof roverTopo==='function')roverTopo();
  for(const v of valves){const bk=entAt(v.x-DX[v.dir],v.y-DY[v.dir]),fr=entAt(v.x+DX[v.dir],v.y+DY[v.dir]);v.va=pipeLike(bk)&&pipeFace(bk,v.dir)?bk.net:null;v.vb=pipeLike(fr)&&pipeFace(fr,(v.dir+2)&3)?fr.net:null;}
 }
 /* ---------- Fluid networks ----------
@@ -589,6 +592,7 @@ function updBuilding(e,dt){
   case 'tank':if(e.amt>0&&e.ft)for(let a=0;a<3&&e.amt>0;a++){if(pushOut(e,e.ft))e.amt--;else break;}break;
   case 'dpad':updPad(e,dt);break;
   case 'lpad':updLpad(e,dt);break;
+  case 'rdepot':if(typeof updRover==='function')updRover(e,dt);break;
  }
 }
 /* Background production (Session 52): what reaches this world's Base Core, in 10 s buckets over the last 5 minutes. When you leave a world

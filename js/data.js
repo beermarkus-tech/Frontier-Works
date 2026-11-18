@@ -138,6 +138,9 @@ D('rswitch',{n:'Rail Switch',k:'rail',sub:'switch',cat:'trans',col:'#d0a040',cos
 D('tstop',{n:'Train Stop',k:'rail',sub:'stop',cat:'trans',col:'#e05a3a',cost:{iron_plate:10,cable:5},desc:'A named track piece where trains halt (the locomotive stops on it, the wagons line up behind). Build trains from its panel. Put Cargo Bays beside the track behind it: 2 tiles per wagon.'});
 D('cbay',{n:'Cargo Bay',k:'cbay',w:2,pw:5,cap:800,cat:'trans',col:'#6f8a52',cost:{iron_plate:20,iron_rod:20,cable:10},desc:'Beside a track behind a Train Stop: loads the wagon next to it (Load: belts fill the bay) or unloads it (Unload: belts carry it away). Holds 800 items. Needs power.'});
 const TRAIN={cap:1000,vmax:16,acc:2.5,brk:4,pw:15,crawl:1.5,xfer:40,car:2,maxW:4,loco:{motor:4,circuit_board:4,steel_beam:10,iron_plate:20},wagon:{steel_beam:4,iron_plate:20,bolts:20}};
+/* Moon Rovers (Session 59): a depot sends ground rovers to another depot; they drive around buildings and crater rims */
+D('rdepot',{n:'Rover Depot',k:'rdepot',w:3,pw:10,cap:600,only:'moon',cat:'trans',col:'#d8dde2',cost:{iron_plate:30,copper_sheet:20,wire:30,concrete:10},desc:'Holds 600 items. Link it to another depot and its rovers drive the goods there (200 per trip), around buildings and crater rims, then come back. Comes with one rover; add up to 3. Recharges rovers (needs power). Only on the Moon.'});
+const ROVER={cap:200,spd:6,load:2,unload:2,wait:10,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 D('lpad',{n:'Launch Pad',k:'lpad',w:6,pw:150,only:'home',cat:'trans',col:'#e8a23a',cost:{heavy_truss:20,cased_girder:60,concrete:400,control_chip:10},desc:'Builds and launches the colony rocket to the Moon. Belt in the rocket parts and the starter kit (or load them from your stock), then press Launch. Needs 150 MW while the rocket is ready.'});
 /* Colony rocket (Session 51, DESIGN.md section 12): parts + the starter kit it carries to the Moon (Moon has no coal or limestone) */
 const ROCKET={parts:{hull_plate:30,heat_shield:15,guidance_core:2,rocket_fuel:60},kit:{iron_plate:200,iron_rod:40,wire:200,cable:50,concrete:120,braced_plate:16,rotor:8,alloy_panel:24,circuit_board:12},lt:10,to:'moon'};
@@ -197,7 +200,7 @@ MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
    'next' = text shown after the last goal. Unlocks count everywhere, like tiers. */
 const WGOALS={moon:[
  {n:'Foothold',req:{iron_plate:200,copper_sheet:100,wire:200},b:['rexc'],r:['r_sinter'],why:'Never run out of concrete: dig regolith anywhere and bake it into blocks.'},
- {n:'Ice Prospecting',req:{concrete:300,quartz_crystal:100,vac_wafer:50},b:['imelt'],r:['r_lunarcrete'],why:'Water on the Moon: ice lies on the floors of dark craters far from the landing site.'},
+ {n:'Ice Prospecting',req:{concrete:300,quartz_crystal:100,vac_wafer:50},b:['imelt','rdepot'],r:['r_lunarcrete'],why:'Water on the Moon: ice lies on the floors of dark craters far from the landing site.'},
  {n:'Lunar Power',req:{lattice:100,vac_wafer:200,concrete:500},b:[],r:['r_wafer_cb','r_moon_alu'],why:'Circuit boards from wafers and aluminium from water: the Moon builds its own Solar Panels.'},
  {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:[],r:[],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need.',next:'Orbital Freighters come next: cargo routes between the Moon and Home.'}]};
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});

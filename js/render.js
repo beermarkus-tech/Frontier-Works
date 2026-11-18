@@ -225,6 +225,8 @@ function paintB(g,id,P,u){
    circ(P*0.5,P*0.62,W*0.24,'#7a7d83');g.fillStyle='#16181b';g.beginPath();g.arc(P*0.5,P*0.62,W*0.18,0,7);g.fill();g.strokeStyle='#3a3d42';g.lineWidth=Math.max(1,u*0.08);for(let k=-2;k<=2;k++){g.beginPath();g.moveTo(P*0.5+k*W*0.06,P*0.62-W*0.16);g.lineTo(P*0.5+k*W*0.06,P*0.62+W*0.16);g.stroke();}
    box(i+W*0.12,i+W*0.14,W*0.14,W*0.72,u*0.06,'#9a6a2a');g.strokeStyle='rgba(30,20,10,0.7)';g.lineWidth=Math.max(1,u*0.06);g.beginPath();for(let y=0.16;y<0.84;y+=0.08){g.moveTo(i+W*0.13,i+W*y);g.lineTo(i+W*0.25,i+W*(y+0.08));g.moveTo(i+W*0.25,i+W*y);g.lineTo(i+W*0.13,i+W*(y+0.08));}g.stroke();
    box(i+W*0.25,i+W*0.36,W*0.17,W*0.05,u*0.03,'#b07a30');dots([[i+W*0.07,i+W*0.07],[i+W*0.93,i+W*0.07],[i+W*0.07,i+W*0.93],[i+W*0.93,i+W*0.93]],u*0.12,'#ff6a3a');break;}
+  case 'rdepot':{box(i,i,W,W,u*0.16,'#5d6066');g.fillStyle='#2b2f34';g.fillRect(i+W*0.08,i+W*0.08,W*0.84,W*0.34);g.fillStyle='#d8dde2';for(let k=0;k<3;k++)g.fillRect(i+W*(0.12+k*0.27),i+W*0.12,W*0.22,W*0.26);   /* Rover Depot (Session 59): three garage bays + a charging pad */
+   g.strokeStyle='#f2c230';g.lineWidth=W*0.03;g.setLineDash([W*0.05,W*0.04]);g.strokeRect(i+W*0.12,i+W*0.52,W*0.76,W*0.36);g.setLineDash([]);g.fillStyle='#5be36a';g.beginPath();g.arc(i+W*0.85,i+W*0.48,W*0.04,0,7);g.fill();break;}
   case 'dpad':{box(i,i,W,W,u*0.16,'#2c333b');g.strokeStyle=col;g.lineWidth=Math.max(1.5,u*0.12);g.beginPath();g.arc(P/2,P/2,W*0.34,0,7);g.stroke();
    g.strokeStyle=shade(col,-25);g.lineWidth=Math.max(1,u*0.06);g.beginPath();g.moveTo(P/2-W*0.18,P/2);g.lineTo(P/2+W*0.18,P/2);g.moveTo(P/2,P/2-W*0.18);g.lineTo(P/2,P/2+W*0.18);g.stroke();
    dots([[i+u*0.3,i+u*0.3],[P-i-u*0.3,i+u*0.3],[i+u*0.3,P-i-u*0.3],[P-i-u*0.3,P-i-u*0.3]],u*0.1,'#ffd36a');break;}
@@ -639,7 +641,7 @@ function render(){
  }
  if(typeof drawTrains==='function')drawTrains(sx,sy,s);   /* trains above buildings (Session 56) */
  // drones (above buildings) and the selected pad's route
- drawDrones(sx,sy,s,lod);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
+ drawDrones(sx,sy,s,lod);if(typeof drawRovers==='function')drawRovers(sx,sy,s);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
  // particles
  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.t+=fdt;if(p.t>p.m){parts.splice(k,1);continue;}p.x+=p.vx*fdt;p.y+=p.vy*fdt;}
  for(const p of parts){if(p.x<x0-2||p.x>x1+2||p.y<y0-2||p.y>y1+2)continue;const f=p.t/p.m,al=(1-f)*(f<0.15?f/0.15:1);ctx.globalAlpha=al*(p.k?0.55:0.45);ctx.fillStyle=p.k?'#eef2f5':'#3a3a3c';ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),s*p.r*(1+f*1.8),0,7);ctx.fill();}

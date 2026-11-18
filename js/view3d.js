@@ -102,7 +102,7 @@ function v3Init(){
  {const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,6,32,32,32);gr.addColorStop(0,'rgba(0,0,0,0.6)');gr.addColorStop(0.55,'rgba(0,0,0,0.34)');gr.addColorStop(1,'rgba(0,0,0,0)');
   g.fillStyle=gr;g.fillRect(0,0,64,64);const t=new T3.CanvasTexture(cv);
   V3.aoP=v3Pool(new T3.PlaneGeometry(1,1).rotateX(-Math.PI/2),new T3.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),{order:1});}
- v3Models();v3Lines();if(typeof v3TrainInit==='function')v3TrainInit();v3ItemsInit();v3SmokeInit();v3Overlays();
+ v3Models();v3Lines();if(typeof v3TrainInit==='function')v3TrainInit();if(typeof v3RoverInit==='function')v3RoverInit();v3ItemsInit();v3SmokeInit();v3Overlays();
  v3Terrain();
  v3Input();addEventListener('resize',v3Resize);v3Resize();v3Quality();
  V3.ready=true;
@@ -310,6 +310,7 @@ function v3Models(){
  def('tstop',[['cyl','#59616a',[0.42,0.6,-0.42],[0.07,1.2,0.07]],['box','#e05a3a',[0.42,1.2,-0.42],[0.06,0.3,0.5]]],[],{h:1.3});
  def('rswitch',[['box','#3a4048',[0.4,0.1,0.4],[0.18,0.2,0.18]],['box','#d0a040',[0.4,0.3,0.4],[0.05,0.3,0.05],{rot:[0,0,0.4]}]],[],{h:0.5});
  {const c=B.cbay.col;def('cbay',[...base(2),['box',c,[0,0.45,0.25],[1.7,0.45,1.1]],['box','#c9a040',[-0.45,0.85,0.25],[0.4,0.35,0.4]],['box','#c9a040',[0.1,0.85,0.25],[0.4,0.35,0.4]],['cyl','#9aa3ab',[0.65,0.9,-0.55],[0.12,1.3,0.12]],['box','#f2c230',[0.3,1.5,-0.55],[0.8,0.1,0.12]]],[],{h:1.6});}
+ {const c=B.rdepot.col;def('rdepot',[...base(3),['box','#5d6066',[0,0.3,0],[2.8,0.2,2.8]],['box',c,[0,0.75,-0.75],[2.6,0.9,1.0]],['box','#2b2f34',[-0.85,0.65,-0.24],[0.7,0.6,0.04]],['box','#2b2f34',[0,0.65,-0.24],[0.7,0.6,0.04]],['box','#2b2f34',[0.85,0.65,-0.24],[0.7,0.6,0.04]]],[['sph','#5be36a',[1.2,0.5,0.2],[0.14,0.14,0.14],{glow:1}]],{h:1.3});}   /* Rover Depot (Session 59) */
  def('rexc',[...base(2),['box','#8c8f96',[0,0.45,0],[1.6,0.4,1.6]],['cyl','#6d7178',[0,0.9,0],[0.3,0.6,0.3]]],[['tor','#d0d4d8',[0,1.0,0.35],[1.0,1.0,1.0],{an:(e,ph)=>({rz:ph*3})}]],{h:1.4});   /* Regolith Excavator (Session 58) */
  def('imelt',[...base(2),['cyl','#c4d6e2',[-0.15,0.8,0],[1.2,1.2,1.2]],['sph','#c4d6e2',[-0.15,1.4,0],[1.2,0.4,1.2]],['box','#9aa3ab',[0.65,0.7,0],[0.25,1.0,0.25]]],[['box','#ff9a50',[-0.15,0.55,0.62],[0.5,0.18,0.03],{glow:1}]],{h:1.7});   /* Ice Melter (Session 58) */
  def('solar',[['box','#3a4048',[0,0.12,0],[1.9,0.24,1.9]],['cyl','#8a939c',[0,0.45,0],[0.12,0.5,0.12]],['box','#1f3f78',[0,0.72,0],[1.8,0.06,1.8],{rot:[-0.35,0,0]}]],[],{h:0.9});   /* Solar Panel (Session 49) */
@@ -667,7 +668,7 @@ function render3D(el){
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
- v3WorldTint();v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();if(typeof v3Trains==='function')v3Trains();v3Signs();v3Meters();v3Zones();v3ZoneLabels();v3Overlay(t);
+ v3WorldTint();v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();if(typeof v3Trains==='function')v3Trains();if(typeof v3Rovers==='function')v3Rovers();v3Signs();v3Meters();v3Zones();v3ZoneLabels();v3Overlay(t);
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}

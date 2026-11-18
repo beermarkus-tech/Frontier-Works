@@ -412,6 +412,20 @@ const server=require('./serve.js');
   ACT.openWorlds();out.panel=/keep producing/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
   S.inv.iron_plate=inv0;delete S.worlds.moon;return out;});
  check(`Moon prep: ${Object.entries(mn).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mn).every(v=>v===true));
+ // Moon Rovers (Session 59): Moon only; a linked depot's rover finds a path and delivers goods; tyre tracks; panel; extra rover costs; save/load
+ const rvr=await p.evaluate(()=>{const keep={ub:S.ub.slice()};let out0=canPlace('rdepot',MW/2+20,MH/2+20)==='Only on the Moon';if(S.worlds&&S.worlds.moon)return{had:false};window.__fw.switchWorld('moon');
+  const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};S.ub.push('rdepot','solar');
+ const free=(x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)!==''||terr[(y+j)*MW+x+i]===3)return false;return true;};
+ let A=null,Bq=null;for(let r=16;r<110&&!A;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(free(x,y,7,3)){A={x,y};break;}}
+ for(let r=40;r<120&&!Bq;r+=2)for(let a=0;a<40;a++){const x=Math.round(A.x+r*Math.cos(a/6.4+1)),y=Math.round(A.y+r*Math.sin(a/6.4+1));if(x>3&&y>3&&x<MW-6&&y<MH-6&&free(x,y,3,3)){Bq={x,y};break;}}
+ out.pl=P('rdepot',A.x,A.y,0)===''&&P('rdepot',Bq.x,Bq.y,0)==='';P('solar',A.x+3,A.y,0);P('solar',A.x+5,A.y,0);
+ const da=entAt(A.x,A.y),db=entAt(Bq.x,Bq.y);da.lx=db.x;da.ly=db.y;da.store={iron_plate:400};tick(0.05);window.__R={da,db,A,Bq};
+  out.home=out0;out.unlock=WGOALS.moon[1].b.includes('rdepot');for(let k=0;k<20*90;k++)tick(0.05);
+  out.route=!!(da._rp&&da._rp.L>10);out.delivered=rvCount(db)>=380;out.tracks=RVTR.length>20;openPanel('ent',da.id);out.panel=/rover route/i.test(document.getElementById('pbody').innerText);
+  S.inv=Object.assign(S.inv,ROVER.cost);ACT.rvAdd();out.add=da.rn===2&&!S.inv.wire;ACT.closePanel();
+  const sv=serialize();load(sv);const d2=entAt(__R.A.x,__R.A.y);out.saved=d2.rn===2&&d2.lx===__R.Bq.x;
+  window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
+ check(`Moon rovers: ${Object.entries(rvr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(rvr).every(v=>v===true));
  // Moon goals (Session 58): every Moon goal can be made from Moon resources with what is unlocked by then; ice on far crater floors;
  // Regolith Excavator digs anywhere; Sintered Blocks; Ice Melter makes water; the Goals panel shows Moon goals there and hands them in
  const mg=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),ur:S.ur.slice(),ms:S.ms,wms:S.wms};
