@@ -3263,3 +3263,14 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Cause:** the generator panel's consumption line (`genUseHtml`) reads the first fuel's energy. The Solar Panel has no fuels, so it threw an error halfway through opening the panel.
 
 **Fixed:** generators without fuel show "Power source: Sunlight, no fuel needed, load %" and no Fuel or Hand-feed sections. The worlds smoke check now opens a Solar Panel's panel and looks for "Sunlight". `npm test` all PASS.
+
+## Session 58c — 2026-11-18 (Claude Code, cloud session) · Build 161
+
+**Asked:** Solar Panels should show the area they power, like poles.
+
+**Built:**
+- **While placing** a generator that also powers buildings (Solar Panel, Coal Burner, Steam Generator, Fuel Turbine, Fission Reactor), its own supply circle shows brightly, with a line to the node it will wire to. The other nodes' circles show too, as before.
+- **A selected pole, switch or generator** (panel open) shows its supply circle.
+- The circle uses the real rule: buildings whose nearest edge lies within `sup` tiles of the node's centre.
+
+**Verified:** screenshots of a selected Solar Panel (circle) and of placing one (own circle, other circles, wire line). `npm test` all PASS.

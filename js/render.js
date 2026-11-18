@@ -647,6 +647,8 @@ function render(){
  // power overlay
  const showPw=tool&&B[tool]&&(B[tool].k==='pole'||B[tool].k==='gen'||B[tool].pw);
  if(showPw){for(const p of pnodes){const c=cen(p);ctx.fillStyle='rgba(255,215,90,0.06)';ctx.strokeStyle='rgba(255,215,90,0.4)';ctx.lineWidth=1.5*DPR;ctx.setLineDash([6*DPR,5*DPR]);ctx.beginPath();ctx.arc(sx(c.x),sy(c.y),B[p.d].sup*s,0,7);ctx.fill();ctx.stroke();ctx.setLineDash([]);}}
+ // the selected pole or generator shows its supply area (Session 58c)
+ {const se=UI.panel&&UI.panel.kind==='ent'&&ents.get(UI.panel.arg);if(se&&isPN(se)&&B[se.d].sup&&!showPw){const c=cen(se),r=B[se.d].sup;ctx.fillStyle='rgba(255,215,90,0.08)';ctx.strokeStyle='rgba(255,215,90,0.6)';ctx.lineWidth=1.5*DPR;ctx.setLineDash([6*DPR,5*DPR]);ctx.beginPath();ctx.arc(sx(c.x),sy(c.y),r*s,0,7);ctx.fill();ctx.stroke();ctx.setLineDash([]);}}
  // wires
  const selN=UI.panel&&UI.panel.kind==='ent'&&ents.get(UI.panel.arg),selG=isPN(selN)?selN.grid:null;
  if(!lod)for(const [a,b,cut] of pwLinks){const A=cen(a),Bc=cen(b),tr=!cut&&a.grid&&a.grid.trip,hi=!cut&&selG&&(a.grid===selG||b.grid===selG);const mx=(A.x+Bc.x)/2,my=(A.y+Bc.y)/2+0.5;if(cut)ctx.setLineDash([s*0.25,s*0.2]);
@@ -666,7 +668,8 @@ function render(){
   else if(isLine(d.k)){const o=entAt(fp.x,fp.y);drawLines([{x:fp.x,y:fp.y,dir:o&&o.k===d.k?o.dir:UI.rot,d:tool,k:d.k,spd:d.spd,cin:null}],sx,sy,s,0.75);}
   else if(d.k==='router'||d.k==='cross'){ctx.globalAlpha=0.75;drawRouter(ctx,{d:tool,k:d.k,dir:UI.rot},X,Y,s);ctx.globalAlpha=1;}
   else if(d.k==='pole'){ctx.globalAlpha=0.8;drawPole(ctx,{d:tool},X,Y,s);ctx.globalAlpha=1;{const nb=pnNearest({d:tool,k:'pole',x:fp.x,y:fp.y,w:1,h:1});if(nb){const C=cen(nb);ctx.strokeStyle='rgba(255,211,74,0.9)';ctx.lineWidth=Math.max(1.5,s*0.06);ctx.beginPath();ctx.moveTo(X+s/2,Y+s/2);ctx.lineTo(sx(C.x),sy(C.y));ctx.stroke();}}ctx.strokeStyle='rgba(255,215,90,0.6)';ctx.setLineDash([5*DPR,5*DPR]);ctx.beginPath();ctx.arc(X+s/2,Y+s/2,d.link*s,0,7);ctx.stroke();ctx.setLineDash([]);}
-  else blit(tool,X,Y,s,0.7);
+  else{blit(tool,X,Y,s,0.7);if(d.k==='gen'&&d.sup){const cx=X+P/2,cy=Y+P/2;ctx.fillStyle='rgba(255,215,90,0.1)';ctx.strokeStyle='rgba(255,215,90,0.8)';ctx.lineWidth=2*DPR;ctx.setLineDash([6*DPR,5*DPR]);ctx.beginPath();ctx.arc(cx,cy,d.sup*s,0,7);ctx.fill();ctx.stroke();ctx.setLineDash([]);   /* generators that are also power nodes (Solar Panel, burners…) show their supply area while placing (Session 58c) */
+   const nb=pnNearest({d:tool,k:'gen',x:fp.x,y:fp.y,w:d.w,h:d.w});if(nb){const C=cen(nb);ctx.strokeStyle='rgba(255,211,74,0.9)';ctx.lineWidth=Math.max(1.5,s*0.06);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(sx(C.x),sy(C.y));ctx.stroke();}}}
   ctx.strokeStyle=bad?'#ff5a46':'#6ef08a';ctx.lineWidth=2*DPR;rr(X+1,Y+1,P-2,P-2,s*0.15);ctx.stroke();ctx.fillStyle=bad?'rgba(255,70,50,0.18)':'rgba(110,240,138,0.1)';ctx.fill();}
  else if(movePrev&&ents.has(movePrev.e.id)){const m=movePrev,e=m.e,X=sx(m.nx),Y=sy(m.ny),P=e.w*s;
   ctx.globalAlpha=0.35;ctx.fillStyle='#000';rr(sx(e.x),sy(e.y),P,P,s*0.15);ctx.fill();ctx.globalAlpha=1;
