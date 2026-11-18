@@ -227,6 +227,8 @@ function paintB(g,id,P,u){
    box(i+W*0.25,i+W*0.36,W*0.17,W*0.05,u*0.03,'#b07a30');dots([[i+W*0.07,i+W*0.07],[i+W*0.93,i+W*0.07],[i+W*0.07,i+W*0.93],[i+W*0.93,i+W*0.93]],u*0.12,'#ff6a3a');break;}
   case 'tdepot':{box(i,i,W,W,u*0.16,'#5d6066');circ(i+W*0.3,i+W*0.3,W*0.2,'#cfe3f0');circ(i+W*0.7,i+W*0.3,W*0.2,'#cfe3f0');g.fillStyle='#3d8ee6';g.beginPath();g.arc(i+W*0.3,i+W*0.3,W*0.1,0,7);g.arc(i+W*0.7,i+W*0.3,W*0.1,0,7);g.fill();   /* Tanker Depot (Session 59b): two tanks + charging pad */
    g.strokeStyle='#f2c230';g.lineWidth=W*0.03;g.setLineDash([W*0.05,W*0.04]);g.strokeRect(i+W*0.12,i+W*0.56,W*0.76,W*0.32);g.setLineDash([]);break;}
+  case 'habitat':{box(i,i,W,W,u*0.2,'#5d6066');circ(P*0.5,P*0.5,W*0.42,'#eef1f4',40);g.strokeStyle='rgba(120,130,140,0.6)';g.lineWidth=Math.max(1,u*0.05);for(const r of [0.3,0.18])g.beginPath(),g.arc(P*0.5,P*0.5,W*r,0,7),g.stroke();   /* Habitat (Session 60): a dome with ring segments and a docking module */
+   g.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3;g.moveTo(P*0.5+Math.cos(a)*W*0.12,P*0.5+Math.sin(a)*W*0.12);g.lineTo(P*0.5+Math.cos(a)*W*0.42,P*0.5+Math.sin(a)*W*0.42);}g.stroke();box(i+W*0.78,i+W*0.4,W*0.2,W*0.2,u*0.05,'#c4cad0');break;}
   case 'rdepot':{box(i,i,W,W,u*0.16,'#5d6066');g.fillStyle='#2b2f34';g.fillRect(i+W*0.08,i+W*0.08,W*0.84,W*0.34);g.fillStyle='#d8dde2';for(let k=0;k<3;k++)g.fillRect(i+W*(0.12+k*0.27),i+W*0.12,W*0.22,W*0.26);   /* Rover Depot (Session 59): three garage bays + a charging pad */
    g.strokeStyle='#f2c230';g.lineWidth=W*0.03;g.setLineDash([W*0.05,W*0.04]);g.strokeRect(i+W*0.12,i+W*0.52,W*0.76,W*0.36);g.setLineDash([]);g.fillStyle='#5be36a';g.beginPath();g.arc(i+W*0.85,i+W*0.48,W*0.04,0,7);g.fill();break;}
   case 'dpad':{box(i,i,W,W,u*0.16,'#2c333b');g.strokeStyle=col;g.lineWidth=Math.max(1.5,u*0.12);g.beginPath();g.arc(P/2,P/2,W*0.34,0,7);g.stroke();
@@ -274,6 +276,7 @@ function drawLive(e,X,Y,s){
    if(id==='fabricator'){for(let k=0;k<4;k++){const on=act>0.5&&((animT*3+k)|0)%3===0;ctx.fillStyle=on?'#59f0a0':'#1d3a2c';ctx.fillRect(X+P*(0.44+k*0.035),Y+P*0.17,P*0.022,P*0.04);}}break;}
   case 'refinery':glow(X+P*0.7,Y+P*0.45,s*0.4,'#ff4040',0.25+0.35*(Math.sin(animT*3+e.id)>0.6?1:0));if(act>0.2)glow(X+P*0.7,Y+P*0.45,s*0.3,'#ffd060',act*0.4);break;
   case 'blender':blades(X+P/2,Y+P/2,P*0.2,2,a*4,'#7ad6c8',P*0.04);break;
+  case 'habitat':{const f=(e.pop||0)/HAB.cap;if(f>0)for(let k=0;k<Math.ceil(f*6);k++){const a=k*Math.PI/3+0.5;glow(X+P*0.5+Math.cos(a)*P*0.24,Y+P*0.5+Math.sin(a)*P*0.24,P*0.06,'#ffd890',0.9);}break;}   /* lit windows: one per ~2 colonists */
   case 'imelt':glow(X+P*0.42,Y+P*0.5,P*0.24,'#ff9a50',act*0.45);break;
   case 'rexc':blades(X+P/2,Y+P*0.48,P*0.24,8,a*3,'#d0d4d8',P*0.025);break;
   case 'vfurnace':glow(X+P*0.5,Y+P*0.5,P*0.26,'#8fb0ff',act*(0.6+0.25*Math.sin(animT*5+e.id)));if(act>0.05){ctx.fillStyle=rgba('#cfe0ff',act*0.7);ctx.beginPath();ctx.arc(X+P*0.5,Y+P*0.5,P*0.07,0,7);ctx.fill();}break;

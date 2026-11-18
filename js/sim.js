@@ -183,6 +183,7 @@ function initEnt(e,d){
   case 'rdepot':case 'tdepot':e.store=e.store||{};e.rr=0;e.rn=e.rn||1;e.rv=Array.isArray(e.rv)?e.rv:[];break;   /* Rover Depot (js/rover.js) */
   case 'lpad':e.store=e.store||{};e.lt=e.lt||0;e.nl=e.nl||0;break;   /* Launch Pad: loaded rocket parts + kit, launch timer (s, 0 = on the ground), launches so far */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
+  case 'hab':e.inb=e.inb||{};e.pop=e.pop||0;e.gt=e.gt||0;e.wa=0;e.oa=0;break;   /* Habitat (Session 60) */
   case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();if(d.sub==='switch')e.bs=e.bs||((typeof UI!=='undefined'&&UI.swSide)||1);break;   /* trains (js/train.js) */
   case 'cbay':e.store=e.store||{};e.bm=e.bm||0;e.rr=0;break;   /* Cargo Bay: bm 0 = Load, 1 = Unload */
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
@@ -311,6 +312,7 @@ function accept(e,item,dir,carry){
   case 'tdepot':{if(!fl||typeof rvTarget!=='function'||!rvTarget(e))return false;let t=0;for(const k in e.store){if(k!==item&&e.store[k]>0)return false;t+=e.store[k];}if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}   /* a sending Tanker Depot fills from its pipes */
   case 'storage':case 'dpad':case 'rdepot':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
+  case 'hab':{if(!fl||(item!=='water'&&item!=='oxygen'))return false;if((e.inb[item]||0)>=60)return false;e.inb[item]=(e.inb[item]||0)+1;return true;}
   case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed()[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;CORE.cur[item]=(CORE.cur[item]||0)+1;zStat('k',e,item,1);return true;
   case 'incin':e.burnT=S.t;stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
@@ -403,7 +405,7 @@ function rebuildTopo(){
 const PIPE_CAP=10,pipeLike=e=>!!e&&(e.k==='pipe'||(e.k==='router'&&B[e.d].sub==='junc'));
 function syncPipes(){for(const n of nets)for(const t of n.tiles){t.item=n.fluid;t.lv=n.cap?n.amt/n.cap:0;}}   // store contents on the tiles (save, rebuild)
 /* first piece beyond a chain of crossings (Session 41d: pipes looked through one crossing only, and never through one into a building) */
-const FLB=['mach','gen','pump','tank','incin','tdepot'];
+const FLB=['mach','gen','pump','tank','incin','tdepot','hab'];
 /* pipe ends (Session 41e): a pipe only links at its two ends along the drawn line (front = dir, back = straight behind or, on a bend,
    the side it bends from); a junction links on all four sides. So side-by-side pipes and pipes ending at another pipe's side don't join. */
 function pipeEnds(t){return t.k!=='pipe'?15:((1<<t.dir)|(1<<(t.cin!=null?((t.cin+2)&3):((t.dir+2)&3))));}
@@ -594,12 +596,21 @@ function updBuilding(e,dt){
   case 'tank':if(e.amt>0&&e.ft)for(let a=0;a<3&&e.amt>0;a++){if(pushOut(e,e.ft))e.amt--;else break;}break;
   case 'dpad':updPad(e,dt);break;
   case 'lpad':updLpad(e,dt);break;
+  case 'hab':{e.want=true;const people=Math.max(1,e.pop),need=people*HAB.per/60*dt;let short=!(e.pw>0);e.wa+=need;e.oa+=need;   /* colonists drink and breathe; growth every HAB.grow s */
+   while(e.wa>=1){if((e.inb.water||0)>0){e.inb.water--;e.wa--;}else{short=true;e.wa=1;break;}}while(e.oa>=1){if((e.inb.oxygen||0)>0){e.inb.oxygen--;e.oa--;}else{short=true;e.oa=1;break;}}
+   e.ok=!short;e.gt+=dt;if(e.gt>=HAB.grow){e.gt=0;e.pop=short?Math.max(0,e.pop-1):Math.min(HAB.cap,e.pop+1);}break;}
   case 'rdepot':case 'tdepot':if(typeof updRover==='function')updRover(e,dt);break;
  }
 }
 /* Background production (Session 52): what reaches this world's Base Core, in 10 s buckets over the last 5 minutes. When you leave a world
    its measured rates are stored with it (S.bg = {r: items per second, t: game time}); when you come back the time away is paid out. */
 let CORE={b:[],cur:{},acc:0};
+/* rates over the last minute (per minute) and the rate-goal hold timer (Session 60) */
+function coreRate60(){const L=CORE.b.slice(-6),r={};if(!L.length)return r;for(const b of L)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]*=60/(L.length*10);return r;}
+const colonyPop=()=>{let n=0;for(const e of ents.values())if(e.k==='hab')n+=e.pop||0;return n;};
+function wgCur(){const L=WGOALS[S.w||'home'];return L?L[(S.wms&&S.wms[S.w])||0]:null;}
+function wgRateTick(){const g=wgCur();S.wgh=S.wgh||{};const w=S.w||'home';if(!g||!g.rate){S.wgh[w]=0;return;}const r=coreRate60(),ok=CORE.b.length>=6&&Object.keys(g.rate).every(k=>(r[k]||0)>=g.rate[k]);S.wgh[w]=ok?(S.wgh[w]||0)+10:0;}
+function wgReady(g){if(!g)return false;const w=S.w||'home';if(!afford(g.req))return false;if(g.pop&&colonyPop()<g.pop)return false;if(g.rate&&((S.wgh&&S.wgh[w])||0)<WG_HOLD)return false;return true;}
 function coreRates(){if(CORE.b.length<6)return null;const r={},T=CORE.b.length*10;for(const b of CORE.b)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]/=T;return r;}
 function bgLeave(){const r=coreRates();S.bg={r:r||(S.bg&&S.bg.r)||{},t:S.t,m:r?CORE.b.length*10:(S.bg&&S.bg.m)||0};}
 function bgArrive(){const B0=S.bg;if(!B0||B0.t==null)return null;const el=Math.max(0,S.t-B0.t),got={};for(const k in B0.r){const n=Math.floor(B0.r[k]*el);if(n>0){give(k,n);got[k]=n;}}B0.t=null;return{el,got};}
@@ -615,7 +626,7 @@ function tick(dt){
  for(const e of buildings)updBuilding(e,dt);
  if(typeof trainTick==='function')trainTick(dt);
  updNets(dt);
- CORE.acc+=dt;if(CORE.acc>=10){CORE.acc-=10;CORE.b.push(CORE.cur);CORE.cur={};if(CORE.b.length>30)CORE.b.shift();}
+ CORE.acc+=dt;if(CORE.acc>=10){CORE.acc-=10;CORE.b.push(CORE.cur);CORE.cur={};if(CORE.b.length>30)CORE.b.shift();if(typeof wgRateTick==='function')wgRateTick();}
  zTick(dt);stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}
 }
 function rates(){const p={},c={};for(const h of stat.hist){for(const k in h.p)p[k]=(p[k]||0)+h.p[k];for(const k in h.c)c[k]=(c[k]||0)+h.c[k];}const m=60/Math.max(1,stat.hist.length);for(const k in p)p[k]*=m;for(const k in c)c[k]*=m;return{p,c};}

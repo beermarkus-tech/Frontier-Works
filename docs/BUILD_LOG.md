@@ -3396,3 +3396,38 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - `npm test` all PASS.
 
 **Known issues:** a single pipe (300 m³/min) fills rovers slower than they drive, so they leave after 10 s with partial loads. Use a Mk2 pipe or several junctions for full loads.
+
+## Session 60 — 2026-11-18 (Claude Code, cloud session) · Build 169
+
+**Asked:** Markus found the Moon too easy (tiny factories were enough for every goal, helium was no challenge), and freighters would only stockpile Moon goods on Earth. He agreed to a "Moon Colony" chapter with four parts: rate goals, self-sufficiency, Habitats with a population, then freighters with real uses on Earth. Parts 1–3 are built in this session; part 4 comes next.
+
+**Built:**
+- **Rate goals:**
+  - World goals can ask for steady deliveries into the Base Core (`rate`, per minute, measured over the last minute) held for 3 minutes (`WG_HOLD`), and/or a colony population (`pop`).
+  - The goal card shows live rates (green when on target), "Held steadily x / 180 s" and the colonists. The button reads "Complete" and only works when everything is met (`wgReady`).
+  - The hold timer advances every 10 s bucket (`wgRateTick`).
+- **Self-sufficiency recipes (unlocked by Moon goal 4, Export Ready):**
+  - Lunar Steel: Vacuum Furnace, 4 iron ore + 2 regolith → 2 steel ingots, 8 s.
+  - Regolith Oxygen: Vacuum Furnace, 6 regolith → 3 oxygen + 1 iron ore.
+  - Water Splitting: Refinery, 4 water → 3 oxygen.
+  - With Moon steel, the normal recipes give steel pipes and beams, stators, motors and cased girders. Refineries and Fabricators can now be built from Moon materials; only plastic stays Earth-only.
+- **Habitat** (`habitat`, k 'hab', 4×4, 15 MW, Moon only, unlocked by goal 4):
+  - It takes water and oxygen through Pipe Junctions (new fluid: Oxygen).
+  - Each colonist uses 2 m³/min of each. A supplied habitat gains a colonist every 20 s (up to 10); short of power, water or oxygen, it loses one.
+  - Panel: colonists, status, buffers, consumption, colony total. It has a dome sprite with lit windows per colonist and a 3D dome with a glowing ring.
+- **New Moon goals:**
+  - 5 **First Settlers:** 10 colonists; 20 steel ingots/min and 30 concrete/min held.
+  - 6 **Self-Sufficient:** 30 colonists; 6 motors/min, 15 steel beams/min, 20 vacuum wafers/min held. Next: Orbital Freighters.
+  - Goal 4 now unlocks the colony content. Markus's four finished goals stay counted.
+- **Rovers climb crater rims:** rim tiles are passable at four times the route cost and 45% speed. Before, crater floors enclosed by rims were unreachable (the smoke check failed on such maps). Straightening never adds a rim crossing.
+
+**Verified:**
+- New smoke check:
+  - a supplied habitat grows to 3+ colonists in 65 s; one short of water shrinks
+  - the habitat panel works
+  - a rate goal is not ready at 170 s held and ready at 180 s; the panel shows "Held steadily"; Complete advances the goal
+- The goal audit covers rate items and habitat supply.
+- The rover checks pass across several random maps.
+- `npm test` all PASS.
+
+**Next up:** part 4. Orbital Freighters (stock-based, fuelled from Home) and real uses for Moon goods on Earth: the first Dyson Sphere stage (Sphere Frame) and Earth upgrades with lattice crystals and helium.

@@ -217,6 +217,9 @@ function entDyn(e){
   if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}${Object.keys(r.i).some(k=>!IT[k].f&&(e.inb[k]||0)<capIn(r.i[k],k)&&(S.inv[k]||0)>=1)?'<button class="btn" data-act="fillInb" style="margin-top:6px">⬆ Fill from stock</button>':''}<h4>Output buffer</h4>${bufList(e.outb)}`;}
  }
  if(e.k==='lpad')h+=lpadHtml(e);
+ if(e.k==='hab'){const st=e.ok?['#4fe08a','Supplied: colonists move in']:!(e.pw>0)?['#ff5a46','No power: colonists leave']:['#ffa53a','Short of water or oxygen: colonists leave'];   /* Habitat (Session 60) */
+  h+=`<div class="row"><span>👥 Colonists</span><span><b>${e.pop||0}</b> / ${HAB.cap}</span></div><div class="bar"><i style="width:${(e.pop||0)/HAB.cap*100}%"></i></div><div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>
+   <div class="row"><span>${nm('water')}</span><span>${e.inb.water||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="row"><span>${nm('oxygen')}</span><span>${e.inb.oxygen||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="muted">Colony total: ${colonyPop()} colonists. Pipe water and oxygen in through Pipe Junctions.</div>`;}
  if(typeof trainDyn==='function')h+=trainDyn(e);
  if(typeof roverDyn==='function')h+=roverDyn(e);
  if(e.k==='drill'||e.k==='pump'){
@@ -262,9 +265,12 @@ function wgHtml(w){const L=WGOALS[w],k=(S.wms&&S.wms[w])||0,here=(S.w||'home')==
  let h=`<div class="muted" style="margin-bottom:8px">${W.ic} ${W.n} goals: deliver things made on the ${W.n} to its Base Core (its own stock), then hand them in here.${here?'':` <b>Hand-ins happen on the ${W.n}.</b>`}</div>`;
  L.forEach((m,i)=>{const done=i<k,cur=i===k;h+=`<div class="card ${done?'done':''} ${cur?'cur':''}"><b>${done?'✓ ':''}${W.n} ${i+1}: ${m.n}</b><div class="muted" style="margin:2px 0 4px">${m.why}</div>`;
   if(!done&&i<=k+1)h+=Object.keys(m.req).map(q=>{const have=here?Math.min(S.inv[q]||0,m.req[q]):0;return`<div class="row"><span>${nm(q)}</span><span>${here?fmt(have)+' / ':''}${m.req[q]}</span></div>${here?`<div class="bar"><i style="width:${have/m.req[q]*100}%"></i></div>`:''}`;}).join('');
+  if(!done&&i<=k+1&&m.pop){const p=here?colonyPop():0;h+=`<div class="row"><span>👥 Colonists</span><span>${here?p+' / ':''}${m.pop}</span></div>${here?`<div class="bar"><i style="width:${Math.min(1,p/m.pop)*100}%"></i></div>`:''}`;}   /* colony goals (Session 60) */
+  if(!done&&i<=k+1&&m.rate){const r=here&&cur?coreRate60():{};h+=Object.keys(m.rate).map(q=>{const v=r[q]||0;return`<div class="row"><span>${nm(q)}</span><span>${here&&cur?`<b style="color:${v>=m.rate[q]?'#5fe08a':'#ffb547'}">${fmt(v)}</b> / `:''}${m.rate[q]}/min</span></div>${here&&cur?`<div class="bar"><i style="width:${Math.min(1,v/m.rate[q])*100}%"></i></div>`:''}`;}).join('');
+   if(here&&cur){const hd=(S.wgh&&S.wgh[w])||0;h+=`<div class="row"><span>Held steadily</span><span>${Math.min(hd,WG_HOLD)} / ${WG_HOLD} s</span></div><div class="bar"><i style="width:${Math.min(1,hd/WG_HOLD)*100}%"></i></div><div class="muted">Delivered into the Base Core, measured over the last minute. All rates must stay at target for ${WG_HOLD/60} minutes.</div>`;}}
   const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];if(un.length&&i<=k+1)h+=`<div class="muted" style="margin-top:4px">Unlocks: ${un.join(', ')}</div>`;
   if(m.next&&i<=k)h+=`<div class="muted" style="margin-top:4px">${done?'Next: ':'Then: '}${m.next}</div>`;
-  if(cur&&here)h+=`<button class="btn ${afford(m.req)?'on':''}" style="margin-top:6px" data-act="submitWg" ${afford(m.req)?'':'disabled'}>Hand in</button>`;
+  if(cur&&here){const ok=wgReady(m);h+=`<button class="btn ${ok?'on':''}" style="margin-top:6px" data-act="submitWg" ${ok?'':'disabled'}>${m.rate||m.pop?'Complete':'Hand in'}</button>`;}
   h+=`</div>`;});return h;}
 function msHtml(){const cw=S.w||'home',view=UI.gview&&(UI.gview==='home'||WGOALS[UI.gview])?UI.gview:cw,others=['home',...Object.keys(WGOALS)].filter(w=>w==='home'||(S.worlds&&S.worlds[w])||cw===w);
  let tabs=others.length>1?`<div class="chips" style="margin-bottom:8px">${others.map(w=>`<button class="btn chip ${w===view?'on':''}" data-act="gview" data-v="${w}">${WORLDS[w].ic} ${w==='home'?'Home tiers':WORLDS[w].n+' goals'}</button>`).join('')}</div>`:'';
@@ -402,7 +408,7 @@ const ACT={
   save();},
  closeDlg,
  gview:v=>{UI.gview=v;renderPanel(true);},
- submitWg:()=>{const w=S.w||'home',L=WGOALS[w];if(!L)return;S.wms=S.wms||{};const k=S.wms[w]||0,m=L[k];if(!m||!afford(m.req))return;pay(m.req);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);S.wms[w]=k+1;sfx('goal');
+ submitWg:()=>{const w=S.w||'home',L=WGOALS[w];if(!L)return;S.wms=S.wms||{};const k=S.wms[w]||0,m=L[k];if(!m||!wgReady(m))return;pay(m.req);S.wgh&&(S.wgh[w]=0);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);S.wms[w]=k+1;sfx('goal');
   const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>${WORLDS[w].ic} ${WORLDS[w].n} ${k+1}: ${m.n}</h2><p>${un.length?'Unlocked: '+un.join(', ')+'.':''} ${L[k+1]?'Next goal: '+L[k+1].n+'.':m.next||''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);buildTools();renderPanel(true);if(typeof updTop==='function')updTop();save();},
  lpadLoad:()=>{const e=ents.get(UI.panel.arg);if(!e)return;const m=lpadMissing(e);let n=0;for(const k in m){const t=Math.min(m[k],S.inv[k]||0);if(t>0){S.inv[k]-=t;e.store[k]=(e.store[k]||0)+t;n+=t;}}toast(n?`Loaded ${n} items`:'Nothing to load from stock');renderPanel(true);},
  lpadGo:()=>{const e=ents.get(UI.panel.arg);const why=lpadLaunch(e);if(why){toast(why);return;}sfx('launch');toast('🚀 Lift-off!');renderPanel(true);},

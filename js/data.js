@@ -20,7 +20,7 @@ I('heavy_truss','Heavy Truss','#34466a');I('compute_module','Compute Module','#2
 I('battery','Battery','#a6e64e');I('control_chip','Control Chip','#3ea2f5');I('turbine_core','Turbine Core','#d9622e');I('uranium_cell','Uranium Cell','#4ec43a');
 I('fuel_rod','Fuel Rod','#2ef070',0,750000);I('waste','Nuclear Waste','#b4ff3a');I('quantum_core','Quantum Core','#ff5fc8');
 /* Colony rocket parts (Session 51; unlocked by Tier 10 since Session 57) */
-I('helium','Helium Crystals','#8fe6ff');I('regolith','Regolith','#a3a3aa');I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
+I('helium','Helium Crystals','#8fe6ff');I('regolith','Regolith','#a3a3aa');I('oxygen','Oxygen','#bfe6ff',1);I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
 I('hull_plate','Hull Plate','#c9d3dd');I('heat_shield','Heat Shield','#5a4a44');I('guidance_core','Guidance Core','#f0c34a');I('rocket_fuel','Rocket Fuel','#ff7a2e');
 
 const RC={}, RL=[];
@@ -103,6 +103,10 @@ R('r_lattice','Lattice Crystal','vfurnace',16,'quartz_crystal:4,helium:4','latti
 // Moon base goals (Session 58, DESIGN.md section 12): local concrete, water, circuit boards and aluminium
 R('r_sinter','Sintered Blocks','vfurnace',4,'regolith:4','concrete:1');   /* regolith baked into blocks that count as concrete: no water, more power */
 R('r_lunarcrete','Moon Concrete','vfurnace',4,'regolith:3,water:4','concrete:2');
+// Moon colony (Session 60): steel from regolith, oxygen for habitats
+R('r_vac_steel','Lunar Steel','vfurnace',8,'iron_ore:4,regolith:2','steel_ingot:2');   /* carbon traces in the regolith; slow and power-hungry */
+R('r_o2_regolith','Regolith Oxygen','vfurnace',6,'regolith:6','oxygen:3,iron_ore:1');
+R('r_o2_water','Water Splitting','refinery',4,'water:4','oxygen:3');
 R('r_wafer_cb','Wafer Circuit Board','vfurnace',8,'vac_wafer:1,copper_sheet:2','circuit_board:2');
 R('r_moon_alu','Lunar Aluminum','vfurnace',6,'bauxite:4,water:6','alu_ingot:2');
 R('r_quantum_core','Quantum Core','fabricator',60,'control_chip:2,compute_module:3,heat_sink:6,battery:10','quantum_core:1');
@@ -139,7 +143,7 @@ D('tstop',{n:'Train Stop',k:'rail',sub:'stop',cat:'trans',col:'#e05a3a',cost:{ir
 D('cbay',{n:'Cargo Bay',k:'cbay',w:2,pw:5,cap:800,cat:'trans',col:'#6f8a52',cost:{iron_plate:20,iron_rod:20,cable:10},desc:'Beside a track behind a Train Stop: loads the wagon next to it (Load: belts fill the bay) or unloads it (Unload: belts carry it away). Holds 800 items. Needs power.'});
 const TRAIN={cap:1000,vmax:16,acc:2.5,brk:4,pw:15,crawl:1.5,xfer:40,car:2,maxW:4,loco:{motor:4,circuit_board:4,steel_beam:10,iron_plate:20},wagon:{steel_beam:4,iron_plate:20,bolts:20}};
 /* Moon Rovers (Session 59): a depot sends ground rovers to another depot; they drive around buildings and crater rims */
-D('rdepot',{n:'Rover Depot',k:'rdepot',w:3,pw:10,cap:600,only:'moon',cat:'trans',col:'#d8dde2',cost:{iron_plate:30,copper_sheet:20,wire:30,concrete:10},desc:'Holds 600 items. Link it to another depot and its rovers drive the goods there (200 per trip), around buildings and crater rims, then come back. Comes with one rover; add up to 3. Recharges rovers (needs power). Only on the Moon.'});
+D('rdepot',{n:'Rover Depot',k:'rdepot',w:3,pw:10,cap:600,only:'moon',cat:'trans',col:'#d8dde2',cost:{iron_plate:30,copper_sheet:20,wire:30,concrete:10},desc:'Holds 600 items. Link it to another depot and its rovers drive the goods there (200 per trip), around buildings (over crater rims slowly, if needed), then come back. Comes with one rover; add up to 3. Recharges rovers (needs power). Only on the Moon.'});
 D('tdepot',{n:'Tanker Depot',k:'tdepot',w:3,pw:10,cap:1200,fl:1,only:'moon',cat:'trans',col:'#cfe3f0',cost:{iron_plate:30,copper_sheet:40,wire:30,concrete:10},desc:'The fluid version of the Rover Depot: holds 1200 m³ of one fluid. Linked to another Tanker Depot, it takes fluid from a pipe (through a Pipe Junction) and its tanker rovers carry 400 m³ per trip; an unlinked one feeds what arrives into its pipes. Only on the Moon.'});
 const ROVER={fcap:400,cap:200,spd:6,load:2,unload:2,wait:10,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 D('lpad',{n:'Launch Pad',k:'lpad',w:6,pw:150,only:'home',cat:'trans',col:'#e8a23a',cost:{heavy_truss:20,cased_girder:60,concrete:400,control_chip:10},desc:'Builds and launches the colony rocket to the Moon. Belt in the rocket parts and the starter kit (or load them from your stock), then press Launch. Needs 150 MW while the rocket is ready.'});
@@ -173,6 +177,8 @@ D('blender',{n:'Blender',k:'mach',mt:'blender',w:3,pw:75,cat:'prod',col:'#2a8a7a
 D('vfurnace',{n:'Vacuum Furnace',k:'mach',mt:'vfurnace',w:3,pw:20,only:'moon',cat:'prod',col:'#5b6fd6',cost:{iron_plate:30,copper_sheet:20,quartz_crystal:10,cable:20},desc:'Melts and grows crystals in the Moon\u2019s vacuum, with Helium Crystals. Only works on the Moon. Built from things the Moon can make.'});
 D('rexc',{n:'Regolith Excavator',k:'drill',w:2,rate:1,pw:8,reg:1,only:'moon',cat:'ext',col:'#8c8f96',cost:{iron_plate:12,iron_rod:8,copper_sheet:4},desc:'Digs Regolith (loose Moon soil) anywhere: no ore node needed. 60/min. Only on the Moon.'});
 D('imelt',{n:'Ice Melter',k:'pump',w:2,rate:2,pw:10,ice:1,only:'moon',cat:'ext',col:'#4f9fd0',cost:{iron_plate:10,copper_sheet:10,wire:10},desc:'Sits on an ice deposit in a dark crater and melts it into Water: 120 m³/min on a normal deposit (out through a Pipe Junction). Only on the Moon.'});   /* Session 58f: a pump on ice nodes, not a free-standing machine */
+D('habitat',{n:'Habitat',k:'hab',w:4,pw:15,only:'moon',cat:'prod',col:'#e9edf1',cost:{steel_beam:10,concrete:40,copper_sheet:20,wire:30},desc:'Home for up to 10 colonists. Needs power plus Water and Oxygen through Pipe Junctions (2 m³/min each per colonist). Supplied, it gains a colonist every 20 s; short of anything, it loses one. Only on the Moon.'});
+const HAB={cap:10,per:2,grow:20};   /* colonists per habitat, water and oxygen per colonist per minute, seconds per colonist gained or lost */
 D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('solar',{n:'Solar Panel',k:'gen',w:2,cap:10,fuels:[],solar:1,only:'moon',link:6,sup:4,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:4,circuit_board:2,wire:10},desc:'10 MW from sunlight, no fuel. Only works in the Moon\u2019s unfiltered sunlight.'});
 D('burner',{n:'Coal Burner',k:'gen',w:2,cap:30,fuels:['coal','petro_coke'],link:8,sup:5,cat:'pow',col:'#7a4a2a',cost:{iron_plate:15,iron_rod:15,wire:20},desc:'30 MW. Burns coal or petroleum coke. Also acts as a power pole.'});
@@ -203,7 +209,11 @@ const WGOALS={moon:[
  {n:'Foothold',req:{iron_plate:200,copper_sheet:100,wire:200},b:['rexc'],r:['r_sinter'],why:'Never run out of concrete: dig regolith anywhere and bake it into blocks.'},
  {n:'Ice Prospecting',req:{concrete:300,quartz_crystal:100,vac_wafer:50},b:['imelt','rdepot','tdepot'],r:['r_lunarcrete'],why:'Water on the Moon: ice lies on the floors of dark craters far from the landing site.'},
  {n:'Lunar Power',req:{lattice:100,vac_wafer:200,concrete:500},b:[],r:['r_wafer_cb','r_moon_alu'],why:'Circuit boards from wafers and aluminium from water: the Moon builds its own Solar Panels.'},
- {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:[],r:[],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need.',next:'Orbital Freighters come next: cargo routes between the Moon and Home.'}]};
+ {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:['habitat'],r:['r_vac_steel','r_o2_regolith','r_o2_water'],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need. Next the Moon becomes a colony.'},
+ /* Colony goals (Session 60): rates held for HOLD seconds (measured at the Base Core over the last minute) and a population */
+ {n:'First Settlers',req:{},pop:10,rate:{steel_ingot:20,concrete:30},b:[],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel and concrete, steadily.'},
+ {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:[],r:[],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Orbital Freighters come next: Moon goods become wanted on Earth.'}]};
+const WG_HOLD=180;   /* seconds a rate goal must be held */
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
 const START_B=[...SIGNS,'zone','bpstation','bplist','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
 const START_R=['r_iron_ingot','r_copper_ingot','r_iron_plate','r_iron_rod','r_bolts','r_wire','r_cable','r_concrete'];

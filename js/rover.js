@@ -10,7 +10,9 @@ function rvTarget(e){if(e.lx==null)return null;const t=entAt(e.lx,e.ly);return t
 const rvCount=e=>{let n=0;for(const k in e.store)n+=e.store[k];return n;};
 
 /* ---------- path finding (A*, 8 directions, no corner cutting), then straightened and rounded ---------- */
-function rvPass(x,y,a,b){if(x<0||y<0||x>=MW||y>=MH)return false;const i=y*MW+x;if(terr[i]===1||terr[i]===3)return false;const id=grid[i];if(!id)return true;
+/* crater rims (terr 3) can be climbed, slowly: they cost 4× in the route search and slow the rover (Session 60: rims enclose crater floors) */
+const rvRim=(x,y)=>x>=0&&y>=0&&x<MW&&y<MH&&terr[y*MW+x]===3;
+function rvPass(x,y,a,b){if(x<0||y<0||x>=MW||y>=MH)return false;const i=y*MW+x;if(terr[i]===1)return false;const id=grid[i];if(!id)return true;
  const o=ents.get(id);if(!o||o===a||o===b)return true;return isLine(o.k)||o.k==='rail';}
 function rvAstar(a,b){const sx=a.x+1,sy=a.y+1,gx=b.x+1,gy=b.y+1,N=MW*MH,G=new Float32Array(N).fill(1e9),from=new Int32Array(N).fill(-1),done=new Uint8Array(N);
  const H=(x,y)=>{const dx=Math.abs(x-gx),dy=Math.abs(y-gy);return Math.max(dx,dy)+0.414*Math.min(dx,dy);};
@@ -19,16 +21,16 @@ function rvAstar(a,b){const sx=a.x+1,sy=a.y+1,gx=b.x+1,gy=b.y+1,N=MW*MH,G=new Fl
  const s0=sy*MW+sx,g0=gy*MW+gx;G[s0]=0;push(H(sx,sy),s0);let n=0;
  while(heap.length&&n++<250000){const [,i]=pop();if(done[i])continue;done[i]=1;if(i===g0)break;const x=i%MW,y=(i/MW)|0;
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(!rvPass(nx,ny,a,b))continue;if(dx&&dy&&(!rvPass(x+dx,y,a,b)||!rvPass(x,y+dy,a,b)))continue;
-   const j=ny*MW+nx,c=G[i]+(dx&&dy?1.414:1);if(c<G[j]){G[j]=c;from[j]=i;push(c+H(nx,ny),j);}}}
+   const j=ny*MW+nx,c=G[i]+(dx&&dy?1.414:1)*(terr[j]===3?4:1);if(c<G[j]){G[j]=c;from[j]=i;push(c+H(nx,ny),j);}}}
  if(from[g0]<0)return null;const p=[];for(let i=g0;i>=0;i=from[i]){p.push([i%MW+0.5,((i/MW)|0)+0.5]);if(i===s0)break;}return p.reverse();}
 function rvLOS(p,q,a,b){const d=Math.hypot(q[0]-p[0],q[1]-p[1]),n=Math.ceil(d*4);for(let k=1;k<n;k++){const t=k/n,x=p[0]+(q[0]-p[0])*t,y=p[1]+(q[1]-p[1])*t;
- for(const [ox,oy] of [[0.3,0.3],[-0.3,0.3],[0.3,-0.3],[-0.3,-0.3]])if(!rvPass(Math.floor(x+ox),Math.floor(y+oy),a,b))return false;}return true;}
+ for(const [ox,oy] of [[0.3,0.3],[-0.3,0.3],[0.3,-0.3],[-0.3,-0.3]]){const tx=Math.floor(x+ox),ty=Math.floor(y+oy);if(!rvPass(tx,ty,a,b)||(rvRim(tx,ty)&&!(rvRim(Math.floor(p[0]),Math.floor(p[1]))&&rvRim(Math.floor(q[0]),Math.floor(q[1])))))return false;}}return true;}   /* straightening never adds rim crossings */
 function rvPath(e,tg){const key=topoVer+'|'+tg.id;if(e._rp&&e._rp.key===key)return e._rp.L?e._rp:null;
  let raw=rvAstar(e,tg);if(!raw){e._rp={key,L:0};return null;}
  const sp=[raw[0]];for(let i=0;i<raw.length-1;){let j=Math.min(raw.length-1,i+60);while(j>i+1&&!rvLOS(raw[i],raw[j],e,tg))j--;sp.push(raw[j]);i=j;}   /* straighten */
  let pts=sp;for(let it=0;it<2;it++){const o=[pts[0]];for(let k=0;k<pts.length-1;k++){const A=pts[k],Bq=pts[k+1];o.push([A[0]*0.75+Bq[0]*0.25,A[1]*0.75+Bq[1]*0.25],[A[0]*0.25+Bq[0]*0.75,A[1]*0.25+Bq[1]*0.75]);}o.push(pts[pts.length-1]);pts=o;}   /* round the corners */
  const cum=[0],f=[1];for(let k=1;k<pts.length;k++)cum.push(cum[k-1]+Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]));
- for(let k=1;k<pts.length;k++){const A=pts[k-1],Bq=pts[k],Cq=pts[k+1]||Bq;let da=Math.atan2(Cq[1]-Bq[1],Cq[0]-Bq[0])-Math.atan2(Bq[1]-A[1],Bq[0]-A[0]);while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;f.push(1-0.55*Math.min(1,Math.abs(da)/0.6));}   /* slower in turns */
+ for(let k=1;k<pts.length;k++){const A=pts[k-1],Bq=pts[k],Cq=pts[k+1]||Bq;let da=Math.atan2(Cq[1]-Bq[1],Cq[0]-Bq[0])-Math.atan2(Bq[1]-A[1],Bq[0]-A[0]);while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;f.push((1-0.55*Math.min(1,Math.abs(da)/0.6))*(rvRim(Math.floor(Bq[0]),Math.floor(Bq[1]))?0.45:1));}   /* slower in turns and on crater rims */
  e._rp={key,pts,cum,f,L:cum[cum.length-1]};return e._rp;}
 function rvAt(P,d){const c=P.cum;d=Math.max(0,Math.min(P.L,d));let lo=0,hi=c.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(c[m]<=d)lo=m;else hi=m;}
  const A=P.pts[lo],Bq=P.pts[hi],t=c[hi]>c[lo]?(d-c[lo])/(c[hi]-c[lo]):0;return{x:A[0]+(Bq[0]-A[0])*t,y:A[1]+(Bq[1]-A[1])*t,a:Math.atan2(Bq[1]-A[1],Bq[0]-A[0]),f:P.f[lo]+(P.f[hi]-P.f[lo])*t};}

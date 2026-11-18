@@ -439,13 +439,23 @@ const server=require('./serve.js');
   out.drained=rvCount(src)<700;out.carried=(db.store.water||0)>50;out.piped=!!(pj&&pj.net&&pj.net.fluid==='water'&&pj.net.amt>0);out.noItems=!accept(da,'iron_plate',0);
   window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
  check(`tanker rovers: ${Object.entries(tkr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(tkr).every(v=>v===true));
+ // Moon colony (Session 60): a supplied Habitat gains colonists, an unsupplied one loses them; a rate goal completes after its rates are held
+ const col=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),wms:S.wms,wgh:S.wgh};if(S.worlds&&S.worlds.moon)return{had:false};fw.switchWorld('moon');S.ub.push('habitat','solar');
+  let X,Y;for(let r=16;r<110&&X==null;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<4&&ok;j++)for(let i=0;i<8&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){X=x;Y=y;break;}}
+  out.pl=fw.placeEnt('habitat',X,Y,0,true)===''&&fw.placeEnt('solar',X+4,Y,0,true)===''&&fw.placeEnt('solar',X+6,Y,0,true)==='';const h=entAt(X,Y);
+  for(let k=0;k<20*65;k++){h.inb.water=50;h.inb.oxygen=50;tick(0.05);}out.grow=h.pop>=3&&h.ok;const p0=h.pop;for(let k=0;k<20*45;k++){h.inb.water=0;h.inb.oxygen=50;tick(0.05);}out.shrink=h.pop<p0;
+  openPanel('ent',h.id);out.panel=/colonists/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
+  S.wms=Object.assign({},S.wms||{},{moon:4});S.wgh={};h.pop=WGOALS.moon[4].pop;CORE.b=[...Array(6)].map(()=>({steel_ingot:4,concrete:6}));for(let k=0;k<17;k++)wgRateTick();out.notYet=!wgReady(WGOALS.moon[4]);wgRateTick();
+  out.ready=wgReady(WGOALS.moon[4]);openPanel('ms');out.goalPanel=/held steadily/i.test(document.getElementById('pbody').innerText);ACT.submitWg();ACT.closeDlg();ACT.closePanel();out.done=S.wms.moon===5;
+  fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;S.wms=keep.wms;S.wgh=keep.wgh;return out;});
+ check(`Moon colony: ${Object.entries(col).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(col).every(v=>v===true));
  // Moon goals (Session 58): every Moon goal can be made from Moon resources with what is unlocked by then; ice on far crater floors;
  // Regolith Excavator digs anywhere; Sintered Blocks; Ice Melter makes water; the Goals panel shows Moon goals there and hands them in
  const mg=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),ur:S.ur.slice(),ms:S.ms,wms:S.wms};
   {const bad=[],ORES=['iron_ore','copper_ore','quartz','bauxite','uranium','helium','ice'];const ub=new Set([...START_B,...MS.flatMap(m=>m.b)]),ur=new Set([...START_R,...MS.flatMap(m=>m.r)]);
    WGOALS.moon.forEach((m,i)=>{if(i){WGOALS.moon[i-1].b.forEach(x=>ub.add(x));WGOALS.moon[i-1].r.forEach(x=>ur.add(x));}const have=new Set(ORES);if(ub.has('rexc'))have.add('regolith');if(ub.has('imelt'))have.add('water');let g=true;
     while(g){g=false;for(const id of ur){const r=RC[id];if(!r||!ub.has(r.m)&&!['smelter','press','assembler'].includes(r.m))continue;if(Object.keys(r.i).every(k=>have.has(k)))for(const k in r.o)if(!have.has(k)){have.add(k);g=true;}}}
-    for(const k in m.req)if(!have.has(k))bad.push(`Moon ${i+1}: ${IT[k].n}`);});out.audit=bad.length?bad.join('; '):true;}
+    for(const k of [...Object.keys(m.req),...Object.keys(m.rate||{})])if(!have.has(k))bad.push(`Moon ${i+1}: ${IT[k].n}`);if(m.pop&&!(ub.has('habitat')&&have.has('oxygen')&&have.has('water')))bad.push(`Moon ${i+1}: habitats can't be supplied`);});out.audit=bad.length?bad.join('; '):true;}
   const had=!!(S.worlds&&S.worlds.moon);if(had)return{had:false};fw.switchWorld('moon');
   const ice=nodes.filter(n=>n.t==='ice');out.ice=ice.length>=5&&ice.every(n=>Math.hypot(n.x-MW/2,n.y-MH/2)>=45&&terr[n.y*MW+n.x]===2);
   S.ub.push('vfurnace','solar');S.ur.push('r_sinter');
