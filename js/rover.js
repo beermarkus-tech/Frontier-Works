@@ -5,8 +5,8 @@
    track can be crossed. Rover state: st 0 at the depot (loading), 1 driving out (p = distance along the path), 2 driving back; c = cargo.
    Rovers recharge at the depot (it needs power to send them); driving needs none. Tyre tracks fade in the dust (RVTR, not saved). */
 let rdepots=[];const RVTR=[];RVTR.w=null;
-function roverTopo(){rdepots=[...ents.values()].filter(e=>e.k==='rdepot');for(const e of rdepots)e._rp=null;}
-function rvTarget(e){if(e.lx==null)return null;const t=entAt(e.lx,e.ly);return t&&t.k==='rdepot'&&t!==e&&t.x===e.lx&&t.y===e.ly?t:null;}
+function roverTopo(){rdepots=[...ents.values()].filter(e=>e.k==='rdepot'||e.k==='tdepot');for(const e of rdepots)e._rp=null;}
+function rvTarget(e){if(e.lx==null)return null;const t=entAt(e.lx,e.ly);return t&&t.k===e.k&&t!==e&&t.x===e.lx&&t.y===e.ly?t:null;}
 const rvCount=e=>{let n=0;for(const k in e.store)n+=e.store[k];return n;};
 
 /* ---------- path finding (A*, 8 directions, no corner cutting), then straightened and rounded ---------- */
@@ -36,31 +36,31 @@ function rvAt(P,d){const c=P.cum;d=Math.max(0,Math.min(P.L,d));let lo=0,hi=c.len
 /* ---------- simulation (from updBuilding) ---------- */
 function updRover(e,dt){const tg=rvTarget(e);while(e.rv.length<e.rn)e.rv.push({st:0,p:0,c:{},w:0});
  e.want=!!tg;e._msg='';
- if(!tg){const ks=Object.keys(e.store);if(ks.length)for(let a=0;a<2;a++){let moved=false;for(let k=0;k<ks.length;k++){const it=ks[(e.si=(e.si||0)+1)%ks.length];if(e.store[it]>0&&pushOut(e,it)){if(--e.store[it]<=0)delete e.store[it];moved=true;break;}}if(!moved)break;}return;}
+ if(!tg){if(e.k==='tdepot')return;const ks=Object.keys(e.store);if(ks.length)for(let a=0;a<2;a++){let moved=false;for(let k=0;k<ks.length;k++){const it=ks[(e.si=(e.si||0)+1)%ks.length];if(e.store[it]>0&&pushOut(e,it)){if(--e.store[it]<=0)delete e.store[it];moved=true;break;}}if(!moved)break;}return;}
  const P=rvPath(e,tg);if(!P){e._msg='No route: buildings or crater rims are in the way';return;}
  let loading=false;
  for(const r of e.rv){
-  if(r.st===0){if(loading)continue;const room=B[tg.d].cap-rvCount(tg),n=rvCount(e);if(e.pw>0&&n>0&&room>0){loading=true;r.w+=dt;if(r.w>=ROVER.load&&(n>=ROVER.cap||r.w>=ROVER.wait)){let take=Math.min(ROVER.cap,room);r.c={};
+  if(r.st===0){if(loading)continue;const fl=e.k==='tdepot',ek=Object.keys(e.store).find(k=>e.store[k]>0),clash=fl&&ek&&Object.keys(tg.store).some(k=>k!==ek&&tg.store[k]>0),room=clash?0:B[tg.d].cap-rvCount(tg),n=rvCount(e);if(clash)e._msg='The destination holds a different fluid';if(e.pw>0&&n>0&&room>0){loading=true;r.w+=dt;const cap=fl?ROVER.fcap:ROVER.cap;if(r.w>=ROVER.load&&(n>=cap||r.w>=ROVER.wait)){let take=Math.min(cap,room);r.c={};
      for(const k of Object.keys(e.store)){const m=Math.min(take,e.store[k]);if(m>0){r.c[k]=m;e.store[k]-=m;if(!e.store[k])delete e.store[k];take-=m;}if(take<=0)break;}r.st=1;r.p=0;r.w=0;}}else r.w=0;continue;}
   const at=rvAt(P,r.p),sp=ROVER.spd*Math.max(0.35,at.f)*dt,p0=r.p;
   if(r.st===1){if(r.p<P.L)r.p=Math.min(P.L,r.p+sp);else{r.w+=dt;if(r.w>=ROVER.unload){let n=0;for(const k of Object.keys(r.c)){const m=Math.min(B[tg.d].cap-rvCount(tg),r.c[k]);if(m>0){tg.store[k]=(tg.store[k]||0)+m;r.c[k]-=m;n+=m;}if(!r.c[k])delete r.c[k];}e.del=(e.del||0)+n;r.st=2;r.w=0;}}}
   else if(r.st===2){r.p=Math.max(0,r.p-sp);if(r.p<=0){for(const k in r.c)e.store[k]=(e.store[k]||0)+r.c[k];r.c={};r.st=0;r.w=0;}}
   if(r.p!==p0){r.tk=(r.tk||0)+Math.abs(r.p-p0);if(r.tk>=0.4){r.tk=0;const q=rvAt(P,r.p);RVTR.push([q.x,q.y,q.a,S.t]);if(RVTR.length>4000)RVTR.splice(0,500);
-    if(typeof parts!=='undefined'&&parts.length<600&&Math.random()<0.5)parts.push({x:q.x-Math.cos(q.a)*(r.st===1?0.4:-0.4),y:q.y-Math.sin(q.a)*(r.st===1?0.4:-0.4),vx:(Math.random()-0.5)*0.3,vy:-0.1-Math.random()*0.15,r:0.16+Math.random()*0.1,t:0,m:1.4,k:1});}}}}
+    if(typeof parts!=='undefined'&&parts.length<600&&Math.random()<0.18)parts.push({x:q.x-Math.cos(q.a)*(r.st===1?0.4:-0.4),y:q.y-Math.sin(q.a)*(r.st===1?0.4:-0.4),vx:(Math.random()-0.5)*0.2,vy:-0.05-Math.random()*0.1,r:0.07+Math.random()*0.05,t:0,m:0.9,k:1});   /* small, short dust puffs (Session 59b) */}}}}
 /* rover positions for drawing: parked ones sit on the depot's charging pad */
 function rvPos(e){const tg=rvTarget(e),P=tg&&e._rp&&e._rp.L?e._rp:null,out=[];
  e.rv.slice(0,e.rn).forEach((r,k)=>{if(r.st===0||!P)out.push({x:e.x+0.75+k*0.75,y:e.y+2.15,a:-Math.PI/2,r,park:true});else{const q=rvAt(P,r.p);out.push({x:q.x,y:q.y,a:r.st===2?q.a+Math.PI:q.a,r,park:false});}});return out;}
 
 /* ---------- panel ---------- */
-function roverStatic(e){if(e.k!=='rdepot')return'';const tg=rvTarget(e);
- return`<h4>Rover route</h4><div class="muted" style="margin-bottom:6px">${tg?`Rovers drive the goods to the Rover Depot at ${tg.x}, ${tg.y}.`:'Not linked: this depot receives rovers and passes their goods on to outgoing belts.'}</div>
+function roverStatic(e){if(e.k!=='rdepot'&&e.k!=='tdepot')return'';const fl=e.k==='tdepot';const tg=rvTarget(e);
+ return`<h4>Rover route</h4><div class="muted" style="margin-bottom:6px">${tg?`${fl?'Tanker rovers carry the fluid':'Rovers drive the goods'} to the ${B[e.d].n} at ${tg.x}, ${tg.y}.${fl?' Fill this depot from a pipe through a Pipe Junction.':''}`:fl?'Not linked: this depot receives tanker rovers and feeds the fluid into its pipes (through a Pipe Junction).':'Not linked: this depot receives rovers and passes their goods on to outgoing belts.'}</div>
   <button class="btn" data-act="rvLink">📍 ${tg?'Change destination':'Send to…'}</button>${tg?' <button class="btn" data-act="rvUnlink">✕ Unlink</button>':''}
   <h4>Rovers</h4><div class="chips"><button class="btn chip" data-act="rvAdd" ${e.rn<ROVER.max&&afford(ROVER.cost)?'':'disabled'}>+ Add a rover</button><button class="btn chip" data-act="rvDel" ${e.rn>1?'':'disabled'}>− Remove one</button></div>
-  <div class="muted" style="margin-top:4px">Up to ${ROVER.max} per depot · each extra rover: ${Object.entries(ROVER.cost).map(([k,v])=>v+' '+IT[k].n).join(', ')} · ${ROVER.cap} items per trip.</div>`;}
-function roverDyn(e){if(e.k!=='rdepot')return'';const tg=rvTarget(e),n=rvCount(e),P=tg&&e._rp&&e._rp.L?e._rp:null;
- let h=`<div class="row"><span>Stored</span><span>${n}/${B[e.d].cap}</span></div><div class="bar"><i style="width:${n/B[e.d].cap*100}%"></i></div>${bufList(e.store)}`;
+  <div class="muted" style="margin-top:4px">Up to ${ROVER.max} per depot · each extra rover: ${Object.entries(ROVER.cost).map(([k,v])=>v+' '+IT[k].n).join(', ')} · ${fl?ROVER.fcap+' m³':ROVER.cap+' items'} per trip.</div>`;}
+function roverDyn(e){if(e.k!=='rdepot'&&e.k!=='tdepot')return'';const tg=rvTarget(e),n=rvCount(e),P=tg&&e._rp&&e._rp.L?e._rp:null,fl=e.k==='tdepot',u=fl?' m³':'';
+ let h=`<div class="row"><span>Stored</span><span>${n}/${B[e.d].cap}${u}</span></div><div class="bar"><i style="width:${n/B[e.d].cap*100}%"></i></div>${bufList(e.store)}`;
  if(e._msg)h+=`<div class="plbad" style="margin:4px 0">⚠ ${e._msg}</div>`;
- if(tg&&P){const trip=2*P.L/(ROVER.spd*0.85)+ROVER.load+ROVER.unload;h+=`<div class="row"><span>Route</span><span>${Math.round(P.L)} tiles · ≈ ${Math.round(trip)} s round trip</span></div><div class="row"><span>Throughput</span><span>≈ ${fmt(e.rn*ROVER.cap*60/trip)} items/min</span></div><div class="row"><span>Delivered so far</span><span>${fmt(e.del||0)}</span></div>`;
+ if(tg&&P){const trip=2*P.L/(ROVER.spd*0.85)+ROVER.load+ROVER.unload;h+=`<div class="row"><span>Route</span><span>${Math.round(P.L)} tiles · ≈ ${Math.round(trip)} s round trip</span></div><div class="row"><span>Throughput</span><span>≈ ${fmt(e.rn*(fl?ROVER.fcap:ROVER.cap)*60/trip)}${fl?' m³':' items'}/min</span></div><div class="row"><span>Delivered so far</span><span>${fmt(e.del||0)}</span></div>`;
   e.rv.slice(0,e.rn).forEach((r,k)=>{const c=Object.keys(r.c).reduce((a,q)=>a+r.c[q],0);h+=`<div class="row"><span>Rover ${k+1}</span><span>${r.st===1?`driving out (${Math.round(r.p/P.L*100)}%) · ${c} items`:r.st===2?`returning (${Math.round((1-r.p/P.L)*100)}%)`:e.pw>0?(r.w>0?'loading':'waiting for goods'):'charging: no power'}</span></div>`;});}
  return h;}
 Object.assign(ACT,{
@@ -77,7 +77,7 @@ function drawRovers(sx,sy,s){if(RVTR.w!==S.w){RVTR.length=0;RVTR.w=S.w;}if(!rdep
    ctx.globalAlpha=0.16*(1-age/120);const c=Math.cos(a),si=Math.sin(a);for(const o of [-0.24,0.24]){const px=X-si*o*s,py=Y+c*o*s;ctx.save();ctx.translate(px,py);ctx.rotate(a);ctx.fillRect(-s*0.2,-s*0.05,s*0.4,s*0.1);ctx.restore();}}ctx.globalAlpha=1;}
  /* the selected depot shows its route */
  const sel=UI.panel&&UI.panel.kind==='ent'&&ents.get(UI.panel.arg),src=UI.linkFrom&&ents.get(UI.linkFrom);
- for(const e of [sel,src])if(e&&e.k==='rdepot'){const tg=rvTarget(e);ctx.save();ctx.lineWidth=Math.max(1.5,s*0.07);ctx.setLineDash([s*0.3,s*0.25]);ctx.lineDashOffset=-animT*s*0.8;
+ for(const e of [sel,src])if(e&&(e.k==='rdepot'||e.k==='tdepot')){const tg=rvTarget(e);ctx.save();ctx.lineWidth=Math.max(1.5,s*0.07);ctx.setLineDash([s*0.3,s*0.25]);ctx.lineDashOffset=-animT*s*0.8;
   if(e===src&&hover){ctx.strokeStyle='rgba(216,221,226,0.9)';ctx.beginPath();ctx.moveTo(sx(e.x+1.5),sy(e.y+1.5));ctx.lineTo(sx(hover.x+0.5),sy(hover.y+0.5));ctx.stroke();}
   else if(tg){const P=e._rp&&e._rp.L?e._rp:null;if(P){ctx.strokeStyle='rgba(216,221,226,0.85)';ctx.beginPath();P.pts.forEach((q,k)=>k?ctx.lineTo(sx(q[0]),sy(q[1])):ctx.moveTo(sx(q[0]),sy(q[1])));ctx.stroke();}
    else{ctx.strokeStyle='rgba(255,90,70,0.9)';ctx.beginPath();ctx.moveTo(sx(e.x+1.5),sy(e.y+1.5));ctx.lineTo(sx(tg.x+1.5),sy(tg.y+1.5));ctx.stroke();}}ctx.restore();}
@@ -87,7 +87,8 @@ function drawRovers(sx,sy,s){if(RVTR.w!==S.w){RVTR.length=0;RVTR.w=S.w;}if(!rdep
   ctx.fillStyle='#2b2f34';for(const wx of [-0.33,0,0.33])for(const wy of [-1,1])rr(L*wx-s*0.11,wy*W/2-s*0.07,s*0.22,s*0.14,s*0.05),ctx.fill();
   ctx.fillStyle='#eef1f4';rr(-L*0.42,-W*0.36,L*0.84,W*0.72,s*0.1);ctx.fill();ctx.strokeStyle='#8f979f';ctx.lineWidth=Math.max(1,s*0.04);ctx.stroke();
   ctx.fillStyle='#3a4450';rr(L*0.18,-W*0.24,L*0.18,W*0.48,s*0.05);ctx.fill();
-  const k0=Object.keys(q.r.c||{}).find(k=>q.r.c[k]>0);ctx.fillStyle=k0?IT[k0].c:'#b9c0c7';rr(-L*0.36,-W*0.24,L*0.46,W*0.48,s*0.04);ctx.fill();
+  const k0=Object.keys(q.r.c||{}).find(k=>q.r.c[k]>0);if(e.k==='tdepot'){ctx.fillStyle='#cfe3f0';rr(-L*0.4,-W*0.3,L*0.56,W*0.6,W*0.3);ctx.fill();ctx.strokeStyle='#8f979f';ctx.stroke();if(k0){ctx.fillStyle=IT[k0].c;rr(-L*0.32,-W*0.12,L*0.4,W*0.24,W*0.12);ctx.fill();}}   /* tanker: a round tank with a stripe of its fluid */
+  else{ctx.fillStyle=k0?IT[k0].c:'#b9c0c7';rr(-L*0.36,-W*0.24,L*0.46,W*0.48,s*0.04);ctx.fill();}
   ctx.restore();}}
 
 /* ---------- 3D ---------- */

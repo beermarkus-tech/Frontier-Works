@@ -3377,3 +3377,22 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Known issues:**
 - Tyre tracks are 2D only and aren't saved.
 - Rovers ignore each other. Very long routes (over about 200 tiles around big crater fields) may need a second depot in between.
+
+## Session 59b — 2026-11-18 (Claude Code, cloud session) · Build 168
+
+**Asked:** fluid rovers as well.
+
+**Built:**
+- **Tanker Depot** (`tdepot`): 3×3, 10 MW, holds 1200 m³ of one fluid, Moon only, unlocked by Moon goal 2 (saves past it get it on load). It has its own sprite (two tanks) and 3D model.
+  - **Linked (sending):** it fills from its pipes through a Pipe Junction; it is a fluid consumer in `updNets`.
+  - **Unlinked (receiving):** it feeds the fluid into its pipes, like a tank.
+  - It won't deliver into a depot that holds a different fluid; the panel says so.
+- **Tanker rovers:** the same rovers and route finding, 400 m³ per trip, drawn with a round tank showing a stripe of the fluid's colour. Panel units read m³.
+- Dust puffs behind rovers are now much smaller and shorter-lived; before, they hid the rover and its tracks.
+
+**Verified:**
+- A browser run: source depot → junction → linked depot → tanker rovers → far depot → its pipe holds water.
+- New smoke check: Moon goal 2 unlock, the source drains, water arrives, water reaches the far pipe, the tanker depot refuses items.
+- `npm test` all PASS.
+
+**Known issues:** a single pipe (300 m³/min) fills rovers slower than they drive, so they leave after 10 s with partial loads. Use a Mk2 pipe or several junctions for full loads.

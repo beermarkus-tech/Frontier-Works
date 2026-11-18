@@ -46,7 +46,7 @@ function tap(t){
   openPanel('ent',a.id);return;}
  if(UI.moveId){const e=ents.get(UI.moveId);UI.moveId=null;movePrev=null;updInfo();if(!e)return;const fp=footprint(e.d,t.x,t.y),why=moveEnt(e,fp.x,fp.y);sfx(why?'deny':'move');toast(why?why+': not moved':`${B[e.d].n} moved`);if(!why)UI.sel=e.id;return;}
  if(UI.linkFrom){const src=ents.get(UI.linkFrom),e=entAt(t.x,t.y);UI.linkFrom=null;updInfo();
-  if(src&&e&&e.k===src.k&&(e.k==='dpad'||e.k==='rdepot')&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast(`Route not changed: tap a different ${src?B[src.d].n:'pad'}`);return;}
+  if(src&&e&&e.k===src.k&&(e.k==='dpad'||e.k==='rdepot'||e.k==='tdepot')&&e!==src){src.lx=e.x;src.ly=e.y;toast(`Route set: ${Math.round(padRoute(src,e))} tiles`);UI.sel=src.id;openPanel('ent',src.id);}else toast(`Route not changed: tap a different ${src?B[src.d].n:'pad'}`);return;}
  if(typeof bpTap==='function'&&bpTap(t))return;   /* blueprint tools (Session 48) */
  const tool=UI.tool;
  if(tool==='paste'){const e=entAt(t.x,t.y);if(!e||!UI.clip)return;if(e.d!==UI.clip.d){toast(`The copied settings are for a ${B[UI.clip.d].n}`);sfx('deny');return;}clipApply(e,UI.clip.s);sparkle(e);sfx('place');toast(`Settings pasted onto this ${B[e.d].n}`);return;}   /* paste settings mode (Session 50) */

@@ -386,7 +386,9 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
 - **Moon Rovers (Session 59, agreed with Markus).** A ground drone for the Moon: **Rover Depot** (3×3, 10 MW to recharge, holds 600, Moon only,
   unlocked by Moon goal 2) linked to another depot (like Drone Pads). Its rovers (1 included, up to 3, extra ones cost Moon materials) carry
   200 items per trip at about 6 tiles/s, slower in turns, along a path found around buildings and crater rims (belts, pipes and track can be
-  crossed); they pass through each other. No route → the panel says so and a red line shows the gap. Tyre tracks fade in the dust over 2
+  crossed); they pass through each other. No route → the panel says so and a red line shows the gap.
+  **Tanker Depot** (Session 59b): the fluid version (holds 1200 m³ of one fluid): a linked one fills from a pipe through a Pipe Junction, its
+  tanker rovers carry 400 m³ per trip, an unlinked one feeds what arrives into its pipes; it won't deliver into a depot holding another fluid. Tyre tracks fade in the dust over 2
   minutes; dust puffs; slight bounce in 3D. Unlinked depots pass goods on to belts. Numbers in `ROVER` (`js/data.js`).
 - **Moon water and concrete (agreed with Markus, Session 55; built in Session 58 as the Moon goals above).** Shipping heavy bulk (concrete, water) by rocket makes
   no sense, so the Moon makes its own base materials; freighters carry what the Moon truly can't make (plastic, circuit boards, rocket

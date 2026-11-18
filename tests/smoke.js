@@ -426,6 +426,19 @@ const server=require('./serve.js');
   const sv=serialize();load(sv);const d2=entAt(__R.A.x,__R.A.y);out.saved=d2.rn===2&&d2.lx===__R.Bq.x;
   window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
  check(`Moon rovers: ${Object.entries(rvr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(rvr).every(v=>v===true));
+ // Tanker rovers (Session 59b): a source feeds a linked Tanker Depot through a Pipe Junction, tanker rovers carry it, the far depot feeds its pipe
+ const tkr=await p.evaluate(()=>{const keep={ub:S.ub.slice()};if(S.worlds&&S.worlds.moon)return{had:false};window.__fw.switchWorld('moon');
+  const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};S.ub.push('tdepot','solar','junction','pipe1');
+ const free=(x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)!==''||terr[(y+j)*MW+x+i]===3)return false;return true;};
+ let A=null,Bq=null;for(let r=16;r<110&&!A;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(free(x,y,8,6)){A={x,y};break;}}
+ for(let r=40;r<120&&!Bq;r+=2)for(let a=0;a<40;a++){const x=Math.round(A.x+r*Math.cos(a/6.4+1)),y=Math.round(A.y+r*Math.sin(a/6.4+1));if(x>3&&y>3&&x<MW-8&&y<MH-6&&free(x,y,6,3)){Bq={x,y};break;}}
+ out.pl=P('tdepot',A.x,A.y,0)===''&&P('junction',A.x+3,A.y+1,0)===''&&P('tdepot',A.x+4,A.y,0)===''&&P('tdepot',Bq.x,Bq.y,0)===''&&P('junction',Bq.x+3,Bq.y+1,0)===''&&P('pipe1',Bq.x+4,Bq.y+1,0)==='';
+ P('solar',A.x+4,A.y+3,0);P('solar',A.x+6,A.y+3,0);
+ const src=entAt(A.x,A.y),da=entAt(A.x+4,A.y),db=entAt(Bq.x,Bq.y);src.store={water:800};da.lx=db.x;da.ly=db.y;tick(0.05);window.__K={src,da,db,A,Bq};
+  out.unlock=WGOALS.moon[1].b.includes('tdepot');for(let k=0;k<20*90;k++)tick(0.05);const pj=entAt(Bq.x+4,Bq.y+1);
+  out.drained=rvCount(src)<700;out.carried=(db.store.water||0)>50;out.piped=!!(pj&&pj.net&&pj.net.fluid==='water'&&pj.net.amt>0);out.noItems=!accept(da,'iron_plate',0);
+  window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
+ check(`tanker rovers: ${Object.entries(tkr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(tkr).every(v=>v===true));
  // Moon goals (Session 58): every Moon goal can be made from Moon resources with what is unlocked by then; ice on far crater floors;
  // Regolith Excavator digs anywhere; Sintered Blocks; Ice Melter makes water; the Goals panel shows Moon goals there and hands them in
  const mg=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),ur:S.ur.slice(),ms:S.ms,wms:S.wms};

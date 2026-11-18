@@ -180,7 +180,7 @@ function initEnt(e,d){
   case 'storage':e.store=e.store||{};e.rr=0;break;
   case 'sign':e.tx=e.tx||'';e.tc=e.tc||0;break;
   case 'bpst':e.dsg=Array.isArray(e.dsg)?e.dsg:[];e.dn=e.dn||'';e.want=true;break;   /* Blueprint Station: design pieces + name; always draws its small power */
-  case 'rdepot':e.store=e.store||{};e.rr=0;e.rn=e.rn||1;e.rv=Array.isArray(e.rv)?e.rv:[];break;   /* Rover Depot (js/rover.js) */
+  case 'rdepot':case 'tdepot':e.store=e.store||{};e.rr=0;e.rn=e.rn||1;e.rv=Array.isArray(e.rv)?e.rv:[];break;   /* Rover Depot (js/rover.js) */
   case 'lpad':e.store=e.store||{};e.lt=e.lt||0;e.nl=e.nl||0;break;   /* Launch Pad: loaded rocket parts + kit, launch timer (s, 0 = on the ground), launches so far */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
   case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();if(d.sub==='switch')e.bs=e.bs||((typeof UI!=='undefined'&&UI.swSide)||1);break;   /* trains (js/train.js) */
@@ -270,7 +270,7 @@ function removeEnt(e,ref,silent){
   for(const b of [e.inb,e.outb,e.store,e.fuel])if(b)for(const k in b)give(k,Math.floor(b[k]));
   if((e.k==='drill')&&e.node&&e.buf)give(NODE_T[e.node.t][0],e.buf);
   if(e.k==='dpad'&&e.dr)for(const k in e.dr.c)give(k,e.dr.c[k]);
-  if(e.k==='rdepot'){for(const r of e.rv||[])for(const k in r.c)give(k,r.c[k]);for(let i=1;i<(e.rn||1);i++)refund(ROVER.cost);}
+  if(e.k==='rdepot'||e.k==='tdepot'){for(const r of e.rv||[])for(const k in r.c)give(k,r.c[k]);for(let i=1;i<(e.rn||1);i++)refund(ROVER.cost);}
  }
  topoDirty=true;
 }
@@ -308,6 +308,7 @@ function accept(e,item,dir,carry){
    if(item==='water'&&d.water){if(e.water>=100)return false;e.water++;return true;}
    if(!has(d.fuels,item))return false;const cap=item==='fuel_rod'?5:50;if((e.fuel[item]||0)>=cap)return false;e.fuel[item]=(e.fuel[item]||0)+1;return true;}
   case 'cbay':{if(fl||e.bm)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}
+  case 'tdepot':{if(!fl||typeof rvTarget!=='function'||!rvTarget(e))return false;let t=0;for(const k in e.store){if(k!==item&&e.store[k]>0)return false;t+=e.store[k];}if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}   /* a sending Tanker Depot fills from its pipes */
   case 'storage':case 'dpad':case 'rdepot':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed()[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
@@ -402,7 +403,7 @@ function rebuildTopo(){
 const PIPE_CAP=10,pipeLike=e=>!!e&&(e.k==='pipe'||(e.k==='router'&&B[e.d].sub==='junc'));
 function syncPipes(){for(const n of nets)for(const t of n.tiles){t.item=n.fluid;t.lv=n.cap?n.amt/n.cap:0;}}   // store contents on the tiles (save, rebuild)
 /* first piece beyond a chain of crossings (Session 41d: pipes looked through one crossing only, and never through one into a building) */
-const FLB=['mach','gen','pump','tank','incin'];
+const FLB=['mach','gen','pump','tank','incin','tdepot'];
 /* pipe ends (Session 41e): a pipe only links at its two ends along the drawn line (front = dir, back = straight behind or, on a bend,
    the side it bends from); a junction links on all four sides. So side-by-side pipes and pipes ending at another pipe's side don't join. */
 function pipeEnds(t){return t.k!=='pipe'?15:((1<<t.dir)|(1<<(t.cin!=null?((t.cin+2)&3):((t.dir+2)&3))));}
@@ -436,12 +437,13 @@ function updNets(dt){
   for(const b of n.att){src=b;
    if(b.k==='pump'){if(b.item&&b.buf>0){if(n.fluid&&n.fluid!==b.item){if(!fluidHome(b,b.item,n))n.conflict={fluid:b.item,b,t:tickNo};continue;}b.buf-=take(b.item,b.buf);}}
    else if(b.k==='mach'){for(const k in b.outb)if(IT[k].f&&b.outb[k]>0){if(n.fluid&&n.fluid!==k){if(!fluidHome(b,k,n))n.conflict={fluid:k,b,t:tickNo};continue;}b.outb[k]-=take(k,b.outb[k]);}}
+   else if(b.k==='tdepot'&&typeof rvTarget==='function'&&!rvTarget(b)){const k0=Object.keys(b.store).find(k=>b.store[k]>0);if(k0&&n.amt<n.cap*0.9){if(n.fluid&&n.fluid!==k0)continue;b.store[k0]-=take(k0,b.store[k0]);if(!b.store[k0])delete b.store[k0];}}   /* a receiving Tanker Depot feeds its pipes (Session 59b) */
    else if(b.k==='tank'&&b.ft&&b.amt>0&&n.amt<n.cap*0.5){if(n.fluid&&n.fluid!==b.ft){if(!fluidHome(b,b.ft,n))n.conflict={fluid:b.ft,b,t:tickNo};continue;}b.amt-=take(b.ft,b.amt);if(!b.amt)b.ft=null;}}
   if(n.fluid&&n.amt>=1){
    // fair share (Session 37f): one unit at a time, in turn, to every building that can take it; the starting point moves by one each tick.
    // Before, each building in turn was filled as far as it could take, and the start could land on the same building every tick, so when
    // fluid was short one refinery always got served first.
-   const cons=n.att.filter(b=>b.k!=='pump'&&!(b.k==='tank'&&n.amt<=n.cap*0.8)&&!(b.k==='mach'&&!(b.r&&RC[b.r].i[n.fluid])));
+   const cons=n.att.filter(b=>b.k!=='pump'&&!(b.k==='tdepot'&&typeof rvTarget==='function'&&!rvTarget(b))&&!(b.k==='tank'&&n.amt<=n.cap*0.8)&&!(b.k==='mach'&&!(b.r&&RC[b.r].i[n.fluid])));
    if(cons.length){let i=(n.rr=((n.rr||0)+1)%cons.length),stall=0;
     while(n.amt>=1&&n.bo>=1&&stall<cons.length){if(accept(cons[i],n.fluid,0,0)){n.amt--;n.bo--;sent++;stall=0;fAdd(n,cons[i],-1);zNetFlow(n,cons[i],1,false);}else stall++;i=(i+1)%cons.length;}}}
   n._got=got;n._sent=sent;n._fl+=((n.cap?n.amt/n.cap:0)-n._fl)*Math.min(1,dt/1.2);}
@@ -592,7 +594,7 @@ function updBuilding(e,dt){
   case 'tank':if(e.amt>0&&e.ft)for(let a=0;a<3&&e.amt>0;a++){if(pushOut(e,e.ft))e.amt--;else break;}break;
   case 'dpad':updPad(e,dt);break;
   case 'lpad':updLpad(e,dt);break;
-  case 'rdepot':if(typeof updRover==='function')updRover(e,dt);break;
+  case 'rdepot':case 'tdepot':if(typeof updRover==='function')updRover(e,dt);break;
  }
 }
 /* Background production (Session 52): what reaches this world's Base Core, in 10 s buckets over the last 5 minutes. When you leave a world
