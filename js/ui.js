@@ -54,7 +54,7 @@ function updInfo(){
 function worldsHtml(){const ids=[S.w||'home',...Object.keys(S.worlds||{})].filter((v,i,a)=>a.indexOf(v)===i&&WORLDS[v]);
  return'<div class="muted">Every world you have reached. Unlocks and tiers count everywhere; each world has its own buildings and its own stock.</div>'+ids.map(id=>{const W=WORLDS[id],here=id===(S.w||'home');
   return`<div class="card"><div class="row"><b>${W.ic} ${W.n}</b>${here?'<span class="plok">you are here</span>':`<button class="btn chip on" data-act="travel" data-v="${id}">Travel</button>`}</div>${bgHtml(id,here)}</div>`;}).join('')
-  +'<div class="muted" style="margin-top:6px">Worlds you are not on keep producing: whatever their factories delivered into the Base Core per minute (measured over your last few minutes there) keeps arriving in that world\u2019s stock while you are away.</div>';}
+  +(typeof freightWorldsHtml==='function'?freightWorldsHtml():'')+'<div class="muted" style="margin-top:6px">Worlds you are not on keep producing: whatever their factories delivered into the Base Core per minute (measured over your last few minutes there) keeps arriving in that world\u2019s stock while you are away.</div>';}
 function bgHtml(id,here){const r=here?coreRates():S.worlds[id]&&S.worlds[id].WS.bg&&S.worlds[id].WS.bg.r,ks=r?Object.keys(r).filter(k=>r[k]*60>=0.05).sort((a,b)=>r[b]-r[a]):[];
  if(here&&!r)return`<div class="muted">Measuring deliveries into the Base Core… (${Math.max(1,Math.ceil((60-CORE.b.length*10-CORE.acc)/10)*10)} s until the first estimate)</div>`;
  if(!ks.length)return`<div class="muted">${here?'Nothing is delivered into the Base Core right now.':'Produces nothing in the background (nothing reached its Base Core).'}</div>`;
@@ -119,7 +119,8 @@ function entStatic(e){
  const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
  if(e.k==='bpst')h+=stHtml(e);   /* Blueprint Station */
  if(typeof trainStatic==='function')h+=trainStatic(e);
- if(typeof roverStatic==='function')h+=roverStatic(e);   /* Train Stop, Cargo Bay (Session 56) */
+ if(typeof roverStatic==='function')h+=roverStatic(e);
+ if(typeof freightStatic==='function')h+=freightStatic(e);   /* Train Stop, Cargo Bay (Session 56) */
  h+=clipHtml(e);   /* copy / paste settings (Session 50) */
  if(e.k==='router'&&d.sub==='valve'){const why={pipe:'⚠ Needs a pipe on both ends: behind the valve (fluid comes in) and in front (the arrow side).',same:'⚠ Both ends are the same pipe network, so the valve can do nothing. The two sides must only be connected through the valve.',mix:'⚠ The pipe in front holds a different fluid.',empty:'Nothing to pass on: the pipe behind is empty.',full:'The pipe in front is full: it takes no more right now.',topped:'Top up: the pipe ahead is at least half full, so the valve waits until it needs more.'}[e.vwhy];
   h+=`<h4>Mode</h4><div class="chips"><button class="btn chip ${e.vm?'':'on'}" data-act="valveMode" data-v="0">Fixed limit</button><button class="btn chip ${e.vm?'on':''}" data-act="valveMode" data-v="1">Top up</button></div>
@@ -222,6 +223,7 @@ function entDyn(e){
    <div class="row"><span>${nm('water')}</span><span>${e.inb.water||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="row"><span>${nm('oxygen')}</span><span>${e.inb.oxygen||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="muted">Colony total: ${colonyPop()} colonists. Pipe water and oxygen in through Pipe Junctions.</div>`;}
  if(typeof trainDyn==='function')h+=trainDyn(e);
  if(typeof roverDyn==='function')h+=roverDyn(e);
+ if(typeof freightDyn==='function')h+=freightDyn(e);
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
   if(e.item){const rate=(d.water?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}

@@ -183,6 +183,7 @@ function initEnt(e,d){
   case 'rdepot':case 'tdepot':e.store=e.store||{};e.rr=0;e.rn=e.rn||1;e.rv=Array.isArray(e.rv)?e.rv:[];break;   /* Rover Depot (js/rover.js) */
   case 'lpad':e.store=e.store||{};e.lt=e.lt||0;e.nl=e.nl||0;break;   /* Launch Pad: loaded rocket parts + kit, launch timer (s, 0 = on the ground), launches so far */
   case 'dpad':e.store=e.store||{};e.rr=0;e.dr=Object.assign({st:0,t:0,c:{},w:0,tx:0,ty:0},e.dr||{});break;
+  case 'fport':break;
   case 'hab':e.inb=e.inb||{};e.pop=e.pop||0;e.gt=e.gt||0;e.wa=0;e.oa=0;break;   /* Habitat (Session 60) */
   case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();if(d.sub==='switch')e.bs=e.bs||((typeof UI!=='undefined'&&UI.swSide)||1);break;   /* trains (js/train.js) */
   case 'cbay':e.store=e.store||{};e.bm=e.bm||0;e.rr=0;break;   /* Cargo Bay: bm 0 = Load, 1 = Unload */
@@ -596,6 +597,7 @@ function updBuilding(e,dt){
   case 'tank':if(e.amt>0&&e.ft)for(let a=0;a<3&&e.amt>0;a++){if(pushOut(e,e.ft))e.amt--;else break;}break;
   case 'dpad':updPad(e,dt);break;
   case 'lpad':updLpad(e,dt);break;
+  case 'fport':e.want=(S.fr||[]).some(f=>f.home===(S.w||'home')&&f.st===0);break;   /* draws power while a freighter waits to launch */
   case 'hab':{e.want=true;const people=Math.max(1,e.pop),need=people*HAB.per/60*dt;let short=!(e.pw>0);e.wa+=need;e.oa+=need;   /* colonists drink and breathe; growth every HAB.grow s */
    while(e.wa>=1){if((e.inb.water||0)>0){e.inb.water--;e.wa--;}else{short=true;e.wa=1;break;}}while(e.oa>=1){if((e.inb.oxygen||0)>0){e.inb.oxygen--;e.oa--;}else{short=true;e.oa=1;break;}}
    e.ok=!short;e.gt+=dt;if(e.gt>=HAB.grow){e.gt=0;e.pop=short?Math.max(0,e.pop-1):Math.min(HAB.cap,e.pop+1);}break;}
@@ -625,6 +627,7 @@ function tick(dt){
  for(const e of crosses)updCross(e);    // splitter never waits a whole tick (Mk5 through splitters: 684 → 780/min)
  for(const e of buildings)updBuilding(e,dt);
  if(typeof trainTick==='function')trainTick(dt);
+ if(typeof freightTick==='function')freightTick(dt);
  updNets(dt);
  CORE.acc+=dt;if(CORE.acc>=10){CORE.acc-=10;CORE.b.push(CORE.cur);CORE.cur={};if(CORE.b.length>30)CORE.b.shift();if(typeof wgRateTick==='function')wgRateTick();}
  zTick(dt);stat.acc+=dt;if(stat.acc>=1){stat.acc-=1;stat.hist.push({p:stat.p,c:stat.c});if(stat.hist.length>60)stat.hist.shift();stat.p={};stat.c={};}

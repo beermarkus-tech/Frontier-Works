@@ -107,6 +107,9 @@ R('r_lunarcrete','Moon Concrete','vfurnace',4,'regolith:3,water:4','concrete:2')
 R('r_vac_steel','Lunar Steel','vfurnace',8,'iron_ore:4,regolith:2','steel_ingot:2');   /* carbon traces in the regolith; slow and power-hungry */
 R('r_o2_regolith','Regolith Oxygen','vfurnace',6,'regolith:6','oxygen:3,iron_ore:1');
 R('r_o2_water','Water Splitting','refinery',4,'water:4','oxygen:3');
+// Earth upgrades with Moon goods (Session 60b, unlocked with Moon goal 6)
+R('r_cryo_rod','Cryo Fuel Rod (alt)','fabricator',90,'uranium_cell:30,helium:10,cased_girder:3','fuel_rod:1',1);
+R('r_lattice_qc','Lattice Quantum Core (alt)','fabricator',40,'control_chip:1,compute_module:2,lattice:2','quantum_core:1',1);
 R('r_wafer_cb','Wafer Circuit Board','vfurnace',8,'vac_wafer:1,copper_sheet:2','circuit_board:2');
 R('r_moon_alu','Lunar Aluminum','vfurnace',6,'bauxite:4,water:6','alu_ingot:2');
 R('r_quantum_core','Quantum Core','fabricator',60,'control_chip:2,compute_module:3,heat_sink:6,battery:10','quantum_core:1');
@@ -145,6 +148,9 @@ const TRAIN={cap:1000,vmax:16,acc:2.5,brk:4,pw:15,crawl:1.5,xfer:40,car:2,maxW:4
 /* Moon Rovers (Session 59): a depot sends ground rovers to another depot; they drive around buildings and crater rims */
 D('rdepot',{n:'Rover Depot',k:'rdepot',w:3,pw:10,cap:600,only:'moon',cat:'trans',col:'#d8dde2',cost:{iron_plate:30,copper_sheet:20,wire:30,concrete:10},desc:'Holds 600 items. Link it to another depot and its rovers drive the goods there (200 per trip), around buildings (over crater rims slowly, if needed), then come back. Comes with one rover; add up to 3. Recharges rovers (needs power). Only on the Moon.'});
 D('tdepot',{n:'Tanker Depot',k:'tdepot',w:3,pw:10,cap:1200,fl:1,only:'moon',cat:'trans',col:'#cfe3f0',cost:{iron_plate:30,copper_sheet:40,wire:30,concrete:10},desc:'The fluid version of the Rover Depot: holds 1200 m³ of one fluid. Linked to another Tanker Depot, it takes fluid from a pipe (through a Pipe Junction) and its tanker rovers carry 400 m³ per trip; an unlinked one feeds what arrives into its pipes. Only on the Moon.'});
+/* Orbital Freighters (Session 60b): ports on both worlds; freighters (based at Home, fuelled with Rocket Fuel there) move item stock between worlds */
+D('fport',{n:'Freighter Port',k:'fport',w:6,pw:40,cat:'trans',col:'#b8c4d0',cost:{hull_plate:20,steel_beam:40,concrete:100,circuit_board:20},desc:'Landing site for Orbital Freighters (one is needed on each world). A Home port builds freighters and sets their routes: cargo taken from one world\u2019s item stock and delivered into the other\u2019s, both ways. Each round trip burns Rocket Fuel from Home\u2019s stock. Needs power to launch.'});
+const FREIGHT={cap:2000,fly:60,dock:5,fuel:40,max:3,cost:{hull_plate:20,guidance_core:1,rocket_fuel:40}};
 const ROVER={fcap:400,cap:200,spd:6,load:2,unload:2,wait:10,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 D('lpad',{n:'Launch Pad',k:'lpad',w:6,pw:150,only:'home',cat:'trans',col:'#e8a23a',cost:{heavy_truss:20,cased_girder:60,concrete:400,control_chip:10},desc:'Builds and launches the colony rocket to the Moon. Belt in the rocket parts and the starter kit (or load them from your stock), then press Launch. Needs 150 MW while the rocket is ready.'});
 /* Colony rocket (Session 51, DESIGN.md section 12): parts + the starter kit it carries to the Moon (Moon has no coal or limestone) */
@@ -212,7 +218,7 @@ const WGOALS={moon:[
  {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:['habitat'],r:['r_vac_steel','r_o2_regolith','r_o2_water'],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need. Next the Moon becomes a colony.'},
  /* Colony goals (Session 60): rates held for HOLD seconds (measured at the Base Core over the last minute) and a population */
  {n:'First Settlers',req:{},pop:10,rate:{steel_ingot:20,concrete:30},b:[],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel and concrete, steadily.'},
- {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:[],r:[],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Orbital Freighters come next: Moon goods become wanted on Earth.'}]};
+ {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:['fport'],r:['r_cryo_rod','r_lattice_qc'],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Trade: Orbital Freighters carry helium and lattice crystals to Earth (cheaper Fuel Rods and Quantum Cores there) and plastic or parts up to the Moon.'}]};
 const WG_HOLD=180;   /* seconds a rate goal must be held */
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
 const START_B=[...SIGNS,'zone','bpstation','bplist','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];

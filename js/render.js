@@ -227,6 +227,8 @@ function paintB(g,id,P,u){
    box(i+W*0.25,i+W*0.36,W*0.17,W*0.05,u*0.03,'#b07a30');dots([[i+W*0.07,i+W*0.07],[i+W*0.93,i+W*0.07],[i+W*0.07,i+W*0.93],[i+W*0.93,i+W*0.93]],u*0.12,'#ff6a3a');break;}
   case 'tdepot':{box(i,i,W,W,u*0.16,'#5d6066');circ(i+W*0.3,i+W*0.3,W*0.2,'#cfe3f0');circ(i+W*0.7,i+W*0.3,W*0.2,'#cfe3f0');g.fillStyle='#3d8ee6';g.beginPath();g.arc(i+W*0.3,i+W*0.3,W*0.1,0,7);g.arc(i+W*0.7,i+W*0.3,W*0.1,0,7);g.fill();   /* Tanker Depot (Session 59b): two tanks + charging pad */
    g.strokeStyle='#f2c230';g.lineWidth=W*0.03;g.setLineDash([W*0.05,W*0.04]);g.strokeRect(i+W*0.12,i+W*0.56,W*0.76,W*0.32);g.setLineDash([]);break;}
+  case 'fport':{box(i,i,W,W,u*0.2,'#5d6066');g.fillStyle='#3a3d42';g.beginPath();g.arc(P*0.5,P*0.5,W*0.34,0,7);g.fill();g.strokeStyle='#f2c230';g.lineWidth=Math.max(1.5,W*0.02);g.beginPath();g.arc(P*0.5,P*0.5,W*0.3,0,7);g.stroke();   /* Freighter Port (Session 60b): landing ring, cargo sheds */
+   g.fillStyle='#f2c230';g.font=`800 ${W*0.18}px Inter,sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('F',P*0.5,P*0.5);g.textAlign='left';for(const [a,b] of [[0.08,0.08],[0.78,0.08],[0.08,0.78],[0.78,0.78]])box(i+W*a,i+W*b,W*0.14,W*0.14,u*0.04,'#c4cad0');break;}
   case 'habitat':{box(i,i,W,W,u*0.2,'#5d6066');circ(P*0.5,P*0.5,W*0.42,'#eef1f4',40);g.strokeStyle='rgba(120,130,140,0.6)';g.lineWidth=Math.max(1,u*0.05);for(const r of [0.3,0.18])g.beginPath(),g.arc(P*0.5,P*0.5,W*r,0,7),g.stroke();   /* Habitat (Session 60): a dome with ring segments and a docking module */
    g.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3;g.moveTo(P*0.5+Math.cos(a)*W*0.12,P*0.5+Math.sin(a)*W*0.12);g.lineTo(P*0.5+Math.cos(a)*W*0.42,P*0.5+Math.sin(a)*W*0.42);}g.stroke();box(i+W*0.78,i+W*0.4,W*0.2,W*0.2,u*0.05,'#c4cad0');break;}
   case 'rdepot':{box(i,i,W,W,u*0.16,'#5d6066');g.fillStyle='#2b2f34';g.fillRect(i+W*0.08,i+W*0.08,W*0.84,W*0.34);g.fillStyle='#d8dde2';for(let k=0;k<3;k++)g.fillRect(i+W*(0.12+k*0.27),i+W*0.12,W*0.22,W*0.26);   /* Rover Depot (Session 59): three garage bays + a charging pad */
@@ -646,7 +648,7 @@ function render(){
  }
  if(typeof drawTrains==='function')drawTrains(sx,sy,s);   /* trains above buildings (Session 56) */
  // drones (above buildings) and the selected pad's route
- drawDrones(sx,sy,s,lod);if(typeof drawRovers==='function')drawRovers(sx,sy,s);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
+ drawDrones(sx,sy,s,lod);if(typeof drawRovers==='function')drawRovers(sx,sy,s);if(typeof drawFreighters==='function')drawFreighters(sx,sy,s);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
  // particles
  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.t+=fdt;if(p.t>p.m){parts.splice(k,1);continue;}p.x+=p.vx*fdt;p.y+=p.vy*fdt;}
  for(const p of parts){if(p.x<x0-2||p.x>x1+2||p.y<y0-2||p.y>y1+2)continue;const f=p.t/p.m,al=(1-f)*(f<0.15?f/0.15:1);ctx.globalAlpha=al*(p.k?0.55:0.45);ctx.fillStyle=p.k?'#eef2f5':'#3a3a3c';ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),s*p.r*(1+f*1.8),0,7);ctx.fill();}

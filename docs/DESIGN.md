@@ -386,8 +386,14 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   Pipe Junctions (2 m³/min each per colonist), gain a colonist every 20 s when supplied (max 10), lose one when short. With **Lunar Steel**
   the Moon makes motors, beams, girders and so its own Refineries and Fabricators (plastic stays Earth-only).
   5 **First Settlers** (10 colonists; 20 steel/min, 30 concrete/min). 6 **Self-Sufficient** (30 colonists; 6 motors/min, 15 steel beams/min,
-  20 wafers/min) → next: Orbital Freighters, with real uses for Moon goods on Earth (first Dyson Sphere stage: Sphere Frame; Earth
-  upgrades with lattice crystals/helium). Rovers may climb crater rims slowly (rims enclose crater floors).
+  20 wafers/min) → **Orbital Freighters** (Session 60b) + Earth uses for Moon goods. Rovers may climb crater rims slowly.
+- **Orbital Freighters (built, Session 60b).** A **Freighter Port** (6×6, 40 MW while a freighter waits to launch) is needed on both worlds.
+  Freighters (up to 3, built at Home's port: 20 Hull Plates, 1 Guidance Core, 40 Rocket Fuel) have a route with up to 3 cargo lines each
+  way and work with the worlds' **item stocks** (not belts), so they keep flying while you are on the other world. Up to 2,000 items each
+  way, 60 s per flight, 5 s docked at each end; each round trip burns 40 Rocket Fuel from Home's stock (the Home port needs power at launch).
+  Take-off and landing are drawn at the port of the world you're on; the Worlds panel and port panels show each freighter's state.
+  **Uses on Earth:** Cryo Fuel Rod (alt: 30 uranium cells + 10 helium + 3 girders, instead of 50 cells) and Lattice Quantum Core (alt:
+  1 control chip + 2 compute modules + 2 lattice crystals). The Dyson Sphere stages (with a Sphere Frame from Moon goods) come later.
   Ice lies on dark crater floors at least 45 tiles from the landing site (own generator pass). Complex machines (Refinery, Fabricator…)
   still need steel/motors from Home: more rocket launches now, freighters later. Numbers in `WGOALS` (`js/data.js`).
 - **Moon Rovers (Session 59, agreed with Markus).** A ground drone for the Moon: **Rover Depot** (3×3, 10 MW to recharge, holds 600, Moon only,
@@ -456,8 +462,9 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 ## 15. Where to start next (kept up to date)
 - **Trains Phase 1 is built (Session 56).** Markus should try it on his phone first: track loop, two stops, Cargo Bays, a train.
 - **Moon goals are built (Session 58).** Markus plays them on the Moon.
-- **Next:** Moon Colony part 4: Orbital Freighters (stock-based, fuelled from Home) unlocked after Moon goal 6, plus uses for Moon goods on
-  Earth (Sphere Frame, lattice/helium upgrades). Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
+- **Moon Colony and Orbital Freighters are built (Sessions 60, 60b).**
+- **Next:** freighter visuals in 3D and balance of the colony numbers after Markus plays them; then the ice planet (new colony rocket,
+  cryo-ice, Cryo Plant) or the first Dyson Sphere stage, as Markus prefers. Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
   blueprints). Then the all-tier measuring tool, also checking the Moon goals. Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
 
 ## 11. Explicitly out of scope (for now)

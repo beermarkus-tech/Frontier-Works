@@ -59,6 +59,7 @@ and keep the game playable after every commit.
 - World goals (`WGOALS` in data.js, progress `S.wms[world]`, shared): the Goals panel (`msHtml`/`wgHtml`, tab `UI.gview`) shows the current world's list; `submitWg` hands in from that world's stock; `grantUnlocks` includes them. Moon content: `rexc` (drill with `reg:1`, no node), `imelt` (Ice Melter), ice nodes (`MOON_RES`, own pass in `genMoon`).
 - Moon Rovers (`js/rover.js`, after train.js): depot `k:'rdepot'` (`e.lx/ly` route, `e.rn` rovers, `e.rv` [{st,p,c,w}] saved); `rvPath` = A* (8-dir) around buildings/terr 3, straightened + rounded, cached per `topoVer`; `updRover` from updBuilding; tracks `RVTR` (not saved); drawn by `drawRovers` / `v3Rovers`. Numbers in `ROVER`.
 - Colony (Session 60): world goals may have `rate` {item: per min} held `WG_HOLD` s (timer `S.wgh[world]` via `wgRateTick` every CORE bucket, rates `coreRate60`) and `pop` (`colonyPop()` = sum of Habitat `e.pop`); `wgReady(g)` gates Complete. Habitat `k:'hab'` takes water/oxygen (FLB) and grows/shrinks every `HAB.grow` s.
+- Orbital Freighters (`js/freight.js`): shared `S.fr` [{id,nm,home,dest,st,t,c,out,back,trips,del}]; `freightTick` (from `tick`) moves item stock between worlds via `wInv(w)` (current `S.inv` or packed `S.worlds[w].WS.inv`); ports `k:'fport'` checked with `portsOn(w)` (packed `es` too); panels `freightStatic/freightDyn/freightWorldsHtml`; drawn by `drawFreighters` (take-off/landing only). Numbers in `FREIGHT`.
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).
 
 ## Rules

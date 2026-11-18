@@ -439,6 +439,18 @@ const server=require('./serve.js');
   out.drained=rvCount(src)<700;out.carried=(db.store.water||0)>50;out.piped=!!(pj&&pj.net&&pj.net.fluid==='water'&&pj.net.amt>0);out.noItems=!accept(da,'iron_plate',0);
   window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
  check(`tanker rovers: ${Object.entries(tkr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(tkr).every(v=>v===true));
+ // Orbital Freighters (Session 60b): a Home-based freighter needs a port on both worlds and Rocket Fuel; it moves stock both ways in one round trip
+ const frt=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),inv:JSON.stringify(S.inv),fr:S.fr};if(S.worlds&&S.worlds.moon)return{had:false};S.ub.push('fport');S.fr=[];
+  const spot=(w,h)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};
+  fw.switchWorld('moon');const m=spot(6,6);out.moonPort=fw.placeEnt('fport',m.x,m.y,0,true)==='';S.inv={helium:600};fw.switchWorld('home');
+  const h=spot(9,6);out.homePort=fw.placeEnt('fport',h.x,h.y,0,true)==='';fw.placeEnt('burner',h.x+6,h.y,0,true);fw.placeEnt('burner',h.x+6,h.y+2,0,true);const pt=entAt(h.x,h.y);
+  S.inv=Object.assign({},FREIGHT.cost,{rocket_fuel:FREIGHT.cost.rocket_fuel+40,plastic:300});openPanel('ent',pt.id);ACT.frAdd();out.built=S.fr.length===1;
+  const f=S.fr[0];f.out=[{i:'plastic',n:300}];f.back=[{i:'helium',n:500}];ACT.closePanel();
+  for(let k=0;k<20*(2*FREIGHT.fly+2*FREIGHT.dock+6);k++){for(const b of [entAt(h.x+6,h.y),entAt(h.x+6,h.y+2)])b.fuel={coal:50};tick(0.05);}
+  out.trip=f.trips===1||f.trips===2;out.home=(S.inv.helium||0)===500&&!S.inv.plastic;out.moon=S.worlds.moon.WS.inv.plastic===300&&S.worlds.moon.WS.inv.helium===100;out.fuel=(S.inv.rocket_fuel||0)===0;
+  ACT.openWorlds();out.worlds=/freighter/i.test(document.getElementById('pbody').innerText);ACT.closePanel();out.uses=!!RC.r_cryo_rod&&!!RC.r_lattice_qc&&WGOALS.moon[5].b.includes('fport');
+  for(const e of [...ents.values()])if(e.k==='fport'||e.d==='burner')removeEnt(e,false,true);delete S.worlds.moon;S.ub=keep.ub;S.inv=JSON.parse(keep.inv);S.fr=keep.fr;return out;});
+ check(`Orbital Freighters: ${Object.entries(frt).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(frt).every(v=>v===true));
  // Moon colony (Session 60): a supplied Habitat gains colonists, an unsupplied one loses them; a rate goal completes after its rates are held
  const col=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),wms:S.wms,wgh:S.wgh};if(S.worlds&&S.worlds.moon)return{had:false};fw.switchWorld('moon');S.ub.push('habitat','solar');
   let X,Y;for(let r=16;r<110&&X==null;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<4&&ok;j++)for(let i=0;i<8&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){X=x;Y=y;break;}}

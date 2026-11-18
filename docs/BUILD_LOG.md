@@ -3431,3 +3431,33 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - `npm test` all PASS.
 
 **Next up:** part 4. Orbital Freighters (stock-based, fuelled from Home) and real uses for Moon goods on Earth: the first Dyson Sphere stage (Sphere Frame) and Earth upgrades with lattice crystals and helium.
+
+## Session 60b — 2026-11-18 (Claude Code, cloud session) · Build 170
+
+**Asked:** part 4 of the Moon Colony chapter: Orbital Freighters with real uses for Moon goods on Earth.
+
+**Built (new file `js/freight.js`):**
+- **Freighter Port** (`fport`): 6×6 on either world, 40 MW while a freighter waits to launch, built from Moon-makeable materials (hull plates, steel beams, concrete, circuit boards). Unlocked by Moon goal 6, Self-Sufficient.
+- **Freighters** (shared `S.fr`):
+  - Built at Home's port, up to 3 (20 Hull Plates, 1 Guidance Core, 40 Rocket Fuel each).
+  - Each has 3 cargo lines "to the Moon" and 3 "back to Home" (item + amount, up to 2,000 per direction).
+  - They take from and deliver into the worlds' **item stocks**, so they keep flying while you are on the other world (packed stocks are updated directly).
+  - 60 s per flight, 5 s docked at each end; 40 Rocket Fuel per round trip from Home's stock. The Home port needs power at launch while you're on Home.
+  - Messages: no port, no fuel, no power. They can be scrapped when docked (refunded).
+- **Panels:** the Home port edits routes and shows each freighter's live state; a Moon port explains it's a landing site and shows traffic; the Worlds panel lists all freighters.
+- **2D:** a freighter (a smaller rocket) sits docked on the port, and take-off and landing are animated at the port of the world you're on.
+- **Uses for Moon goods on Earth** (alternate recipes, unlocked by goal 6):
+  - **Cryo Fuel Rod:** 30 uranium cells + 10 helium crystals + 3 girders → 1 rod (instead of 50 cells).
+  - **Lattice Quantum Core:** 1 control chip + 2 compute modules + 2 lattice crystals → 1 core.
+
+**Verified:**
+- New smoke check: ports on both worlds; a freighter built at Home; one round trip carries 300 plastic to the Moon's stock and 500 helium to Home's stock and burns the fuel; the Worlds panel lists it; the new recipes and unlock exist.
+- Screenshot of the port panel with the docked freighter.
+- `npm test` all PASS.
+
+**Known issues:**
+- Freighters aren't drawn in 3D yet (ports are).
+- Colony and freighter numbers are first guesses.
+- The Sphere Frame (first Dyson Sphere stage) is not built; Moon goods' Earth use is the two alternate recipes for now.
+
+**Next up:** Markus plays the colony goals and freighters. Then 3D freighter visuals, balance, and the next chapter (ice planet or first Dyson Sphere stage).
