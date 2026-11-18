@@ -3341,3 +3341,13 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - "From a node" on an ice deposit plans water.
 
 **Verified:** the Moon goals smoke check confirms the Moon default for concrete is Sintered Blocks, regolith is raw and ice gives water; back on Home, concrete defaults to the Press again. `npm test` all PASS.
+
+## Session 58h — 2026-11-18 (Claude Code, cloud session) · Build 166
+
+**Reported:** when starting a power line by tapping a pole or generator, nothing showed which one was picked (on a phone there is no hover, and the start outline was only drawn under the finger).
+
+**Fixed:** while a line is open, its start pole or generator keeps the same yellow dashed, moving ring as a selected building, plus a faint circle for the wire reach. This is drawn every frame, independent of the finger.
+
+**Verified:** screenshot with no hover after two taps; the start pole is ringed. `npm test` all PASS.
+
+**Open question:** Moon Rovers. A proposal was sent (Rover Depot, 200 items per trip, 6 tiles/s, drives around obstacles, tyre tracks, Moon goal 2). Waiting for Markus's go.

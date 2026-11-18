@@ -685,6 +685,9 @@ function render(){
   if(slow.length&&slow.length<ps.length){ctx.strokeStyle='rgba(255,140,40,0.95)';ctx.lineWidth=Math.max(2,s*0.08);for(const t of slow){rr(sx(t.x)+s*0.08,sy(t.y)+s*0.08,s*0.84,s*0.84,s*0.15);ctx.stroke();}}}}
  if(typeof drawBpGhost==='function')drawBpGhost(sx,sy,s);   /* blueprint preview */
  if(UI.sel&&ents.has(UI.sel)){const e=ents.get(UI.sel),X=sx(e.x)-3*DPR,Y=sy(e.y)-3*DPR,P=e.w*s+6*DPR;ctx.strokeStyle='rgba(255,181,71,0.25)';ctx.lineWidth=7*DPR;rr(X,Y,P,P,s*0.2);ctx.stroke();ctx.strokeStyle='#ffb547';ctx.lineWidth=2*DPR;ctx.setLineDash([7*DPR,5*DPR]);ctx.lineDashOffset=-animT*24*DPR;ctx.stroke();ctx.setLineDash([]);}
+ {const ws=UI.wireStart&&UI.tool&&B[UI.tool]&&B[UI.tool].k==='pole'&&ents.get(UI.wireStart);if(ws){const X=sx(ws.x)-3*DPR,Y=sy(ws.y)-3*DPR,P=ws.w*s+6*DPR,C=cen(ws);   /* the start of a power line stays marked, also without a finger on the screen (Session 58h) */
+  ctx.strokeStyle='rgba(255,181,71,0.25)';ctx.lineWidth=7*DPR;rr(X,Y,P,P,s*0.2);ctx.stroke();ctx.strokeStyle='#ffb547';ctx.lineWidth=2*DPR;ctx.setLineDash([7*DPR,5*DPR]);ctx.lineDashOffset=-animT*24*DPR;ctx.stroke();
+  ctx.strokeStyle='rgba(255,211,74,0.45)';ctx.lineWidth=1.5*DPR;ctx.setLineDash([5*DPR,5*DPR]);ctx.lineDashOffset=0;ctx.beginPath();ctx.arc(sx(C.x),sy(C.y),Math.max(B[ws.d].link||0,B[UI.tool].link||0)*s,0,7);ctx.stroke();ctx.setLineDash([]);}}
  // clouds and vignette are CSS layers above the canvas (cheap on phones): just keep the cloud layer in step with the camera
  syncClouds(ox,oy);
 }
