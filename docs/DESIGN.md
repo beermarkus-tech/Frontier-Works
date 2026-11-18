@@ -385,7 +385,7 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   **steady rates** into the Base Core held for 3 minutes, and a **population**. **Habitats** (4×4) need power + water + oxygen through
   Pipe Junctions (2 m³/min each per colonist), gain a colonist every 20 s when supplied (max 10), lose one when short. With **Lunar Steel**
   the Moon makes motors, beams, girders and so its own Refineries and Fabricators (plastic stays Earth-only).
-  5 **First Settlers** (10 colonists; 20 steel/min, 30 concrete/min). 6 **Self-Sufficient** (30 colonists; 6 motors/min, 15 steel beams/min,
+  5 **First Settlers** (10 colonists; 15 steel pipes/min, 30 concrete/min; Session 60c: pipes instead of raw ingots, they are useful for building). 6 **Self-Sufficient** (30 colonists; 6 motors/min, 15 steel beams/min,
   20 wafers/min) → **Orbital Freighters** (Session 60b) + Earth uses for Moon goods. Rovers may climb crater rims slowly.
 - **Orbital Freighters (built, Session 60b).** A **Freighter Port** (6×6, 40 MW while a freighter waits to launch) is needed on both worlds.
   Freighters (up to 3, built at Home's port: 20 Hull Plates, 1 Guidance Core, 40 Rocket Fuel) have a route with up to 3 cargo lines each

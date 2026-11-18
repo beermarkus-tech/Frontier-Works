@@ -457,7 +457,7 @@ const server=require('./serve.js');
   out.pl=fw.placeEnt('habitat',X,Y,0,true)===''&&fw.placeEnt('solar',X+4,Y,0,true)===''&&fw.placeEnt('solar',X+6,Y,0,true)==='';const h=entAt(X,Y);
   for(let k=0;k<20*65;k++){h.inb.water=50;h.inb.oxygen=50;tick(0.05);}out.grow=h.pop>=3&&h.ok;const p0=h.pop;for(let k=0;k<20*45;k++){h.inb.water=0;h.inb.oxygen=50;tick(0.05);}out.shrink=h.pop<p0;
   openPanel('ent',h.id);out.panel=/colonists/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
-  S.wms=Object.assign({},S.wms||{},{moon:4});S.wgh={};h.pop=WGOALS.moon[4].pop;CORE.b=[...Array(6)].map(()=>({steel_ingot:4,concrete:6}));for(let k=0;k<17;k++)wgRateTick();out.notYet=!wgReady(WGOALS.moon[4]);wgRateTick();
+  S.wms=Object.assign({},S.wms||{},{moon:4});S.wgh={};h.pop=WGOALS.moon[4].pop;CORE.b=[...Array(6)].map(()=>({steel_pipe:4,concrete:6}));for(let k=0;k<17;k++)wgRateTick();out.notYet=!wgReady(WGOALS.moon[4]);wgRateTick();
   out.ready=wgReady(WGOALS.moon[4]);openPanel('ms');out.goalPanel=/held steadily/i.test(document.getElementById('pbody').innerText);ACT.submitWg();ACT.closeDlg();ACT.closePanel();out.done=S.wms.moon===5;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;S.wms=keep.wms;S.wgh=keep.wgh;return out;});
  check(`Moon colony: ${Object.entries(col).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(col).every(v=>v===true));

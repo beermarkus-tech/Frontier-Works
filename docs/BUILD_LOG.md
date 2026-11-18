@@ -3461,3 +3461,11 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The Sphere Frame (first Dyson Sphere stage) is not built; Moon goods' Earth use is the two alternate recipes for now.
 
 **Next up:** Markus plays the colony goals and freighters. Then 3D freighter visuals, balance, and the next chapter (ice planet or first Dyson Sphere stage).
+
+## Session 60c — 2026-11-18 (Claude Code, cloud session) · Build 171
+
+**Asked:** why ask for raw steel ingots per minute? They aren't useful for building. Ask for beams or pipes instead.
+
+**Changed:** Moon goal 5, First Settlers, now asks for **15 steel pipes/min** (was 20 steel ingots/min) plus 30 concrete/min. That is about the same steel; pipes are used for Refineries, stators and motors. Goal 6 already asks for beams and motors. Rate goals don't use up anything; deliveries stay in the Moon's stock.
+
+**Verified:** the colony smoke check uses pipes. `npm test` all PASS.

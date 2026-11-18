@@ -217,7 +217,7 @@ const WGOALS={moon:[
  {n:'Lunar Power',req:{lattice:100,vac_wafer:200,concrete:500},b:[],r:['r_wafer_cb','r_moon_alu'],why:'Circuit boards from wafers and aluminium from water: the Moon builds its own Solar Panels.'},
  {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:['habitat'],r:['r_vac_steel','r_o2_regolith','r_o2_water'],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need. Next the Moon becomes a colony.'},
  /* Colony goals (Session 60): rates held for HOLD seconds (measured at the Base Core over the last minute) and a population */
- {n:'First Settlers',req:{},pop:10,rate:{steel_ingot:20,concrete:30},b:[],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel and concrete, steadily.'},
+ {n:'First Settlers',req:{},pop:10,rate:{steel_pipe:15,concrete:30},b:[],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel pipes and concrete, steadily (they stay in your stock for building).'},
  {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:['fport'],r:['r_cryo_rod','r_lattice_qc'],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Trade: Orbital Freighters carry helium and lattice crystals to Earth (cheaper Fuel Rods and Quantum Cores there) and plastic or parts up to the Moon.'}]};
 const WG_HOLD=180;   /* seconds a rate goal must be held */
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
