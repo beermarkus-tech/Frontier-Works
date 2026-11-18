@@ -3505,3 +3505,14 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Cause:** the rate was computed from the ore node underneath; the excavator has none, so it came out as 0.
 
 **Fixed:** it now shows its full rate (60/min at 100% clock, scaled by the clock). The Moon goals smoke check opens its panel and looks for "Output rate 60/min". `npm test` all PASS.
+
+## Session 61c — 2026-11-18 (Claude Code, cloud session) · Build 175
+
+**Asked:** rovers drive right over pipes and belts; avoid this.
+
+**Changed:**
+- Belts, pipes and track now cost 30× in the rover route search, so rovers drive around them.
+- They only cross where there is no other way (e.g. a base fully enclosed by belts); there they slow to half speed.
+- Straightening the route never adds a crossing.
+
+**Verified:** the rover smoke check now lays a short belt across a found route; the new route avoids every belt tile. The rover and tanker checks pass. `npm test` all PASS.
