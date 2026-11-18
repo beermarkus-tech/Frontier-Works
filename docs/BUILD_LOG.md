@@ -3469,3 +3469,19 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Changed:** Moon goal 5, First Settlers, now asks for **15 steel pipes/min** (was 20 steel ingots/min) plus 30 concrete/min. That is about the same steel; pipes are used for Refineries, stators and motors. Goal 6 already asks for beams and motors. Rate goals don't use up anything; deliveries stay in the Moon's stock.
 
 **Verified:** the colony smoke check uses pipes. `npm test` all PASS.
+
+## Session 60d — 2026-11-18 (Claude Code, cloud session) · Build 172
+
+**Asked:** something stronger than 10 MW Solar Panels; a factory for the colony rate goals needs 350–400 MW. Markus accepted the proposal (both).
+
+**Built:**
+- **Solar Array** (`solar2`): 4×4, 60 MW, no fuel, Moon only. 50% more power per tile than panels. Cost: 16 alloy panels, 8 vacuum wafers, 6 steel beams, 20 wire. Unlocked by Moon goal 4 (saves past it get it on load). Arrays touching each other or panels join one network.
+- **Helium Fusion Reactor** (`fusion`): 6×6, 1500 MW, Moon only. It burns Helium Crystals (now 3000 MJ each, so 30/min at full load) and needs 120 m³/min of water through a Pipe Junction. Unlocked by Moon goal 5.
+  - Cost: 60 steel beams, 40 girders, 20 motors, 20 lattice crystals, 40 wafers, 80 copper sheets.
+  - **Deviation from the proposal:** no Guidance Core from Earth, because freighters only arrive with goal 6.
+- Sprites (a 4×4 cell grid; a torus chamber with a blue glow and a moving arc), 3D models, and the planner and generator cards through the normal generator code.
+
+**Verified:**
+- Screenshots in 2D and 3D on the Moon.
+- New smoke check: the array alone gives a 60 MW grid; the reactor gives 1500 MW with helium and water and burns fuel under load; both are refused on Home.
+- `npm test` all PASS.

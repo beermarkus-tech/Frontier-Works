@@ -20,7 +20,7 @@ I('heavy_truss','Heavy Truss','#34466a');I('compute_module','Compute Module','#2
 I('battery','Battery','#a6e64e');I('control_chip','Control Chip','#3ea2f5');I('turbine_core','Turbine Core','#d9622e');I('uranium_cell','Uranium Cell','#4ec43a');
 I('fuel_rod','Fuel Rod','#2ef070',0,750000);I('waste','Nuclear Waste','#b4ff3a');I('quantum_core','Quantum Core','#ff5fc8');
 /* Colony rocket parts (Session 51; unlocked by Tier 10 since Session 57) */
-I('helium','Helium Crystals','#8fe6ff');I('regolith','Regolith','#a3a3aa');I('oxygen','Oxygen','#bfe6ff',1);I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
+I('helium','Helium Crystals','#8fe6ff',0,3000);   /* also fusion fuel: 3000 MJ each (Session 60d) */I('regolith','Regolith','#a3a3aa');I('oxygen','Oxygen','#bfe6ff',1);I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
 I('hull_plate','Hull Plate','#c9d3dd');I('heat_shield','Heat Shield','#5a4a44');I('guidance_core','Guidance Core','#f0c34a');I('rocket_fuel','Rocket Fuel','#ff7a2e');
 
 const RC={}, RL=[];
@@ -187,6 +187,8 @@ D('habitat',{n:'Habitat',k:'hab',w:4,pw:15,only:'moon',cat:'prod',col:'#e9edf1',
 const HAB={cap:10,per:2,grow:20};   /* colonists per habitat, water and oxygen per colonist per minute, seconds per colonist gained or lost */
 D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('solar',{n:'Solar Panel',k:'gen',w:2,cap:10,fuels:[],solar:1,only:'moon',link:6,sup:4,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:4,circuit_board:2,wire:10},desc:'10 MW from sunlight, no fuel. Only works in the Moon\u2019s unfiltered sunlight.'});
+D('solar2',{n:'Solar Array',k:'gen',w:4,cap:60,fuels:[],solar:1,only:'moon',link:8,sup:6,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:16,vac_wafer:8,steel_beam:6,wire:20},desc:'60 MW from sunlight, no fuel: 50% more power per tile than Solar Panels. Arrays placed touching each other (or panels) join one network. Only on the Moon.'});
+D('fusion',{n:'Helium Fusion Reactor',k:'gen',w:6,cap:1500,fuels:['helium'],water:120/(1500*60),only:'moon',link:10,sup:7,cat:'pow',col:'#7fd6ff',cost:{steel_beam:60,cased_girder:40,motor:20,lattice:20,vac_wafer:40,copper_sheet:80},desc:'1500 MW from Helium Crystals (30/min at full load) plus 120 m³/min of water for cooling (through a Pipe Junction). Only on the Moon.'});
 D('burner',{n:'Coal Burner',k:'gen',w:2,cap:30,fuels:['coal','petro_coke'],link:8,sup:5,cat:'pow',col:'#7a4a2a',cost:{iron_plate:15,iron_rod:15,wire:20},desc:'30 MW. Burns coal or petroleum coke. Also acts as a power pole.'});
 D('steam',{n:'Steam Generator',k:'gen',w:3,cap:75,fuels:['coal','petro_coke'],water:45/(75*60),link:8,sup:5,cat:'pow',col:'#6a5a4a',cost:{rotor:10,braced_plate:10,cable:30,concrete:20},desc:'75 MW. Needs coal/coke plus 45 m³/min water.'});
 D('turbine',{n:'Fuel Turbine',k:'gen',w:3,cap:150,fuels:['fuel'],link:8,sup:5,cat:'pow',col:'#9a6a1a',cost:{motor:15,cased_girder:15,rubber:50,steel_pipe:30},desc:'150 MW. Burns liquid fuel (12 m³/min).'});
@@ -215,9 +217,9 @@ const WGOALS={moon:[
  {n:'Foothold',req:{iron_plate:200,copper_sheet:100,wire:200},b:['rexc'],r:['r_sinter'],why:'Never run out of concrete: dig regolith anywhere and bake it into blocks.'},
  {n:'Ice Prospecting',req:{concrete:300,quartz_crystal:100,vac_wafer:50},b:['imelt','rdepot','tdepot'],r:['r_lunarcrete'],why:'Water on the Moon: ice lies on the floors of dark craters far from the landing site.'},
  {n:'Lunar Power',req:{lattice:100,vac_wafer:200,concrete:500},b:[],r:['r_wafer_cb','r_moon_alu'],why:'Circuit boards from wafers and aluminium from water: the Moon builds its own Solar Panels.'},
- {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:['habitat'],r:['r_vac_steel','r_o2_regolith','r_o2_water'],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need. Next the Moon becomes a colony.'},
+ {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:['habitat','solar2'],r:['r_vac_steel','r_o2_regolith','r_o2_water'],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need. Next the Moon becomes a colony.'},
  /* Colony goals (Session 60): rates held for HOLD seconds (measured at the Base Core over the last minute) and a population */
- {n:'First Settlers',req:{},pop:10,rate:{steel_pipe:15,concrete:30},b:[],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel pipes and concrete, steadily (they stay in your stock for building).'},
+ {n:'First Settlers',req:{},pop:10,rate:{steel_pipe:15,concrete:30},b:['fusion'],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel pipes and concrete, steadily (they stay in your stock for building).'},
  {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:['fport'],r:['r_cryo_rod','r_lattice_qc'],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Trade: Orbital Freighters carry helium and lattice crystals to Earth (cheaper Fuel Rods and Quantum Cores there) and plastic or parts up to the Moon.'}]};
 const WG_HOLD=180;   /* seconds a rate goal must be held */
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});

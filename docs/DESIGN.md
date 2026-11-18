@@ -387,6 +387,9 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   the Moon makes motors, beams, girders and so its own Refineries and Fabricators (plastic stays Earth-only).
   5 **First Settlers** (10 colonists; 15 steel pipes/min, 30 concrete/min; Session 60c: pipes instead of raw ingots, they are useful for building). 6 **Self-Sufficient** (30 colonists; 6 motors/min, 15 steel beams/min,
   20 wafers/min) → **Orbital Freighters** (Session 60b) + Earth uses for Moon goods. Rovers may climb crater rims slowly.
+- **Moon power (Session 60d, agreed with Markus):** **Solar Array** (4×4, 60 MW, no fuel, Moon materials; unlocked by Moon goal 4) and
+  **Helium Fusion Reactor** (6×6, 1500 MW from 30 Helium Crystals/min + 120 m³/min water; Moon materials only, lattice crystals as its
+  heart; unlocked by Moon goal 5). Helium thereby gets a use on the Moon itself.
 - **Orbital Freighters (built, Session 60b).** A **Freighter Port** (6×6, 40 MW while a freighter waits to launch) is needed on both worlds.
   Freighters (up to 3, built at Home's port: 20 Hull Plates, 1 Guidance Core, 40 Rocket Fuel) have a route with up to 3 cargo lines each
   way and work with the worlds' **item stocks** (not belts), so they keep flying while you are on the other world. Up to 2,000 items each
