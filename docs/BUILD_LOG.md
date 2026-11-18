@@ -3326,3 +3326,18 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The "Melt Ice" recipe is gone. Moon goal 2 still unlocks the Ice Melter and Moon Concrete.
 
 **Verified:** the Moon goals smoke check confirms the melter is refused off ice, a drill is refused on ice, the melter goes onto an ice node and produces water, and the goal audit counts water once the melter is unlocked. `npm test` all PASS.
+
+## Session 58g — 2026-11-18 (Claude Code, cloud session) · Build 165
+
+**Reported:** the newly unlocked Melt Ice and Moon Concrete seemed missing from the planner. Markus also asked for the difference between Sintered Blocks and Moon Concrete.
+
+**Findings:**
+- The planner does list Sintered Blocks and Moon Concrete once Moon goal 2 is handed in. Before that they are locked and only show with "🔒 Show locked".
+- "Melt Ice" no longer exists: the Ice Melter makes water directly (Session 58f).
+
+**Fixed (planning on the Moon):**
+- Regolith counts as a raw material (dug anywhere), instead of showing as "missing".
+- On the Moon, recipes needing Earth-only raws (limestone, coal, crude oil, sulfur) are listed last, so concrete defaults to Sintered Blocks there; on Home, the Press recipe stays the default.
+- "From a node" on an ice deposit plans water.
+
+**Verified:** the Moon goals smoke check confirms the Moon default for concrete is Sintered Blocks, regolith is raw and ice gives water; back on Home, concrete defaults to the Press again. `npm test` all PASS.

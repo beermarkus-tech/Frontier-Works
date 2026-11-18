@@ -428,7 +428,8 @@ const server=require('./serve.js');
   out.dig=ex.item==='regolith'&&ex.buf>0;out.sinter=(vf.outb.concrete||0)>=1;for(let k=0;k<40;k++){im.pw=1;updBuilding(im,0.05);}out.melt=im.item==='water'&&im.buf>0;
   S.wms=Object.assign({},S.wms||{});S.wms.moon=0;S.inv=Object.assign({},WGOALS.moon[0].req);openPanel('ms');const tx=document.getElementById('pbody').innerText;out.panel=/Foothold/.test(tx)&&!!document.querySelector('#pbody [data-act="submitWg"]:not([disabled])');
   ACT.submitWg();ACT.closeDlg();out.handIn=S.wms.moon===1&&ub('rexc')&&ur('r_sinter')&&/Goal 2/.test(document.getElementById('msTxt').textContent);ACT.closePanel();
-  fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;S.ur=keep.ur;S.wms=keep.wms;return out;});
+  S.ur.push('r_lunarcrete');out.plan=plProducers('concrete')[0].id==='r_sinter'&&PL_RAW.has('regolith')&&plResItem('ice')==='water';
+  fw.switchWorld('home');out.planHome=plProducers('concrete')[0].id==='r_concrete';delete S.worlds.moon;S.ub=keep.ub;S.ur=keep.ur;S.wms=keep.wms;return out;});
  check(`Moon goals: ${Object.entries(mg).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mg).every(v=>v===true));
  // colony rocket (Session 51): Tier 10 unlocks the pad (Tier 11 removed in Session 57), it takes only rocket items, Load from stock, launch needs power, after the flight the
  // Moon exists with the starter kit in its own stock, a second launch adds another kit

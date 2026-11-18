@@ -8,8 +8,10 @@
 const PLAN_KEY='frontierworks_plan';
 const PL_MACH=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace'];
 const PL_RES=[...Object.keys(NODE_T),'water'];
-const plResItem=res=>res==='water'?'water':NODE_T[res][0];
-const PL_RAW=new Set(PL_RES.map(plResItem));
+const plResItem=res=>res==='water'||res==='ice'?'water':NODE_T[res][0];   /* an Ice Melter on an ice deposit gives water (Session 58g) */
+const PL_RAW=new Set([...PL_RES.map(plResItem),'regolith']);   /* regolith: dug anywhere on the Moon */
+const PL_EARTH=new Set(['limestone','coal','crude','sulfur']);   /* on the Moon, recipes needing these come last (Session 58g) */
+const plOffWorld=r=>(typeof S!=='undefined'&&S&&S.w==='moon')&&Object.keys(r.i).some(k=>PL_EARTH.has(k));
 const PL_EPS=1e-6;
 function plDefault(){return{mode:'fwd',locked:false,fwd:{res:'iron',p:1,ex:'drill1',n:1,clock:100,steps:[]},rev:{targets:[{item:'iron_plate',rate:60}],pick:{},sup:{}},pow:{mw:100,gen:'burner',fuel:'coal',self:1}};}
 /* Several plans at once (Session 37b): PLS.list holds plans (each: name, mode, fwd/rev/pow, ticks); PL is the active one (same object).
@@ -94,7 +96,7 @@ function plFwd(f){
  out.left=pool;out.used=srcRate>0?1-(pool[src]||0)/srcRate:0;return out;
 }
 /* Recipes that make `item` (main product first, then byproduct recipes; standard before alternates). */
-function plProducers(item){return RL.filter(r=>r.o[item]&&!r.i[item]&&plRecOk(r)).sort((a,b)=>((Object.keys(a.o)[0]!==item)-(Object.keys(b.o)[0]!==item))||(a.alt-b.alt));}
+function plProducers(item){return RL.filter(r=>r.o[item]&&!r.i[item]&&plRecOk(r)).sort((a,b)=>(plOffWorld(a)-plOffWorld(b))||((Object.keys(a.o)[0]!==item)-(Object.keys(b.o)[0]!==item))||(a.alt-b.alt));}
 function plPick(item,pick){const ps=plProducers(item);if(!ps.length)return null;return ps.find(r=>r.id===pick[item])||ps[0];}
 function plTargets(){const s=new Set();for(const r of RL)if(plRecOk(r))for(const k in r.o)if(!PL_RAW.has(k)&&!r.i[k])s.add(k);return[...s].sort((a,b)=>IT[a].n.localeCompare(IT[b].n));}
 /* Reverse: target per minute → machines per item (summed across the whole tree), raw resources, byproducts. */
