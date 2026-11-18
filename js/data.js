@@ -105,8 +105,6 @@ R('r_sinter','Sintered Blocks','vfurnace',4,'regolith:4','concrete:1');   /* reg
 R('r_lunarcrete','Moon Concrete','vfurnace',4,'regolith:3,water:4','concrete:2');
 R('r_wafer_cb','Wafer Circuit Board','vfurnace',8,'vac_wafer:1,copper_sheet:2','circuit_board:2');
 R('r_moon_alu','Lunar Aluminum','vfurnace',6,'bauxite:4,water:6','alu_ingot:2');
-// Ice Melter
-R('r_melt','Melt Ice','imelt',2,'ice:2','water:10');
 R('r_quantum_core','Quantum Core','fabricator',60,'control_chip:2,compute_module:3,heat_sink:6,battery:10','quantum_core:1');
 // Blender
 R('r_uranium_cell','Uranium Cell','blender',12,'uranium:10,concrete:3,acid:8','uranium_cell:5,acid:2');
@@ -170,7 +168,7 @@ D('fabricator',{n:'Fabricator',k:'mach',mt:'fabricator',w:4,pw:55,cat:'prod',col
 D('blender',{n:'Blender',k:'mach',mt:'blender',w:3,pw:75,cat:'prod',col:'#2a8a7a',cost:{motor:20,heavy_truss:5,compute_module:5,concrete:50},desc:'Mixes solids and fluids.'});
 D('vfurnace',{n:'Vacuum Furnace',k:'mach',mt:'vfurnace',w:3,pw:20,only:'moon',cat:'prod',col:'#5b6fd6',cost:{iron_plate:30,copper_sheet:20,quartz_crystal:10,cable:20},desc:'Melts and grows crystals in the Moon\u2019s vacuum, with Helium Crystals. Only works on the Moon. Built from things the Moon can make.'});
 D('rexc',{n:'Regolith Excavator',k:'drill',w:2,rate:1,pw:8,reg:1,only:'moon',cat:'ext',col:'#8c8f96',cost:{iron_plate:12,iron_rod:8,copper_sheet:4},desc:'Digs Regolith (loose Moon soil) anywhere: no ore node needed. 60/min. Only on the Moon.'});
-D('imelt',{n:'Ice Melter',k:'mach',mt:'imelt',w:2,pw:6,only:'moon',cat:'prod',col:'#4f9fd0',cost:{iron_plate:10,copper_sheet:10,wire:10},desc:'Melts Ice from the dark craters into Water (out through a Pipe Junction). Only on the Moon.'});
+D('imelt',{n:'Ice Melter',k:'pump',w:2,rate:2,pw:10,ice:1,only:'moon',cat:'ext',col:'#4f9fd0',cost:{iron_plate:10,copper_sheet:10,wire:10},desc:'Sits on an ice deposit in a dark crater and melts it into Water: 120 m³/min on a normal deposit (out through a Pipe Junction). Only on the Moon.'});   /* Session 58f: a pump on ice nodes, not a free-standing machine */
 D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('solar',{n:'Solar Panel',k:'gen',w:2,cap:10,fuels:[],solar:1,only:'moon',link:6,sup:4,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:4,circuit_board:2,wire:10},desc:'10 MW from sunlight, no fuel. Only works in the Moon\u2019s unfiltered sunlight.'});
 D('burner',{n:'Coal Burner',k:'gen',w:2,cap:30,fuels:['coal','petro_coke'],link:8,sup:5,cat:'pow',col:'#7a4a2a',cost:{iron_plate:15,iron_rod:15,wire:20},desc:'30 MW. Burns coal or petroleum coke. Also acts as a power pole.'});
@@ -199,7 +197,7 @@ MS.forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
    'next' = text shown after the last goal. Unlocks count everywhere, like tiers. */
 const WGOALS={moon:[
  {n:'Foothold',req:{iron_plate:200,copper_sheet:100,wire:200},b:['rexc'],r:['r_sinter'],why:'Never run out of concrete: dig regolith anywhere and bake it into blocks.'},
- {n:'Ice Prospecting',req:{concrete:300,quartz_crystal:100,vac_wafer:50},b:['imelt'],r:['r_melt','r_lunarcrete'],why:'Water on the Moon: ice lies on the floors of dark craters far from the landing site.'},
+ {n:'Ice Prospecting',req:{concrete:300,quartz_crystal:100,vac_wafer:50},b:['imelt'],r:['r_lunarcrete'],why:'Water on the Moon: ice lies on the floors of dark craters far from the landing site.'},
  {n:'Lunar Power',req:{lattice:100,vac_wafer:200,concrete:500},b:[],r:['r_wafer_cb','r_moon_alu'],why:'Circuit boards from wafers and aluminium from water: the Moon builds its own Solar Panels.'},
  {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:[],r:[],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need.',next:'Orbital Freighters come next: cargo routes between the Moon and Home.'}]};
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});

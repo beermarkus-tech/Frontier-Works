@@ -299,7 +299,7 @@ function genInfo(g){const d=B[g];let h=`<div class="card"><b>${d.n}</b>${ub(g)?'
  h+=`<div class="muted">Fuel use follows the power actually drawn: at half load it burns half as much.${d.fuels.length>1?` It can burn ${d.fuels.map(f=>IT[f].n).join(' or ')} (uses the first it has, in this order).`:''}</div></div>`;
  return h;}
 function codexHtml(){
- const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace','imelt'];let h='';
+ const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace'];let h='';
  for(const mt of mts){const rs=RL.filter(r=>r.m===mt&&ur(r.id));if(!rs.length)continue;h+=`<h4>${B[mt].n} · ${B[mt].pw} MW</h4>`+rs.map(r=>`<div class="card"><b>${r.n}</b><br>${recLine(r)}</div>`).join('');}
  h+=`<h4>Generators (fuel at full load)</h4>`+['burner','steam','turbine','reactor'].map(genInfo).join('');
  h+=`<h4>Extraction</h4>`+['drill1','drill2','drill3','opump','wpump'].map(id=>{const d=B[id],r=d.rate*60;

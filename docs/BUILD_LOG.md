@@ -3314,3 +3314,15 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 
 **Known issues:**
 - Poles inside a pasted blueprint aren't wired anymore. Wire them with the pole tool or "Connect to…".
+
+## Session 58f — 2026-11-18 (Claude Code, cloud session) · Build 164
+
+**Reported:** the Ice Melter could be placed anywhere; it should only go on ice deposits.
+
+**Built:**
+- **The Ice Melter is now an extractor on ice deposits**, like an Oil Pump on a well: 2×2, 10 MW, Moon only. It makes Water straight from the ice below (120 m³/min on a normal deposit, ×0.5 / ×2 for impure / pure), out through a Pipe Junction.
+- Placing it off ice says "Needs an ice deposit underneath".
+- Drills refuse ice ("Ice is melted where it lies: use an Ice Melter").
+- The "Melt Ice" recipe is gone. Moon goal 2 still unlocks the Ice Melter and Moon Concrete.
+
+**Verified:** the Moon goals smoke check confirms the melter is refused off ice, a drill is refused on ice, the melter goes onto an ice node and produces water, and the goal audit counts water once the melter is unlocked. `npm test` all PASS.

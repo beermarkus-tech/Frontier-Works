@@ -376,7 +376,8 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   wafers, lattice crystals), and send it home for the Dyson Sphere. The Goals panel shows the goals of the world you're on (a switch
   shows the other world's list; hand-ins happen on that world, from its own stock); the top bar shows "🌑 Goal N" there.
   1 **Foothold** (iron plates, copper sheets, wire) → Regolith Excavator (digs anywhere) + Sintered Blocks (Vacuum Furnace: regolith → concrete).
-  2 **Ice Prospecting** (concrete, quartz crystals, vacuum wafers) → Ice Melter (ice → water) + Moon Concrete (regolith + water).
+  2 **Ice Prospecting** (concrete, quartz crystals, vacuum wafers) → Ice Melter (sits on an ice deposit, makes water; Session 58f) + Moon
+    Concrete (regolith + water).
   3 **Lunar Power** (lattice crystals, wafers, concrete) → Wafer Circuit Board (wafer + copper sheet) + Lunar Aluminum (bauxite + water):
     with Assemblers the Moon makes its own Alloy Panels, circuit boards and so Solar Panels.
   4 **Export Ready** (a stockpile of helium, wafers, lattice crystals) → next: Orbital Freighters.

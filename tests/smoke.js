@@ -416,16 +416,16 @@ const server=require('./serve.js');
  // Regolith Excavator digs anywhere; Sintered Blocks; Ice Melter makes water; the Goals panel shows Moon goals there and hands them in
  const mg=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),ur:S.ur.slice(),ms:S.ms,wms:S.wms};
   {const bad=[],ORES=['iron_ore','copper_ore','quartz','bauxite','uranium','helium','ice'];const ub=new Set([...START_B,...MS.flatMap(m=>m.b)]),ur=new Set([...START_R,...MS.flatMap(m=>m.r)]);
-   WGOALS.moon.forEach((m,i)=>{if(i){WGOALS.moon[i-1].b.forEach(x=>ub.add(x));WGOALS.moon[i-1].r.forEach(x=>ur.add(x));}const have=new Set(ORES);if(ub.has('rexc'))have.add('regolith');let g=true;
+   WGOALS.moon.forEach((m,i)=>{if(i){WGOALS.moon[i-1].b.forEach(x=>ub.add(x));WGOALS.moon[i-1].r.forEach(x=>ur.add(x));}const have=new Set(ORES);if(ub.has('rexc'))have.add('regolith');if(ub.has('imelt'))have.add('water');let g=true;
     while(g){g=false;for(const id of ur){const r=RC[id];if(!r||!ub.has(r.m)&&!['smelter','press','assembler'].includes(r.m))continue;if(Object.keys(r.i).every(k=>have.has(k)))for(const k in r.o)if(!have.has(k)){have.add(k);g=true;}}}
     for(const k in m.req)if(!have.has(k))bad.push(`Moon ${i+1}: ${IT[k].n}`);});out.audit=bad.length?bad.join('; '):true;}
   const had=!!(S.worlds&&S.worlds.moon);if(had)return{had:false};fw.switchWorld('moon');
   const ice=nodes.filter(n=>n.t==='ice');out.ice=ice.length>=5&&ice.every(n=>Math.hypot(n.x-MW/2,n.y-MH/2)>=45&&terr[n.y*MW+n.x]===2);
-  S.ub.push('vfurnace','solar');S.ur.push('r_sinter','r_melt');
+  S.ub.push('vfurnace','solar');S.ur.push('r_sinter');
   let X,Y;for(let r=16;r<120&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=0;j<6&&ok;j++)for(let i=0;i<12&&ok;i++)if(canPlace('incin',x+i,y+j)!==''||nodeAt[(y+j)*MW+x+i])ok=false;if(ok){X=x;Y=y;break;}}
-  S.ub.push('rexc','imelt');for(let k=0;k<5;k++)fw.placeEnt('solar',X+k*2,Y+3,0,true);out.rexc=fw.placeEnt('rexc',X,Y,0,true)==='';fw.placeEnt('vfurnace',X+2,Y,0,true);fw.placeEnt('imelt',X+5,Y,0,true);
-  const ex=entAt(X,Y),vf=entAt(X+2,Y),im=entAt(X+5,Y);vf.r='r_sinter';vf.inb={regolith:20};im.r='r_melt';im.inb={ice:10};for(let k=0;k<20*6;k++)tick(0.05);
-  out.dig=ex.item==='regolith'&&ex.buf>0;out.sinter=(vf.outb.concrete||0)>=1;out.melt=(im.outb.water||0)>=10||im.run;
+  S.ub.push('rexc','imelt');for(let k=0;k<5;k++)fw.placeEnt('solar',X+k*2,Y+3,0,true);out.rexc=fw.placeEnt('rexc',X,Y,0,true)==='';fw.placeEnt('vfurnace',X+2,Y,0,true);out.offIce=canPlace('imelt',X+5,Y)==='Needs an ice deposit underneath';const ic=ice[0];out.drillIce=canPlace('drill1',ic.x,ic.y)!=='';out.onIce=fw.placeEnt('imelt',ic.x,ic.y,0,true)==='';
+  const ex=entAt(X,Y),vf=entAt(X+2,Y),im=entAt(ic.x,ic.y);vf.r='r_sinter';vf.inb={regolith:20};for(let k=0;k<20*6;k++)tick(0.05);
+  out.dig=ex.item==='regolith'&&ex.buf>0;out.sinter=(vf.outb.concrete||0)>=1;for(let k=0;k<40;k++){im.pw=1;updBuilding(im,0.05);}out.melt=im.item==='water'&&im.buf>0;
   S.wms=Object.assign({},S.wms||{});S.wms.moon=0;S.inv=Object.assign({},WGOALS.moon[0].req);openPanel('ms');const tx=document.getElementById('pbody').innerText;out.panel=/Foothold/.test(tx)&&!!document.querySelector('#pbody [data-act="submitWg"]:not([disabled])');
   ACT.submitWg();ACT.closeDlg();out.handIn=S.wms.moon===1&&ub('rexc')&&ur('r_sinter')&&/Goal 2/.test(document.getElementById('msTxt').textContent);ACT.closePanel();
   fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;S.ur=keep.ur;S.wms=keep.wms;return out;});

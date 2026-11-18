@@ -141,6 +141,8 @@ function canPlace(id,x,y){
  else if(!d.ow&&water>0&&!(d.k==='pump'&&d.oil))return 'Cannot build on water';
  if(d.k==='drill'&&!d.reg&&(!node||node.t==='oil'))return 'Needs an ore node underneath';
  if(d.k==='pump'&&d.oil&&(!node||node.t!=='oil'))return 'Needs an oil well underneath';
+ if(d.k==='pump'&&d.ice&&(!node||node.t!=='ice'))return 'Needs an ice deposit underneath';
+ if(d.k==='drill'&&node&&node.t==='ice')return 'Ice is melted where it lies: use an Ice Melter';
  return '';
 }
 function afford(cost,mult){mult=mult||1;for(const k in cost)if((S.inv[k]||0)<cost[k]*mult)return false;return true;}
@@ -572,7 +574,7 @@ function updBuilding(e,dt){
    break;}
   case 'drill':case 'pump':{
    const d=B[e.d];let item=null,rate=0;
-   if(d.water){item='water';rate=d.rate;}else if(d.reg){item='regolith';rate=d.rate;}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
+   if(d.water){item='water';rate=d.rate;}else if(d.reg){item='regolith';rate=d.rate;}else if(d.ice&&e.node){item='water';rate=d.rate*PUR[e.node.p][0];}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
    e.item=item;e.want=!!item&&e.buf<10&&!e.off;
    if(e.off){if(item&&e.buf>0&&pushOut(e,item))e.buf--;break;}
    if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;zStat('p',e,item,1);}}
