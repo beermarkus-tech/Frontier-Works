@@ -356,7 +356,7 @@ const server=require('./serve.js');
   out.go=fw.switchWorld('moon')&&S.w==='moon';out.map=MW===256&&S.gen===3&&!terr.some(t=>t===1)&&bio.every(b=>b>=EARTH_NB)&&nodes.some(n=>n.t==='iron')&&[...ents.values()].some(e=>e.k==='core');
   out.ownStock=Object.keys(S.inv).length===0;S.ub.push('solar');
   let X,Y;for(let r=16;r<120&&X==null;r+=2)for(let a=0;a<48;a++){const x=Math.round(MW/2+r*Math.cos(a/7.6)),y=Math.round(MH/2+r*Math.sin(a/7.6));let ok=true;for(let j=0;j<3&&ok;j++)for(let i=0;i<5&&ok;i++)if(canPlace('solar',x+i,y+j)!==''&&canPlace('incin',x+i,y+j)!==''||nodeAt[(y+j)*MW+x+i])ok=false;if(ok&&canPlace('solar',x,y)===''&&canPlace('smelter',x+2,y)===''){X=x;Y=y;break;}}
-  out.solarOk=P('solar',X,Y,0)==='';P('smelter',X+2,Y,0);const sm=entAt(X+2,Y);sm.r='r_iron_ingot';sm.inb={iron_ore:20};for(let k=0;k<40;k++)tick(0.05);out.powered=sm.pw>0&&!!sm.run;
+  out.solarOk=P('solar',X,Y,0)==='';tick(0.05);openPanel('ent',entAt(X,Y).id);out.solarPanel=/sunlight/i.test(document.getElementById('pbody').innerText);ACT.closePanel();P('smelter',X+2,Y,0);const sm=entAt(X+2,Y);sm.r='r_iron_ingot';sm.inb={iron_ore:20};for(let k=0;k<40;k++)tick(0.05);out.powered=sm.pw>0&&!!sm.run;
   S.inv={iron_plate:5};
   fw.switchWorld('home');out.back=S.w==='home'&&ents.size===nHome&&JSON.stringify(S.inv)===invHome&&S.seed===seedHome&&MW===mwHome&&!!S.worlds.moon;
   out.solarHome=canPlace('solar',MW/2+20,MH/2+20)==='Only on the Moon';

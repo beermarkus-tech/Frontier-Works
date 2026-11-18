@@ -1,5 +1,5 @@
 // Frontier Works service worker — bump VERSION on every release so players get the update.
-const VERSION = 'fw-build-159';   // keep in step with BUILD in js/pwa.js
+const VERSION = 'fw-build-160';   // keep in step with BUILD in js/pwa.js
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './js/data.js', './js/sim.js', './js/render.js', './js/ui.js', './js/plan.js', './js/zones.js', './js/blueprint.js', './js/calc.js', './js/view3d.js', './js/train.js', './js/lib/three.min.js', './js/input.js', './js/pwa.js', './js/audio.js', './js/sync.js', './js/main.js',

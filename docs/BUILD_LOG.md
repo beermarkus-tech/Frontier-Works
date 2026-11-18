@@ -3255,3 +3255,11 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Known issues:**
 - Goal amounts are first guesses.
 - Moon machines needing steel or motors (Refinery, Fabricator, Assembler parts such as rotors are fine) still come from Home kits.
+
+## Session 58b — 2026-11-18 (Claude Code, cloud session) · Build 160
+
+**Reported:** tapping a Solar Panel on the Moon froze the interface (no supply circle, nothing).
+
+**Cause:** the generator panel's consumption line (`genUseHtml`) reads the first fuel's energy. The Solar Panel has no fuels, so it threw an error halfway through opening the panel.
+
+**Fixed:** generators without fuel show "Power source: Sunlight, no fuel needed, load %" and no Fuel or Hand-feed sections. The worlds smoke check now opens a Solar Panel's panel and looks for "Sunlight". `npm test` all PASS.

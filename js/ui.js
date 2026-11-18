@@ -134,7 +134,7 @@ function entStatic(e){
     <div class="chips" style="margin-top:4px">${['any','rest','over'].filter(x=>!R.includes(x)).map(x=>`<button class="btn chip" data-act="lsAdd" data-v="${k}|${x}">+ ${lbl[x]}</button>`).join('')}${R.length?`<button class="btn chip" data-act="lsBlock" data-v="${k}">Block</button>`:''}</div>
     <select class="wide lssel" data-ls="${k}"><option value="">+ Add an item…</option>${items.filter(x=>!R.includes(x)).sort((a,b)=>IT[a].n.localeCompare(IT[b].n)).map(x=>`<option value="${x}">${IT[x].n}</option>`).join('')}</select>`;}
  }
- if(e.k==='gen')h+=`<h4>Hand-feed</h4><div class="chips">${d.fuels.filter(f=>!IT[f].f).map(f=>`<button class="btn chip" data-act="feed" data-v="${f}">+10 ${nm(f)} from stock</button>`).join('')}</div>`;
+ if(e.k==='gen'&&d.fuels.length)h+=`<h4>Hand-feed</h4><div class="chips">${d.fuels.filter(f=>!IT[f].f).map(f=>`<button class="btn chip" data-act="feed" data-v="${f}">+10 ${nm(f)} from stock</button>`).join('')}</div>`;
  if(e.k==='dpad'){const tg=padTarget(e);h+=`<h4>Drone route</h4><div class="muted" style="margin-bottom:6px">${tg?`Sends its items by drone to the Drone Pad at ${tg.x}, ${tg.y} (${Math.round(padRoute(e,tg))} tiles away).`:'Not linked: this pad receives drones and passes their items on to outgoing belts.'}</div><button class="btn" data-act="padLink">📍 ${tg?'Change destination':'Send to…'}</button>${tg?' <button class="btn" data-act="padUnlink">✕ Unlink</button>':''} <button class="btn" data-act="takeAll">Move all into item stock</button>`;}
  if(e.k==='sign')h+=`<h4>Text</h4><input type="text" id="signTxt" class="signtxt" data-act="signText" maxlength="60" placeholder="e.g. Iron Works" value="${(e.tx||'').replace(/"/g,'&quot;')}"><h4>Size</h4><div class="chips">${SIGNS.map(id=>`<button class="btn chip ${e.d===id?'on':''}" data-act="signSize" data-v="${id}" style="min-width:48px;min-height:36px;font-weight:600" title="${B[id].w}×${B[id].w}">${B[id].n.slice(5)}</button>`).join('')}</div><h4>Colour</h4><div class="chips">${SIGN_COL.map((c,i)=>`<button class="btn chip signcol ${(e.tc||0)===i?'on':''}" data-act="signColor" data-v="${i}" style="background:${c}" title="Colour ${i+1}">&nbsp;</button>`).join('')}</div>`;
  if(e.k==='storage')h+=`<h4>Actions</h4><button class="btn" data-act="takeAll">Move all into item stock</button>`;
@@ -167,7 +167,8 @@ function effChip(e){if(e.k==='gen'){const L=Math.round(Math.min(1,e._ls||0)*100)
  if(e._efT==null||e._efT<3)return`<span class="effchip" title="Efficiency (measuring)">…</span>`;
  const pc=Math.round(e._ef*100);return`<span class="effchip" style="color:${effCol(pc)};border-color:${effCol(pc)}" title="Efficiency, last ${fmtSec(e._efT)}">${pc}%</span>`;}
 /* Generator consumption: fuel burned in proportion to load (fuel/min = MW·60 / item energy), plus water and waste */
-function genUseHtml(e){const d=B[e.d],f=d.fuels.find(k=>(e.fuel[k]||0)>0)||d.fuels[0],en=IT[f].e,L=Math.min(1,e._ls||0),full=d.cap*60/en;
+function genUseHtml(e){const d=B[e.d];if(!d.fuels.length)return`<h4>Power source</h4><div class="row"><span>Sunlight</span><span>no fuel needed · ${Math.round(Math.min(1,e._ls||0)*100)}% load</span></div>`;   /* Solar Panel (Session 58b: the fuel line crashed the panel) */
+ const f=d.fuels.find(k=>(e.fuel[k]||0)>0)||d.fuels[0],en=IT[f].e,L=Math.min(1,e._ls||0),full=d.cap*60/en;
  let h=`<h4>Consumption</h4><div class="row"><span>Burns now</span><span><b>${fmt(full*L)} ${IT[f].n}/min</b> <small class="muted">at ${Math.round(L*100)}% load</small></span></div>`;
  h+=`<div class="row"><span class="muted">At full load (${d.cap} MW)</span><span class="muted">${fmt(full)} ${IT[f].n}/min · one lasts ${fmtSec(en/d.cap)}</span></div>`;
  if(d.water)h+=`<div class="row"><span>${nm('water')}</span><span>${fmt(d.cap*60*d.water*L)}/min <small class="muted">(full: ${fmt(d.cap*60*d.water)})</small></span></div>`;
@@ -224,7 +225,7 @@ function entDyn(e){
  if(e.k==='gen'){
   h+=`<div class="row"><span>Capacity</span><span>${d.cap} MW</span></div><div class="row"><span>Load</span><span>${(e.load*100).toFixed(0)}%</span></div><div class="bar"><i style="width:${e.load*100}%"></i></div>`;
   h+=genUseHtml(e);
-  h+=`<h4>Fuel</h4>${bufList(e.fuel)}`;if(d.water)h+=`<div class="row"><span>${nm('water')}</span><span>${e.water}/100</span></div>`;
+  if(d.fuels.length)h+=`<h4>Fuel</h4>${bufList(e.fuel)}`;if(d.water)h+=`<div class="row"><span>${nm('water')}</span><span>${e.water}/100</span></div>`;
   if(e.d==='reactor')h+=`<div class="row"><span>${nm('waste')}</span><span>${e.outb.waste||0}/50</span></div>`;
   h+=gridHtml(e.grid);}
  if(e.k==='pole')h+=e.d==='pswitch'&&e.off?'<div class="muted">Switched off: everything behind it is cut from the grid.</div>'+gridHtml(e.grid):gridHtml(e.grid);
