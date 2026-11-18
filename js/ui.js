@@ -220,7 +220,7 @@ function entDyn(e){
  if(e.k==='lpad')h+=lpadHtml(e);
  if(e.k==='hab'){const st=e.ok?['#4fe08a','Supplied: colonists move in']:!(e.pw>0)?['#ff5a46','No power: colonists leave']:['#ffa53a','Short of water or oxygen: colonists leave'];   /* Habitat (Session 60) */
   h+=`<div class="row"><span>👥 Colonists</span><span><b>${e.pop||0}</b> / ${HAB.cap}</span></div><div class="bar"><i style="width:${(e.pop||0)/HAB.cap*100}%"></i></div><div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>
-   <div class="row"><span>${nm('water')}</span><span>${e.inb.water||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="row"><span>${nm('oxygen')}</span><span>${e.inb.oxygen||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="muted">Colony total: ${colonyPop()} colonists. Pipe water and oxygen in through Pipe Junctions.</div>`;}
+   <div class="row"><span>${nm('water')}</span><span>${e.inb.water||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="row"><span>${nm('oxygen')}</span><span>${e.inb.oxygen||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="muted">${(e._hc||1)>1?`Connected to ${e._hc-1} more Habitat${e._hc>2?'s':''}: they share water and oxygen, one junction of each feeds them all. `:'Habitats placed touching each other share water and oxygen. '}Colony total: ${colonyPop()} colonists. Pipe water and oxygen in through Pipe Junctions.</div>`;}
  if(typeof trainDyn==='function')h+=trainDyn(e);
  if(typeof roverDyn==='function')h+=roverDyn(e);
  if(typeof freightDyn==='function')h+=freightDyn(e);

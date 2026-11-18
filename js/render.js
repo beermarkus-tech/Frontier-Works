@@ -282,7 +282,8 @@ function drawLive(e,X,Y,s){
    if(id==='fabricator'){for(let k=0;k<4;k++){const on=act>0.5&&((animT*3+k)|0)%3===0;ctx.fillStyle=on?'#59f0a0':'#1d3a2c';ctx.fillRect(X+P*(0.44+k*0.035),Y+P*0.17,P*0.022,P*0.04);}}break;}
   case 'refinery':glow(X+P*0.7,Y+P*0.45,s*0.4,'#ff4040',0.25+0.35*(Math.sin(animT*3+e.id)>0.6?1:0));if(act>0.2)glow(X+P*0.7,Y+P*0.45,s*0.3,'#ffd060',act*0.4);break;
   case 'blender':blades(X+P/2,Y+P/2,P*0.2,2,a*4,'#7ad6c8',P*0.04);break;
-  case 'habitat':{const f=(e.pop||0)/HAB.cap;if(f>0)for(let k=0;k<Math.ceil(f*6);k++){const a=k*Math.PI/3+0.5;glow(X+P*0.5+Math.cos(a)*P*0.24,Y+P*0.5+Math.sin(a)*P*0.24,P*0.06,'#ffd890',0.9);}break;}   /* lit windows: one per ~2 colonists */
+  case 'habitat':{for(const [dx,dy] of [[4,0],[0,4]]){const o=entAt(e.x+dx,e.y+dy);if(o&&o.k==='hab'&&o.x===e.x+dx&&o.y===e.y+dy){ctx.fillStyle='#c4cad0';if(dx)rr(X+P-s*0.4,Y+P/2-s*0.35,s*0.8,s*0.7,s*0.15);else rr(X+P/2-s*0.35,Y+P-s*0.4,s*0.7,s*0.8,s*0.15);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=1;ctx.stroke();}}   /* corridor to a habitat right next to it (Session 61d) */
+   const f=(e.pop||0)/HAB.cap;if(f>0)for(let k=0;k<Math.ceil(f*6);k++){const a=k*Math.PI/3+0.5;glow(X+P*0.5+Math.cos(a)*P*0.24,Y+P*0.5+Math.sin(a)*P*0.24,P*0.06,'#ffd890',0.9);}break;}   /* lit windows: one per ~2 colonists */
   case 'fusion':glow(X+P/2,Y+P/2,P*0.3,'#7fd6ff',act*(0.55+0.2*Math.sin(animT*6+e.id)));if(act>0.05){ctx.strokeStyle=rgba('#dff6ff',act*0.8);ctx.lineWidth=Math.max(1,s*0.12);ctx.beginPath();ctx.arc(X+P/2,Y+P/2,P*0.22,animT*3,animT*3+2.2);ctx.stroke();}break;
   case 'imelt':glow(X+P*0.42,Y+P*0.5,P*0.24,'#ff9a50',act*0.45);break;
   case 'rexc':blades(X+P/2,Y+P*0.48,P*0.24,8,a*3,'#d0d4d8',P*0.025);break;

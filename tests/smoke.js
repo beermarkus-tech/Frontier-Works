@@ -466,10 +466,11 @@ const server=require('./serve.js');
  check(`Moon power: ${Object.entries(mpw).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mpw).every(v=>v===true));
  // Moon colony (Session 60): a supplied Habitat gains colonists, an unsupplied one loses them; a rate goal completes after its rates are held
  const col=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),wms:S.wms,wgh:S.wgh};if(S.worlds&&S.worlds.moon)return{had:false};fw.switchWorld('moon');S.ub.push('habitat','solar');
-  let X,Y;for(let r=16;r<110&&X==null;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<4&&ok;j++)for(let i=0;i<8&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){X=x;Y=y;break;}}
+  let X,Y;for(let r=16;r<110&&X==null;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<8&&ok;j++)for(let i=0;i<8&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){X=x;Y=y;break;}}
   out.pl=fw.placeEnt('habitat',X,Y,0,true)===''&&fw.placeEnt('solar',X+4,Y,0,true)===''&&fw.placeEnt('solar',X+6,Y,0,true)==='';const h=entAt(X,Y);
   for(let k=0;k<20*65;k++){h.inb.water=50;h.inb.oxygen=50;tick(0.05);}out.grow=h.pop>=3&&h.ok;const p0=h.pop;for(let k=0;k<20*45;k++){h.inb.water=0;h.inb.oxygen=50;tick(0.05);}out.shrink=h.pop<p0;
   openPanel('ent',h.id);out.panel=/colonists/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
+  {const h2ok=fw.placeEnt('habitat',X,Y+4,0,true)==='';const h2=entAt(X,Y+4);if(h2ok){h2.inb={};for(let k=0;k<20;k++){h.inb.water=60;h.inb.oxygen=60;tick(0.05);}out.share=(h2.inb.water||0)>10&&(h2.inb.oxygen||0)>10&&h2._hc===2;removeEnt(h2,false,true);tick(0.05);}else out.share='nospace';}   /* touching habitats share (Session 61d) */
   S.wms=Object.assign({},S.wms||{},{moon:4});S.wgh={};h.pop=WGOALS.moon[4].pop;CORE.b=[...Array(6)].map(()=>({steel_pipe:4,concrete:6}));for(let k=0;k<17;k++)wgRateTick();out.notYet=!wgReady(WGOALS.moon[4]);wgRateTick();
   out.ready=wgReady(WGOALS.moon[4]);openPanel('ms');out.goalPanel=/held steadily/i.test(document.getElementById('pbody').innerText);ACT.submitWg();ACT.closeDlg();ACT.closePanel();out.done=S.wms.moon===5;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;S.wms=keep.wms;S.wgh=keep.wgh;return out;});

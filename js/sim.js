@@ -610,6 +610,12 @@ let CORE={b:[],cur:{},acc:0};
 /* rates over the last minute (per minute) and the rate-goal hold timer (Session 60) */
 function coreRate60(){const L=CORE.b.slice(-6),r={};if(!L.length)return r;for(const b of L)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]*=60/(L.length*10);return r;}
 const colonyPop=()=>{let n=0;for(const e of ents.values())if(e.k==='hab')n+=e.pop||0;return n;};
+/* Habitats that touch share water and oxygen (Session 61d, Markus): clusters found once per topology change, contents evened out every tick */
+let HABC={ver:-1,list:[]};
+function habClusters(){if(HABC.ver===topoVer)return HABC.list;const hs=[...ents.values()].filter(e=>e.k==='hab'),seen=new Set(),out=[];
+ for(const h of hs){if(seen.has(h))continue;const c=[h],q=[h];seen.add(h);while(q.length){const a=q.pop();for(const p of perim(a)){const o=entAt(p.x,p.y);if(o&&o.k==='hab'&&!seen.has(o)){seen.add(o);c.push(o);q.push(o);}}}for(const m of c)m._hc=c.length;out.push(c);}
+ HABC={ver:topoVer,list:out};return out;}
+function habShare(){for(const c of habClusters()){if(c.length<2)continue;for(const k of ['water','oxygen']){let t=0;for(const h of c)t+=h.inb[k]||0;const each=Math.floor(t/c.length);let rest=t-each*c.length;for(const h of c){h.inb[k]=each+(rest>0?1:0);if(rest>0)rest--;}}}}
 function wgCur(){const L=WGOALS[S.w||'home'];return L?L[(S.wms&&S.wms[S.w])||0]:null;}
 function wgRateTick(){const g=wgCur();S.wgh=S.wgh||{};const w=S.w||'home';if(!g||!g.rate){S.wgh[w]=0;return;}const r=coreRate60(),ok=CORE.b.length>=6&&Object.keys(g.rate).every(k=>(r[k]||0)>=g.rate[k]);S.wgh[w]=ok?(S.wgh[w]||0)+10:0;}
 function wgReady(g){if(!g)return false;const w=S.w||'home';if(!afford(g.req))return false;if(g.pop&&colonyPop()<g.pop)return false;if(g.rate&&((S.wgh&&S.wgh[w])||0)<WG_HOLD)return false;return true;}
@@ -626,6 +632,7 @@ function tick(dt){
  for(const e of routers)updRouter(e);   // after the belts (Session 37j): the tile in front has already moved on this tick, so a
  for(const e of crosses)updCross(e);    // splitter never waits a whole tick (Mk5 through splitters: 684 → 780/min)
  for(const e of buildings)updBuilding(e,dt);
+ habShare();
  if(typeof trainTick==='function')trainTick(dt);
  if(typeof freightTick==='function')freightTick(dt);
  updNets(dt);

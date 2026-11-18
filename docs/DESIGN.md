@@ -385,7 +385,8 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   4 **Export Ready** (a stockpile of helium, wafers, lattice crystals) → Habitat, Lunar Steel, Regolith Oxygen, Water Splitting.
   **Moon Colony chapter (Session 60, agreed with Markus: the Moon was too easy, goods had no use on Earth):** colony goals ask for
   **steady rates** into the Base Core held for 3 minutes, and a **population**. **Habitats** (4×4) need power + water + oxygen through
-  Pipe Junctions (2 m³/min each per colonist), gain a colonist every 20 s when supplied (max 10), lose one when short. With **Lunar Steel**
+  Pipe Junctions (2 m³/min each per colonist), gain a colonist every 20 s when supplied (max 10), lose one when short. Habitats that touch share water
+  and oxygen (one junction of each feeds the whole block; Session 61d); each still needs power. With **Lunar Steel**
   the Moon makes motors, beams, girders and so its own Refineries and Fabricators (plastic stays Earth-only).
   5 **First Settlers** (10 colonists; 15 steel pipes/min, 30 concrete/min; Session 60c: pipes instead of raw ingots, they are useful for building). 6 **Self-Sufficient** (30 colonists; 6 motors/min, 15 steel beams/min,
   20 wafers/min) → **Orbital Freighters** (Session 60b) + Earth uses for Moon goods. Rovers may climb crater rims slowly.

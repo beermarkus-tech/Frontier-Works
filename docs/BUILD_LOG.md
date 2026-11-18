@@ -3516,3 +3516,17 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Straightening the route never adds a crossing.
 
 **Verified:** the rover smoke check now lays a short belt across a found route; the new route avoids every belt tile. The rover and tanker checks pass. `npm test` all PASS.
+
+## Session 61d — 2026-11-18 (Claude Code, cloud session) · Build 176
+
+**Asked:** connected habitats should share water and oxygen, so one junction of each supplies a whole block.
+
+**Built:**
+- Habitats that touch form a block (`habClusters`, recomputed when the layout changes). Their water and oxygen are evened out every tick (`habShare`), so a junction on any one habitat feeds them all. Each still needs power.
+- The panel says how many habitats it is connected to.
+- A short corridor is drawn between habitats placed right next to each other.
+
+**Verified:**
+- Screenshot of three touching habitats with corridors.
+- The colony smoke check places a second habitat next to the first, feeds only the first, and confirms the second fills with water and oxygen.
+- `npm test` all PASS.
