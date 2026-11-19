@@ -3760,3 +3760,14 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The launcher's loaded store isn't drained by the catch-up, which matches how Base Core rates work.
 
 **Next up:** unchanged (Markus plays Rime; Dyson stage 3; trains Phase 2).
+
+## Session 64c — 2026-11-19 (Claude Code, cloud session) · Build 189
+**Asked:** Markus asked about the realistic chances of monetizing the game, and what itch.io is. Then: "Not yet. Let's keep this idea for later."
+
+**Done:**
+- Docs only. The release idea is parked in DESIGN.md section 15, with the suggested order: onboarding polish, cloud save without a token, performance and originality check, itch.io test, then Google Play / Steam if interest is good.
+- Build number bumped (no game change).
+
+**Verified:** `npm test`.
+
+**Next up:** unchanged.

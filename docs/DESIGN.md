@@ -496,6 +496,9 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 - **Moon Colony and Orbital Freighters are built (Sessions 60, 60b).**
 - **Rime step 1 is built (Session 63).**
 - **Rime step 2 is built (Session 64):** Rime goals, Gas Extractor, Cryo Plant, freighters to Rime, Dyson stage 2.
+- **Parked idea (Session 64c, Markus: "keep this idea for later"):** a public release. Plan if revived: polish the first 30 minutes
+  (tutorial), make cloud save work without a GitHub token, check performance and that nothing resembles commercial games, then publish on
+  itch.io (free / pay what you want, playable in the browser) to test interest; Google Play and a Steam wishlist page only if the response is good.
 - **Next:** Markus plays Rime; decide the last chapter (Dyson stage 3). Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
   blueprints). Then the all-tier measuring tool, also checking the Moon goals. Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
 
