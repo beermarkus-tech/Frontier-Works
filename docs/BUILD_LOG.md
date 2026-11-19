@@ -3530,3 +3530,15 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Screenshot of three touching habitats with corridors.
 - The colony smoke check places a second habitat next to the first, feeds only the first, and confirms the second fills with water and oxygen.
 - `npm test` all PASS.
+
+## Session 61e — 2026-11-19 (Claude Code, cloud session) · Build 177
+
+**Asked:** rover tyre tracks visible in 3D as well.
+
+**Built:**
+- `v3Tracks` (rover.js) draws two flat dark marks per track point (left and right wheel) just above the ground.
+- One instanced mesh, updated at most every 0.3 s or when tracks are added.
+- Marks fade over 2 minutes from near-black towards the ground grey, matching 2D.
+- Tracks are cleared when changing worlds.
+
+**Verified:** 3D screenshot shows the twin tracks from the depot along the route. `npm test` all PASS.

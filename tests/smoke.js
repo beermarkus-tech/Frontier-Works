@@ -424,7 +424,7 @@ const server=require('./serve.js');
  out.pl=P('rdepot',A.x,A.y,0)===''&&P('rdepot',Bq.x,Bq.y,0)==='';P('solar',A.x+3,A.y,0);P('solar',A.x+5,A.y,0);
  const da=entAt(A.x,A.y),db=entAt(Bq.x,Bq.y);da.lx=db.x;da.ly=db.y;da.store={iron_plate:400};tick(0.05);window.__R={da,db,A,Bq};
   out.home=out0;out.unlock=WGOALS.moon[1].b.includes('rdepot');for(let k=0;k<20*90;k++)tick(0.05);
-  out.route=!!(da._rp&&da._rp.L>10);
+  out.route=!!(da._rp&&da._rp.L>10);out.tracks3d=typeof v3Tracks==='function';
   {const P0=da._rp,mid=P0.pts[Math.floor(P0.pts.length/2)],mx=Math.floor(mid[0]),my=Math.floor(mid[1]);let n=0;for(let k=-2;k<=2;k++)if(!entAt(mx+k,my)&&terr[my*MW+mx+k]!==1&&!fw.placeEnt('belt1',mx+k,my,1,true))n++;topoDirty=true;tick(0.05);const P1=rvPath(da,db);   /* a short belt across the route: the rover drives around it (Session 61c) */
    out.avoid=n>0&&!!P1&&P1.pts.every(q=>!rvLine(Math.floor(q[0]),Math.floor(q[1])));for(let k=-2;k<=2;k++){const e=entAt(mx+k,my);if(e&&e.k==='belt')removeEnt(e,false,true);}topoDirty=true;tick(0.05);}out.delivered=rvCount(db)>=380;out.tracks=RVTR.length>20;openPanel('ent',da.id);out.panel=/rover route/i.test(document.getElementById('pbody').innerText);
   S.inv=Object.assign(S.inv,ROVER.cost);ACT.rvAdd();out.add=da.rn===2&&!S.inv.wire;ACT.closePanel();

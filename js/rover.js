@@ -99,8 +99,14 @@ function drawRovers(sx,sy,s){if(RVTR.w!==S.w){RVTR.length=0;RVTR.w=S.w;}if(!rdep
 function v3RoverInit(){const part=(geo,c,p,s,rot)=>({g:geo,c:new T3.Color(c),m:new T3.Matrix4().compose(new T3.Vector3(...p),new T3.Quaternion().setFromEuler(new T3.Euler(...(rot||[0,0,0]))),new T3.Vector3(...s))});
  const bx=new T3.BoxGeometry(1,1,1),cy=new T3.CylinderGeometry(0.5,0.5,1,12),P=[part(bx,'#eef1f4',[0,0.42,0],[0.85,0.22,0.55]),part(bx,'#3a4450',[0.25,0.6,0],[0.2,0.16,0.4]),part(cy,'#9aa3ab',[-0.2,0.75,0.18],[0.04,0.4,0.04])];
  for(const wx of [-0.3,0,0.3])for(const wz of [-0.32,0.32])P.push(part(cy,'#2b2f34',[wx,0.15,wz],[0.28,0.12,0.28],[Math.PI/2,0,0]));
- V3.rovP=v3Pool(v3Merge(P),V3.mat,{cast:1,recv:1});V3.rovC=v3Pool(new T3.BoxGeometry(1,1,1),new T3.MeshStandardMaterial({roughness:0.6}),{color:1,cast:1});}
-function v3Rovers(){if(!V3.rovP||!V3T)return;const T=V3T,list=rdepots.flatMap(e=>rvPos(e)),m=v3PoolN(V3.rovP,list.length),cg=list.filter(q=>Object.keys(q.r.c||{}).some(k=>q.r.c[k]>0)),cm=v3PoolN(V3.rovC,cg.length);
+ V3.rovP=v3Pool(v3Merge(P),V3.mat,{cast:1,recv:1});
+ {const g=new T3.PlaneGeometry(0.4,0.1);g.rotateX(-Math.PI/2);V3.trkP=v3Pool(g,new T3.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0.6,depthWrite:false}),{color:1,order:3});}   /* tyre tracks in 3D (Session 61e) */V3.rovC=v3Pool(new T3.BoxGeometry(1,1,1),new T3.MeshStandardMaterial({roughness:0.6}),{color:1,cast:1});}
+function v3Tracks(){const T=V3T;if(RVTR.w!==S.w){RVTR.length=0;RVTR.w=S.w;}const now=performance.now();if(V3.trkT&&now-V3.trkT<300&&V3.trkN===RVTR.length)return;V3.trkT=now;V3.trkN=RVTR.length;
+ const pts=RVTR.filter(q=>S.t-q[3]<120),m=v3PoolN(V3.trkP,pts.length*2),dk=new T3.Color('#141418'),gr=new T3.Color('#4a4a50');let i=0;
+ for(const [x,y,a,t] of pts){const f=(S.t-t)/120;T.c.copy(dk).lerp(gr,f);T.e.set(0,-a,0);T.q.setFromEuler(T.e);const c=Math.cos(a),s=Math.sin(a);
+  for(const o of [-0.29,0.29]){m.setMatrixAt(i,T.m.compose(T.v.set(x-s*o,0.03,y+c*o),T.q,T.s.set(1,1,1)));m.setColorAt(i,T.c);i++;}}
+ m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}
+function v3Rovers(){if(!V3.rovP||!V3T)return;if(V3.trkP)v3Tracks();const T=V3T,list=rdepots.flatMap(e=>rvPos(e)),m=v3PoolN(V3.rovP,list.length),cg=list.filter(q=>Object.keys(q.r.c||{}).some(k=>q.r.c[k]>0)),cm=v3PoolN(V3.rovC,cg.length);
  list.forEach((q,i)=>{T.e.set(0,-q.a,0);T.q.setFromEuler(T.e);m.setMatrixAt(i,T.m.compose(T.v.set(q.x,q.park?0.05:0.05+Math.abs(Math.sin(animT*9+q.x*3))*0.04,q.y),T.q,T.s.set(1.2,1.2,1.2)));});
  cg.forEach((q,i)=>{const k0=Object.keys(q.r.c).find(k=>q.r.c[k]>0);T.e.set(0,-q.a,0);T.q.setFromEuler(T.e);cm.setMatrixAt(i,T.m.compose(T.v.set(q.x,0.72,q.y),T.q,T.s.set(0.5,0.18,0.45)));cm.setColorAt(i,T.c.set(IT[k0].c));});
  m.instanceMatrix.needsUpdate=true;cm.instanceMatrix.needsUpdate=true;if(cm.instanceColor)cm.instanceColor.needsUpdate=true;}
