@@ -236,6 +236,7 @@ function paintB(g,id,P,u){
    for(const [a,b] of [[0.14,0.2],[0.86,0.2],[0.14,0.8],[0.86,0.8]])circ(i+W*a,i+W*b,W*0.07,'#c4cad0');break;}
   case 'srecv':{box(i,i,W,W,u*0.16,'#4a525b');circ(P/2,P/2,W*0.42,'#e9eef2',30);g.fillStyle='#ffd27a';g.beginPath();g.arc(P/2,P/2,W*0.12,0,7);g.fill();   /* Sphere Receiver (Session 62): a dish */
    g.strokeStyle='rgba(120,130,140,0.6)';g.lineWidth=Math.max(1,u*0.05);for(const r of [0.22,0.32])g.beginPath(),g.arc(P/2,P/2,W*r,0,7),g.stroke();break;}
+  case 'soutlet':{box(i,i,W,W,u*0.14,'#5d6066');circ(P/2,P/2,W*0.32,col);g.fillStyle='#2b2f34';g.beginPath();g.moveTo(P/2-W*0.12,P/2-W*0.14);g.lineTo(P/2+W*0.16,P/2);g.lineTo(P/2-W*0.12,P/2+W*0.14);g.fill();break;}   /* Stock Outlet (Session 62c) */
   case 'fport':{box(i,i,W,W,u*0.2,'#5d6066');g.fillStyle='#3a3d42';g.beginPath();g.arc(P*0.5,P*0.5,W*0.34,0,7);g.fill();g.strokeStyle='#f2c230';g.lineWidth=Math.max(1.5,W*0.02);g.beginPath();g.arc(P*0.5,P*0.5,W*0.3,0,7);g.stroke();   /* Freighter Port (Session 60b): landing ring, cargo sheds */
    g.fillStyle='#f2c230';g.font=`800 ${W*0.18}px Inter,sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('F',P*0.5,P*0.5);g.textAlign='left';for(const [a,b] of [[0.08,0.08],[0.78,0.08],[0.08,0.78],[0.78,0.78]])box(i+W*a,i+W*b,W*0.14,W*0.14,u*0.04,'#c4cad0');break;}
   case 'habitat':{box(i,i,W,W,u*0.2,'#5d6066');circ(P*0.5,P*0.5,W*0.42,'#eef1f4',40);g.strokeStyle='rgba(120,130,140,0.6)';g.lineWidth=Math.max(1,u*0.05);for(const r of [0.3,0.18])g.beginPath(),g.arc(P*0.5,P*0.5,W*r,0,7),g.stroke();   /* Habitat (Session 60): a dome with ring segments and a docking module */
@@ -305,7 +306,7 @@ function drawLive(e,X,Y,s){
  // smoke
  const sm=SMOKE[id];if(sm&&act>0.3&&parts.length<600){const rate=(sm[2]===2?9:4)*act;if(Math.random()<rate*fdt)parts.push({x:e.x+e.w*sm[0],y:e.y+e.w*sm[1],vx:0.25+Math.random()*0.2,vy:-0.35-Math.random()*0.25,r:(sm[2]===2?0.55:0.22)+Math.random()*0.12,t:0,m:sm[2]===2?4:2.6,k:sm[2]});}
  // badge + status
- let icon=null;if(e.k==='mach'&&e.r)icon=Object.keys(RC[e.r].o)[0];else if((e.k==='drill'||e.k==='pump')&&e.item)icon=e.item;else if(e.k==='storage'){for(const k in e.store){icon=k;break;}}
+ let icon=null;if(e.k==='mach'&&e.r)icon=Object.keys(RC[e.r].o)[0];else if(e.k==='soutlet'&&e.oi)icon=e.oi;else if((e.k==='drill'||e.k==='pump')&&e.item)icon=e.item;else if(e.k==='storage'){for(const k in e.store){icon=k;break;}}
  if(icon&&s>9){const r=Math.min(s*0.32,P*0.16),bx=X+s*0.42,by=Y+P-s*0.42;ctx.fillStyle='rgba(10,14,18,0.85)';ctx.beginPath();ctx.arc(bx,by,r*1.25,0,7);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();drawItem(icon,bx,by,r*2.1);}
  if(e.off&&(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen')){ctx.fillStyle='rgba(8,10,14,0.45)';rr(X+s*0.06,Y+s*0.06,P-s*0.12,P-s*0.12,s*0.15);ctx.fill();
   if(s>9){const cx=X+P/2,cy=Y+P/2,r=Math.min(s*0.32,P*0.16);ctx.strokeStyle='#d8dee4';ctx.lineWidth=Math.max(1.5,r*0.28);ctx.lineCap='round';ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI*0.3,Math.PI*1.3);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy-r*1.15);ctx.lineTo(cx,cy-r*0.25);ctx.stroke();ctx.lineCap='butt';}}

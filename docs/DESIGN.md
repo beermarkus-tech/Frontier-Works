@@ -400,6 +400,8 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   fuel: power beamed back). Progress shows as a "☀ Dyson Sphere" card under the Home tiers and in the top bar; in 3D the sun hangs low
   in the north-west sky and a golden frame ring grows around it (both worlds). Stage 2 (Sphere Panels) will need ice-planet goods.
   Launcher and segment recipe are unlocked by Moon goal 6. Numbers in `DYSON`.
+- **Stock Outlet** (Session 62c, Logistics, 2×2, unlocked by Moon goal 6): feeds one chosen item from the world's item stock onto belts
+  leading away. It closes the loop for freighter cargo (it arrives in the stock), e.g. lattice crystals → Fabricator → Sphere Launcher.
 - **Orbital Freighters (built, Session 60b).** A **Freighter Port** (6×6, 40 MW while a freighter waits to launch) is needed on both worlds.
   Freighters (up to 3, built at Home's port: 20 Hull Plates, 1 Guidance Core, 40 Rocket Fuel) have a route with up to 3 cargo lines each
   way and work with the worlds' **item stocks** (not belts), so they keep flying while you are on the other world. Up to 2,000 items each

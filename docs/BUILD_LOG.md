@@ -3611,3 +3611,17 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Changed:** the Freighter Port now costs 60 steel beams + 40 alloy panels + 100 concrete + 20 circuit boards (was 20 hull plates + 40 steel beams + …). It is ground infrastructure, and everything in the cost is made on the Moon from Lunar Steel, Lunar Aluminum and wafer circuit boards. Freighters themselves still need Hull Plates (built at Home).
 
 **Verified:** the freighter smoke check still passes (its test inventory comes from the cost table). `npm test` all PASS.
+
+## Session 62c — 2026-11-19 (Claude Code, cloud session) · Build 183
+
+**Asked:** how do lattice crystals get from the (Moon) Base Core to the Sphere Launcher?
+
+**Gap found:** freighters deliver into a world's item stock, but nothing could take items out of the stock onto belts, so Fabricators on Earth couldn't get freighter cargo.
+
+**Built:**
+- **Stock Outlet** (`soutlet`): Logistics, 2×2, 10 iron plates + 10 cables, unlocked by Moon goal 6 (so Markus has it).
+- Tap it to choose an item (the list shows stock counts). It pushes that item from the current world's stock onto belts leading away, up to 2 per tick (as fast as the belt takes it).
+- An item badge shows on the building. It has a sprite and a 3D model; `e.oi` is saved.
+- The chain: Moon lattice → Moon Base Core → freighter "back to Home" → Home stock → Stock Outlet → belt → Fabricator → Sphere Launcher.
+
+**Verified:** new smoke check: choosing the item in the panel works, stock goes down and the item appears on the belt; unlocked by goal 6. `npm test` all PASS.

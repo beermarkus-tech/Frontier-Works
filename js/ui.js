@@ -119,6 +119,7 @@ function entStatic(e){
  const noteHtml=o=>{const n=outNote(o);return n?`<div class="${n[0]==='⚠'?'plbad':'muted'}" style="margin:2px 0 4px">${n}</div>`:'';};
  if(e.k==='bpst')h+=stHtml(e);   /* Blueprint Station */
  if(typeof trainStatic==='function')h+=trainStatic(e);
+ if(e.k==='soutlet'){const ks=Object.keys(IT).filter(k=>!IT[k].f).sort((a,b)=>IT[a].n.localeCompare(IT[b].n));h+=`<h4>Item</h4><select class="wide" data-act="outItem">${['',...ks].map(k=>`<option value="${k}" ${k===(e.oi||'')?'selected':''}>${k?IT[k].n+((S.inv[k]||0)>0?` (${fmt(S.inv[k])} in stock)`:''):'– choose an item –'}</option>`).join('')}</select><div class="muted" style="margin-top:4px">Connect a belt leading away from the outlet.</div>`;}   /* Stock Outlet (Session 62c) */
  if(typeof roverStatic==='function')h+=roverStatic(e);
  if(typeof freightStatic==='function')h+=freightStatic(e);   /* Train Stop, Cargo Bay (Session 56) */
  h+=clipHtml(e);   /* copy / paste settings (Session 50) */
@@ -218,6 +219,7 @@ function entDyn(e){
   if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}${Object.keys(r.i).some(k=>!IT[k].f&&(e.inb[k]||0)<capIn(r.i[k],k)&&(S.inv[k]||0)>=1)?'<button class="btn" data-act="fillInb" style="margin-top:6px">⬆ Fill from stock</button>':''}<h4>Output buffer</h4>${bufList(e.outb)}`;}
  }
  if(e.k==='lpad')h+=lpadHtml(e);
+ if(e.k==='soutlet')h+=e.oi?`<div class="row"><span>${nm(e.oi)} in stock</span><span>${fmt(Math.floor(S.inv[e.oi]||0))}</span></div>`:'<div class="muted">No item chosen.</div>';
  if(e.k==='hab'){const st=e.ok?['#4fe08a','Supplied: colonists move in']:!(e.pw>0)?['#ff5a46','No power: colonists leave']:['#ffa53a','Short of water or oxygen: colonists leave'];   /* Habitat (Session 60) */
   h+=`<div class="row"><span>👥 Colonists</span><span><b>${e.pop||0}</b> / ${HAB.cap}</span></div><div class="bar"><i style="width:${(e.pop||0)/HAB.cap*100}%"></i></div><div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>
    <div class="row"><span>${nm('water')}</span><span>${e.inb.water||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="row"><span>${nm('oxygen')}</span><span>${e.inb.oxygen||0} m³ · uses ${fmt(Math.max(1,e.pop||0)*HAB.per)}/min</span></div><div class="muted">${(e._hc||1)>1?`Connected to ${e._hc-1} more Habitat${e._hc>2?'s':''}: they share water and oxygen, one junction of each feeds them all. `:'Habitats placed touching each other share water and oxygen. '}Colony total: ${colonyPop()} colonists. Pipe water and oxygen in through Pipe Junctions.</div>`;}
@@ -440,7 +442,7 @@ document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');
  if(typeof mapTap!=='undefined'&&performance.now()-mapTap.t<600&&Math.hypot(ev.clientX-mapTap.x,ev.clientY-mapTap.y)<40&&!ev.target.closest('#dock'))return;   /* ghost tap from the map tap */
 const f=ACT[el.dataset.act];if(f){if(!['rotate','rotSel','submitMs','auMute'].includes(el.dataset.act))sfx('click');f(el.dataset.v,el);}});
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset.act==='signText'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.k==='sign'){e.tx=el.value.slice(0,60);e._tk=null;topoVer++;}return;}if(el.dataset.act==='clock'&&UI.panel){const e=ents.get(UI.panel.arg);if(e){e.clock=+el.value/100;const cv2=document.getElementById('clockv');if(cv2)cv2.textContent=el.value+'%';}}});
-document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.act==='clock')renderPanel(true);});
+document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.act==='clock')renderPanel(true);if(el.dataset.act==='outItem'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.k==='soutlet'){e.oi=el.value||null;renderPanel(true);}}});
 
 document.addEventListener('input',ev=>{const el=ev.target;if(el.dataset&&el.dataset.act==='swName'&&UI.panel){const e=ents.get(UI.panel.arg);if(e&&e.d==='pswitch')e.tx=el.value.slice(0,30);}});
 
