@@ -3603,3 +3603,11 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Known issues:**
 - The sun direction is fixed; it doesn't match the shadow light, which comes from higher up.
 - The frame is only seen when the camera looks towards the horizon in the north-west.
+
+## Session 62b — 2026-11-19 (Claude Code, cloud session) · Build 182
+
+**Reported:** a Freighter Port couldn't be built on the Moon without Hull Plates.
+
+**Changed:** the Freighter Port now costs 60 steel beams + 40 alloy panels + 100 concrete + 20 circuit boards (was 20 hull plates + 40 steel beams + …). It is ground infrastructure, and everything in the cost is made on the Moon from Lunar Steel, Lunar Aluminum and wafer circuit boards. Freighters themselves still need Hull Plates (built at Home).
+
+**Verified:** the freighter smoke check still passes (its test inventory comes from the cost table). `npm test` all PASS.
