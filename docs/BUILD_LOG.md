@@ -3625,3 +3625,13 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The chain: Moon lattice → Moon Base Core → freighter "back to Home" → Home stock → Stock Outlet → belt → Fabricator → Sphere Launcher.
 
 **Verified:** new smoke check: choosing the item in the panel works, stock goes down and the item appears on the belt; unlocked by goal 6. `npm test` all PASS.
+
+## Session 62d — 2026-11-19 (Claude Code, cloud session) · Build 184
+
+**Asked:** the Stock Outlet should be available on Earth early, so the Base Core can be used as a master material stock.
+
+**Changed:** the Stock Outlet is now a starting building (`START_B`), available from the first minute on every world. Existing saves get it on load through `grantUnlocks`. It is no longer listed under Moon goal 6.
+
+**Verified:** the Stock Outlet smoke check confirms it is in the starting set. `npm test` all PASS.
+
+**Open question:** this makes early game easier (items can come back out of the stock). Watch whether it unbalances the early tiers.

@@ -397,7 +397,7 @@ const server=require('./serve.js');
  const sto=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),inv:JSON.stringify(S.inv)};S.ub.push('soutlet');
   let X,Y;for(let r=12;r<150&&X==null;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<2&&ok;j++)for(let i=0;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){X=x;Y=y;break;}}
   out.pl=fw.placeEnt('soutlet',X,Y,0,true)==='';for(let i=2;i<6;i++)fw.placeEnt('belt1',X+i,Y,0,true);const o=entAt(X,Y);S.inv.lattice=50;openPanel('ent',o.id);const sel=document.querySelector('#pbody select[data-act="outItem"]');sel.value='lattice';sel.dispatchEvent(new Event('change',{bubbles:true}));out.set=o.oi==='lattice';ACT.closePanel();
-  for(let k=0;k<40;k++)tick(0.05);out.fed=S.inv.lattice<50;out.onBelt=[2,3,4,5].some(i=>{const b=entAt(X+i,Y);return b&&b.item==='lattice';});out.unlock=WGOALS.moon[5].b.includes('soutlet');
+  for(let k=0;k<40;k++)tick(0.05);out.fed=S.inv.lattice<50;out.onBelt=[2,3,4,5].some(i=>{const b=entAt(X+i,Y);return b&&b.item==='lattice';});out.unlock=START_B.includes('soutlet');
   for(let i=0;i<6;i++){const e=entAt(X+i,Y);if(e)removeEnt(e,false,true);}S.ub=keep.ub;S.inv=JSON.parse(keep.inv);return out;});
  check(`Stock Outlet: ${Object.entries(sto).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(sto).every(v=>v===true));
  // calculator (Session 53): toolbar button opens it, buttons and keyboard work, parser rules, closes and stays closed
