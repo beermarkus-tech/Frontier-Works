@@ -400,8 +400,15 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   Buildings look frosted pale blue. **Geyser Turbine** (3×3, 200 MW, no fuel) sits on a geyser; one geyser and the basic ores are next to the
   landing site. **Ice Sleds** (Markus's wish: like the rovers but different): Sled Depot / Tanker Sled Depot, sleds carry 150 items or 300 m³,
   run about 9 tiles/s (35% faster over frozen seas), cannot climb glacier cliffs (they go around), long skids, snow spray, ski grooves (2D + 3D).
-  **Step 2 (next):** Rime goals (Landfall, Geothermal, Cold Lab, Ice Colony with heat, Export Ready), Cryo Plant + Superconductor Coils,
-  Rare Gas from geysers, freighters to Rime, Dyson stage 2 (Sphere Panels from coils + wafers + alloy panels).
+  **Step 2 (built, Session 64):** **Gas Extractor** (pump on a steam geyser → Rare Gas, 60 m³/min normal) and **Cryo Plant** (Rime only,
+  up to 3 inputs: Thawed Water from cryo ice, **Frost Steel** = iron ore + cryo ice → steel ingots, so Rime needs no coal, and
+  **Superconductor Coils** = wire + cryo ice + Rare Gas). Habitats are allowed on the Moon and Rime; on Rime they draw 3× power (heating).
+  **Rime goals:** 1 Landfall (hand-in; unlocks Gas Extractor, Cryo Plant, water and Frost Steel), 2 Geothermal (hand-in; coils),
+  3 Cold Lab (coils 4/min + steel pipes 15/min held; unlocks Sphere Panel and the Coil Motor alt on Earth), 4 Ice Colony (20 colonists,
+  concrete + beams held), 5 Export Ready (40 colonists, coils 8/min). **Freighters** get a destination per freighter (any visited world;
+  changeable while docked at Home); Moon 60 s, Rime 120 s each way. **Dyson stage 2, Sphere Panels:** 300 panels (Fabricator on Earth:
+  2 coils + 4 vacuum wafers + 4 alloy panels), fired by the same launchers once the frame is done; finished, every Sphere Receiver gives
+  6000 MW instead of 2500. Panels fill rings inside the frame in the 3D sky. Stage 3 is a placeholder for the last chapter.
 - **Dyson Sphere stage 1, Sphere Frame (built, Session 62, agreed with Markus).** Sphere Frame Segments (Fabricator on Earth: 2 lattice
   crystals from the Moon + 2 hull plates + 4 heat sinks + 6 steel beams) are belted into a **Sphere Launcher** (8×8, Home only, 4000 MW
   while charging, one segment every 20 s). 300 segments complete the stage and unlock the **Sphere Receiver** (4×4, Home, 2500 MW, no
@@ -487,7 +494,8 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 - **Moon goals are built (Session 58).** Markus plays them on the Moon.
 - **Moon Colony and Orbital Freighters are built (Sessions 60, 60b).**
 - **Rime step 1 is built (Session 63).**
-- **Next:** Rime step 2 (goals, Cryo Plant, Superconductor Coils, Rare Gas, freighters to Rime, Dyson stage 2). Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
+- **Rime step 2 is built (Session 64):** Rime goals, Gas Extractor, Cryo Plant, freighters to Rime, Dyson stage 2.
+- **Next:** Markus plays Rime; decide the last chapter (Dyson stage 3). Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
   blueprints). Then the all-tier measuring tool, also checking the Moon goals. Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
 
 ## 11. Explicitly out of scope (for now)

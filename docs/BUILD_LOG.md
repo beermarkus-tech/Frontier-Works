@@ -3683,3 +3683,56 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - 3D frozen seas show ice-chunk decorations.
 
 **Next up:** step 2: Rime goals, Cryo Plant, Superconductor Coils, Rare Gas pump, freighters to Rime, Dyson stage 2.
+
+## Session 64 — 2026-11-19 (Claude Code, cloud session) · Build 187
+**Asked:** "Let's go for stage 2 then." Markus is still launching Sphere Frame Segments and hasn't reached Rime yet. This is Rime step 2, as proposed in Session 63, built with my defaults.
+
+**Built:**
+- **Gas Extractor** (`gasx`, Rime only): a pump that sits on a steam geyser and gives Rare Gas, 60 m³/min on a normal geyser.
+- **Cryo Plant** (`cryoplant`, Rime only, 3×3, 40 MW). Recipes:
+  - Thawed Water: 2 cryo ice → 4 water
+  - **Frost Steel**: 3 iron ore + 2 cryo ice → 3 steel ingots (Rime has no coal)
+  - **Superconductor Coil**: 20 wire + 4 cryo ice + 10 Rare Gas
+  - It is in the planner and codex machine lists.
+- **Habitats** are allowed on the Moon and on Rime. `only` can now be a list of worlds. On Rime a habitat draws 3× power for heating (45 MW).
+- **Rime goals** (5):
+  1. Landfall: hand-in. Unlocks the Gas Extractor, the Cryo Plant, water and Frost Steel.
+  2. Geothermal: hand-in. Unlocks coils.
+  3. Cold Lab: coils 4/min and steel pipes 15/min, held. Unlocks Sphere Panel and the Coil Motor alt.
+  4. Ice Colony: 20 colonists, with concrete and beams held.
+  5. Export Ready: 40 colonists and coils 8/min.
+- **Freighters to Rime:**
+  - each freighter has destination chips for every visited world; the destination can be changed only while docked at Home
+  - flight time each way: Moon 60 s, Rime 120 s
+  - texts read "the Moon" but "Rime"
+- **Dyson stage 2, Sphere Panels:**
+  - 300 panels (Fabricator: 2 coils + 4 vacuum wafers + 4 alloy panels)
+  - the launchers take only the current stage's item; when the frame is done they take panels
+  - finished, every Sphere Receiver gives 6000 MW (was 2500); this is applied on load and at the moment the stage ends
+  - panels fill rings inside the frame in the 3D sky, gradually covering the sun
+  - stage 3 "Sphere Shell" is a placeholder
+- 2D sprites and 3D models for the Gas Extractor and the Cryo Plant.
+
+**Decisions:**
+- Frost Steel gives Rime steel without coal or oil.
+- Coils need all three Rime resources (cryo ice, Rare Gas, power from the geysers), so the panels need a real Rime base.
+- Sphere Panels are made on Earth, so freighters link all three worlds: coils from Rime, wafers from the Moon.
+
+**Verified:**
+- New smoke check:
+  - lock texts at Home: "Only on Rime" and "Only on the Moon and Rime"
+  - the Gas Extractor needs a geyser and makes Rare Gas
+  - the Cryo Plant and a habitat place on Rime, with heating power
+  - recipes and the planner list; 5 goals in the Goals panel
+  - freighter destination switch and the 120 s flight; the destination is locked in flight
+  - stage 2 launch takes panels and refuses frames; the receiver cap rises and resets
+- Sprite render check: no errors.
+- `npm test` all PASS (142).
+
+**Known issues:**
+- Frame segments left in a launcher when stage 1 ends stay there. They are not used for panels.
+- Late Rime pacing is untested (coils 8/min needs 80 Rare Gas/min, i.e. 2 normal geysers, which compete with Geyser Turbines).
+
+**Next up:** Markus plays Rime. Then decide the last chapter (Dyson stage 3), and trains Phase 2.
+
+**Open questions:** Is a 120 s freighter flight to Rime about right?

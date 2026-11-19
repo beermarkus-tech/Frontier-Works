@@ -233,6 +233,11 @@ function paintB(g,id,P,u){
    circ(P*0.5,P*0.62,W*0.24,'#7a7d83');g.fillStyle='#16181b';g.beginPath();g.arc(P*0.5,P*0.62,W*0.18,0,7);g.fill();g.strokeStyle='#3a3d42';g.lineWidth=Math.max(1,u*0.08);for(let k=-2;k<=2;k++){g.beginPath();g.moveTo(P*0.5+k*W*0.06,P*0.62-W*0.16);g.lineTo(P*0.5+k*W*0.06,P*0.62+W*0.16);g.stroke();}
    box(i+W*0.12,i+W*0.14,W*0.14,W*0.72,u*0.06,'#9a6a2a');g.strokeStyle='rgba(30,20,10,0.7)';g.lineWidth=Math.max(1,u*0.06);g.beginPath();for(let y=0.16;y<0.84;y+=0.08){g.moveTo(i+W*0.13,i+W*y);g.lineTo(i+W*0.25,i+W*(y+0.08));g.moveTo(i+W*0.25,i+W*y);g.lineTo(i+W*0.13,i+W*(y+0.08));}g.stroke();
    box(i+W*0.25,i+W*0.36,W*0.17,W*0.05,u*0.03,'#b07a30');dots([[i+W*0.07,i+W*0.07],[i+W*0.93,i+W*0.07],[i+W*0.07,i+W*0.93],[i+W*0.93,i+W*0.93]],u*0.12,'#ff6a3a');break;}
+  case 'gasx':{box(i,i,W,W,u*0.16,'#5d6066');circ(P/2,P/2,W*0.36,'#d9cbf2');g.fillStyle='#3b2e58';g.beginPath();g.arc(P/2,P/2,W*0.2,0,7);g.fill();   /* Gas Extractor (Session 64): a hood over the geyser vent and a gas bottle */
+   box(i+W*0.68,i+W*0.08,W*0.22,W*0.42,u*0.06,'#b89ae8');g.strokeStyle='#9aa3ab';g.lineWidth=W*0.05;g.beginPath();g.moveTo(P/2,P/2);g.lineTo(i+W*0.79,i+W*0.5);g.stroke();break;}
+  case 'cryoplant':{box(i,i,W,W,u*0.18,col);for(const [a,b] of [[0.3,0.32],[0.3,0.68]]){circ(P*a,P*b,P*0.16,'#e9f5fc');g.fillStyle='#5aa6d6';g.beginPath();g.arc(P*a,P*b,P*0.09,0,7);g.fill();}   /* Cryo Plant (Session 64): two cold tanks and a coil winder */
+   circ(P*0.7,P*0.5,P*0.2,'#4a525b');g.strokeStyle='#e8a23a';g.lineWidth=Math.max(1,u*0.07);for(let k=0;k<4;k++){g.beginPath();g.arc(P*0.7,P*0.5,P*(0.06+k*0.035),0,7);g.stroke();}
+   pipe(P*0.42,P*0.32,P*0.55,P*0.45,u*0.1,'#9fc8e6');pipe(P*0.42,P*0.68,P*0.55,P*0.55,u*0.1,'#9fc8e6');break;}
   case 'geoturb':{box(i,i,W,W,u*0.18,'#5d6066');circ(P/2,P/2,W*0.38,'#bfe3f7');g.fillStyle='#2b3a48';g.beginPath();g.arc(P/2,P/2,W*0.26,0,7);g.fill();   /* Geyser Turbine (Session 63): a cap over the geyser with a turbine fan */
    g.strokeStyle='#e9f5fc';g.lineWidth=W*0.05;g.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3;g.moveTo(P/2,P/2);g.lineTo(P/2+Math.cos(a)*W*0.22,P/2+Math.sin(a)*W*0.22);}g.stroke();box(i+W*0.72,i+W*0.06,W*0.2,W*0.2,u*0.05,'#9aa3ab');break;}
   case 'stdepot':case 'tdepot':{box(i,i,W,W,u*0.16,'#5d6066');circ(i+W*0.3,i+W*0.3,W*0.2,'#cfe3f0');circ(i+W*0.7,i+W*0.3,W*0.2,'#cfe3f0');g.fillStyle='#3d8ee6';g.beginPath();g.arc(i+W*0.3,i+W*0.3,W*0.1,0,7);g.arc(i+W*0.7,i+W*0.3,W*0.1,0,7);g.fill();   /* Tanker Depot (Session 59b): two tanks + charging pad */
@@ -275,7 +280,7 @@ function bStatus(e){
 }
 /* live overlays (animation on top of sprites) */
 function isActive(e){if(e.k==='slaunch')return e.ch>0;if(e.k==='lpad')return e.lt>0;if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;if(e.k==='incin')return e.burnT!=null&&S.t-e.burnT<1.5;return e.k==='core';}   /* incinerator: lit only for 1.5 s after it burns something (Session 39u) */
-const SMOKE={geoturb:[0.82,0.16,1],lpad:[0.5,0.7,2],smelter:[0.74,0.28,0],foundry:[0.8,0.2,0],burner:[0.72,0.28,0],incin:[0.5,0.5,0],steam:[0.8,0.22,1],reactor:[0.4,0.46,2],refinery:[0.7,0.45,1]};
+const SMOKE={geoturb:[0.82,0.16,1],gasx:[0.5,0.5,1],cryoplant:[0.3,0.32,1],lpad:[0.5,0.7,2],smelter:[0.74,0.28,0],foundry:[0.8,0.2,0],burner:[0.72,0.28,0],incin:[0.5,0.5,0],steam:[0.8,0.22,1],reactor:[0.4,0.46,2],refinery:[0.7,0.45,1]};
 /* glow: a cached radial sprite per colour drawn with globalAlpha (Session 40: a new gradient per glow per frame was a main 2D cost); skipped when invisible */
 const GLOWC=new Map();
 function glow(x,y,r,c,a){if(!(a>0.01)||r<0.5)return;let sp=GLOWC.get(c);if(!sp){sp=document.createElement('canvas');sp.width=sp.height=64;const g=sp.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,rgba(c,1));gr.addColorStop(1,rgba(c,0));g.fillStyle=gr;g.fillRect(0,0,64,64);GLOWC.set(c,sp);}
@@ -298,6 +303,8 @@ function drawLive(e,X,Y,s){
   case 'blender':blades(X+P/2,Y+P/2,P*0.2,2,a*4,'#7ad6c8',P*0.04);break;
   case 'habitat':{for(const [dx,dy] of [[4,0],[0,4]]){const o=entAt(e.x+dx,e.y+dy);if(o&&o.k==='hab'&&o.x===e.x+dx&&o.y===e.y+dy){ctx.fillStyle='#c4cad0';if(dx)rr(X+P-s*0.4,Y+P/2-s*0.35,s*0.8,s*0.7,s*0.15);else rr(X+P/2-s*0.35,Y+P-s*0.4,s*0.7,s*0.8,s*0.15);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=1;ctx.stroke();}}   /* corridor to a habitat right next to it (Session 61d) */
    const f=(e.pop||0)/HAB.cap;if(f>0)for(let k=0;k<Math.ceil(f*6);k++){const a=k*Math.PI/3+0.5;glow(X+P*0.5+Math.cos(a)*P*0.24,Y+P*0.5+Math.sin(a)*P*0.24,P*0.06,'#ffd890',0.9);}break;}   /* lit windows: one per ~2 colonists */
+  case 'cryoplant':glow(X+P*0.7,Y+P*0.5,P*0.2,'#7fe0ff',act*(0.5+0.25*Math.sin(animT*6+e.id)));break;
+  case 'gasx':glow(X+P/2,Y+P/2,P*0.2,'#c9a6ff',act*0.5);break;
   case 'geoturb':blades(X+P/2,Y+P/2,P*0.2,6,a*8,'#e9f5fc',P*0.03);break;
   case 'srecv':glow(X+P/2,Y+P/2,P*0.2,'#ffd27a',0.4+0.3*act);break;
   case 'fusion':glow(X+P/2,Y+P/2,P*0.3,'#7fd6ff',act*(0.55+0.2*Math.sin(animT*6+e.id)));if(act>0.05){ctx.strokeStyle=rgba('#dff6ff',act*0.8);ctx.lineWidth=Math.max(1,s*0.12);ctx.beginPath();ctx.arc(X+P/2,Y+P/2,P*0.22,animT*3,animT*3+2.2);ctx.stroke();}break;

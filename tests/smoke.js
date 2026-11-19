@@ -472,6 +472,28 @@ const server=require('./serve.js');
   out.drained=rvCount(src)<700;out.carried=(db.store.water||0)>50;out.piped=!!(pj&&pj.net&&pj.net.fluid==='water'&&pj.net.amt>0);out.noItems=!accept(da,'iron_plate',0);
   window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
  check(`tanker rovers: ${Object.entries(tkr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(tkr).every(v=>v===true));
+ // Rime step 2 (Session 64): Gas Extractor on geysers makes Rare Gas, Cryo Plant and Habitats (heated) only where allowed, 5 Rime goals,
+ // freighters can be sent to Rime (longer flight), Dyson stage 2 launches Sphere Panels and raises receiver output
+ const rm2=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};const keep={ub:S.ub.slice(),fr:S.fr,dy:S.dyson};if(S.worlds&&(S.worlds.rime||S.worlds.moon))return{had:false};
+  out.homeLock=canPlace('cryoplant',MW/2+20,MH/2+20)==='Only on Rime'&&canPlace('habitat',MW/2+20,MH/2+20)==='Only on the Moon and Rime';
+  fw.switchWorld('rime');S.ub.push('gasx','cryoplant','habitat');
+  const gy=nodes.find(n=>n.t==='geyser'&&!entAt(n.x,n.y)&&canPlace('gasx',n.x,n.y)==='');out.gasOnly=canPlace('gasx',MW/2-12,MH/2-12)==='Needs a steam geyser underneath';
+  out.gas=!!gy&&P('gasx',gy.x,gy.y,0)==='';const G=gy&&entAt(gy.x,gy.y);for(let k=0;k<5;k++)tick(0.05);out.gasItem=!!G&&G.item==='rare_gas';
+  const free=(x,y,w)=>{for(let j=0;j<w;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)!==''||terr[(y+j)*MW+x+i]===3)return false;return true;};
+  let A=null;for(let r=16;r<110&&!A;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(free(x,y,8)){A={x,y};break;}}
+  out.cryo=P('cryoplant',A.x,A.y,0)==='';out.hab=P('habitat',A.x+4,A.y,0)==='';const H=entAt(A.x+4,A.y);out.heat=!!H&&bPw(H)===B.habitat.pw*HAB.heat;
+  out.recipes=RC.r_sc_coil.m==='cryoplant'&&RC.r_frost_steel.m==='cryoplant'&&PL_MACH.includes('cryoplant')&&RC.r_sphere_panel.m==='fabricator';
+  out.goals=WGOALS.rime.length===5;openPanel('ms');out.goalPanel=/landfall/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
+  fw.switchWorld('home');out.homeHab=bPw({d:'habitat',k:'hab'})===B.habitat.pw;
+  S.fr=[{id:1,nm:'Freighter 1',home:'home',dest:'moon',st:0,t:0,c:{},out:[],back:[]}];S.worlds.moon={WS:{inv:{}},es:[]};ACT.frDest('1|rime');out.frDest=S.fr[0].dest==='rime'&&frFly(S.fr[0])===FREIGHT.flyTo.rime&&frDests().length===2;
+  S.fr[0].st=1;ACT.frDest('1|moon');out.frLocked=S.fr[0].dest==='rime';
+  delete S.worlds.rime;delete S.worlds.moon;S.fr=keep.fr;
+  const st=DYSON.stages;S.ub.push('slaunch');S.dyson={f:st[0].need+st[1].need-1};out.item=dysonItem()==='sphere_panel';
+  const spot=(w)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<w&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};
+  const a=spot(8);P('slaunch',a.x,a.y,0);const L=entAt(a.x,a.y);out.accept=accept(L,'sphere_panel',0)&&!accept(L,'sphere_frame',0);
+  for(let k=0;k<20*(DYSON.fire+1);k++){L.pw=1;updLauncher(L,0.05);}out.stage2=S.dyson.f===st[0].need+st[1].need&&B.srecv.cap===st[1].cap;closeDlg();
+  out.label=/stage 3/i.test(dysonLabel());removeEnt(L,false,true);S.dyson=keep.dy;dysonApply();out.reset=B.srecv.cap===st[0].cap;S.ub=keep.ub;return out;});
+ check(`Rime step 2: ${Object.entries(rm2).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(rm2).every(v=>v===true));
  // Dyson Sphere stage 1 (Session 62): the launcher takes only frame segments, fires one per DYSON.fire s when powered, completing the stage unlocks the receiver
  const dys=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),dy:S.dyson};S.ub.push('slaunch');S.dyson={f:DYSON.stages[0].need-2};
   const spot=(w,h)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};

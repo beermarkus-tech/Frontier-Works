@@ -131,7 +131,7 @@ function boxBlur(a,w,h,rad){const t=new Float32Array(a.length),o=new Float32Arra
 const biomeAt=(x,y)=>bio&&x>=0&&y>=0&&x<MW&&y<MH?BIOMES[bio[(y|0)*MW+(x|0)]]:BIOMES[0];
 function newGame(seed){
  MW=MH=MAP_NEW;
- S={pw2:1,gen:2,mw:MAP_NEW,ext:MAP_EXT,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};
+ S={pw2:1,gen:2,mw:MAP_NEW,ext:MAP_EXT,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};if(typeof dysonApply==='function')dysonApply();
  ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  genMap(S.seed);grid=new Int32Array(MW*MH);S.cam={x:MW/2,y:MH/2,z:1.2};   /* the map is bigger after genMap (coast ring) */
  placeEnt('core',MW/2-2,MH/2-2,0,true);
@@ -144,7 +144,7 @@ const ub=id=>has(S.ub,id), ur=id=>has(S.ur,id);
 const entAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?null:(grid[y*MW+x]?ents.get(grid[y*MW+x]):null);
 const isLine=k=>k==='belt'||k==='pipe';
 function canPlace(id,x,y){
- const d=B[id],w=d.w;if(d.only&&d.only!==((S&&S.w)||'home'))return 'Only on the '+WORLDS[d.only].n;
+ const d=B[id],w=d.w;if(!onWorld(d,(S&&S.w)||'home'))return onlyTxt(d);
  if(x<0||y<0||x+w>MW||y+w>MH)return 'Out of bounds';
  let water=0,node=null;
  for(let j=0;j<w;j++)for(let i=0;i<w;i++){const idx=(y+j)*MW+x+i;
@@ -155,8 +155,9 @@ function canPlace(id,x,y){
  if(d.k==='drill'&&!d.reg&&(!node||node.t==='oil'))return 'Needs an ore node underneath';
  if(d.k==='pump'&&d.oil&&(!node||node.t!=='oil'))return 'Needs an oil well underneath';
  if(d.k==='pump'&&d.ice&&(!node||node.t!=='ice'))return 'Needs an ice deposit underneath';
+ if(d.k==='pump'&&d.gas&&(!node||node.t!=='geyser'))return 'Needs a steam geyser underneath';
  if(d.geyser){let g=false;for(let j=0;j<w;j++)for(let i=0;i<w;i++){const n=nodeAt[(y+j)*MW+x+i];if(n&&n.t==='geyser')g=true;}if(!g)return 'Needs a steam geyser underneath';}
- if(d.k==='drill'&&node&&node.t==='geyser')return 'A geyser: use a Geyser Turbine (or a pump for Rare Gas, later)';
+ if(d.k==='drill'&&node&&node.t==='geyser')return 'A geyser: use a Geyser Turbine, or a Gas Extractor for Rare Gas';
  if(d.k==='drill'&&node&&node.t==='ice')return 'Ice is melted where it lies: use an Ice Melter';
  return '';
 }
@@ -276,7 +277,7 @@ function pnMigrate(){const P=[...ents.values()].filter(isPN),C=P.map(cen),edges=
 /* the part of the grid behind a switch: nodes reachable from its smaller side (not through the switch or other off switches) */
 function swSide(sw){const sides=pnPeers(sw).map(p=>{const seen=new Set([sw,p]),q=[p];while(q.length){const a=q.pop();if(a.d==='pswitch'&&a.off&&a!==p)continue;for(const b of pnPeers(a))if(!seen.has(b)){seen.add(b);q.push(b);}}seen.delete(sw);return seen;});
  if(!sides.length)return new Set();const gens=s=>[...s].filter(x=>x.k==='gen').length;sides.sort((a,b)=>gens(a)-gens(b)||a.size-b.size);return sides[0];}
-function swLoad(sw){const side=swSide(sw);let mw=0;for(const e of ents.values())if(e.pnode&&side.has(e.pnode))mw+=B[e.d].pw?B[e.d].pw*Math.pow(e.clock||1,1.6)*(e.k==='mach'&&!e.r?0:1):0;return mw;}
+function swLoad(sw){const side=swSide(sw);let mw=0;for(const e of ents.values())if(e.pnode&&side.has(e.pnode))mw+=B[e.d].pw?bPw(e)*Math.pow(e.clock||1,1.6)*(e.k==='mach'&&!e.r?0:1):0;return mw;}
 function removeEnt(e,ref,silent){
  if(e.k==='core')return;if(ref&&e.fm)refund(B.fmeter.cost);
  const peers=isPN(e)?pnPeers(e):null;if(peers)for(const p of peers)pnUnlink(e,p);
@@ -330,7 +331,7 @@ function accept(e,item,dir,carry){
   case 'tdepot':{if(!fl||typeof rvTarget!=='function'||!rvTarget(e))return false;let t=0;for(const k in e.store){if(k!==item&&e.store[k]>0)return false;t+=e.store[k];}if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;return true;}   /* a sending Tanker Depot fills from its pipes */
   case 'storage':case 'dpad':case 'rdepot':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
-  case 'slaunch':{if(item!=='sphere_frame'||(e.store.sphere_frame||0)>=DYSON.store)return false;e.store.sphere_frame=(e.store.sphere_frame||0)+1;return true;}
+  case 'slaunch':{const it=dysonItem();if(item!==it||(e.store[it]||0)>=DYSON.store)return false;e.store[it]=(e.store[it]||0)+1;return true;}   /* only the current stage's item (Session 64) */
   case 'hab':{if(!fl||(item!=='water'&&item!=='oxygen'))return false;if((e.inb[item]||0)>=60)return false;e.inb[item]=(e.inb[item]||0)+1;return true;}
   case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed(e)[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;CORE.cur[item]=(CORE.cur[item]||0)+1;zStat('k',e,item,1);return true;
@@ -493,7 +494,9 @@ function pipeSide(e){const n=e.net;if(!n)return null;const seen=new Set([e]),sid
 
 
 /* ================= SIMULATION ================= */
-function drawMW(e){const d=B[e.d];return e.want?d.pw*Math.pow(e.clock||1,1.6):0;}
+/* a building's rated power; Habitats on Rime need extra for heating (Session 64) */
+const bPw=e=>B[e.d].pw*(e.k==='hab'&&(S.w||'home')==='rime'?HAB.heat:1);
+function drawMW(e){return e.want?bPw(e)*Math.pow(e.clock||1,1.6):0;}
 function genCan(g){const d=B[g.d];if(g.off)return false;if(d.solar)return true;if(d.water&&g.water<1)return false;if(g.d==='reactor'&&(g.outb.waste||0)>=50)return false;if(g.energy>0)return true;for(const f of d.fuels)if((g.fuel[f]||0)>0)return true;return false;}
 function powerStep(dt){
  for(const g of grids){

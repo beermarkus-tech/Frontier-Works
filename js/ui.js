@@ -27,7 +27,7 @@ const toolIcon=id=>TICON[id]||(TICON[id]=makeIcon(id));
 let toolsKey='';
 function buildCats(){$('cats').innerHTML=CATS.map(([k,n])=>`<button class="cat ${UI.cat===k?'on':''}" data-act="cat" data-v="${k}"><svg class="i" viewBox="0 0 24 24">${CAT_ICON[k]}</svg><span>${n}</span></button>`).join('');toolsKey='';buildTools();}
 function buildTools(){
- const list=Object.values(B).filter(d=>d.cat===UI.cat&&ub(d.id)&&(!d.only||d.only===(S.w||'home'))),   /* world-locked buildings only show on their world (Session 51) */key=UI.cat+':'+list.map(d=>d.id).join(',');
+ const list=Object.values(B).filter(d=>d.cat===UI.cat&&ub(d.id)&&onWorld(d,S.w||'home')),   /* world-locked buildings only show on their world (Session 51) */key=UI.cat+':'+list.map(d=>d.id).join(',');
  if(key!==toolsKey){toolsKey=key;const el=$('tools');
   el.innerHTML=list.map(d=>`<button class="tool" data-act="tool" data-v="${d.id}" title="${d.n}"><img src="${toolIcon(d.id)}" alt=""><span>${d.n}</span></button>`).join('')||'<span class="muted" style="padding:10px">Nothing unlocked here yet — check Goals.</span>';}
  refreshTools();updInfo();
@@ -208,14 +208,14 @@ function lpadHtml(e){const need=rocketNeed(e),f=lpadFrac(e),dest=rocketDest(e),D
  h+=`<div class="muted" style="margin-top:4px">${ready?(e.pw>0?'Ready for launch.':'Complete, but the pad needs power (150 MW) to launch.'):'Belt the parts in from any side, or load them from your item stock.'} The kit lands in the ${WORLDS[dest].n}'s own stock${e.nl?` · launches so far: ${e.nl}`:' and opens the way there'}.</div>`;
  return h;}
 function rocketLanded(first,to){to=to||'moon';const W=WORLDS[to];sfx('goal');
- if(first){dialog(`<h2>${W.ic} The colony rocket has landed!</h2><p>Your starter kit is waiting in the ${W.n}'s stock. ${to==='rime'?'Rime is frozen: no coal and no oil. Power comes from Geyser Turbines on the steam geysers (one is right next to the landing site); Ice Sleds carry goods across the snow.':`The ${W.n} has no coal and no limestone: power comes from Solar Panels, and concrete from home.`} Every further launch brings another kit.</p><button class="btn on" data-act="travel" data-v="${to}">Travel to the ${W.n}</button> <button class="btn" data-act="closeDlg">Later</button>`);}
- else toast(`🚀 Rocket landed: a new starter kit is in the ${W.n}'s stock`);
+ if(first){dialog(`<h2>${W.ic} The colony rocket has landed!</h2><p>Your starter kit is waiting in ${theW(to)}'s stock. ${to==='rime'?'Rime is frozen: no coal and no oil. Power comes from Geyser Turbines on the steam geysers (one is right next to the landing site); Ice Sleds carry goods across the snow. Open Goals to see what Rime needs.':`The ${W.n} has no coal and no limestone: power comes from Solar Panels, and concrete from home.`} Every further launch brings another kit.</p><button class="btn on" data-act="travel" data-v="${to}">Travel to ${theW(to)}</button> <button class="btn" data-act="closeDlg">Later</button>`);}
+ else toast(`🚀 Rocket landed: a new starter kit is in ${theW(to)}'s stock`);
  if(typeof updTop==='function')updTop();save();}
 function entDyn(e){
  const d=B[e.d];let h='';const st=bStatus(e);
  if(e.fm){const [v,mx]=fmRate(e),u=e.k==='pipe'?' m³/min':'/min';h+=`<h4>Flow Meter</h4><div class="row"><span>Flow</span><span><b>${fmt(v)}${u}</b></span></div><div class="row"><span>Maximum here</span><span>${fmt(mx)}${u}</span></div><div class="row"><span>Used</span><span>${mx?Math.round(v/mx*100):0}%</span></div><button class="btn" data-act="meterOff" style="margin-top:6px">✕ Remove Flow Meter</button>`;}
  if(st)h+=`<div class="row"><span>Status</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>`;
- if(d.pw){h+=`<div class="row"><span>Power</span><span>${fmt(d.pw*Math.pow(e.clock||1,1.6))} MW ${e.grid?'':'<span style="color:#e04030">(not connected)</span>'}</span></div>`;}
+ if(d.pw){h+=`<div class="row"><span>Power</span><span>${fmt(bPw(e)*Math.pow(e.clock||1,1.6))} MW ${e.grid?'':'<span style="color:#e04030">(not connected)</span>'}</span></div>`;}
  if(e.k==='mach')h+=effHtml(e);
  if(e.k==='mach'){
   if(e.r){const r=RC[e.r];h+=`<div class="bar"><i style="width:${(e.prog*100).toFixed(0)}%"></i></div><h4>Input buffer <span class="muted" style="text-transform:none;letter-spacing:0">· one stack each</span></h4>${Object.keys(r.i).map(k=>`<div class="row"><span>${nm(k)}</span><span>${fmt(Math.floor(e.inb[k]||0))} / ${capIn(r.i[k],k)}</span></div>`).join('')}${Object.keys(r.i).some(k=>!IT[k].f&&(e.inb[k]||0)<capIn(r.i[k],k)&&(S.inv[k]||0)>=1)?'<button class="btn" data-act="fillInb" style="margin-top:6px">⬆ Fill from stock</button>':''}<h4>Output buffer</h4>${bufList(e.outb)}`;}
@@ -315,7 +315,7 @@ function genInfo(g){const d=B[g];let h=`<div class="card"><b>${d.n}</b>${ub(g)?'
  h+=`<div class="muted">Fuel use follows the power actually drawn: at half load it burns half as much.${d.fuels.length>1?` It can burn ${d.fuels.map(f=>IT[f].n).join(' or ')} (uses the first it has, in this order).`:''}</div></div>`;
  return h;}
 function codexHtml(){
- const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace'];let h='';
+ const mts=['smelter','press','assembler','foundry','refinery','fabricator','blender','vfurnace','cryoplant'];let h='';
  for(const mt of mts){const rs=RL.filter(r=>r.m===mt&&ur(r.id));if(!rs.length)continue;h+=`<h4>${B[mt].n} · ${B[mt].pw} MW</h4>`+rs.map(r=>`<div class="card"><b>${r.n}</b><br>${recLine(r)}</div>`).join('');}
  h+=`<h4>Generators (fuel at full load)</h4>`+['burner','steam','turbine','reactor'].map(genInfo).join('');
  h+=`<h4>Extraction</h4>`+['drill1','drill2','drill3','opump','wpump'].map(id=>{const d=B[id],r=d.rate*60;

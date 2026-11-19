@@ -20,7 +20,7 @@ I('heavy_truss','Heavy Truss','#34466a');I('compute_module','Compute Module','#2
 I('battery','Battery','#a6e64e');I('control_chip','Control Chip','#3ea2f5');I('turbine_core','Turbine Core','#d9622e');I('uranium_cell','Uranium Cell','#4ec43a');
 I('fuel_rod','Fuel Rod','#2ef070',0,750000);I('waste','Nuclear Waste','#b4ff3a');I('quantum_core','Quantum Core','#ff5fc8');
 /* Colony rocket parts (Session 51; unlocked by Tier 10 since Session 57) */
-I('helium','Helium Crystals','#8fe6ff',0,3000);   /* also fusion fuel: 3000 MJ each (Session 60d) */I('regolith','Regolith','#a3a3aa');I('cryo_ice','Cryo Ice','#9fd8ff');I('rare_gas','Rare Gas','#c9a6ff',1);   /* Rime (Session 63) */I('sphere_frame','Sphere Frame Segment','#ffd27a');I('oxygen','Oxygen','#bfe6ff',1);I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
+I('helium','Helium Crystals','#8fe6ff',0,3000);   /* also fusion fuel: 3000 MJ each (Session 60d) */I('regolith','Regolith','#a3a3aa');I('cryo_ice','Cryo Ice','#9fd8ff');I('rare_gas','Rare Gas','#c9a6ff',1);I('sc_coil','Superconductor Coil','#7fe0ff');I('sphere_panel','Sphere Panel','#ffcf5a');   /* Rime (Session 63) */I('sphere_frame','Sphere Frame Segment','#ffd27a');I('oxygen','Oxygen','#bfe6ff',1);I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
 I('hull_plate','Hull Plate','#c9d3dd');I('heat_shield','Heat Shield','#5a4a44');I('guidance_core','Guidance Core','#f0c34a');I('rocket_fuel','Rocket Fuel','#ff7a2e');
 
 const RC={}, RL=[];
@@ -35,7 +35,7 @@ const STACK={};{const st=(n,ids)=>ids.split(' ').forEach(i=>STACK[i]=n);
  st(100,'water crude heavy_residue fuel alumina acid');
  st(50,'steel_beam steel_pipe quartz_crystal alu_casing braced_plate truss_frame rotor cased_girder stator circuit_board alloy_panel heat_sink battery uranium_cell waste');
  st(20,'motor resonator heavy_truss compute_module data_bus coolant_block control_chip turbine_core fuel_rod');
- st(10,'quantum_core guidance_core');st(100,'helium regolith ice cryo_ice');st(20,'sphere_frame');st(50,'vac_wafer');st(20,'lattice');st(50,'hull_plate rocket_fuel');st(20,'heat_shield');}
+ st(10,'quantum_core guidance_core');st(100,'helium regolith ice cryo_ice');st(20,'sphere_frame sphere_panel sc_coil');st(50,'vac_wafer');st(20,'lattice');st(50,'hull_plate rocket_fuel');st(20,'heat_shield');}
 const stackOf=id=>STACK[id]||(IT[id]&&IT[id].f?100:50);
 R('r_iron_ingot','Iron Ingot','smelter',2,'iron_ore:1','iron_ingot:1');
 R('r_copper_ingot','Copper Ingot','smelter',2,'copper_ore:1','copper_ingot:1');
@@ -112,6 +112,13 @@ R('r_cryo_rod','Cryo Fuel Rod (alt)','fabricator',90,'uranium_cell:30,helium:10,
 R('r_lattice_qc','Lattice Quantum Core (alt)','fabricator',40,'control_chip:1,compute_module:2,lattice:2','quantum_core:1',1);
 // Dyson Sphere stage 1 (Session 62): frame segments made on Earth from Moon lattice crystals
 R('r_sphere_frame','Sphere Frame Segment','fabricator',40,'lattice:2,hull_plate:2,heat_sink:4,steel_beam:6','sphere_frame:1');
+// Rime (Session 64, DESIGN.md section 15): the Cryo Plant works with deep cold; no coal on Rime, so steel is quenched in cryo ice
+R('r_thaw','Thawed Water','cryoplant',2,'cryo_ice:2','water:4');
+R('r_frost_steel','Frost Steel','cryoplant',6,'iron_ore:3,cryo_ice:2','steel_ingot:3');
+R('r_sc_coil','Superconductor Coil','cryoplant',15,'wire:20,cryo_ice:4,rare_gas:10','sc_coil:1');
+R('r_coil_motor','Coil Motor (alt)','fabricator',20,'sc_coil:1,steel_beam:2,wire:10','motor:2',1);
+// Dyson Sphere stage 2 (Session 64): panels made on Earth from Rime coils and Moon wafers
+R('r_sphere_panel','Sphere Panel','fabricator',40,'sc_coil:2,vac_wafer:4,alloy_panel:4','sphere_panel:1');
 R('r_wafer_cb','Wafer Circuit Board','vfurnace',8,'vac_wafer:1,copper_sheet:2','circuit_board:2');
 R('r_moon_alu','Lunar Aluminum','vfurnace',6,'bauxite:4,water:6','alu_ingot:2');
 R('r_quantum_core','Quantum Core','fabricator',60,'control_chip:2,compute_module:3,heat_sink:6,battery:10','quantum_core:1');
@@ -156,12 +163,16 @@ D('fport',{n:'Freighter Port',k:'fport',w:6,pw:40,cat:'trans',col:'#b8c4d0',cost
 /* Dyson Sphere (Session 62, DESIGN.md section 12): a Sphere Launcher on Home fires frame segments into orbit around the sun; finished stages beam power back */
 D('slaunch',{n:'Sphere Launcher',k:'slaunch',w:8,pw:4000,only:'home',cat:'trans',col:'#ffb547',cost:{heavy_truss:40,motor:80,control_chip:30,cased_girder:150,concrete:600,lattice:30},desc:'A magnetic launcher that fires Sphere Frame Segments into orbit around the sun (one every 20 s). Belt the segments in. Draws 4000 MW while charging. Home only.'});
 D('srecv',{n:'Sphere Receiver',k:'gen',w:4,cap:2500,fuels:[],solar:1,only:'home',link:10,sup:7,cat:'pow',col:'#ffd27a',cost:{alloy_panel:60,control_chip:10,heat_sink:20,steel_beam:30},desc:'Receives power beamed down from the finished Dyson Sphere frame: 2500 MW, no fuel. Home only.'});
-const DYSON={fire:20,store:20,stages:[{n:'Sphere Frame',need:300,b:['srecv'],why:'Launch the frame: a ring of segments around the sun. Finished, it beams power back to Home Sphere Receivers.'},
- {n:'Sphere Panels',need:0,soon:'Needs goods from the ice planet: the next chapter.'}]};
-const FREIGHT={cap:2000,fly:60,dock:5,fuel:40,max:3,cost:{hull_plate:20,guidance_core:1,rocket_fuel:40}};
+/* it = item the launchers fire in this stage; cap = Sphere Receiver output once the stage is complete (Session 64) */
+const DYSON={fire:20,store:20,stages:[{n:'Sphere Frame',need:300,it:'sphere_frame',cap:2500,b:['srecv'],why:'Launch the frame: a ring of segments around the sun. Finished, it beams power back to Home Sphere Receivers.'},
+ {n:'Sphere Panels',need:300,it:'sphere_panel',cap:6000,b:[],why:'Clad the frame with panels (Superconductor Coils from Rime, Vacuum Wafers from the Moon). Finished, every Sphere Receiver gives 6000 MW.'},
+ {n:'Sphere Shell',need:0,soon:'The last chapter: still to come.'}]};
+const FREIGHT={cap:2000,fly:60,flyTo:{moon:60,rime:120},dock:5,fuel:40,max:3,cost:{hull_plate:20,guidance_core:1,rocket_fuel:40}};
 D('geoturb',{n:'Geyser Turbine',k:'gen',w:3,cap:200,fuels:[],solar:1,geyser:1,only:'rime',link:8,sup:5,cat:'pow',col:'#bfe3f7',cost:{iron_plate:40,copper_sheet:30,cable:30,concrete:20},desc:'Sits on a steam geyser: 200 MW, no fuel. Only on Rime.'});
 D('sdepot',{n:'Sled Depot',k:'rdepot',veh:'sled',w:3,pw:10,cap:450,only:'rime',cat:'trans',col:'#d6e8f5',cost:{iron_plate:30,copper_sheet:20,wire:30,concrete:10},desc:'Ice Sleds: link it to another Sled Depot; its sleds race the goods there (150 per trip), fastest over frozen seas, around buildings and glacier cliffs. Comes with one sled, up to 3. Needs power. Only on Rime.'});
 D('stdepot',{n:'Tanker Sled Depot',k:'tdepot',veh:'sled',fl:1,w:3,pw:10,cap:900,only:'rime',cat:'trans',col:'#cfe3f0',cost:{iron_plate:30,copper_sheet:40,wire:30,concrete:10},desc:'Fluid version of the Sled Depot: holds 900 m³ of one fluid; tanker sleds carry 300 m³ per trip. Fills from (linked) or feeds into (unlinked) its pipes through a Pipe Junction. Only on Rime.'});
+D('gasx',{n:'Gas Extractor',k:'pump',w:2,rate:1,pw:25,gas:1,only:'rime',cat:'ext',col:'#b89ae8',cost:{iron_plate:20,copper_sheet:20,steel_pipe:10},desc:'Sits on a steam geyser and catches the Rare Gas in its plume: 60 m³/min on a normal geyser (out through a Pipe Junction). Only on Rime.'});
+D('cryoplant',{n:'Cryo Plant',k:'mach',mt:'cryoplant',w:3,pw:40,only:'rime',cat:'prod',col:'#8fd0f0',cost:{iron_plate:40,copper_sheet:30,cable:30,concrete:40},desc:'Uses Rime\u2019s deep cold: thaws cryo ice into water, quenches Frost Steel from iron ore (no coal needed) and winds Superconductor Coils. Up to 3 inputs, solids and fluids. Only on Rime.'});
 const SLED={cap:150,fcap:300,spd:9,load:2,unload:2,wait:10,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 const ROVER={fcap:400,cap:200,spd:6,load:2,unload:2,wait:10,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 D('lpad',{n:'Launch Pad',k:'lpad',w:6,pw:150,only:'home',cat:'trans',col:'#e8a23a',cost:{heavy_truss:20,cased_girder:60,concrete:400,control_chip:10},desc:'Builds and launches the colony rocket to the Moon. Belt in the rocket parts and the starter kit (or load them from your stock), then press Launch. Needs 150 MW while the rocket is ready.'});
@@ -198,8 +209,8 @@ D('blender',{n:'Blender',k:'mach',mt:'blender',w:3,pw:75,cat:'prod',col:'#2a8a7a
 D('vfurnace',{n:'Vacuum Furnace',k:'mach',mt:'vfurnace',w:3,pw:20,only:'moon',cat:'prod',col:'#5b6fd6',cost:{iron_plate:30,copper_sheet:20,quartz_crystal:10,cable:20},desc:'Melts and grows crystals in the Moon\u2019s vacuum, with Helium Crystals. Only works on the Moon. Built from things the Moon can make.'});
 D('rexc',{n:'Regolith Excavator',k:'drill',w:2,rate:1,pw:8,reg:1,only:'moon',cat:'ext',col:'#8c8f96',cost:{iron_plate:12,iron_rod:8,copper_sheet:4},desc:'Digs Regolith (loose Moon soil) anywhere: no ore node needed. 60/min. Only on the Moon.'});
 D('imelt',{n:'Ice Melter',k:'pump',w:2,rate:2,pw:10,ice:1,only:'moon',cat:'ext',col:'#4f9fd0',cost:{iron_plate:10,copper_sheet:10,wire:10},desc:'Sits on an ice deposit in a dark crater and melts it into Water: 120 m³/min on a normal deposit (out through a Pipe Junction). Only on the Moon.'});   /* Session 58f: a pump on ice nodes, not a free-standing machine */
-D('habitat',{n:'Habitat',k:'hab',w:4,pw:15,only:'moon',cat:'prod',col:'#e9edf1',cost:{steel_beam:10,concrete:40,copper_sheet:20,wire:30},desc:'Home for up to 10 colonists. Needs power plus Water and Oxygen through Pipe Junctions (2 m³/min each per colonist). Habitats placed touching each other share water and oxygen, so one junction of each feeds the whole block. Supplied, it gains a colonist every 20 s; short of anything, it loses one. Only on the Moon.'});
-const HAB={cap:10,per:2,grow:20};   /* colonists per habitat, water and oxygen per colonist per minute, seconds per colonist gained or lost */
+D('habitat',{n:'Habitat',k:'hab',w:4,pw:15,only:['moon','rime'],cat:'prod',col:'#e9edf1',cost:{steel_beam:10,concrete:40,copper_sheet:20,wire:30},desc:'Home for up to 10 colonists. Needs power plus Water and Oxygen through Pipe Junctions (2 m³/min each per colonist). Habitats placed touching each other share water and oxygen, so one junction of each feeds the whole block. Supplied, it gains a colonist every 20 s; short of anything, it loses one. On Rime it needs 3× the power for heating. Only on the Moon and Rime.'});
+const HAB={cap:10,per:2,grow:20,heat:3};   /* heat: power factor on Rime (Session 64) */   /* colonists per habitat, water and oxygen per colonist per minute, seconds per colonist gained or lost */
 D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('solar',{n:'Solar Panel',k:'gen',w:2,cap:10,fuels:[],solar:1,only:'moon',link:6,sup:4,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:4,circuit_board:2,wire:10},desc:'10 MW from sunlight, no fuel. Only works in the Moon\u2019s unfiltered sunlight.'});
 D('solar2',{n:'Solar Array',k:'gen',w:4,cap:60,fuels:[],solar:1,only:'moon',link:8,sup:6,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:16,vac_wafer:8,steel_beam:6,wire:20},desc:'60 MW from sunlight, no fuel: 50% more power per tile than Solar Panels. Arrays placed touching each other (or panels) join one network. Only on the Moon.'});
@@ -236,6 +247,15 @@ const WGOALS={moon:[
  /* Colony goals (Session 60): rates held for HOLD seconds (measured at the Base Core over the last minute) and a population */
  {n:'First Settlers',req:{},pop:10,rate:{steel_pipe:15,concrete:30},b:['fusion'],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel pipes and concrete, steadily (they stay in your stock for building).'},
  {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:['fport','slaunch','geoturb','sdepot','stdepot'],r:['r_cryo_rod','r_lattice_qc','r_sphere_frame'],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Trade: Orbital Freighters carry helium and lattice crystals to Earth (cheaper Fuel Rods and Quantum Cores there) and plastic or parts up to the Moon.'}]};
+WGOALS.rime=[   /* Session 64: Rime chapter */
+ {n:'Landfall',req:{iron_plate:200,copper_sheet:100,concrete:100},b:['gasx','cryoplant'],r:['r_thaw','r_frost_steel'],why:'Settle in on the ice: catch Rare Gas from the geysers, and make water and steel without coal in the Cryo Plant.'},
+ {n:'Geothermal',req:{steel_beam:100,steel_pipe:200,cable:200},b:[],r:['r_sc_coil'],why:'Frost Steel builds the base. Next: wind Superconductor Coils from wire, cryo ice and Rare Gas.'},
+ {n:'Cold Lab',req:{},rate:{sc_coil:4,steel_pipe:15},b:[],r:['r_sphere_panel','r_coil_motor'],why:'Make coils steadily. They unlock Sphere Panels on Earth: the Dyson Sphere\u2019s second stage.'},
+ {n:'Ice Colony',req:{},pop:20,rate:{concrete:30,steel_beam:10},b:[],r:[],why:'People move to Rime: Habitats need water (thawed ice), oxygen and three times the power for heating.'},
+ {n:'Export Ready',req:{},pop:40,rate:{sc_coil:8},b:[],r:[],why:'A growing colony and a steady coil line: enough to ship coils to Earth for the Sphere Panels.',next:'Fly the coils to Home with Orbital Freighters (set a freighter\u2019s destination to Rime) and clad the Dyson Sphere with Sphere Panels.'}];
+const onWorld=(d,w)=>!d.only||(Array.isArray(d.only)?d.only.includes(w):d.only===w);   /* d.only: a world id or a list of them (Session 64) */
+const theW=w=>(w==='moon'?'the ':'')+WORLDS[w].n;   /* 'the Moon', but 'Rime', 'Home' */
+const onlyTxt=d=>'Only on '+[].concat(d.only).map(theW).join(' and ');
 const WG_HOLD=180;   /* seconds a rate goal must be held */
 const WG_TOL=0.85;   /* the hold keeps counting while every rate is at least 85% of its target (Session 61h, Markus: allow 10–20% deviation) */
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});

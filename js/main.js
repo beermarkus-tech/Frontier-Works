@@ -30,7 +30,7 @@ function growIncin(){const inc=[...ents.values()].filter(e=>e.k==='incin');if(!i
 function load(str){const data=typeof str==='string'?parseSave(str):str;CORE={b:[],cur:{},acc:0};
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;
  /* Session 46: saves from before the coast ring are moved MAP_EXT tiles in (one time); the original save text is kept as a backup */
- S.w=S.w||'home';S.worlds=S.worlds||{};
+ S.w=S.w||'home';S.worlds=S.worlds||{};if(typeof dysonApply==='function')dysonApply();
  const mig=S.ext===undefined,E=MAP_EXT,oW=MW,oH=MH;   /* only saves from before the coast ring (the Moon has ext 0) */if(mig){S.ext=E;try{localStorage.setItem('frontierworks_preexpand',typeof str==='string'?str:JSON.stringify(data));}catch(e){}
   if(S.cam){S.cam.x+=E;S.cam.y+=E;}
   if(S.zmap){const old=new Uint16Array(oW*oH);let i=0;for(const part of String(S.zmap).split(',')){const [v,c]=part.split(':').map(Number);if(!(c>0))continue;if(v)old.fill(v,i,Math.min(old.length,i+c));i+=c;}
