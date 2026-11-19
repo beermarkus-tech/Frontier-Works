@@ -195,18 +195,20 @@ function effHtml(e){
  return h;
 }
 /* Launch Pad panel (Session 51): what is loaded, what is missing, load from stock, launch */
-function lpadHtml(e){const need=rocketNeed(),f=lpadFrac(e);let h='';
- if(e.lt>0)return`<h4>Launch</h4><div class="row"><span>Rocket</span><span><b>climbing… ${Math.round(e.lt/ROCKET.lt*100)}%</b></span></div><div class="bar"><i style="width:${e.lt/ROCKET.lt*100}%"></i></div><div class="muted">Its cargo lands in the ${WORLDS[ROCKET.to].n}'s stock.</div>`;
+function lpadHtml(e){const need=rocketNeed(e),f=lpadFrac(e),dest=rocketDest(e),D0=ROCKET_TO[dest];let h='';
+ if(e.lt>0)return`<h4>Launch</h4><div class="row"><span>Rocket</span><span><b>climbing… ${Math.round(e.lt/ROCKET.lt*100)}%</b></span></div><div class="bar"><i style="width:${e.lt/ROCKET.lt*100}%"></i></div><div class="muted">Its cargo lands in the ${WORLDS[e.ld||dest].n}'s stock.</div>`;
+ const dOk=d=>{const nd=ROCKET_TO[d].need;return!nd||Object.keys(nd).every(w=>((S.wms&&S.wms[w])||0)>=nd[w]);};   /* destination switch (Session 63) */
+ h+=`<h4>Destination</h4><div class="chips">${Object.keys(ROCKET_TO).map(d=>`<button class="btn chip ${d===dest?'on':''}" data-act="lpDest" data-v="${d}" ${dOk(d)?'':'disabled'}>${WORLDS[d].ic} ${WORLDS[d].n}${dOk(d)?'':' 🔒'}</button>`).join('')}</div>${dOk('rime')?'':'<div class="muted">Rime opens after Moon goal 6 (Self-Sufficient).</div>'}`;
  h+=`<h4>Colony rocket</h4><div class="row"><span>Loaded</span><span><b>${Math.round(f*100)}%</b></span></div><div class="bar"><i style="width:${f*100}%"></i></div>`;
- const rows=(o,title)=>`<h4>${title}</h4>`+Object.keys(o).map(k=>{const have=Math.min(need[k],e.store[k]||0),want=k in ROCKET.parts&&k in ROCKET.kit?need[k]:o[k];return`<div class="row"><span>${nm(k)}</span><span class="${have>=need[k]?'plok':''}">${fmt(have)} / ${want}${(S.inv[k]||0)>0&&have<need[k]?` <small class="muted">(${fmt(S.inv[k])} in stock)</small>`:''}</span></div>`;}).join('');
- h+=rows(ROCKET.parts,'Rocket parts')+rows(ROCKET.kit,'Starter kit (cargo)');
+ const rows=(o,title)=>`<h4>${title}</h4>`+Object.keys(o).map(k=>{const have=Math.min(need[k],e.store[k]||0),want=k in D0.parts&&k in D0.kit?need[k]:o[k];return`<div class="row"><span>${nm(k)}</span><span class="${have>=need[k]?'plok':''}">${fmt(have)} / ${want}${(S.inv[k]||0)>0&&have<need[k]?` <small class="muted">(${fmt(S.inv[k])} in stock)</small>`:''}</span></div>`;}).join('');
+ h+=rows(D0.parts,'Rocket parts')+rows(D0.kit,'Starter kit (cargo)');
  const miss=lpadMissing(e),canLoad=Object.keys(miss).some(k=>(S.inv[k]||0)>0);
  h+=`<div class="chips" style="margin-top:8px"><button class="btn" data-act="lpadLoad" ${canLoad?'':'disabled'}>📦 Load from stock</button>`;
  const ready=lpadReady(e);h+=`<button class="btn ${ready&&e.pw>0?'on':''}" data-act="lpadGo" ${ready&&e.pw>0?'':'disabled'}>🚀 Launch</button></div>`;
- h+=`<div class="muted" style="margin-top:4px">${ready?(e.pw>0?'Ready for launch.':'Complete, but the pad needs power (150 MW) to launch.'):'Belt the parts in from any side, or load them from your item stock.'} The kit lands in the ${WORLDS[ROCKET.to].n}'s own stock${e.nl?` · launches so far: ${e.nl}`:' and opens the way there'}.</div>`;
+ h+=`<div class="muted" style="margin-top:4px">${ready?(e.pw>0?'Ready for launch.':'Complete, but the pad needs power (150 MW) to launch.'):'Belt the parts in from any side, or load them from your item stock.'} The kit lands in the ${WORLDS[dest].n}'s own stock${e.nl?` · launches so far: ${e.nl}`:' and opens the way there'}.</div>`;
  return h;}
-function rocketLanded(first){const W=WORLDS[ROCKET.to];sfx('goal');
- if(first){dialog(`<h2>${W.ic} The colony rocket has landed!</h2><p>Your starter kit is waiting in the ${W.n}'s stock. The ${W.n} has no coal and no limestone: power comes from Solar Panels, and concrete from home. Every further launch brings another kit.</p><button class="btn on" data-act="travel" data-v="${ROCKET.to}">Travel to the ${W.n}</button> <button class="btn" data-act="closeDlg">Later</button>`);}
+function rocketLanded(first,to){to=to||'moon';const W=WORLDS[to];sfx('goal');
+ if(first){dialog(`<h2>${W.ic} The colony rocket has landed!</h2><p>Your starter kit is waiting in the ${W.n}'s stock. ${to==='rime'?'Rime is frozen: no coal and no oil. Power comes from Geyser Turbines on the steam geysers (one is right next to the landing site); Ice Sleds carry goods across the snow.':`The ${W.n} has no coal and no limestone: power comes from Solar Panels, and concrete from home.`} Every further launch brings another kit.</p><button class="btn on" data-act="travel" data-v="${to}">Travel to the ${W.n}</button> <button class="btn" data-act="closeDlg">Later</button>`);}
  else toast(`🚀 Rocket landed: a new starter kit is in the ${W.n}'s stock`);
  if(typeof updTop==='function')updTop();save();}
 function entDyn(e){
@@ -417,6 +419,7 @@ const ACT={
  gview:v=>{UI.gview=v;renderPanel(true);},
  submitWg:()=>{const w=S.w||'home',L=WGOALS[w];if(!L)return;S.wms=S.wms||{};const k=S.wms[w]||0,m=L[k];if(!m||!wgReady(m))return;pay(m.req);S.wgh&&(S.wgh[w]=0);for(const b of m.b)if(!ub(b))S.ub.push(b);for(const r of m.r)if(!ur(r))S.ur.push(r);S.wms[w]=k+1;sfx('goal');
   const un=[...m.b.map(b=>B[b].n),...m.r.map(r=>RC[r].n)];dialog(`<h2>${WORLDS[w].ic} ${WORLDS[w].n} ${k+1}: ${m.n}</h2><p>${un.length?'Unlocked: '+un.join(', ')+'.':''} ${L[k+1]?'Next goal: '+L[k+1].n+'.':m.next||''}</p><button class="btn on" data-act="closeDlg">Nice</button>`);buildTools();renderPanel(true);if(typeof updTop==='function')updTop();save();},
+ lpDest:v=>{const e=ents.get(UI.panel&&UI.panel.arg);if(!e||e.k!=='lpad'||e.lt>0)return;if(rocketDest(e)!==v){for(const k in e.store)give(k,e.store[k]);e.store={};e.dest=v;toast(`Destination: ${WORLDS[v].n} (loaded goods went back to stock)`);}renderPanel(true);},
  lpadLoad:()=>{const e=ents.get(UI.panel.arg);if(!e)return;const m=lpadMissing(e);let n=0;for(const k in m){const t=Math.min(m[k],S.inv[k]||0);if(t>0){S.inv[k]-=t;e.store[k]=(e.store[k]||0)+t;n+=t;}}toast(n?`Loaded ${n} items`:'Nothing to load from stock');renderPanel(true);},
  lpadGo:()=>{const e=ents.get(UI.panel.arg);const why=lpadLaunch(e);if(why){toast(why);return;}sfx('launch');toast('🚀 Lift-off!');renderPanel(true);},
  openFind:()=>openPanel('find'),

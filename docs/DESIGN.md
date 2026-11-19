@@ -394,6 +394,14 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
 - **Moon power (Session 60d, agreed with Markus):** **Solar Array** (4×4, 60 MW, no fuel, Moon materials; unlocked by Moon goal 4) and
   **Helium Fusion Reactor** (6×6, 1500 MW from 30 Helium Crystals/min + 120 m³/min water; Moon materials only, lattice crystals as its
   heart; unlocked by Moon goal 5). Helium thereby gets a use on the Moon itself.
+- **Rime, the ice planet (Session 63, agreed with Markus; step 1 built).** Reached with a second colony rocket: the Launch Pad has a
+  **destination switch** (Moon / Rime; Rime opens after Moon goal 6, needs 200 Rocket Fuel, brings a bigger kit). Rime (256×256): snowfields
+  and glacier uplands, **frozen seas** (buildable), **glacier cliffs**, **steam geysers** and **Cryo Ice**; no coal, no oil, no open water.
+  Buildings look frosted pale blue. **Geyser Turbine** (3×3, 200 MW, no fuel) sits on a geyser; one geyser and the basic ores are next to the
+  landing site. **Ice Sleds** (Markus's wish: like the rovers but different): Sled Depot / Tanker Sled Depot, sleds carry 150 items or 300 m³,
+  run about 9 tiles/s (35% faster over frozen seas), cannot climb glacier cliffs (they go around), long skids, snow spray, ski grooves (2D + 3D).
+  **Step 2 (next):** Rime goals (Landfall, Geothermal, Cold Lab, Ice Colony with heat, Export Ready), Cryo Plant + Superconductor Coils,
+  Rare Gas from geysers, freighters to Rime, Dyson stage 2 (Sphere Panels from coils + wafers + alloy panels).
 - **Dyson Sphere stage 1, Sphere Frame (built, Session 62, agreed with Markus).** Sphere Frame Segments (Fabricator on Earth: 2 lattice
   crystals from the Moon + 2 hull plates + 4 heat sinks + 6 steel beams) are belted into a **Sphere Launcher** (8×8, Home only, 4000 MW
   while charging, one segment every 20 s). 300 segments complete the stage and unlock the **Sphere Receiver** (4×4, Home, 2500 MW, no
@@ -478,9 +486,8 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 - **Trains Phase 1 is built (Session 56).** Markus should try it on his phone first: track loop, two stops, Cargo Bays, a train.
 - **Moon goals are built (Session 58).** Markus plays them on the Moon.
 - **Moon Colony and Orbital Freighters are built (Sessions 60, 60b).**
-- **Dyson Sphere stage 1 is built (Session 62).**
-- **Next:** the ice planet (new colony rocket, cryo-ice, rare gases, Cryo Plant), whose goods Sphere stage 2 (panels) will need; freighter
-  visuals in 3D; balance after Markus plays the colony and sphere. Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
+- **Rime step 1 is built (Session 63).**
+- **Next:** Rime step 2 (goals, Cryo Plant, Superconductor Coils, Rare Gas, freighters to Rime, Dyson stage 2). Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
   blueprints). Then the all-tier measuring tool, also checking the Moon goals. Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
 
 ## 11. Explicitly out of scope (for now)

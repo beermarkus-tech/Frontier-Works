@@ -16,7 +16,7 @@ function mkNoise(r,cell){const gw=Math.ceil(MW/cell)+2,gh=Math.ceil(MH/cell)+2,v
    expandMap() puts it in the middle of a bigger map and fills the ring from a deterministic coast field, so every load gives the same map.
    prepTerrain waits until the map has its final size (GEN_DEFER). */
 let GEN_DEFER=false;
-function genMap(seed){GEN_DEFER=true;try{if(S&&S.gen===3)genMoon(seed);else if(S&&S.gen===2)genBiome(seed);else genClassic(seed);}finally{GEN_DEFER=false;}if(S&&S.ext)expandMap(S.ext);prepTerrain(seed);}
+function genMap(seed){GEN_DEFER=true;try{if(S&&S.gen===4)genRime(seed);else if(S&&S.gen===3)genMoon(seed);else if(S&&S.gen===2)genBiome(seed);else genClassic(seed);}finally{GEN_DEFER=false;}if(S&&S.ext)expandMap(S.ext);prepTerrain(seed);}
 /* The Moon (Session 49): grey regolith, dark maria and bright highlands, craters (rock rim, dusty floor), no water.
    Resources: iron (mostly maria), quartz and bauxite (highlands), a little uranium; Helium comes in step 2c. */
 function genMoon(seed){const r=rng((seed^0x6d6f6f6e)>>>0),n1=mkNoise(r,46),n2=mkNoise(r,9),n3=mkNoise(r,5),T=MW*MH,cx=MW/2,cy=MH/2;
@@ -39,6 +39,19 @@ function genMoon(seed){const r=rng((seed^0x6d6f6f6e)>>>0),n1=mkNoise(r,46),n2=mk
  /* Ice (Session 58): only on dark crater floors, far from the landing site; own pass, own random numbers */
  {const r3=rng((seed^0x49636521)>>>0),tgt=Math.max(5,Math.round(MW*MH/9000));
   for(let a=0,k=0;a<tgt*400&&k<tgt;a++){const x=3+Math.floor(r3()*(MW-6)),y=3+Math.floor(r3()*(MH-6));if(Math.hypot(x-cx,y-cy)<45||terr[y*MW+x]!==2||near(x,y,4))continue;const p=r3();if(add('ice',x,y,p<0.3?0:p<0.8?1:2))k++;}}}
+/* Rime, the ice planet (Session 63): snowfields and glacier uplands, frozen seas (terr 2, buildable, fast for sleds), glacier cliffs (terr 3),
+   steam geysers and cryo ice. No coal and no oil; power from Geyser Turbines. A geyser and the basic ores sit near the landing site. */
+function genRime(seed){const r=rng((seed^0x52696d65)>>>0),n1=mkNoise(r,40),n2=mkNoise(r,12),n3=mkNoise(r,6),T=MW*MH,cx=MW/2,cy=MH/2;
+ terr=new Uint8Array(T);bio=new Uint8Array(T);nodeAt=new Array(T).fill(null);nodes=[];
+ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=y*MW+x,v=n1(x,y),hi=v>0.55;bio[i]=hi?EARTH_NB+3:EARTH_NB+2;
+  terr[i]=v<0.36?2:hi&&n3(x,y)>0.66&&n2(x,y)>0.45?3:0;}
+ for(let y=-14;y<=14;y++)for(let x=-14;x<=14;x++)if(Math.hypot(x,y)<14)terr[(cy+y)*MW+cx+x]=0;   /* flat landing site */
+ const add=(t,x,y,p)=>{const i=y*MW+x;if(x<2||y<2||x>=MW-2||y>=MH-2||nodeAt[i]||terr[i]===3)return false;const n={t,x,y,p};nodes.push(n);nodeAt[i]=n;return true;};
+ const near=(x,y,rr)=>{for(let j=-rr;j<=rr;j++)for(let i=-rr;i<=rr;i++){const X=x+i,Y=y+j;if(X>=0&&Y>=0&&X<MW&&Y<MH&&nodeAt[Y*MW+X])return true;}return false;};
+ add('iron',cx-8,cy-4,1);add('copper',cx+7,cy-6,1);add('limestone',cx-5,cy+8,1);add('geyser',cx+6,cy+6,1);add('cryo',cx-10,cy+3,1);
+ const odds={iron:[4,2],copper:[3,1.5],limestone:[2.5,1],quartz:[1,3],bauxite:[1,1.5],sulfur:[0.8,0.8],uranium:[0.3,1],cryo:[1.2,3],geyser:[0.8,0.8]},keys=Object.keys(odds),target=Math.round(MW*MH/900);
+ for(let a=0,k=0;a<target*30&&k<target;a++){const x=3+Math.floor(r()*(MW-6)),y=3+Math.floor(r()*(MH-6));if(Math.hypot(x-cx,y-cy)<16||near(x,y,4))continue;const hi=bio[y*MW+x]===EARTH_NB+3?1:0;
+  let s=0;for(const t of keys)s+=odds[t][hi];let q=r()*s,t=keys[0];for(const k2 of keys){q-=odds[k2][hi];if(q<=0){t=k2;break;}}const p=r();if(add(t,x,y,p<0.3?0:p<0.8?1:2))k++;}}
 function expandMap(E){const oW=MW,oH=MH,nW=oW+2*E,nH=oH+2*E,oT=terr,oB=bio,k=((S.seed>>>0)%1000)+7,land=(x,y)=>oT[y*oW+x]!==1?1:0;
  const lf=(get,n)=>{const a=new Float32Array(n);for(let i=0;i<n;i++){let s=0,c=0;for(let j=-5;j<=5;j++){const q=i+j;if(q<0||q>=n)continue;s+=get(q);c++;}a[i]=s/c;}return a;};
  const T=lf(x=>land(x,0),oW),Bo=lf(x=>land(x,oH-1),oW),L=lf(y=>land(0,y),oH),Ri=lf(y=>land(oW-1,y),oH);
@@ -142,6 +155,8 @@ function canPlace(id,x,y){
  if(d.k==='drill'&&!d.reg&&(!node||node.t==='oil'))return 'Needs an ore node underneath';
  if(d.k==='pump'&&d.oil&&(!node||node.t!=='oil'))return 'Needs an oil well underneath';
  if(d.k==='pump'&&d.ice&&(!node||node.t!=='ice'))return 'Needs an ice deposit underneath';
+ if(d.geyser){let g=false;for(let j=0;j<w;j++)for(let i=0;i<w;i++){const n=nodeAt[(y+j)*MW+x+i];if(n&&n.t==='geyser')g=true;}if(!g)return 'Needs a steam geyser underneath';}
+ if(d.k==='drill'&&node&&node.t==='geyser')return 'A geyser: use a Geyser Turbine (or a pump for Rare Gas, later)';
  if(d.k==='drill'&&node&&node.t==='ice')return 'Ice is melted where it lies: use an Ice Melter';
  return '';
 }
@@ -317,7 +332,7 @@ function accept(e,item,dir,carry){
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'slaunch':{if(item!=='sphere_frame'||(e.store.sphere_frame||0)>=DYSON.store)return false;e.store.sphere_frame=(e.store.sphere_frame||0)+1;return true;}
   case 'hab':{if(!fl||(item!=='water'&&item!=='oxygen'))return false;if((e.inb[item]||0)>=60)return false;e.inb[item]=(e.inb[item]||0)+1;return true;}
-  case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed()[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
+  case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed(e)[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;CORE.cur[item]=(CORE.cur[item]||0)+1;zStat('k',e,item,1);return true;
   case 'incin':e.burnT=S.t;stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
  }
@@ -561,17 +576,17 @@ function updPad(e,dt){const d=B[e.d],D=e.dr,tg=padTarget(e),pw=e.pw>0;
 }
 /* Launch Pad (Session 51): fill it with the rocket parts and the starter kit, then Launch (needs power). The rocket climbs for ROCKET.lt
    seconds, then its kit lands in the Moon's stock; the first launch creates the Moon world. */
-function lpadMissing(e){const need=rocketNeed(),m={};for(const k in need){const n=need[k]-(e.store[k]||0);if(n>0)m[k]=n;}return m;}
-const lpadFrac=e=>{if(e.lt>0)return 1;const need=rocketNeed();let h=0,t=0;for(const k in need){t+=need[k];h+=Math.min(need[k],e.store[k]||0);}return t?h/t:0;};
+function lpadMissing(e){const need=rocketNeed(e),m={};for(const k in need){const n=need[k]-(e.store[k]||0);if(n>0)m[k]=n;}return m;}
+const lpadFrac=e=>{if(e.lt>0)return 1;const need=rocketNeed(e);let h=0,t=0;for(const k in need){t+=need[k];h+=Math.min(need[k],e.store[k]||0);}return t?h/t:0;};
 const lpadReady=e=>!e.lt&&!Object.keys(lpadMissing(e)).length;
 function lpadLaunch(e){if(!e||e.k!=='lpad')return 'Not a Launch Pad';if(e.lt>0)return 'Already launching';if(!lpadReady(e))return 'The rocket is not complete yet';if(!(e.pw>0))return 'No power: the pad needs 150 MW';
- const need=rocketNeed();for(const k in need){e.store[k]-=need[k];if(e.store[k]<=0)delete e.store[k];stat.c[k]=(stat.c[k]||0)+need[k];}e.lt=0.001;return '';}
-function rocketArrive(){const to=ROCKET.to,W=WORLDS[to],kit=ROCKET.kit;S.worlds=S.worlds||{};let first=false;
+ const need=rocketNeed(e);e.ld=rocketDest(e);for(const k in need){e.store[k]-=need[k];if(e.store[k]<=0)delete e.store[k];stat.c[k]=(stat.c[k]||0)+need[k];}e.lt=0.001;return '';}
+function rocketArrive(to){to=to||'moon';const W=WORLDS[to],kit=ROCKET_TO[to].kit;S.worlds=S.worlds||{};let first=false;
  if(S.w===to){for(const k in kit)give(k,kit[k]);return false;}
  if(!S.worlds[to]){first=true;S.worlds[to]={WS:{seed:(Math.random()*1e9)|0,gen:W.gen,mw:W.mw,ext:W.ext,zones:[],zmap:'',cam:null,inv:{}},es:[['core',W.mw/2-2,W.mw/2-2,0]]};}
  const inv=S.worlds[to].WS.inv=S.worlds[to].WS.inv||{};for(const k in kit)inv[k]=(inv[k]||0)+kit[k];return first;}
 function updLpad(e,dt){e.want=lpadReady(e)||e.lt>0;
- if(e.lt>0){e.lt+=dt;if(e.lt>=ROCKET.lt){e.lt=0;e.nl=(e.nl||0)+1;const first=rocketArrive();if(typeof rocketLanded==='function')rocketLanded(first);}}}
+ if(e.lt>0){e.lt+=dt;if(e.lt>=ROCKET.lt){e.lt=0;e.nl=(e.nl||0)+1;const to=e.ld||rocketDest(e),first=rocketArrive(to);if(typeof rocketLanded==='function')rocketLanded(first,to);}}}
 function updBuilding(e,dt){
  switch(e.k){
   case 'mach':{

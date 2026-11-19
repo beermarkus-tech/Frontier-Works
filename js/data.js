@@ -20,7 +20,7 @@ I('heavy_truss','Heavy Truss','#34466a');I('compute_module','Compute Module','#2
 I('battery','Battery','#a6e64e');I('control_chip','Control Chip','#3ea2f5');I('turbine_core','Turbine Core','#d9622e');I('uranium_cell','Uranium Cell','#4ec43a');
 I('fuel_rod','Fuel Rod','#2ef070',0,750000);I('waste','Nuclear Waste','#b4ff3a');I('quantum_core','Quantum Core','#ff5fc8');
 /* Colony rocket parts (Session 51; unlocked by Tier 10 since Session 57) */
-I('helium','Helium Crystals','#8fe6ff',0,3000);   /* also fusion fuel: 3000 MJ each (Session 60d) */I('regolith','Regolith','#a3a3aa');I('sphere_frame','Sphere Frame Segment','#ffd27a');I('oxygen','Oxygen','#bfe6ff',1);I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
+I('helium','Helium Crystals','#8fe6ff',0,3000);   /* also fusion fuel: 3000 MJ each (Session 60d) */I('regolith','Regolith','#a3a3aa');I('cryo_ice','Cryo Ice','#9fd8ff');I('rare_gas','Rare Gas','#c9a6ff',1);   /* Rime (Session 63) */I('sphere_frame','Sphere Frame Segment','#ffd27a');I('oxygen','Oxygen','#bfe6ff',1);I('ice','Ice','#d4f1ff');I('vac_wafer','Vacuum Wafer','#b9c8ff');I('lattice','Lattice Crystal','#7fffe0');   /* Moon (Session 52) */
 I('hull_plate','Hull Plate','#c9d3dd');I('heat_shield','Heat Shield','#5a4a44');I('guidance_core','Guidance Core','#f0c34a');I('rocket_fuel','Rocket Fuel','#ff7a2e');
 
 const RC={}, RL=[];
@@ -35,7 +35,7 @@ const STACK={};{const st=(n,ids)=>ids.split(' ').forEach(i=>STACK[i]=n);
  st(100,'water crude heavy_residue fuel alumina acid');
  st(50,'steel_beam steel_pipe quartz_crystal alu_casing braced_plate truss_frame rotor cased_girder stator circuit_board alloy_panel heat_sink battery uranium_cell waste');
  st(20,'motor resonator heavy_truss compute_module data_bus coolant_block control_chip turbine_core fuel_rod');
- st(10,'quantum_core guidance_core');st(100,'helium regolith ice');st(20,'sphere_frame');st(50,'vac_wafer');st(20,'lattice');st(50,'hull_plate rocket_fuel');st(20,'heat_shield');}
+ st(10,'quantum_core guidance_core');st(100,'helium regolith ice cryo_ice');st(20,'sphere_frame');st(50,'vac_wafer');st(20,'lattice');st(50,'hull_plate rocket_fuel');st(20,'heat_shield');}
 const stackOf=id=>STACK[id]||(IT[id]&&IT[id].f?100:50);
 R('r_iron_ingot','Iron Ingot','smelter',2,'iron_ore:1','iron_ingot:1');
 R('r_copper_ingot','Copper Ingot','smelter',2,'copper_ore:1','copper_ingot:1');
@@ -159,11 +159,18 @@ D('srecv',{n:'Sphere Receiver',k:'gen',w:4,cap:2500,fuels:[],solar:1,only:'home'
 const DYSON={fire:20,store:20,stages:[{n:'Sphere Frame',need:300,b:['srecv'],why:'Launch the frame: a ring of segments around the sun. Finished, it beams power back to Home Sphere Receivers.'},
  {n:'Sphere Panels',need:0,soon:'Needs goods from the ice planet: the next chapter.'}]};
 const FREIGHT={cap:2000,fly:60,dock:5,fuel:40,max:3,cost:{hull_plate:20,guidance_core:1,rocket_fuel:40}};
+D('geoturb',{n:'Geyser Turbine',k:'gen',w:3,cap:200,fuels:[],solar:1,geyser:1,only:'rime',link:8,sup:5,cat:'pow',col:'#bfe3f7',cost:{iron_plate:40,copper_sheet:30,cable:30,concrete:20},desc:'Sits on a steam geyser: 200 MW, no fuel. Only on Rime.'});
+D('sdepot',{n:'Sled Depot',k:'rdepot',veh:'sled',w:3,pw:10,cap:450,only:'rime',cat:'trans',col:'#d6e8f5',cost:{iron_plate:30,copper_sheet:20,wire:30,concrete:10},desc:'Ice Sleds: link it to another Sled Depot; its sleds race the goods there (150 per trip), fastest over frozen seas, around buildings and glacier cliffs. Comes with one sled, up to 3. Needs power. Only on Rime.'});
+D('stdepot',{n:'Tanker Sled Depot',k:'tdepot',veh:'sled',fl:1,w:3,pw:10,cap:900,only:'rime',cat:'trans',col:'#cfe3f0',cost:{iron_plate:30,copper_sheet:40,wire:30,concrete:10},desc:'Fluid version of the Sled Depot: holds 900 m³ of one fluid; tanker sleds carry 300 m³ per trip. Fills from (linked) or feeds into (unlinked) its pipes through a Pipe Junction. Only on Rime.'});
+const SLED={cap:150,fcap:300,spd:9,load:2,unload:2,wait:10,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 const ROVER={fcap:400,cap:200,spd:6,load:2,unload:2,wait:10,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 D('lpad',{n:'Launch Pad',k:'lpad',w:6,pw:150,only:'home',cat:'trans',col:'#e8a23a',cost:{heavy_truss:20,cased_girder:60,concrete:400,control_chip:10},desc:'Builds and launches the colony rocket to the Moon. Belt in the rocket parts and the starter kit (or load them from your stock), then press Launch. Needs 150 MW while the rocket is ready.'});
 /* Colony rocket (Session 51, DESIGN.md section 12): parts + the starter kit it carries to the Moon (Moon has no coal or limestone) */
 const ROCKET={parts:{hull_plate:30,heat_shield:15,guidance_core:2,rocket_fuel:60},kit:{iron_plate:200,iron_rod:40,wire:200,cable:50,concrete:120,braced_plate:16,rotor:8,alloy_panel:24,circuit_board:12},lt:10,to:'moon'};
-const rocketNeed=()=>{const o=Object.assign({},ROCKET.parts);for(const k in ROCKET.kit)o[k]=(o[k]||0)+ROCKET.kit[k];return o;};
+/* destinations (Session 63): Rime is further away (more fuel), its kit builds Geyser Turbines and a first sled line; open after Moon goal 6 */
+const ROCKET_TO={moon:{parts:ROCKET.parts,kit:ROCKET.kit},rime:{parts:{hull_plate:30,heat_shield:15,guidance_core:2,rocket_fuel:200},kit:{iron_plate:300,iron_rod:60,wire:200,cable:80,copper_sheet:80,concrete:120,braced_plate:16,rotor:8},need:{moon:6}}};
+const rocketDest=e=>(e&&e.dest&&ROCKET_TO[e.dest])?e.dest:'moon';
+const rocketNeed=e=>{const D0=ROCKET_TO[rocketDest(e)],o=Object.assign({},D0.parts);for(const k in D0.kit)o[k]=(o[k]||0)+D0.kit[k];return o;};
 D('dpad',{n:'Drone Pad',k:'dpad',w:3,pw:25,cap:400,cat:'trans',col:'#2fa7a0',cost:{motor:4,stator:4,cased_girder:6,cable:30},desc:'Holds 400 items. Link it to another pad and its drone flies them there (40 per trip). An unlinked pad receives drones and passes items to outgoing belts.'});
 const DRONE={cap:40,spd:10,load:1.5,unload:1.5,wait:8};   // items per trip, tiles per second, seconds to load / unload, max seconds to wait for a full load
 D('sign1',{n:'Sign S',k:'sign',w:1,cat:'sign',col:'#e9e2cf',ow:1,cost:{iron_plate:1},desc:'A 1×1 label. Tap it to write text and pick a colour.'});
@@ -228,7 +235,7 @@ const WGOALS={moon:[
  {n:'Export Ready',req:{helium:1000,vac_wafer:300,lattice:100},b:['habitat','solar2'],r:['r_vac_steel','r_o2_regolith','r_o2_water'],why:'A stockpile for Earth: helium and crystals are what the Dyson Sphere will need. Next the Moon becomes a colony.'},
  /* Colony goals (Session 60): rates held for HOLD seconds (measured at the Base Core over the last minute) and a population */
  {n:'First Settlers',req:{},pop:10,rate:{steel_pipe:15,concrete:30},b:['fusion'],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel pipes and concrete, steadily (they stay in your stock for building).'},
- {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:['fport','slaunch'],r:['r_cryo_rod','r_lattice_qc','r_sphere_frame'],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Trade: Orbital Freighters carry helium and lattice crystals to Earth (cheaper Fuel Rods and Quantum Cores there) and plastic or parts up to the Moon.'}]};
+ {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:['fport','slaunch','geoturb','sdepot','stdepot'],r:['r_cryo_rod','r_lattice_qc','r_sphere_frame'],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Trade: Orbital Freighters carry helium and lattice crystals to Earth (cheaper Fuel Rods and Quantum Cores there) and plastic or parts up to the Moon.'}]};
 const WG_HOLD=180;   /* seconds a rate goal must be held */
 const WG_TOL=0.85;   /* the hold keeps counting while every rate is at least 85% of its target (Session 61h, Markus: allow 10–20% deviation) */
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
@@ -284,13 +291,20 @@ const BIOMES=[
   d2:{flower:0,stone:0.012,rock:'#8c8c92',speck:['rgba(220,220,230,0.18)',0.3]},d3:{tree:0,bush:0,rock:0.55,rockc:'#7a7a80'},res:{},pure:0.5,dens:1},
  {id:'highland',n:'Lunar Highlands',desc:'Bright, cratered uplands. Quartz and aluminium ore.',t:[0,0,0.9,0.9],
   pal:{ga:[118,118,124],gb:[142,142,148],gc:[166,166,172],sa:[184,182,176],ra:[196,196,200],rb:[172,172,178],sh:[60,60,68],dp:[30,30,36]},
-  d2:{flower:0,stone:0.012,rock:'#c4c4ca',speck:['rgba(255,255,255,0.22)',0.35]},d3:{tree:0,bush:0,rock:0.7,rockc:'#b2b2b8'},res:{},pure:0.5,dens:1}
+  d2:{flower:0,stone:0.012,rock:'#c4c4ca',speck:['rgba(255,255,255,0.22)',0.35]},d3:{tree:0,bush:0,rock:0.7,rockc:'#b2b2b8'},res:{},pure:0.5,dens:1},
+ /* Rime biomes (Session 63): only used by genRime. terr 2 = frozen sea (buildable), 3 = glacier cliffs */
+ {id:'snowfield',n:'Snowfields',desc:'Wind-packed snow under a pale sky. Ores, cryo ice and steam geysers.',t:[0,0,0.9,0.9],
+  pal:{ga:[214,224,234],gb:[228,236,244],gc:[242,247,251],sa:[158,204,232],ra:[120,170,210],rb:[100,150,196],sh:[140,190,224],dp:[90,140,190]},
+  d2:{flower:0,stone:0.004,rock:'#9cc4e4',speck:['rgba(140,180,220,0.4)',0.15]},d3:{snowtree:0.03,rock:0.25,rockc:'#cfe3f0'},res:{},pure:0.4,dens:1},
+ {id:'glacier',n:'Glacier',desc:'Blue ice and cliffs. Quartz and uranium, rich cryo ice.',t:[0,0,0.9,0.9],
+  pal:{ga:[188,212,232],gb:[204,224,240],gc:[222,236,248],sa:[150,198,230],ra:[96,150,200],rb:[80,132,186],sh:[130,182,220],dp:[80,130,180]},
+  d2:{flower:0,stone:0.01,rock:'#7fb0dc',speck:['rgba(255,255,255,0.5)',0.25]},d3:{snowtree:0.005,rock:0.5,rockc:'#a8cbe8'},res:{},pure:0.8,dens:1}
 ];
-const NODE_T={iron:['iron_ore','#b0705a'],copper:['copper_ore','#e0843f'],limestone:['limestone','#e6dcbc'],coal:['coal','#3a3a3a'],sulfur:['sulfur','#f0dc40'],quartz:['quartz','#f0c0ee'],bauxite:['bauxite','#c4542e'],uranium:['uranium','#80f050'],oil:['crude','#1a1420'],helium:['helium','#8fe6ff'],ice:['ice','#d4f1ff']};
-const MOON_RES=['helium','ice'];   /* never on Home maps (genBiome skips them) */
+const NODE_T={iron:['iron_ore','#b0705a'],copper:['copper_ore','#e0843f'],limestone:['limestone','#e6dcbc'],coal:['coal','#3a3a3a'],sulfur:['sulfur','#f0dc40'],quartz:['quartz','#f0c0ee'],bauxite:['bauxite','#c4542e'],uranium:['uranium','#80f050'],oil:['crude','#1a1420'],helium:['helium','#8fe6ff'],ice:['ice','#d4f1ff'],cryo:['cryo_ice','#9fd8ff'],geyser:['rare_gas','#eaf6ff']};
+const MOON_RES=['helium','ice','cryo','geyser'];   /* off-world resources: never on Home maps */   /* never on Home maps (genBiome skips them) */
 const PUR=[[0.5,'Impure'],[1,'Normal'],[2,'Pure']];
 
 /* Worlds (Session 49, DESIGN.md section 12). The world you're on lives in the normal game state; the others are packed into S.worlds.
    gen 3 = Moon generator (genMoon). ext = coast ring (MAP_EXT on Home, none on the Moon). */
-const WORLDS={home:{n:'Home',ic:'🌍'},moon:{n:'Moon',ic:'🌑',gen:3,mw:256,ext:0}};
+const WORLDS={home:{n:'Home',ic:'🌍'},moon:{n:'Moon',ic:'🌑',gen:3,mw:256,ext:0},rime:{n:'Rime',ic:'❄️',gen:4,mw:256,ext:0}};   /* Rime: the ice planet (Session 63) */
 const WKEYS=['seed','gen','mw','ext','zones','zmap','cam','inv','bg','trains'];   /* per-world parts of S; everything else (unlocks, tiers, settings) is shared */

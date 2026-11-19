@@ -3647,3 +3647,39 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Verified:** a 3D screenshot during take-off. `npm test` all PASS.
 
 **Known issues:** no smoke cloud at the pad in 3D yet.
+
+## Session 63 — 2026-11-19 (Claude Code, cloud session) · Build 186
+
+**Asked:** Markus accepted the ice-planet proposal (name Rime, Moon size) and asked for snowmobile-like transport there, similar to the rovers but looking and behaving a bit differently. Built in two steps; this is step 1.
+
+**Built:**
+- **World Rime** (`WORLDS.rime`, gen 4, 256×256, no coast ring, `genRime`):
+  - Two new biomes (Snowfields, Glacier) appended after the Moon ones.
+  - Frozen seas (terr 2, buildable, painted icy blue), glacier cliffs (terr 3), a flat landing site.
+  - Nodes: iron, copper, limestone, quartz, bauxite, sulfur, uranium, **cryo ice** and **steam geysers** (both added to `MOON_RES`, never on Home). A geyser, iron, copper, limestone and cryo ice sit next to the landing site.
+  - No coal, oil or open water. 2D: a snowy surrounding ring. 3D: a pale sky and fog, no water plane.
+- **Frosted look:** `worldLook()` ('m'/'r'/''); Rime tints buildings pale blue (`rimeTint`) in 2D sprites (cache `|r`) and 3D (`v3WorldTint`).
+- **Getting there:** the Launch Pad has a **destination switch** (Moon / Rime).
+  - Rime is locked until Moon goal 6. It needs 200 Rocket Fuel and brings a bigger kit (`ROCKET_TO`).
+  - Switching destination returns loaded goods to stock. The first landing offers "Travel to Rime" with Rime-specific advice.
+- **Geyser Turbine** (`geoturb`): 3×3, 200 MW, no fuel, must sit on a steam geyser, Rime only. A fan sprite with a steam plume; 3D model with a spinning fan and steam. Drills refuse geysers.
+- **Ice Sleds:** `sdepot` (items, holds 450) and `stdepot` (fluids, 900 m³), Rime only.
+  - They reuse the rover code with `veh:'sled'` and `SLED` numbers: 150 items or 300 m³ per trip, about 9 tiles/s, 35% faster over frozen seas.
+  - **They cannot climb glacier cliffs** and route around them (rovers climb rims slowly).
+  - Look: long skids, slim body, rear track, white snow spray, thin bluish ski grooves in 2D and 3D, a slight sway in 3D.
+- Unlocks: the turbine and both sled depots come with Moon goal 6 (Markus has them).
+
+**Verified:**
+- Screenshots: Rime far view, near 2D (sled depot with sleds, frosted buildings), 3D (sled tracks, turbine).
+- New smoke check:
+  - Home has no cryo or geysers; the Rime map, biomes, frozen seas and cliffs; no water
+  - frosted look; the turbine needs a geyser and gives 200 MW
+  - a sled route is found and delivers; cliffs are impassable for sleds
+  - the Launch Pad destination switches to Rime (200 fuel), and a launch creates Rime with its kit
+- `npm test` all PASS.
+
+**Known issues:**
+- Rime has no goals yet; the Goals panel there shows the Home tiers. Rare Gas can't be pumped yet. Freighters only fly Home ↔ Moon.
+- 3D frozen seas show ice-chunk decorations.
+
+**Next up:** step 2: Rime goals, Cryo Plant, Superconductor Coils, Rare Gas pump, freighters to Rime, Dyson stage 2.

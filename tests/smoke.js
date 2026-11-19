@@ -422,6 +422,27 @@ const server=require('./serve.js');
   ACT.openWorlds();out.panel=/keep producing/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
   S.inv.iron_plate=inv0;delete S.worlds.moon;return out;});
  check(`Moon prep: ${Object.entries(mn).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mn).every(v=>v===true));
+ // Rime (Session 63): its own map (snow biomes, frozen seas, cliffs, geysers, cryo ice, none of those at Home), frosted look, Geyser Turbine power,
+ // Ice Sleds deliver (and can't climb cliffs), the rocket can be sent to Rime after Moon goal 6
+ const rim=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};const keep={ub:S.ub.slice(),wms:S.wms};if(S.worlds&&(S.worlds.rime||S.worlds.moon))return{had:false};
+  out.homeClean=!nodes.some(n=>n.t==='cryo'||n.t==='geyser');
+  out.go=fw.switchWorld('rime')&&S.w==='rime'&&S.gen===4&&MW===256;out.map=bio.every(b=>b>=EARTH_NB+2)&&terr.some(t=>t===2)&&terr.some(t=>t===3)&&!terr.some(t=>t===1)&&nodes.some(n=>n.t==='geyser')&&nodes.some(n=>n.t==='cryo');
+  out.look=worldLook()==='r';S.ub.push('geoturb','sdepot','drill1');const gy=nodes.find(n=>n.t==='geyser'&&Math.hypot(n.x-MW/2,n.y-MH/2)<12);
+  out.turb=canPlace('geoturb',MW/2-12,MH/2-12)==='Needs a steam geyser underneath'&&!!gy&&P('geoturb',gy.x-1,gy.y-1,0)==='';tick(0.05);const T=entAt(gy.x,gy.y);out.power=!!T&&T.grid&&T.grid.cap===200;
+  const free=(x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)!==''||terr[(y+j)*MW+x+i]===3)return false;return true;};
+  let A=null,Bq=null;for(let r=18;r<110&&!A;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(free(x,y,7,3)){A={x,y};break;}}
+  for(let r=30;r<100&&!Bq;r+=2)for(let a=0;a<40;a++){const x=Math.round(A.x+r*Math.cos(a/6.4+1)),y=Math.round(A.y+r*Math.sin(a/6.4+1));if(x>3&&y>3&&x<MW-6&&y<MH-6&&free(x,y,3,3)){Bq={x,y};break;}}
+  out.sleds=P('sdepot',A.x,A.y,0)===''&&P('sdepot',Bq.x,Bq.y,0)==='';const da=entAt(A.x,A.y),db=entAt(Bq.x,Bq.y);
+  da.lx=db.x;da.ly=db.y;da.store={iron_plate:300};tick(0.05);for(let k=0;k<20*60;k++){da.pw=1;updRover(da,0.05);}   /* powered directly: the sled run itself is what's tested */
+  const Pp=da._rp;out.sledRoute=!!(Pp&&Pp.L>10);out.cliffs=!rvPass(...(()=>{const i=terr.findIndex(t=>t===3);return[i%MW,(i/MW)|0];})(),da,db);
+  out.delivered=rvCount(db)>0;out.sledParams=VP(da)===SLED;
+  S.wms=Object.assign({},S.wms||{},{moon:6});fw.switchWorld('home');delete S.worlds.rime;
+  let L=null;for(let r=12;r<150&&!L;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<6&&ok;j++)for(let i=0;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){L={x,y};break;}}
+  S.ub.push('lpad');P('lpad',L.x,L.y,0);const pad=entAt(L.x,L.y);openPanel('ent',pad.id);ACT.lpDest('rime');out.dest=rocketDest(pad)==='rime'&&rocketNeed(pad).rocket_fuel===200;
+  for(const k in rocketNeed(pad))pad.store[k]=rocketNeed(pad)[k];pad.pw=1;out.launch=lpadLaunch(pad)==='';for(let k=0;k<ROCKET.lt*20+5;k++)tick(0.05);closeDlg();ACT.closePanel();
+  out.arrived=!!(S.worlds.rime&&S.worlds.rime.WS.gen===4&&S.worlds.rime.WS.inv.copper_sheet===ROCKET_TO.rime.kit.copper_sheet);
+  removeEnt(pad,false,true);delete S.worlds.rime;S.ub=keep.ub;S.wms=keep.wms;return out;});
+ check(`Rime: ${Object.entries(rim).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(rim).every(v=>v===true));
  // Moon Rovers (Session 59): Moon only; a linked depot's rover finds a path and delivers goods; tyre tracks; panel; extra rover costs; save/load
  const rvr=await p.evaluate(()=>{const keep={ub:S.ub.slice()};let out0=canPlace('rdepot',MW/2+20,MH/2+20)==='Only on the Moon';if(S.worlds&&S.worlds.moon)return{had:false};window.__fw.switchWorld('moon');
   const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};S.ub.push('rdepot','solar');

@@ -160,7 +160,7 @@ function v3Terrain(){
   const P=g.attributes.position,UV=g.attributes.uv;for(let i=0;i<P.count;i++){const x=P.getX(i),z=P.getZ(i);P.setY(i,v3H(x,z)-0.05);UV.setXY(i,x/MW,1-z/MH);}
   g.computeVertexNormals();const m=new T3.Mesh(g,V3.oMat);m.receiveShadow=true;sc.add(m);V3.coarse.push(m);}
  // the Moon (Session 49): black sky with stars, no water, grey sea floor, Home on the horizon
- {const moon=S&&S.gen===3;V3.sky.visible=!moon;sc.background=moon?new T3.Color('#020306'):null;V3.fogC.set(moon?'#05070c':'#c6dcea');sc.fog.color.copy(V3.fogC);   /* the Fog keeps its own copy of the colour */
+ {const moon=S&&S.gen===3;V3.sky.visible=!moon;sc.background=moon?new T3.Color('#020306'):null;V3.fogC.set(moon?'#05070c':S&&S.gen===4?'#dce9f3':'#c6dcea');sc.fog.color.copy(V3.fogC);   /* the Fog keeps its own copy of the colour */
   V3.hemi.color.set(moon?0xd8dce6:0xe4f0ff);V3.hemi.groundColor.set(moon?0x3a3a40:0x5c6a4c);
   if(!V3.stars){const N=1400,p=new Float32Array(N*3);for(let k=0;k<N;k++){const u=Math.random()*2-1,a=Math.random()*Math.PI*2,r=Math.sqrt(1-u*u);p[k*3]=r*Math.cos(a)*850;p[k*3+1]=Math.abs(u)*850;p[k*3+2]=r*Math.sin(a)*850;}
    const g=new T3.BufferGeometry();g.setAttribute('position',new T3.BufferAttribute(p,3));V3.stars=new T3.Points(g,new T3.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false,fog:false,depthWrite:false}));V3.stars.renderOrder=-9;sc.add(V3.stars);
@@ -185,7 +185,8 @@ function v3Terrain(){
   V3.wNorm.wrapS=V3.wNorm.wrapT=T3.RepeatWrapping;V3.wNorm.repeat.set(290,290);}
  V3.water=new T3.Mesh(new T3.PlaneGeometry(4000,4000).rotateX(-Math.PI/2),new T3.MeshStandardMaterial({color:'#3f93d6',transparent:true,opacity:0.58,roughness:0.12,metalness:0.05,normalMap:V3.wNorm,normalScale:new T3.Vector2(0.45,0.45),depthWrite:false}));
  V3.water.position.set(MW/2,-0.12,MH/2);V3.water.receiveShadow=true;V3.water.renderOrder=2;sc.add(V3.water);
- if(S&&S.gen===3){V3.water.visible=false;V3.floor.material.color.set('#2c2c32');}   /* no water on the Moon */
+ if(S&&S.gen===3){V3.water.visible=false;V3.floor.material.color.set('#2c2c32');}
+ if(S&&S.gen===4){V3.water.visible=false;V3.floor.material.color.set('#d8e6f0');}   /* Rime: frozen, no open water */   /* no water on the Moon */
  if(V3.grid){sc.remove(V3.grid);V3.grid.geometry.dispose();}
  V3.grid=new T3.GridHelper(MW,MW,0xffffff,0xffffff);V3.grid.position.set(MW/2,0.03,MH/2);V3.grid.material.transparent=true;V3.grid.material.opacity=0.07;V3.grid.material.depthWrite=false;V3.grid.visible=false;sc.add(V3.grid);
  // decoration candidates per biome (shown near the camera, hidden where something is built)
@@ -236,10 +237,10 @@ function v3Decor(){
    Part: [geo, colour, [x,y,z], [sx,sy,sz], opts]; opts: rot [rx,ry,rz], pivot [x,y,z], an(e,ph,act,t)→{dx,dy,dz,rx,ry,rz,sy},
    glow (unlit, brightness follows activity) or cf(e,act,t)→hex for per-building colour. Origin = footprint centre. */
 /* Moon look (Session 54): recolour the building models' vertex colours in place when the world changes (originals kept in userData.c0) */
-function v3WorldTint(){const mn=moonLook();if(!V3.M||V3.tint===mn)return;V3.tint=mn;
+function v3WorldTint(){const mn=worldLook(),tf=lookTint(mn);if(!V3.M||V3.tint===mn)return;V3.tint=mn;
  for(const id in V3.M){const m=V3.M[id];const geos=[m.geo,...(m.parts||[]).filter(p=>!p.glow).map(p=>p.pool.geo)];
   for(const g of geos){const at=g&&g.getAttribute('color');if(!at)continue;if(!g.userData.c0)g.userData.c0=at.array.slice();const o=g.userData.c0,a=at.array;
-   for(let i=0;i<a.length;i+=3){if(mn){const t=moonTint(o[i],o[i+1],o[i+2]);a[i]=t[0];a[i+1]=t[1];a[i+2]=t[2];}else{a[i]=o[i];a[i+1]=o[i+1];a[i+2]=o[i+2];}}at.needsUpdate=true;}}}
+   for(let i=0;i<a.length;i+=3){if(tf){const t=tf(o[i],o[i+1],o[i+2]);a[i]=t[0];a[i+1]=t[1];a[i+2]=t[2];}else{a[i]=o[i];a[i+1]=o[i+1];a[i+2]=o[i+2];}}at.needsUpdate=true;}}}
 function v3Models(){
  const M={},bolts=w=>V3.look!=='nice'?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>['cyl6','#8a939c',[a*w*0.43,0.245,b*w*0.43],[0.09,0.05,0.09]]),
   base=(w,col)=>[['box','#2a3037',[0,0.11,0],[w*0.95,0.22,w*0.95]],['box',col?shade(col,-40):'#3b434c',[0,0.235,0],[w*0.85,0.03,w*0.85]],...bolts(w)];
@@ -320,6 +321,7 @@ function v3Models(){
  def('slaunch',[...base(8),['box','#4a525b',[0,0.4,0],[7.6,0.5,7.6]],['box','#2b2f34',[0,2.2,0],[1.2,0.3,7.2],{rot:[-0.45,0,0]}],['box','#8a939c',[0,1.1,2.2],[0.3,2.0,0.3]],['box','#8a939c',[0,0.8,0.8],[0.3,1.2,0.3]]],
   [['tor','#7fd6ff',[0,2.0,-0.4],[1.4,1.4,1.4],{rot:[0.45,0,0],glow:1}],['tor','#7fd6ff',[0,2.9,-2.2],[1.4,1.4,1.4],{rot:[0.45,0,0],glow:1}],['tor','#7fd6ff',[0,1.2,1.4],[1.4,1.4,1.4],{rot:[0.45,0,0],glow:1}]],{h:4});   /* Sphere Launcher (Session 62) */
  def('srecv',[...base(4),['cyl','#8a939c',[0,0.8,0],[0.4,1.2,0.4]],['sph','#e9eef2',[0,1.5,0],[3.4,0.9,3.4]],['cyl','#8a939c',[0,2.0,0],[0.1,1.0,0.1]]],[['sph','#ffd27a',[0,2.55,0],[0.35,0.35,0.35],{glow:1}]],{h:2.6});   /* Sphere Receiver (Session 62) */
+ def('geoturb',[...base(3),['cyl','#bfe3f7',[0,0.7,0],[2.4,0.9,2.4]],['tor','#9aa3ab',[0,1.15,0],[2.2,2.2,2.2],{rot:[Math.PI/2,0,0]}],['cyl','#9aa3ab',[0.9,1.4,-0.9],[0.35,1.6,0.35]]],[['box','#e9f5fc',[0,1.3,0],[1.8,0.06,0.25],{an:(e,ph)=>({ry:ph*6})}],['box','#e9f5fc',[0,1.3,0],[0.25,0.06,1.8],{an:(e,ph)=>({ry:ph*6})}]],{smoke:[[0.9,2.3,-0.9,1]],h:2.2,wire:1.5});   /* Geyser Turbine (Session 63) */
  def('solar2',[['box','#3a4048',[0,0.14,0],[3.9,0.28,3.9]],['cyl','#8a939c',[0,0.5,0],[0.18,0.6,0.18]],['box','#1f3f78',[0,0.85,0],[3.7,0.07,3.7],{rot:[-0.35,0,0]}]],[],{h:1.1});   /* Solar Array (Session 60d) */
  def('fusion',[...base(6),['box','#4a525b',[0,0.5,0],[5.6,0.6,5.6]],['tor','#c4ccd4',[0,1.4,0],[4.0,4.0,3.2],{rot:[Math.PI/2,0,0]}],['cyl','#8a939c',[0,1.4,0],[1.4,1.8,1.4]]],[['tor','#7fd6ff',[0,1.45,0],[3.2,3.2,2.0],{rot:[Math.PI/2,0,0],glow:1}]],{h:2.6,wire:2});   /* Helium Fusion Reactor (Session 60d) */
  def('solar',[['box','#3a4048',[0,0.12,0],[1.9,0.24,1.9]],['cyl','#8a939c',[0,0.45,0],[0.12,0.5,0.12]],['box','#1f3f78',[0,0.72,0],[1.8,0.06,1.8],{rot:[-0.35,0,0]}]],[],{h:0.9});   /* Solar Panel (Session 49) */
@@ -332,6 +334,7 @@ function v3Models(){
  // build: merge statics, create pools for animated parts
  const G=V3.G,m4=new T3.Matrix4(),q=new T3.Quaternion(),eu=new T3.Euler();
  const pm=(pos,scl,rot)=>{eu.set(...(rot||[0,0,0]));q.setFromEuler(eu);return new T3.Matrix4().compose(new T3.Vector3(...pos),q.clone(),new T3.Vector3(...scl));};
+ M.sdepot=M.rdepot&&Object.assign({},M.rdepot);M.stdepot=M.tdepot&&Object.assign({},M.tdepot);   /* sled depots share the rover depot models (Session 63) */
  V3.M=M;V3.tint=null;
  for(const id in M){const m=M[id];if(!B[id])continue;
   const nice=V3.look==='nice';m.geo=v3Merge(m.st.map(([g,c,pos,scl,o])=>nice&&g==='box'&&Math.min(scl[0],scl[1],scl[2])>=0.08?{g:v3RBox(scl[0],scl[1],scl[2]),c:v3col(c),m:pm(pos,[1,1,1],o&&o.rot)}:{g:G[g],c:v3col(c),m:pm(pos,scl,o&&o.rot)}));m.pool=v3Pool(m.geo,V3.mat,{cast:1,recv:1});
