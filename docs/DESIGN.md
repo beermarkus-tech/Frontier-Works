@@ -384,7 +384,7 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
     with Assemblers the Moon makes its own Alloy Panels, circuit boards and so Solar Panels.
   4 **Export Ready** (a stockpile of helium, wafers, lattice crystals) → Habitat, Lunar Steel, Regolith Oxygen, Water Splitting.
   **Moon Colony chapter (Session 60, agreed with Markus: the Moon was too easy, goods had no use on Earth):** colony goals ask for
-  **steady rates** into the Base Core held for 3 minutes, and a **population**. **Habitats** (4×4) need power + water + oxygen through
+  **steady rates** into the Base Core (averaged over the last 5 minutes, Session 61f) held for 3 minutes, and a **population**. **Habitats** (4×4) need power + water + oxygen through
   Pipe Junctions (2 m³/min each per colonist), gain a colonist every 20 s when supplied (max 10), lose one when short. Habitats that touch share water
   and oxygen (one junction of each feeds the whole block; Session 61d); each still needs power. With **Lunar Steel**
   the Moon makes motors, beams, girders and so its own Refineries and Fabricators (plastic stays Earth-only).

@@ -608,7 +608,8 @@ function updBuilding(e,dt){
    its measured rates are stored with it (S.bg = {r: items per second, t: game time}); when you come back the time away is paid out. */
 let CORE={b:[],cur:{},acc:0};
 /* rates over the last minute (per minute) and the rate-goal hold timer (Session 60) */
-function coreRate60(){const L=CORE.b.slice(-6),r={};if(!L.length)return r;for(const b of L)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]*=60/(L.length*10);return r;}
+/* goal rates average over the last 5 minutes (all CORE buckets; Session 61f: rovers and trains deliver in batches, a 1-minute window kept resetting the hold) */
+function coreRate60(){const L=CORE.b.slice(-30),r={};if(!L.length)return r;for(const b of L)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]*=60/(L.length*10);return r;}
 const colonyPop=()=>{let n=0;for(const e of ents.values())if(e.k==='hab')n+=e.pop||0;return n;};
 /* Habitats that touch share water and oxygen (Session 61d, Markus): clusters found once per topology change, contents evened out every tick */
 let HABC={ver:-1,list:[]};

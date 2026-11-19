@@ -3542,3 +3542,11 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Tracks are cleared when changing worlds.
 
 **Verified:** 3D screenshot shows the twin tracks from the depot along the route. `npm test` all PASS.
+
+## Session 61f — 2026-11-19 (Claude Code, cloud session) · Build 178
+
+**Reported:** with rovers in the chain, the delivery rate goes up and down, and every dip below target restarted the 3-minute hold. It should be averaged over a longer time, like the belt meters.
+
+**Changed:** goal rates are now averaged over the last 5 minutes (all Base Core buckets) instead of the last minute. Batches from rovers or trains even out, and the hold only resets when the 5-minute average really drops below target. The goal card text says so.
+
+**Verified:** the colony smoke check now feeds the Base Core in batches every 30 s (empty buckets in between). The goal still completes after the hold. `npm test` all PASS.
