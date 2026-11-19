@@ -224,6 +224,7 @@ function entDyn(e){
  if(typeof trainDyn==='function')h+=trainDyn(e);
  if(typeof roverDyn==='function')h+=roverDyn(e);
  if(typeof freightDyn==='function')h+=freightDyn(e);
+ if(typeof launcherDyn==='function')h+=launcherDyn(e);
  if(e.k==='drill'||e.k==='pump'){
   if(e.node)h+=`<div class="row"><span>Node</span><span>${nm(NODE_T[e.node.t][0])} · ${PUR[e.node.p][1]}</span></div>`;
   if(e.item){const rate=(d.water||d.reg?d.rate:d.rate*(e.node?PUR[e.node.p][0]:0))*e.clock*60;   /* the Regolith Excavator digs at its full rate anywhere (Session 61b) */h+=`<div class="row"><span>Output rate</span><span>${fmt(rate)}/min</span></div><div class="row"><span>Buffered</span><span>${e.buf}/10</span></div>`;}
@@ -288,6 +289,7 @@ function msHtml(){const cw=S.w||'home',view=UI.gview&&(UI.gview==='home'||WGOALS
   if(m.goal&&i<=S.ms)h+=`<div class="muted" style="margin-top:4px">${done?'Next: ':''}${m.goal}${done&&lpadDone()?' ✓':''}</div>`;
   if(cur&&cw==='home')h+=`<button class="btn ${afford(m.req)?'on':''}" style="margin-top:6px" data-act="submitMs" ${afford(m.req)?'':'disabled'}>Submit</button>`;
   h+=`</div>`;});
+ if(typeof dysonHtml==='function')h+=dysonHtml();
  return h;
 }
 const fmtKB=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';

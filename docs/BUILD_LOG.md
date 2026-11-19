@@ -3575,3 +3575,31 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Goal card colours: green at or above target, amber within tolerance, red below. The card text explains this.
 
 **Verified:** the colony smoke check feeds about 90% of target in batches (the goal still completes) and confirms a rate far below target resets the clock. `npm test` all PASS.
+
+## Session 62 — 2026-11-19 (Claude Code, cloud session) · Build 181
+
+**Asked:** Markus finished Moon goal 6. He chose Dyson Sphere stage 1 (Sphere Frame) as the next chapter, before the ice planet.
+
+**Built (new file `js/dyson.js`):**
+- **Sphere Frame Segment:** Fabricator, 40 s; 2 lattice crystals + 2 hull plates + 4 heat sinks + 6 steel beams.
+- **Sphere Launcher** (`slaunch`): 8×8, Home only.
+  - It takes segments by belt (holds 20) and fires one every 20 s while powered, drawing 4000 MW while charging.
+  - 2D: a blue charge glow and a golden launch streak. 3D: an inclined rail with glowing coils.
+- **Stage 1, Sphere Frame:** 300 segments in orbit.
+  - Completing it shows a dialog and unlocks the **Sphere Receiver** (`srecv`, 4×4, Home, 2500 MW, no fuel; a dish with a glowing focus).
+  - Progress (shared `S.dyson.f`) shows in a "☀ Dyson Sphere" card under the Home tiers in Goals and in the top bar ("☀ Sphere 70%").
+  - Stage 2 is listed as "needs goods from the ice planet".
+- **3D sky:**
+  - The sun (a glowing sprite) hangs low in the north-west sky, kept relative to the camera like the Moon's Home planet.
+  - A golden ring of frame segments grows around it with progress; a second, crossing ring appears after 50%. It shows on both worlds.
+  - The first placements sat above the visible sky, so it was moved down to just above the horizon.
+- Unlocks: the launcher and the segment recipe come with Moon goal 6, so Markus has them on load.
+
+**Verified:**
+- Screenshots: 3D sky with the frame at 70%, and the launcher.
+- New smoke check: the launcher only takes segments, fires per its timer when powered, the stage completes (dialog, receiver unlocked), it stops after completion, the Goals card and top-bar label work, and a Receiver gives a 2500 MW grid.
+- `npm test` all PASS.
+
+**Known issues:**
+- The sun direction is fixed; it doesn't match the shadow light, which comes from higher up.
+- The frame is only seen when the camera looks towards the horizon in the north-west.

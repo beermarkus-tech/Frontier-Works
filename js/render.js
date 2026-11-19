@@ -231,6 +231,11 @@ function paintB(g,id,P,u){
    box(i+W*0.25,i+W*0.36,W*0.17,W*0.05,u*0.03,'#b07a30');dots([[i+W*0.07,i+W*0.07],[i+W*0.93,i+W*0.07],[i+W*0.07,i+W*0.93],[i+W*0.93,i+W*0.93]],u*0.12,'#ff6a3a');break;}
   case 'tdepot':{box(i,i,W,W,u*0.16,'#5d6066');circ(i+W*0.3,i+W*0.3,W*0.2,'#cfe3f0');circ(i+W*0.7,i+W*0.3,W*0.2,'#cfe3f0');g.fillStyle='#3d8ee6';g.beginPath();g.arc(i+W*0.3,i+W*0.3,W*0.1,0,7);g.arc(i+W*0.7,i+W*0.3,W*0.1,0,7);g.fill();   /* Tanker Depot (Session 59b): two tanks + charging pad */
    g.strokeStyle='#f2c230';g.lineWidth=W*0.03;g.setLineDash([W*0.05,W*0.04]);g.strokeRect(i+W*0.12,i+W*0.56,W*0.76,W*0.32);g.setLineDash([]);break;}
+  case 'slaunch':{box(i,i,W,W,u*0.2,'#4a525b');g.fillStyle='#2b2f34';g.fillRect(i+W*0.42,i+W*0.06,W*0.16,W*0.88);   /* Sphere Launcher (Session 62): a long magnetic rail with coil rings */
+   for(let k=0;k<6;k++){const y=i+W*(0.12+k*0.14);g.strokeStyle='#7fd6ff';g.lineWidth=W*0.025;g.strokeRect(i+W*0.36,y,W*0.28,W*0.06);}circ(P/2,P/2,W*0.08,'#ffd27a');
+   for(const [a,b] of [[0.14,0.2],[0.86,0.2],[0.14,0.8],[0.86,0.8]])circ(i+W*a,i+W*b,W*0.07,'#c4cad0');break;}
+  case 'srecv':{box(i,i,W,W,u*0.16,'#4a525b');circ(P/2,P/2,W*0.42,'#e9eef2',30);g.fillStyle='#ffd27a';g.beginPath();g.arc(P/2,P/2,W*0.12,0,7);g.fill();   /* Sphere Receiver (Session 62): a dish */
+   g.strokeStyle='rgba(120,130,140,0.6)';g.lineWidth=Math.max(1,u*0.05);for(const r of [0.22,0.32])g.beginPath(),g.arc(P/2,P/2,W*r,0,7),g.stroke();break;}
   case 'fport':{box(i,i,W,W,u*0.2,'#5d6066');g.fillStyle='#3a3d42';g.beginPath();g.arc(P*0.5,P*0.5,W*0.34,0,7);g.fill();g.strokeStyle='#f2c230';g.lineWidth=Math.max(1.5,W*0.02);g.beginPath();g.arc(P*0.5,P*0.5,W*0.3,0,7);g.stroke();   /* Freighter Port (Session 60b): landing ring, cargo sheds */
    g.fillStyle='#f2c230';g.font=`800 ${W*0.18}px Inter,sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('F',P*0.5,P*0.5);g.textAlign='left';for(const [a,b] of [[0.08,0.08],[0.78,0.08],[0.08,0.78],[0.78,0.78]])box(i+W*a,i+W*b,W*0.14,W*0.14,u*0.04,'#c4cad0');break;}
   case 'habitat':{box(i,i,W,W,u*0.2,'#5d6066');circ(P*0.5,P*0.5,W*0.42,'#eef1f4',40);g.strokeStyle='rgba(120,130,140,0.6)';g.lineWidth=Math.max(1,u*0.05);for(const r of [0.3,0.18])g.beginPath(),g.arc(P*0.5,P*0.5,W*r,0,7),g.stroke();   /* Habitat (Session 60): a dome with ring segments and a docking module */
@@ -262,7 +267,7 @@ function bStatus(e){
  return null;
 }
 /* live overlays (animation on top of sprites) */
-function isActive(e){if(e.k==='lpad')return e.lt>0;if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;if(e.k==='incin')return e.burnT!=null&&S.t-e.burnT<1.5;return e.k==='core';}   /* incinerator: lit only for 1.5 s after it burns something (Session 39u) */
+function isActive(e){if(e.k==='slaunch')return e.ch>0;if(e.k==='lpad')return e.lt>0;if(e.k==='dpad')return !!(e.dr&&e.dr.st);if(e.k==='mach')return e.run&&e.pw>0;if(e.k==='drill'||e.k==='pump')return e.want&&e.pw>0;if(e.k==='gen')return e.load>0;if(e.k==='incin')return e.burnT!=null&&S.t-e.burnT<1.5;return e.k==='core';}   /* incinerator: lit only for 1.5 s after it burns something (Session 39u) */
 const SMOKE={lpad:[0.5,0.7,2],smelter:[0.74,0.28,0],foundry:[0.8,0.2,0],burner:[0.72,0.28,0],incin:[0.5,0.5,0],steam:[0.8,0.22,1],reactor:[0.4,0.46,2],refinery:[0.7,0.45,1]};
 /* glow: a cached radial sprite per colour drawn with globalAlpha (Session 40: a new gradient per glow per frame was a main 2D cost); skipped when invisible */
 const GLOWC=new Map();
@@ -286,6 +291,7 @@ function drawLive(e,X,Y,s){
   case 'blender':blades(X+P/2,Y+P/2,P*0.2,2,a*4,'#7ad6c8',P*0.04);break;
   case 'habitat':{for(const [dx,dy] of [[4,0],[0,4]]){const o=entAt(e.x+dx,e.y+dy);if(o&&o.k==='hab'&&o.x===e.x+dx&&o.y===e.y+dy){ctx.fillStyle='#c4cad0';if(dx)rr(X+P-s*0.4,Y+P/2-s*0.35,s*0.8,s*0.7,s*0.15);else rr(X+P/2-s*0.35,Y+P-s*0.4,s*0.7,s*0.8,s*0.15);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=1;ctx.stroke();}}   /* corridor to a habitat right next to it (Session 61d) */
    const f=(e.pop||0)/HAB.cap;if(f>0)for(let k=0;k<Math.ceil(f*6);k++){const a=k*Math.PI/3+0.5;glow(X+P*0.5+Math.cos(a)*P*0.24,Y+P*0.5+Math.sin(a)*P*0.24,P*0.06,'#ffd890',0.9);}break;}   /* lit windows: one per ~2 colonists */
+  case 'srecv':glow(X+P/2,Y+P/2,P*0.2,'#ffd27a',0.4+0.3*act);break;
   case 'fusion':glow(X+P/2,Y+P/2,P*0.3,'#7fd6ff',act*(0.55+0.2*Math.sin(animT*6+e.id)));if(act>0.05){ctx.strokeStyle=rgba('#dff6ff',act*0.8);ctx.lineWidth=Math.max(1,s*0.12);ctx.beginPath();ctx.arc(X+P/2,Y+P/2,P*0.22,animT*3,animT*3+2.2);ctx.stroke();}break;
   case 'imelt':glow(X+P*0.42,Y+P*0.5,P*0.24,'#ff9a50',act*0.45);break;
   case 'rexc':blades(X+P/2,Y+P*0.48,P*0.24,8,a*3,'#d0d4d8',P*0.025);break;
@@ -656,7 +662,7 @@ function render(){
  }
  if(typeof drawTrains==='function')drawTrains(sx,sy,s);   /* trains above buildings (Session 56) */
  // drones (above buildings) and the selected pad's route
- drawDrones(sx,sy,s,lod);if(typeof drawRovers==='function')drawRovers(sx,sy,s);if(typeof drawFreighters==='function')drawFreighters(sx,sy,s);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
+ drawDrones(sx,sy,s,lod);if(typeof drawRovers==='function')drawRovers(sx,sy,s);if(typeof drawFreighters==='function')drawFreighters(sx,sy,s);if(typeof drawLaunchers==='function')drawLaunchers(sx,sy,s);drawRockets(sx,sy,s);drawZoneFence(sx,sy,s);drawMeters(sx,sy,s);drawHighlights(sx,sy,s,W,H);
  // particles
  for(let k=parts.length-1;k>=0;k--){const p=parts[k];p.t+=fdt;if(p.t>p.m){parts.splice(k,1);continue;}p.x+=p.vx*fdt;p.y+=p.vy*fdt;}
  for(const p of parts){if(p.x<x0-2||p.x>x1+2||p.y<y0-2||p.y>y1+2)continue;const f=p.t/p.m,al=(1-f)*(f<0.15?f/0.15:1);ctx.globalAlpha=al*(p.k?0.55:0.45);ctx.fillStyle=p.k?'#eef2f5':'#3a3a3c';ctx.beginPath();ctx.arc(sx(p.x),sy(p.y),s*p.r*(1+f*1.8),0,7);ctx.fill();}

@@ -394,6 +394,12 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
 - **Moon power (Session 60d, agreed with Markus):** **Solar Array** (4×4, 60 MW, no fuel, Moon materials; unlocked by Moon goal 4) and
   **Helium Fusion Reactor** (6×6, 1500 MW from 30 Helium Crystals/min + 120 m³/min water; Moon materials only, lattice crystals as its
   heart; unlocked by Moon goal 5). Helium thereby gets a use on the Moon itself.
+- **Dyson Sphere stage 1, Sphere Frame (built, Session 62, agreed with Markus).** Sphere Frame Segments (Fabricator on Earth: 2 lattice
+  crystals from the Moon + 2 hull plates + 4 heat sinks + 6 steel beams) are belted into a **Sphere Launcher** (8×8, Home only, 4000 MW
+  while charging, one segment every 20 s). 300 segments complete the stage and unlock the **Sphere Receiver** (4×4, Home, 2500 MW, no
+  fuel: power beamed back). Progress shows as a "☀ Dyson Sphere" card under the Home tiers and in the top bar; in 3D the sun hangs low
+  in the north-west sky and a golden frame ring grows around it (both worlds). Stage 2 (Sphere Panels) will need ice-planet goods.
+  Launcher and segment recipe are unlocked by Moon goal 6. Numbers in `DYSON`.
 - **Orbital Freighters (built, Session 60b).** A **Freighter Port** (6×6, 40 MW while a freighter waits to launch) is needed on both worlds.
   Freighters (up to 3, built at Home's port: 20 Hull Plates, 1 Guidance Core, 40 Rocket Fuel) have a route with up to 3 cargo lines each
   way and work with the worlds' **item stocks** (not belts), so they keep flying while you are on the other world. Up to 2,000 items each
@@ -470,8 +476,9 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 - **Trains Phase 1 is built (Session 56).** Markus should try it on his phone first: track loop, two stops, Cargo Bays, a train.
 - **Moon goals are built (Session 58).** Markus plays them on the Moon.
 - **Moon Colony and Orbital Freighters are built (Sessions 60, 60b).**
-- **Next:** freighter visuals in 3D and balance of the colony numbers after Markus plays them; then the ice planet (new colony rocket,
-  cryo-ice, Cryo Plant) or the first Dyson Sphere stage, as Markus prefers. Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
+- **Dyson Sphere stage 1 is built (Session 62).**
+- **Next:** the ice planet (new colony rocket, cryo-ice, rare gases, Cryo Plant), whose goods Sphere stage 2 (panels) will need; freighter
+  visuals in 3D; balance after Markus plays the colony and sphere. Then trains Phase 2 (Rail Underpass/Crossing, fluid wagons, trains in
   blueprints). Then the all-tier measuring tool, also checking the Moon goals. Then the all-tier measuring tool for the rulebook (section 14) and Tier 7/8 goal tweaks for new games.
 
 ## 11. Explicitly out of scope (for now)

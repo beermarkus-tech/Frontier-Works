@@ -60,6 +60,7 @@ and keep the game playable after every commit.
 - Moon Rovers (`js/rover.js`, after train.js): depot `k:'rdepot'` (`e.lx/ly` route, `e.rn` rovers, `e.rv` [{st,p,c,w}] saved); `rvPath` = A* (8-dir) around buildings/terr 3, straightened + rounded, cached per `topoVer`; `updRover` from updBuilding; tracks `RVTR` (not saved); drawn by `drawRovers` / `v3Rovers`. Numbers in `ROVER`.
 - Colony (Session 60): world goals may have `rate` {item: per min} held `WG_HOLD` s (timer `S.wgh[world]` via `wgRateTick` every CORE bucket, rates `coreRate60`) and `pop` (`colonyPop()` = sum of Habitat `e.pop`); `wgReady(g)` gates Complete. Habitat `k:'hab'` takes water/oxygen (FLB) and grows/shrinks every `HAB.grow` s.
 - Orbital Freighters (`js/freight.js`): shared `S.fr` [{id,nm,home,dest,st,t,c,out,back,trips,del}]; `freightTick` (from `tick`) moves item stock between worlds via `wInv(w)` (current `S.inv` or packed `S.worlds[w].WS.inv`); ports `k:'fport'` checked with `portsOn(w)` (packed `es` too); panels `freightStatic/freightDyn/freightWorldsHtml`; drawn by `drawFreighters` (take-off/landing only). Numbers in `FREIGHT`.
+- Dyson Sphere (`js/dyson.js`): shared `S.dyson.f` = segments in orbit; `DYSON.stages` (stage 1 need 300, unlocks `srecv`); launcher `k:'slaunch'` (`updLauncher`, `e.ch` charge, `e.fl` last shot); Goals card `dysonHtml`, top bar `dysonLabel`; 2D `drawLaunchers`, 3D `v3Dyson` (sun sprite + ring segments placed low in the NW sky relative to the camera).
 - Debug hook: `window.__fw` (state, placeEnt, tick, entAt, ACT…).
 
 ## Rules

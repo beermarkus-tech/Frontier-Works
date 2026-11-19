@@ -444,6 +444,15 @@ const server=require('./serve.js');
   out.drained=rvCount(src)<700;out.carried=(db.store.water||0)>50;out.piped=!!(pj&&pj.net&&pj.net.fluid==='water'&&pj.net.amt>0);out.noItems=!accept(da,'iron_plate',0);
   window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
  check(`tanker rovers: ${Object.entries(tkr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(tkr).every(v=>v===true));
+ // Dyson Sphere stage 1 (Session 62): the launcher takes only frame segments, fires one per DYSON.fire s when powered, completing the stage unlocks the receiver
+ const dys=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),dy:S.dyson};S.ub.push('slaunch');S.dyson={f:DYSON.stages[0].need-2};
+  const spot=(w,h)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};
+  const a=spot(8,8);out.placed=fw.placeEnt('slaunch',a.x,a.y,0,true)==='';const L=entAt(a.x,a.y);out.only=accept(L,'sphere_frame',0)&&!accept(L,'iron_plate',0);L.store.sphere_frame=4;
+  for(let k=0;k<20*(DYSON.fire*2+1);k++){L.pw=1;updLauncher(L,0.05);}out.fired=S.dyson.f===DYSON.stages[0].need;out.unlock=ub('srecv');out.dialog=!document.getElementById('dlg').classList.contains('hidden');closeDlg();
+  out.stops=(()=>{L.pw=1;updLauncher(L,0.05);return !L.want;})();openPanel('ms');out.card=/dyson sphere/i.test(document.getElementById('pbody').innerText);ACT.closePanel();out.label=/☀/.test(dysonLabel());
+  const r=spot(4,4);out.recv=fw.placeEnt('srecv',r.x,r.y,0,true)==='';tick(0.05);out.cap=entAt(r.x,r.y).grid&&entAt(r.x,r.y).grid.cap===2500;
+  for(const e of [...ents.values()])if(e.k==='slaunch'||e.d==='srecv')removeEnt(e,false,true);S.ub=keep.ub;S.dyson=keep.dy;return out;});
+ check(`Dyson Sphere: ${Object.entries(dys).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(dys).every(v=>v===true));
  // Orbital Freighters (Session 60b): a Home-based freighter needs a port on both worlds and Rocket Fuel; it moves stock both ways in one round trip
  const frt=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),inv:JSON.stringify(S.inv),fr:S.fr};if(S.worlds&&S.worlds.moon)return{had:false};S.ub.push('fport');S.fr=[];
   const spot=(w,h)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};
