@@ -459,7 +459,7 @@ const server=require('./serve.js');
  // Moon power (Session 60d): a Solar Array gives 60 MW; the Helium Fusion Reactor gives 1500 MW from helium + water and burns helium under load
  const mpw=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice()};if(S.worlds&&S.worlds.moon)return{had:false};fw.switchWorld('moon');S.ub.push('solar2','fusion','smelter');
   const spot=(w,h)=>{for(let r=16;r<120;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};
-  const a=spot(4,4);out.array=fw.placeEnt('solar2',a.x,a.y,0,true)==='';tick(0.05);out.arrayCap=entAt(a.x,a.y).grid&&entAt(a.x,a.y).grid.cap===60;
+  const a=spot(4,4);out.array=fw.placeEnt('solar2',a.x,a.y,0,true)==='';tick(0.05);out.arrayCap=entAt(a.x,a.y).grid&&entAt(a.x,a.y).grid.cap===60;out.unplugged=/not connected/i.test((bStatus(entAt(a.x,a.y))||[])[1]||'');   /* Session 61g */
   const f=spot(9,7);out.fusion=fw.placeEnt('fusion',f.x,f.y,0,true)==='';const R=entAt(f.x,f.y);for(let k=0;k<3;k++){fw.placeEnt('smelter',f.x+6,f.y+k*2,0,true);const sm=entAt(f.x+6,f.y+k*2);sm.r='r_iron_ingot';sm.inb={iron_ore:50};}
   R.fuel={helium:50};R.water=100;for(let k=0;k<40;k++){R.water=100;tick(0.05);}out.fusionCap=R.grid&&R.grid.cap===1500;out.burns=(R.fuel.helium||0)<50||R.energy>0;
   out.homeNo=true;fw.switchWorld('home');out.homeNo=canPlace('fusion',MW/2+20,MH/2+20)==='Only on the Moon';delete S.worlds.moon;S.ub=keep.ub;return out;});

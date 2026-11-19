@@ -3550,3 +3550,18 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Changed:** goal rates are now averaged over the last 5 minutes (all Base Core buckets) instead of the last minute. Batches from rovers or trains even out, and the hold only resets when the 5-minute average really drops below target. The goal card text says so.
 
 **Verified:** the colony smoke check now feeds the Base Core in batches every 30 s (empty buckets in between). The goal still completes after the hold. `npm test` all PASS.
+
+## Session 61g — 2026-11-19 (Claude Code, cloud session) · Build 179
+
+**Reported:** after replacing Solar Panels with Solar Arrays the fuse tripped. After resetting it, production stayed halted.
+
+**Likely cause** (the save itself wasn't available):
+- Since Session 58e nothing wires itself. Removing the panels removed their wires, and the new arrays only join if they touch another generator.
+- The machines' poles were left on a network without generators. That network can't trip (no capacity), so nothing came back after the reset.
+- **Fix in play:** draw a line from each separate group of arrays to a pole with the pole tool.
+
+**Built, to make this visible:**
+- **Machines, drills, pumps and pads** say why they have no power: "no pole in reach", "fuse tripped", "no generator on this network", or "generators idle (fuel?)".
+- **A generator** with no wires and no consumers shows "Not connected: draw a power line to it" (red status dot).
+
+**Verified:** the Moon power smoke check confirms a lone Solar Array reports "Not connected". `npm test` all PASS.

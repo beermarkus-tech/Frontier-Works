@@ -249,14 +249,16 @@ function paintB(g,id,P,u){
   default:box(i,i,W,W,u*0.16,col);
  }
 }
+/* why a building has no power (Session 61g): no pole in reach, a network without generators, a tripped fuse, or too little power */
+function noPowerWhy(e){const g=e.grid;if(!g)return'No power: no pole in reach';if(g.trip)return'No power: fuse tripped';if(!g.gens.length)return'No power: no generator on this network';if(g.cap<=0)return'No power: generators idle (fuel?)';return'No power';}
 function bStatus(e){
  if(e.k==='lpad'){if(e.lt>0)return['#4fe08a','Launching'];if(!lpadReady(e))return['#ffd34a','Loading rocket'];if(!(e.pw>0))return['#ff5a46','No power'];return['#4fe08a','Ready for launch'];}
- if(e.k==='dpad'){const tg=padTarget(e);if(!tg)return null;if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.dr.st)return['#4fe08a',e.dr.st===1?'Drone flying out':'Drone returning'];if(!padCount(e))return['#ffd34a','Waiting for items'];if(padCount(tg)>=B[tg.d].cap)return['#ffa53a','Destination full'];return['#4fe08a','Loading'];}
+ if(e.k==='dpad'){const tg=padTarget(e);if(!tg)return null;if(e.want&&!e.pw)return['#ff5a46',noPowerWhy(e)];if(e.dr.st)return['#4fe08a',e.dr.st===1?'Drone flying out':'Drone returning'];if(!padCount(e))return['#ffd34a','Waiting for items'];if(padCount(tg)>=B[tg.d].cap)return['#ffa53a','Destination full'];return['#4fe08a','Loading'];}
  if(e.off&&(e.k==='mach'||e.k==='drill'||e.k==='pump'||e.k==='gen'))return['#8a96a0','Switched off'];
- if(e.k==='mach'){if(!e.r)return['#8a96a0','No recipe'];if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.run)return['#4fe08a','Working'];
+ if(e.k==='mach'){if(!e.r)return['#8a96a0','No recipe'];if(e.want&&!e.pw)return['#ff5a46',noPowerWhy(e)];if(e.run)return['#4fe08a','Working'];
   const r=RC[e.r];for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return['#ffa53a','Output full'];return['#ffd34a','Waiting for input'];}
- if(e.k==='drill'||e.k==='pump'){if(!e.item)return['#8a96a0','Nothing to extract'];if(e.want&&!e.pw)return['#ff5a46','No power'];if(e.buf>=10)return['#ffa53a','Output blocked'];return['#4fe08a','Extracting'];}
- if(e.k==='gen'){if(e.grid&&e.grid.trip)return['#ff5a46','Fuse tripped'];if(!genCan(e))return['#ffa53a',B[e.d].water&&e.water<1?'Needs water':'Needs fuel'];return e.load>0?['#4fe08a','Generating']:['#ffd34a','Standby'];}
+ if(e.k==='drill'||e.k==='pump'){if(!e.item)return['#8a96a0','Nothing to extract'];if(e.want&&!e.pw)return['#ff5a46',noPowerWhy(e)];if(e.buf>=10)return['#ffa53a','Output blocked'];return['#4fe08a','Extracting'];}
+ if(e.k==='gen'){if(e.grid&&e.grid.trip)return['#ff5a46','Fuse tripped'];if(typeof pnPeers==='function'&&!pnPeers(e).length&&!(e.grid&&e.grid.cons.length))return['#ff5a46','Not connected: draw a power line to it'];if(!genCan(e))return['#ffa53a',B[e.d].water&&e.water<1?'Needs water':'Needs fuel'];return e.load>0?['#4fe08a','Generating']:['#ffd34a','Standby'];}
  return null;
 }
 /* live overlays (animation on top of sprites) */
