@@ -359,7 +359,8 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   measures what its factories deliver into its Base Core (last 5 minutes, needs at least 1 minute). When you leave, that rate is stored
   with the world; when you come back, the time away (game time, so the speed buttons count) is paid out into its stock, and the arrival
   message says what came in. The Worlds panel shows each world's background rates. Only Base Core deliveries count; buildings, belts
-  and crates on the inactive world stay paused as they were.
+  and crates on the inactive world stay paused as they were. Exception (Session 64b): **Sphere Launcher launches** are measured the same way
+  and paid out into the Dyson Sphere on return, up to the end of the current stage.
 - **Moon look** (Session 54; Session 54b: Markus switched to the all-white option, "real white, stronger grey"): on the Moon all buildings
   are painted white against the sun, in 2D and 3D. Shapes, details and textures stay; colours become pure white or clear greys by their
   brightness (bodies white, darker details grey, holes near-black). Home is unchanged. Belts, pipes, signs, lights and items keep their colours.

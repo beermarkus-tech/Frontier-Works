@@ -3736,3 +3736,27 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Next up:** Markus plays Rime. Then decide the last chapter (Dyson stage 3), and trains Phase 2.
 
 **Open questions:** Is a 120 s freighter flight to Rime about right?
+
+## Session 64b — 2026-11-19 (Claude Code, cloud session) · Build 188
+**Asked:** Markus spent a long time on the Moon. Back on Earth, the Dyson Sphere hadn't grown. Shouldn't the launches continue while he is away?
+
+**Found:**
+- Home is paused while you're on another world. Background production only pays out what reached the Base Core, at the measured rates.
+- Launchers were not covered. Their segments go into the launchers, not the Core, so nothing reached the sphere while away.
+- Time already spent away can't be made up, because no launch rate was recorded then.
+
+**Built:**
+- Launches are recorded (`DYL`, the last 5 min since load, like `CORE`).
+- `bgLeave` stores the launch rate `S.bg.dy`.
+- `bgArrive` → `dyCatchUp` adds the launches for the time away. It stops at the end of the current stage, completes the stage if reached (unlocks, receiver power, dialog) and shows "☀ N launched to the Dyson Sphere" in the arrival message.
+- Agreed rule added to DESIGN.md (background production exception).
+
+**Verified:**
+- New smoke check: rate measurement, stored on leave, paid on arrival, capped at the stage end with unlock.
+- `npm test` all PASS.
+
+**Known issues:**
+- Launchers need at least 30 s of measured time on Home before leaving, or no rate is recorded.
+- The launcher's loaded store isn't drained by the catch-up, which matches how Base Core rates work.
+
+**Next up:** unchanged (Markus plays Rime; Dyson stage 3; trains Phase 2).

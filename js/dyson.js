@@ -14,8 +14,14 @@ function dysonItem(){const c=dysonStage();let i=c.i;while(i>0&&(!DYSON.stages[i]
 function dysonApply(){const c=dysonStage();let cap=B.srecv.cap0||(B.srecv.cap0=B.srecv.cap);for(let i=0;i<c.i;i++)if(DYSON.stages[i].cap)cap=DYSON.stages[i].cap;B.srecv.cap=cap;
  B.srecv.desc=`Receives power beamed down from the Dyson Sphere: ${cap} MW, no fuel.${cap<DYSON.stages[1].cap?` ${DYSON.stages[1].cap} MW once the Sphere Panels are done.`:''} Home only.`;}
 function updLauncher(e,dt){const cur=dysonStage(),it=cur.st&&cur.st.it,ok=!cur.soon&&!cur.done&&!!it&&(e.store[it]||0)>0;e.want=ok;if(!ok){e.ch=0;return;}
- if(e.pw>0){e.ch+=dt;if(e.ch>=DYSON.fire){e.ch=0;e.store[it]--;if(!e.store[it])delete e.store[it];dyS().f++;e.fl=S.t;stat.c[it]=(stat.c[it]||0)+1;
+ if(e.pw>0){e.ch+=dt;if(e.ch>=DYSON.fire){e.ch=0;e.store[it]--;if(!e.store[it])delete e.store[it];dyS().f++;e.fl=S.t;DYL.push(S.t);stat.c[it]=(stat.c[it]||0)+1;
   const now=dysonStage();if(now.i>cur.i){for(const b of cur.st.b||[])if(!ub(b))S.ub.push(b);dysonApply();if(typeof dysonDone==='function')dysonDone(cur.st);}}}}
+/* Background launches (Session 64b): while you are on another world Home is paused, so launches are measured like Base Core deliveries
+   (the last 5 min, since the last load) and paid out on return by bgArrive, up to the end of the current stage. */
+let DYL=[];
+function dyLaunchRate(){const win=Math.min(300,(CORE.b.length||0)*10);if(win<30)return 0;DYL=DYL.filter(t=>S.t-t<=win);return DYL.length/win;}
+function dyCatchUp(rate,el){const c=dysonStage();if(!rate||c.done||c.soon)return 0;const n=Math.min(Math.floor(rate*el),c.st.need-c.have);if(n<=0)return 0;
+ dyS().f+=n;const now=dysonStage();if(now.i>c.i){for(const b of c.st.b||[])if(!ub(b))S.ub.push(b);dysonApply();setTimeout(()=>dysonDone(c.st),1500);}return n;}
 function dysonDone(st){sfx('goal');const txt=st.it==='sphere_frame'?`The frame now circles the sun. Unlocked: ${(st.b||[]).map(b=>B[b].n).join(', ')}: power beamed down to Home, no fuel needed.`:`The panels catch far more sunlight: every Sphere Receiver now gives ${B.srecv.cap} MW.`;
  dialog(`<h2>☀ Dyson Sphere: ${st.n} complete!</h2><p>${txt} Look up in 3D to see it.</p><button class="btn on" data-act="closeDlg">Beautiful</button>`);if(typeof buildTools==='function')buildTools();save();}
 function dysonLabel(){const c=dysonStage();return c.done?'☀ Complete':c.soon?'☀ Stage '+(c.i+1)+' soon':'☀ Sphere '+Math.round(c.have/c.st.need*100)+'%';}

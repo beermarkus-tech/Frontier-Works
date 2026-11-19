@@ -27,7 +27,7 @@ function growIncin(){const inc=[...ents.values()].filter(e=>e.k==='incin');if(!i
   if(!at){ents.delete(e.id);refund(B.incin.cost);back++;continue;}
   e.x=at[0];e.y=at[1];e.w=e.h=2;for(let j=0;j<2;j++)for(let i=0;i<2;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
  if(back)setTimeout(()=>toast(`Incinerators are 2×2 now: ${back} had no room and went back to stock`),1500);}
-function load(str){const data=typeof str==='string'?parseSave(str):str;CORE={b:[],cur:{},acc:0};
+function load(str){const data=typeof str==='string'?parseSave(str):str;CORE={b:[],cur:{},acc:0};if(typeof DYL!=='undefined')DYL=[];
  S=data.S;S.spd=S.spd||1;MW=MH=S.mw||128;
  /* Session 46: saves from before the coast ring are moved MAP_EXT tiles in (one time); the original save text is kept as a backup */
  S.w=S.w||'home';S.worlds=S.worlds||{};if(typeof dysonApply==='function')dysonApply();

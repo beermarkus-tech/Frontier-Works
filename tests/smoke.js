@@ -503,6 +503,13 @@ const server=require('./serve.js');
   const r=spot(4,4);out.recv=fw.placeEnt('srecv',r.x,r.y,0,true)==='';tick(0.05);out.cap=entAt(r.x,r.y).grid&&entAt(r.x,r.y).grid.cap===2500;
   for(const e of [...ents.values()])if(e.k==='slaunch'||e.d==='srecv')removeEnt(e,false,true);S.ub=keep.ub;S.dyson=keep.dy;return out;});
  check(`Dyson Sphere: ${Object.entries(dys).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(dys).every(v=>v===true));
+ // Dyson launches while away (Session 64b): the measured launch rate is paid out on return, capped at the end of the stage
+ const dyb=await p.evaluate(()=>{const out={},keep={dy:S.dyson,cb:CORE.b,ub:S.ub.slice(),bg:S.bg};S.dyson={f:10};CORE.b=new Array(30).fill({});DYL=[];for(let k=0;k<15;k++)DYL.push(S.t-k*10);
+  out.rate=Math.abs(dyLaunchRate()-0.05)<1e-9;bgLeave();out.saved=Math.abs(S.bg.dy-0.05)<1e-9;S.bg.t=S.t-1000;const r=bgArrive();out.paid=r.dy===50&&S.dyson.f===60;
+  S.dyson={f:DYSON.stages[0].need-5};out.cap=dyCatchUp(1,1000)===5&&S.dyson.f===DYSON.stages[0].need&&ub('srecv');
+  S.dyson=keep.dy;CORE.b=keep.cb;S.ub=keep.ub;S.bg=keep.bg;DYL=[];dysonApply();return out;});
+ await new Promise(r=>setTimeout(r,1700));await p.evaluate(()=>closeDlg());
+ check(`Dyson launches while away: ${Object.entries(dyb).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(dyb).every(v=>v===true));
  // Orbital Freighters (Session 60b): a Home-based freighter needs a port on both worlds and Rocket Fuel; it moves stock both ways in one round trip
  const frt=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),inv:JSON.stringify(S.inv),fr:S.fr};if(S.worlds&&S.worlds.moon)return{had:false};S.ub.push('fport');S.fr=[];
   const spot=(w,h)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};

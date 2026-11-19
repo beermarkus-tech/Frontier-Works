@@ -644,8 +644,8 @@ function wgCur(){const L=WGOALS[S.w||'home'];return L?L[(S.wms&&S.wms[S.w])||0]:
 function wgRateTick(){const g=wgCur();S.wgh=S.wgh||{};const w=S.w||'home';if(!g||!g.rate){S.wgh[w]=0;return;}const r=coreRate60(),ok=CORE.b.length>=6&&Object.keys(g.rate).every(k=>(r[k]||0)>=g.rate[k]*WG_TOL);S.wgh[w]=ok?(S.wgh[w]||0)+10:0;}
 function wgReady(g){if(!g)return false;const w=S.w||'home';if(!afford(g.req))return false;if(g.pop&&colonyPop()<g.pop)return false;if(g.rate&&((S.wgh&&S.wgh[w])||0)<WG_HOLD)return false;return true;}
 function coreRates(){if(CORE.b.length<6)return null;const r={},T=CORE.b.length*10;for(const b of CORE.b)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]/=T;return r;}
-function bgLeave(){const r=coreRates();S.bg={r:r||(S.bg&&S.bg.r)||{},t:S.t,m:r?CORE.b.length*10:(S.bg&&S.bg.m)||0};}
-function bgArrive(){const B0=S.bg;if(!B0||B0.t==null)return null;const el=Math.max(0,S.t-B0.t),got={};for(const k in B0.r){const n=Math.floor(B0.r[k]*el);if(n>0){give(k,n);got[k]=n;}}B0.t=null;return{el,got};}
+function bgLeave(){const r=coreRates(),dy=typeof dyLaunchRate==='function'?dyLaunchRate():0;S.bg={r:r||(S.bg&&S.bg.r)||{},t:S.t,m:r?CORE.b.length*10:(S.bg&&S.bg.m)||0,dy:r?dy:((S.bg&&S.bg.dy)||dy)};}   /* dy: Sphere launches per s (Session 64b) */
+function bgArrive(){const B0=S.bg;if(!B0||B0.t==null)return null;const el=Math.max(0,S.t-B0.t),got={};for(const k in B0.r){const n=Math.floor(B0.r[k]*el);if(n>0){give(k,n);got[k]=n;}}const dy=B0.dy&&typeof dyCatchUp==='function'?dyCatchUp(B0.dy,el):0;B0.t=null;return{el,got,dy};}
 function tick(dt){
  if(topoDirty)rebuildTopo();
  tickNo++;S.t+=dt;
