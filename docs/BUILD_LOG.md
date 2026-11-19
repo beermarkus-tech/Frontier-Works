@@ -3565,3 +3565,13 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - **A generator** with no wires and no consumers shows "Not connected: draw a power line to it" (red status dot).
 
 **Verified:** the Moon power smoke check confirms a lone Solar Array reports "Not connected". `npm test` all PASS.
+
+## Session 61h — 2026-11-19 (Claude Code, cloud session) · Build 180
+
+**Asked:** the steady-hold measure should allow 10–20% deviation over the 3 minutes without resetting.
+
+**Changed:**
+- The hold now keeps counting while every rate's 5-minute average is at least **85%** of its target (`WG_TOL`, the middle of 10–20%). It resets only below that.
+- Goal card colours: green at or above target, amber within tolerance, red below. The card text explains this.
+
+**Verified:** the colony smoke check feeds about 90% of target in batches (the goal still completes) and confirms a rate far below target resets the clock. `npm test` all PASS.

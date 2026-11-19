@@ -222,6 +222,7 @@ const WGOALS={moon:[
  {n:'First Settlers',req:{},pop:10,rate:{steel_pipe:15,concrete:30},b:['fusion'],r:[],why:'People move in: keep Habitats supplied with water, oxygen and power, and make your own steel pipes and concrete, steadily (they stay in your stock for building).'},
  {n:'Self-Sufficient',req:{},pop:30,rate:{motor:6,steel_beam:15,vac_wafer:20},b:['fport'],r:['r_cryo_rod','r_lattice_qc'],why:'The colony builds its own machines: motors and beams from Moon steel, wafers for its electronics. Nothing needed from Earth.',next:'Trade: Orbital Freighters carry helium and lattice crystals to Earth (cheaper Fuel Rods and Quantum Cores there) and plastic or parts up to the Moon.'}]};
 const WG_HOLD=180;   /* seconds a rate goal must be held */
+const WG_TOL=0.85;   /* the hold keeps counting while every rate is at least 85% of its target (Session 61h, Markus: allow 10–20% deviation) */
 for(const w in WGOALS)WGOALS[w].forEach(m=>{m.b=m.b||[];m.r=m.r||[];});
 const START_B=[...SIGNS,'zone','bpstation','bplist','belt1','splitter','merger','crossing','storage','drill1','smelter','press','burner','pole1'];
 const START_R=['r_iron_ingot','r_copper_ingot','r_iron_plate','r_iron_rod','r_bolts','r_wire','r_cable','r_concrete'];
