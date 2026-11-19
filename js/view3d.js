@@ -102,7 +102,7 @@ function v3Init(){
  {const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,6,32,32,32);gr.addColorStop(0,'rgba(0,0,0,0.6)');gr.addColorStop(0.55,'rgba(0,0,0,0.34)');gr.addColorStop(1,'rgba(0,0,0,0)');
   g.fillStyle=gr;g.fillRect(0,0,64,64);const t=new T3.CanvasTexture(cv);
   V3.aoP=v3Pool(new T3.PlaneGeometry(1,1).rotateX(-Math.PI/2),new T3.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),{order:1});}
- v3Models();v3Lines();if(typeof v3TrainInit==='function')v3TrainInit();if(typeof v3RoverInit==='function')v3RoverInit();v3ItemsInit();v3SmokeInit();v3Overlays();
+ v3Models();v3Lines();if(typeof v3TrainInit==='function')v3TrainInit();if(typeof v3RoverInit==='function')v3RoverInit();if(typeof v3FreightInit==='function')v3FreightInit();v3ItemsInit();v3SmokeInit();v3Overlays();
  v3Terrain();
  v3Input();addEventListener('resize',v3Resize);v3Resize();v3Quality();
  V3.ready=true;
@@ -677,7 +677,7 @@ function render3D(el){
  v3Motion(el);v3Cam();
  const sig=v3Sig();if(sig!==V3.sig){V3.sig=sig;v3Layout();}else if(v3TripSig()!==V3.trip)v3Layout();
  for(const p of parts)if(V3.sm.p.length<V3.sm.N)V3.sm.p.push({x:p.x,y:0.3,z:p.y,vx:p.vx*0.5,vy:0.6+Math.random()*0.4,vz:p.vy*0.5,r:0.35,t:0,m:1.2,k:1});parts.length=0;
- v3WorldTint();v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();if(typeof v3Trains==='function')v3Trains();if(typeof v3Rovers==='function')v3Rovers();if(typeof v3Dyson==='function')v3Dyson();v3Signs();v3Meters();v3Zones();v3ZoneLabels();{const zh=zHidden();if(V3.zRail&&V3.zRail.mesh)V3.zRail.mesh.visible=!zh&&V3.zRail.mesh.count>0;if(V3.zPost&&V3.zPost.mesh)V3.zPost.mesh.visible=!zh&&V3.zPost.mesh.count>0;if(zh&&V3.zl)for(const o of V3.zl.values())o.sp.visible=false;}v3Overlay(t);
+ v3WorldTint();v3Anim(el,t);v3Items();v3Smoke(el);v3Drones();if(typeof v3Trains==='function')v3Trains();if(typeof v3Rovers==='function')v3Rovers();if(typeof v3Dyson==='function')v3Dyson();if(typeof v3Freighters==='function')v3Freighters();v3Signs();v3Meters();v3Zones();v3ZoneLabels();{const zh=zHidden();if(V3.zRail&&V3.zRail.mesh)V3.zRail.mesh.visible=!zh&&V3.zRail.mesh.count>0;if(V3.zPost&&V3.zPost.mesh)V3.zPost.mesh.visible=!zh&&V3.zPost.mesh.count>0;if(zh&&V3.zl)for(const o of V3.zl.values())o.sp.visible=false;}v3Overlay(t);
  // sun & shadows follow the view; fog keeps the horizon soft
  const s=v3cl(C3.dist*0.8,12,70),sun=V3.sun;sun.position.set(C3.x-40,70,C3.y-28);sun.target.position.set(C3.x,0,C3.y);
  const sc=sun.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.near=10;sc.far=220;sc.updateProjectionMatrix();}

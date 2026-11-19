@@ -3635,3 +3635,15 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Verified:** the Stock Outlet smoke check confirms it is in the starting set. `npm test` all PASS.
 
 **Open question:** this makes early game easier (items can come back out of the stock). Watch whether it unbalances the early tiers.
+
+## Session 62e — 2026-11-19 (Claude Code, cloud session) · Build 185
+
+**Asked:** the freighter take-off and landing in 3D too.
+
+**Built:**
+- `frPoses()` works out where each freighter is on the current world: docked, taking off or landing (lift in tiles), or away. Both views use it.
+- `v3Freighters` draws a white rocket (orange band, red fins) docked on the port. During take-off and landing it rises or descends with an orange flame that grows with height, and disappears high up.
+
+**Verified:** a 3D screenshot during take-off. `npm test` all PASS.
+
+**Known issues:** no smoke cloud at the pad in 3D yet.

@@ -46,10 +46,21 @@ document.addEventListener('change',ev=>{const el=ev.target,a=el.dataset&&el.data
 setInterval(()=>{if(UI.panel&&UI.panel.kind==='ent'){const e=ents.get(UI.panel.arg);if(e&&e.k==='fport')for(const f of S.fr||[]){const el=document.getElementById('frst'+f.id);if(el){const st=frStatus(f);setHTML(el,`<div class="row" style="margin-top:6px"><span>Now</span><span class="status" style="color:${st[0]}"><i style="background:${st[0]}"></i>${st[1]}</span></div>`);}}}},500);
 
 /* ---------- 2D: freighters docked at a port, taking off and landing (the flight itself is out of sight) ---------- */
-function drawFreighters(sx,sy,s){const L=S.fr;if(!L||!L.length)return;const here=S.w||'home',pts=portsOn(here);if(!pts.length)return;
+/* where each freighter is on the world you're on: docked (lift 0), taking off or landing (lift in tiles), or away (not listed) */
+function frPoses(){const L=S.fr,out=[];if(!L||!L.length)return out;const here=S.w||'home',pts=portsOn(here);if(!pts.length)return out;
  L.forEach((f,k)=>{const pt=pts[k%pts.length];let lift=null;
   if(f.home===here){if(f.st===0)lift=0;else if(f.st===1&&f.t<8)lift=Math.pow(f.t,2)*0.5;else if(f.st===3&&f.t>FREIGHT.fly-8)lift=Math.pow(FREIGHT.fly-f.t,2)*0.5;}
   if(f.dest===here){if(f.st===2)lift=0;else if(f.st===1&&f.t>FREIGHT.fly-8)lift=Math.pow(FREIGHT.fly-f.t,2)*0.5;else if(f.st===3&&f.t<8)lift=Math.pow(f.t,2)*0.5;}
-  if(lift==null)return;const a=Math.max(0,Math.min(1,1-(lift-20)/15));if(a<=0)return;const X=sx(pt.x+3+[0,-1.5,1.5][k%3]),Yb=sy(pt.y+4)-lift*s,w=s*0.9,H=s*2.8;
+  if(lift!=null)out.push({x:pt.x+3+[0,-1.5,1.5][k%3],y:pt.y+3,lift,f});});return out;}
+function drawFreighters(sx,sy,s){for(const q of frPoses()){const lift=q.lift,a=Math.max(0,Math.min(1,1-(lift-20)/15));if(a<=0)continue;const X=sx(q.x),Yb=sy(q.y+1)-lift*s,w=s*0.9,H=s*2.8;
   if(lift>0){const fl=s*1.6*(0.9+0.1*Math.sin(animT*40));glow(X,Yb+fl*0.3,fl,'#ff9a30',0.8*a);}
-  ctx.globalAlpha=a;drawRocketShape(X,Yb,w,H);ctx.globalAlpha=1;});}
+  ctx.globalAlpha=a;drawRocketShape(X,Yb,w,H);ctx.globalAlpha=1;}}
+/* 3D (Session 62e): the same take-off and landing; a white rocket with red fins and a flame while it flies, climbing out of sight */
+function v3FreightInit(){const part=(geo,c,p,sc,rot)=>({g:geo,c:new T3.Color(c),m:new T3.Matrix4().compose(new T3.Vector3(...p),new T3.Quaternion().setFromEuler(new T3.Euler(...(rot||[0,0,0]))),new T3.Vector3(...sc))});
+ const cy=new T3.CylinderGeometry(0.5,0.5,1,16),co=new T3.ConeGeometry(0.5,1,16),bx=new T3.BoxGeometry(1,1,1),P=[part(cy,'#eef1f4',[0,1.6,0],[0.8,2.4,0.8]),part(co,'#eef1f4',[0,3.3,0],[0.8,1.0,0.8]),part(cy,'#e8a23a',[0,2.4,0],[0.82,0.14,0.82]),part(cy,'#3a3f46',[0,0.3,0],[0.6,0.4,0.6])];
+ for(const a of [0,Math.PI/2,Math.PI,Math.PI*1.5])P.push(part(bx,'#c9302c',[Math.cos(a)*0.5,0.7,Math.sin(a)*0.5],[0.06,0.9,0.45],[0,-a,0]));
+ V3.frP=v3Pool(v3Merge(P),V3.mat,{cast:1,recv:1});const fg=new T3.ConeGeometry(0.4,1,12);fg.rotateX(Math.PI);fg.translate(0,-0.5,0);V3.frF=v3Pool(fg,new T3.MeshBasicMaterial({color:'#ffa040',transparent:true,opacity:0.85,depthWrite:false}),{order:4});}
+function v3Freighters(){if(!V3.frP||!V3T)return;const T=V3T,L=frPoses().filter(q=>q.lift<45),m=v3PoolN(V3.frP,L.length),fl=L.filter(q=>q.lift>0),fm=v3PoolN(V3.frF,fl.length);T.q.identity();
+ L.forEach((q,i)=>m.setMatrixAt(i,T.m.compose(T.v.set(q.x,0.3+q.lift*1.3,q.y),T.q,T.s.set(1,1,1))));
+ fl.forEach((q,i)=>{const n=1.2+Math.min(2.5,q.lift*0.2)+Math.sin(animT*40+i)*0.15;fm.setMatrixAt(i,T.m.compose(T.v.set(q.x,0.3+q.lift*1.3+0.1,q.y),T.q,T.s.set(1,n,1)));});
+ m.instanceMatrix.needsUpdate=true;fm.instanceMatrix.needsUpdate=true;}
