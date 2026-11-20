@@ -108,7 +108,7 @@ function frame(now){
 }
 let lastAff='',lastBio=null;
 function updBiome(){if(S.gen!==2||!bio)return;const x=V3.on?C3.x:cam.x,y=V3.on?C3.y:cam.y,b=biomeAt(x,y);if(b!==lastBio){if(lastBio)toast(`Entering ${b.n}: ${b.desc}`);lastBio=b;}}
-function updTop(){if($('worldBtn')){const many=S&&S.worlds&&Object.keys(S.worlds).length>0;$('worldBtn').style.display=many?'':'none';const W=WORLDS[(S&&S.w)||'home'];$('worldTxt').textContent=W.ic+' '+W.n;}let d=0,c=0,tr=false;for(const g of grids){if(!g.gens.length)continue;d+=g.dem;c+=g.cap;if(g.trip)tr=true;}   /* only networks with generators: parts cut off by a Power Switch don't count (Session 58d) */
+function updTop(){if($('worldBtn')){const many=S&&S.worlds&&Object.keys(S.worlds).length>0;$('worldBtn').style.display=many?'':'none';const W=WORLDS[(S&&S.w)||'home'];$('worldTxt').textContent=W.n;$('worldIc').textContent=W.ic;}let d=0,c=0,tr=false;for(const g of grids){if(!g.gens.length)continue;d+=g.dem;c+=g.cap;if(g.trip)tr=true;}   /* only networks with generators: parts cut off by a Power Switch don't count (Session 58d) */
  $('pwv').textContent=fmt(d);$('pwc').textContent=fmt(c);$('fuse').style.display=tr?'':'none';
  const r=c>0?d/c:0,m=$('pwm');m.style.width=Math.min(100,r*100)+'%';m.style.background=tr?'#ff5a46':r>0.9?'#ffb547':'#5fe08a';
  const ms=MS[S.ms];$('msBtn').classList.toggle('ready',!!ms&&afford(ms.req));const wg=WGOALS[S.w||'home'];if(wg){const k=(S.wms&&S.wms[S.w])||0,g=wg[k];$('msBtn').classList.toggle('ready',!!g&&wgReady(g));$('msTxt').textContent=g?`${WORLDS[S.w].ic} Goal ${k+1}`:`${WORLDS[S.w].ic} Done`;}

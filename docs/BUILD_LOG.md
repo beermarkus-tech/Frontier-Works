@@ -3771,3 +3771,20 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Verified:** `npm test`.
 
 **Next up:** unchanged.
+
+## Session 64d — 2026-11-20 (Claude Code, cloud session) · Build 190
+**Asked:** On phones the top bar is too cramped: the power reading and the top-right toolbar are cut off. Remove the app logo (it has no function) on phones, and keep it on tablets.
+
+**Built (CSS, phones ≤700 px):**
+- The logo (`#brand`) is hidden.
+- The power box no longer shrinks; slightly smaller numbers and a shorter meter.
+- Menu buttons are a little narrower.
+- The Stats button is hidden, because tapping the power box opens Stats too.
+- The world button now has its own icon element (`#worldIc`), so it shows 🌍/🌑/❄️ on phones instead of an empty button (its text label was already hidden there).
+- Portrait tablets (701–1000 px) also overflowed in a check. There, Items, Stats and Planner show as icons only; the logo, world name and Goals text stay.
+
+**Verified:**
+- Screenshots at 360, 390, 820 and 1180 px wide: everything fits, with the ☰ menu visible.
+- `npm test` all PASS.
+
+**Next up:** unchanged.

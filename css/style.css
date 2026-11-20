@@ -35,6 +35,9 @@ img.ii{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
 #menuGroup{display:flex;gap:2px;padding:4px;border-radius:14px}
 #menuGroup .btn{background:transparent;border-color:transparent;padding:7px 11px;border-radius:10px}
 #menuGroup .btn:hover{background:rgba(255,255,255,.09)}
+#worldIc{font-weight:400;margin-right:5px}
+@media (max-width:700px){#worldIc{margin-right:0}}
+@media (min-width:701px) and (max-width:1000px){#menuGroup .btn:not(#msBtn):not(#worldBtn) span{display:none}}   /* portrait tablets: Items/Stats/Planner as icons so the bar fits (Session 64d) */
 #msBtn.ready{color:#1d1305;background:linear-gradient(180deg,#ffc56a,#ff9433);animation:glow 1.6s infinite}
 @keyframes glow{50%{box-shadow:0 0 20px rgba(255,170,60,.75)}}
 #mini{position:fixed;left:calc(10px + var(--sal));top:calc(64px + var(--sat));width:164px;height:164px;border-radius:14px;cursor:pointer;z-index:3;transition:opacity .3s}
@@ -129,9 +132,13 @@ input[type=range]{width:100%;accent-color:#ffb547;margin:4px 0}
 @media (max-width:560px){#loading .ld{flex-direction:column;text-align:center}#loading .ldbar{margin-left:auto;margin-right:auto}}
 @media (max-width:700px){
  #mini{display:none}
- #brand{padding:7px 9px}#brand span{display:none}
- #pwr{min-width:0;padding:6px 10px}#pwr .meter{width:70px}
- #menuGroup .btn span{display:none}#menuGroup .btn{padding:7px 9px}
+ #brand{display:none}   /* Session 64d: phones need the room; the logo has no function */
+ #top{gap:6px}
+ #pwr{min-width:0;flex-shrink:0;padding:6px 9px;gap:7px}#pwr .meter{width:70px}
+ #menuGroup{padding:3px;flex-shrink:1;min-width:0}#menuGroup .btn span{display:none}#menuGroup .btn{padding:7px 6px}
+ #statsBtn{display:none}   /* tapping the power box opens Stats too */
+ #pwr .pv{font-size:11px}#pwr .pv b{font-size:14px}#pwr .meter{width:60px}
+ #fuse{padding:6px 8px;font-size:12px}
  #panel{left:calc(8px + var(--sal));right:calc(8px + var(--sar));width:auto;top:auto;bottom:calc(var(--dockH) + 16px + var(--sab));max-height:min(58%,calc(100% - var(--dockH) - 90px - var(--sat) - var(--sab)))}
  #panel.in{animation:pinm .3s cubic-bezier(.2,.9,.3,1.08)}
  @keyframes pinm{from{opacity:0;transform:translateY(26px)}}
