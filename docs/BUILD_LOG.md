@@ -3878,3 +3878,18 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The Bay and Hothouse descriptions now explain the setup: pick the recipe, water by junction, regolith by belt (Hothouse: water and steam on separate junctions), Rations out on a belt, oxygen optional on its own pipe.
 
 **Verified:** smoke check (blocked oxygen doesn't stop it; blocked rations do). `npm test` all PASS.
+
+## Session 65d — 2026-11-21 (Claude Code, cloud session) · Build 195
+**Asked:** On Rime at goal 2, the habitats get water and warmth but miss oxygen and rations. Is there another way to make oxygen (and rations)?
+
+**Found:**
+- Rations are optional: a Habitat holds 10 without them, and goal 2 needs 10 colonists.
+- Oxygen on Rime was only possible via Water Splitting in a Refinery, whose parts (motors, cased girders) are hard to make there early.
+
+**Changed:**
+- New Cryo Plant recipe **Frozen Air**: 2 cryo ice → 3 oxygen every 4 s (45 m³/min per plant, enough for about 22 colonists). Unlocked by Rime goal 1; saves past it get it on load.
+- The Habitat panel marks Rations as "(optional: holds 20)".
+
+**Verified:** smoke check (recipe + unlock). `npm test` all PASS.
+
+**Note for Markus:** each Cryo Plant needs 2 crew. With 4 lander crew, a water plant and an oxygen plant use it all; colonists add crew as they move in.

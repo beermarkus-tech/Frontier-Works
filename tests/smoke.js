@@ -497,7 +497,7 @@ const server=require('./serve.js');
  // Colony (Session 65): crew slows specialist machines when short, Rations let a Habitat grow past 10, Rime Habitats need Steam (Heat Exchanger on a geyser), farms make Rations + oxygen
  const cl=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};const keep={ub:S.ub.slice(),ur:S.ur.slice()};if(S.worlds&&(S.worlds.rime||S.worlds.moon))return{had:false};
   {const r=RC.r_hydro,e0={inb:{water:6,regolith:1},outb:{oxygen:99}};out.vent=canStart(e0,r)&&!canStart({inb:{water:6,regolith:1},outb:{rations:99}},r);}   /* Session 65c: blocked oxygen doesn't stop a farm */
-  out.recipes=RC.r_hydro.m==='hydro'&&RC.r_hothouse.o.rations===2&&RC.r_hothouse.o.oxygen===2&&PL_MACH.includes('hothouse')&&B.vfurnace.crew===2;
+  out.recipes=RC.r_cryo_o2.m==='cryoplant'&&WGOALS.rime[0].r.includes('r_cryo_o2')&&RC.r_hydro.m==='hydro'&&RC.r_hothouse.o.rations===2&&RC.r_hothouse.o.oxygen===2&&PL_MACH.includes('hothouse')&&B.vfurnace.crew===2;
   fw.switchWorld('rime');S.ub.push('habitat','cryoplant','hexch','hothouse','solar');
   const free=(x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)!==''||terr[(y+j)*MW+x+i]===3)return false;return true;};
   let A=null;for(let r=16;r<110&&!A;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(free(x,y,16,4)){A={x,y};break;}}
