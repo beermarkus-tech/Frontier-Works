@@ -549,7 +549,7 @@ function updCross(e){
  if(e.hs&&pass(e.hs,e.hd,e.hT))e.hs=null;
  if(e.vs&&pass(e.vs,e.vd,e.vT))e.vs=null;
 }
-function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if((e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}
+function canStart(e,r){for(const k in r.i)if((e.inb[k]||0)<r.i[k])return false;for(const k in r.o)if(k!==r.vent&&(e.outb[k]||0)+r.o[k]>capOut(r.o[k]))return false;return true;}   /* r.vent: a by-product that is released when it can't leave (Session 65c) */
 /* Efficiency: running average over the last EFF_T seconds of "working" vs. why not (e._ef 0..1, e._efw {reason: share}).
    Not saved; it re-measures after loading. Reasons: 'in:<item>' waiting for input, 'out' output full, 'power', 'recipe', 'none'. */
 const EFF_T=300;   /* 5 minutes (Session 39q; was 30 s) */
@@ -596,7 +596,7 @@ function updBuilding(e,dt){
    const r=e.r&&RC[e.r];e.want=false;if(!r){effTrack(e,dt,'recipe');return;}
    if(e.off){for(const k in e.outb)if(e.outb[k]>0){if(pushOut(e,k))e.outb[k]--;}break;}   // switched off (Session 37e): no new cycles, no power; finished items still leave
    if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=e.ovT===tickNo-1?e.ov:0;}   /* a batch that starts straight after the last one keeps that batch's leftover step (Session 41h) */
-   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t*(B[e.d].crew?CREW.f:1);if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];zStat('p',e,k,r.o[k]);}e.run=false;e.ov=Math.min(0.999,e.prog-1);e.ovT=tickNo;e.prog=0;
+   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t*(B[e.d].crew?CREW.f:1);if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];zStat('p',e,k,r.o[k]);}if(r.vent&&e.outb[r.vent]>capOut(r.o[r.vent]))e.outb[r.vent]=capOut(r.o[r.vent]);e.run=false;e.ov=Math.min(0.999,e.prog-1);e.ovT=tickNo;e.prog=0;
      if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=e.ov;}}}}
    for(const k in e.outb)if(e.outb[k]>0){for(let a=0;a<2&&e.outb[k]>0;a++){if(pushOut(e,k))e.outb[k]--;else break;}}
    effTrack(e,dt,machState(e,r));

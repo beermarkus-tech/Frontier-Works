@@ -3867,3 +3867,14 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - `npm test` all PASS.
 
 **Next up:** colony step 2 (unchanged).
+
+## Session 65c — 2026-11-21 (Claude Code, cloud session) · Build 194
+**Asked:** The Hydroponics Bays get water, regolith and power but produce nothing.
+
+**Found:** In a test the Bay works when its recipe is chosen. The likely trap is the oxygen by-product. With only one Pipe Junction (carrying water in), the oxygen can't leave, its output stack fills and the machine stops ("Output full"). A belt is also needed to take the Rations away.
+
+**Changed:**
+- Recipes can have a `vent` by-product. The farms' oxygen is taken out by a pipe if there is one; otherwise it is released and the farm keeps working (`canStart` ignores it; the stack is clamped).
+- The Bay and Hothouse descriptions now explain the setup: pick the recipe, water by junction, regolith by belt (Hothouse: water and steam on separate junctions), Rations out on a belt, oxygen optional on its own pipe.
+
+**Verified:** smoke check (blocked oxygen doesn't stop it; blocked rations do). `npm test` all PASS.

@@ -120,6 +120,7 @@ R('r_coil_motor','Coil Motor (alt)','fabricator',20,'sc_coil:1,steel_beam:2,wire
 // Colony food (Session 65): plants also make oxygen
 R('r_hydro','Rations (Hydroponics)','hydro',12,'water:6,regolith:1','rations:2,oxygen:2');
 R('r_hothouse','Rations (Hothouse)','hothouse',12,'water:6,steam:4','rations:2,oxygen:2');
+RC.r_hydro.vent=RC.r_hothouse.vent='oxygen';   /* Session 65c: the oxygen is a bonus; without a pipe for it, it's released and the farm keeps growing */
 // Dyson Sphere stage 2 (Session 64): panels made on Earth from Rime coils and Moon wafers
 R('r_sphere_panel','Sphere Panel','fabricator',40,'sc_coil:2,vac_wafer:4,alloy_panel:4','sphere_panel:1');
 R('r_wafer_cb','Wafer Circuit Board','vfurnace',8,'vac_wafer:1,copper_sheet:2','circuit_board:2');
@@ -217,8 +218,8 @@ D('habitat',{n:'Habitat',k:'hab',w:4,pw:15,only:['moon','rime'],cat:'prod',col:'
    heat stays 1 (the 3× power of Session 64 was replaced by steam). LANDER = crew that comes with the first rocket to a world. */
 const HAB={cap:10,fed:20,per:2,food:0.5,warm:1,grow:20,heat:1};
 const CREW_LANDER=4;
-D('hydro',{n:'Hydroponics Bay',k:'mach',mt:'hydro',w:3,pw:30,crew:1,only:'moon',cat:'prod',col:'#6fbf5a',cost:{iron_plate:30,copper_sheet:20,quartz_crystal:10,concrete:30},desc:'Grows food under lamps: water and a little regolith become Rations, and the plants give off oxygen. Belt the Rations into Habitats. Needs 1 crew. Only on the Moon.'});
-D('hothouse',{n:'Hothouse',k:'mach',mt:'hothouse',w:3,pw:10,crew:1,only:'rime',cat:'prod',col:'#7fcf6a',cost:{iron_plate:30,copper_sheet:20,steel_pipe:20,concrete:30},desc:'A steam-heated greenhouse: water and Steam become Rations, and the plants give off oxygen. Belt the Rations into Habitats. Needs 1 crew. Only on Rime.'});
+D('hydro',{n:'Hydroponics Bay',k:'mach',mt:'hydro',w:3,pw:30,crew:1,only:'moon',cat:'prod',col:'#6fbf5a',cost:{iron_plate:30,copper_sheet:20,quartz_crystal:10,concrete:30},desc:'Grows food under lamps. Pick its recipe, pipe Water in through a Pipe Junction and belt a little Regolith in; Rations come out on a belt, carry them to your Habitats. The plants also give off oxygen: take it out through a second Pipe Junction on its own pipe, or it is simply released. Needs 1 crew. Only on the Moon.'});
+D('hothouse',{n:'Hothouse',k:'mach',mt:'hothouse',w:3,pw:10,crew:1,only:'rime',cat:'prod',col:'#7fcf6a',cost:{iron_plate:30,copper_sheet:20,steel_pipe:20,concrete:30},desc:'A steam-heated greenhouse. Pick its recipe and pipe Water and Steam in (one Pipe Junction each, on separate pipes); Rations come out on a belt, carry them to your Habitats. The plants also give off oxygen: take it out through another Pipe Junction, or it is simply released. Needs 1 crew. Only on Rime.'});
 D('hexch',{n:'Heat Exchanger',k:'pump',w:2,rate:2,pw:5,steam:1,only:'rime',cat:'ext',col:'#e8a87c',cost:{iron_plate:20,copper_sheet:20,cable:10},desc:'Sits on a steam geyser and pipes out its Steam: 120 m³/min on a normal geyser (out through a Pipe Junction). Habitats on Rime need Steam for warmth, Hothouses for growing. Only on Rime.'});   /* colonists per habitat, water and oxygen per colonist per minute, seconds per colonist gained or lost */
 D('incin',{n:'Incinerator',k:'incin',w:2,cat:'prod',col:'#a03020',cost:{concrete:10,iron_plate:10},desc:'Destroys anything delivered to it.'});
 D('solar',{n:'Solar Panel',k:'gen',w:2,cap:10,fuels:[],solar:1,only:'moon',link:6,sup:4,cat:'pow',col:'#2a3e6a',cost:{alloy_panel:4,circuit_board:2,wire:10},desc:'10 MW from sunlight, no fuel. Only works in the Moon\u2019s unfiltered sunlight.'});
