@@ -240,7 +240,9 @@ function v3Decor(){
 function v3WorldTint(){const mn=worldLook(),tf=lookTint(mn);if(!V3.M||V3.tint===mn)return;V3.tint=mn;
  for(const id in V3.M){const m=V3.M[id];const geos=[m.geo,...(m.parts||[]).filter(p=>!p.glow).map(p=>p.pool.geo)];
   for(const g of geos){const at=g&&g.getAttribute('color');if(!at)continue;if(!g.userData.c0)g.userData.c0=at.array.slice();const o=g.userData.c0,a=at.array;
-   for(let i=0;i<a.length;i+=3){if(tf){const t=tf(o[i],o[i+1],o[i+2]);a[i]=t[0];a[i+1]=t[1];a[i+2]=t[2];}else{a[i]=o[i];a[i+1]=o[i+1];a[i+2]=o[i+2];}}at.needsUpdate=true;}}}
+   const nr=mn==='r'&&g.getAttribute('normal'),ps=g.getAttribute('position');   /* Rime (Session 64e): surfaces facing up are snow-covered */
+   for(let i=0;i<a.length;i+=3){if(tf){const t=tf(o[i],o[i+1],o[i+2]);a[i]=t[0];a[i+1]=t[1];a[i+2]=t[2];}else{a[i]=o[i];a[i+1]=o[i+1];a[i+2]=o[i+2];}
+    if(nr){const ny=nr.array[i+1];if(ny>0.35){const f=Math.min(1,(ny-0.35)/0.3),p=ps.array,h=Math.sin(p[i]*12.9+p[i+2]*78.2)*0.5+0.5,v=0.9+0.1*h;a[i]=a[i]*(1-f)+0.9*v*f;a[i+1]=a[i+1]*(1-f)+0.95*v*f;a[i+2]=a[i+2]*(1-f)+1.0*f;}}}at.needsUpdate=true;}}}
 function v3Models(){
  const M={},bolts=w=>V3.look!=='nice'?[]:[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>['cyl6','#8a939c',[a*w*0.43,0.245,b*w*0.43],[0.09,0.05,0.09]]),
   base=(w,col)=>[['box','#2a3037',[0,0.11,0],[w*0.95,0.22,w*0.95]],['box',col?shade(col,-40):'#3b434c',[0,0.235,0],[w*0.85,0.03,w*0.85]],...bolts(w)];

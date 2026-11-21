@@ -3788,3 +3788,30 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - `npm test` all PASS.
 
 **Next up:** unchanged.
+
+## Session 64e — 2026-11-21 (Claude Code, cloud session) · Build 191
+**Asked:** Rime buildings look faded. Keep the frost idea but less faded. Show options first.
+
+**Previews and choices:**
+1. First round: A crisp frost, B ice glaze, C crisp + straight snow caps. Markus chose C.
+2. Markus asked for snow that covers more, wind-blown instead of a straight line, with high and low parts covered differently.
+3. Wind-blown previews followed at increasing strengths. Markus chose "very heavy" plus white tops in 3D.
+
+**Built:**
+- `rimeTint`: crisp, cold colours (darks stay dark, highlights lifted toward ice white) instead of a 38% blend to pale blue.
+- `snowPass` (render.js), run on Rime sprites after the tint (not belts, pipes, rails, poles, signs, junctions):
+  - wind from the west: a drift on every upward ledge, deeper toward the east end
+  - the roof gets full drifts; raised parts (found as roughly horizontal dark outlines) get 45% caps
+  - edges smoothed sideways, so there are no column streaks
+  - a crust on the west face, blue shading deeper in each drift, a soft shadow under it, sparkles
+  - strength `SNOW_AMT` 4.2; about 10 ms per sprite, cached per zoom bucket
+- 3D `v3WorldTint`: on Rime, vertices whose normal faces up (y > 0.35, full at 0.65) blend to snow white with slight variation. Sides keep the crisp tint.
+
+**Verified:**
+- Screenshots of a small Rime factory in 2D and 3D; no page errors.
+- `npm test` all PASS.
+
+**Known issues:**
+- Snow strength is fixed. Very small sprites at far zoom get little snow, which is fine.
+
+**Next up:** unchanged.

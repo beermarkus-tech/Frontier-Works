@@ -146,12 +146,40 @@ function bkt(s){return Math.max(6,Math.min(180,Math.pow(2,Math.round(Math.log2(s
 const moonLook=()=>!!(S&&S.w==='moon');
 /* world looks (Session 63): 'm' = Moon (white), 'r' = Rime (frosted pale blue), '' = Home */
 const worldLook=()=>S&&S.w==='moon'?'m':S&&S.w==='rime'?'r':'';
-function rimeTint(r,g,b){return[r*0.62+0.88*0.38,g*0.62+0.93*0.38,b*0.6+0.98*0.4];}
+/* Rime look (Session 64e, Markus picked "crisp + very heavy wind-blown snow"): colours stay strong with a cold shift (darks stay dark,
+   highlights lifted toward ice white); 2D sprites then get snowPass, 3D models white tops (v3WorldTint). */
+function rimeTint(r,g,b){const L=0.3*r+0.59*g+0.11*b,h=Math.pow(L,1.5)*0.35,cl=v=>v<0?0:v>1?1:v;return[cl((r*0.86+0.02)*(1-h)+0.92*h),cl((g*0.95+0.03)*(1-h)+0.97*h),cl((b+0.08)*(1-h)+h)];}
+/* Wind-blown snow on a sprite canvas. Wind from the west: drifts on every upward ledge, deeper toward the east end of a roof, smaller caps
+   on raised parts (top edges found as roughly horizontal dark outlines), a thin crust on the west face, blue shading and a soft shadow
+   under each drift, a few sparkles. One pass over the pixels per column/row (sprites are cached, but zooming makes new ones). */
+const SNOW_AMT=4.2;
+function snowPass(c,seed){const g=c.getContext('2d'),W=c.width,H=c.height;if(W<8)return;const d=g.getImageData(0,0,W,H),a=d.data;
+ let s=(seed>>>0)%2147483646+1;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
+ const N=64,tab=new Float32Array(N+1);for(let i=0;i<N;i++)tab[i]=rnd();tab[N]=tab[0];
+ const n1=x=>{x=((x%N)+N)%N;const i=Math.floor(x),f=x-i,u=f*f*(3-2*f);return tab[i]*(1-u)+tab[i+1]*u;},nz=x=>0.6*n1(x)+0.3*n1(x*2.3+11)+0.1*n1(x*5.1+29);
+ const sc=W/10,T=Math.max(3,Math.round(W/11*SNOW_AMT)),WH=W*H,L=new Float32Array(WH),A=new Uint8Array(WH),snow=new Float32Array(WH);
+ for(let i=0;i<WH;i++){A[i]=a[i*4+3];L[i]=(0.3*a[i*4]+0.59*a[i*4+1]+0.11*a[i*4+2])/255;}
+ const darkH=(j,ref)=>{const x=j%W;if(x<3||x>=W-3)return false;const t=ref-0.16;return L[j]<t&&L[j-2]<t+0.04&&L[j+2]<t+0.04&&L[j-3]<t+0.06&&L[j+3]<t+0.06;};
+ for(let x=0;x<W;x++){const drift=0.45+0.9*Math.pow(x/W,1.3),nx=nz(x/sc),th1=T*drift*(0.3+nx),th2=th1*0.45;
+  for(let y=0;y<H;y++){const i=y*W+x;if(A[i]<200)continue;let k=1,kind=0;   /* nearest ledge above: the open sky (roof) or a raised part's top outline */
+   for(;k<=T;k++){if(y-k<0||A[i-k*W]<100){kind=1;break;}if(k>=2&&darkH(i-k*W,L[i])){kind=2;break;}}
+   if(!kind)continue;const th=kind===1?th1:th2;if(k<=th){const t=k/th;snow[i]=t<0.7?1:1-(t-0.7)/0.3;}}}
+ /* smooth the drift edges sideways (no column streaks) */
+ {const r=Math.max(1,Math.round(W/60)),tmp=new Float32Array(WH);for(let y=0;y<H;y++){let acc=0,n=0;const o=y*W;for(let x=-r;x<W+r;x++){if(x+r<W){acc+=snow[o+x+r];n++;}if(x-r-1>=0){acc-=snow[o+x-r-1];n--;}if(x>=0&&x<W)tmp[o+x]=acc/n;}}
+  for(let i=0;i<WH;i++)snow[i]=A[i]<200?0:Math.min(1,Math.max(0,(tmp[i]-0.2)/0.5));}
+ const Tw=Math.max(2,Math.round(T*0.18));   /* west-face crust */
+ for(let y=0;y<H;y++){const ny=nz(y/sc*1.3+5),th=Tw*(0.2+ny);let lo=-1;for(let x=0;x<W;x++){const i=y*W+x;if(A[i]<200){lo=x;continue;}const k=x-lo;if(k<=th)snow[i]=Math.max(snow[i],0.85*(1-k/(th+1)));}}
+ const below=new Uint16Array(WH);for(let x=0;x<W;x++){let run=0;for(let y=H-1;y>=0;y--){const i=y*W+x;run=snow[i]>0.5?run+1:0;below[i]=run;}}
+ for(let i=0;i<WH;i++){const f=snow[i];if(f<=0)continue;const j=i*4,top=i<W||snow[i-W]<0.3,sh=top?0:Math.min(1,below[i]/(T*0.5));
+  const R=top?255:246-26*(1-sh),G=top?255:250-14*(1-sh);a[j]=a[j]*(1-f)+R*f;a[j+1]=a[j+1]*(1-f)+G*f;a[j+2]=a[j+2]*(1-f)+255*f;}
+ for(let i=0;i<WH-W;i++)if(snow[i]>0.6&&A[i+W]>=200&&snow[i+W]<0.2){const j=(i+W)*4;a[j]*=0.82;a[j+1]*=0.85;a[j+2]*=0.9;}
+ for(let n=0;n<WH/1600;n++){const i=Math.floor(rnd()*WH);if(snow[i]>0.7){const j=i*4;a[j]=a[j+1]=a[j+2]=255;}}
+ g.putImageData(d,0,0);}
 const lookTint=w=>w==='m'?moonTint:w==='r'?rimeTint:null;
 function moonTint(r,g,b){const L=0.3*r+0.59*g+0.11*b,v=Math.max(0,Math.min(1,(L-0.08)/0.42)),o=0.16+0.84*(1-(1-v)*(1-v));return[o,o,o];}   /* Session 54b: monochrome (option C, stronger): bright and mid parts pure white, darker details clear greys, holes near-black */
 function moonCanvas(c,f){f=f||moonTint;const g=c.getContext('2d'),d=g.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){if(a[i+3]<200)continue;const o=f(a[i]/255,a[i+1]/255,a[i+2]/255);a[i]=o[0]*255;a[i+1]=o[1]*255;a[i+2]=o[2]*255;}g.putImageData(d,0,0);}
 function getSprite(id,s){const b=bkt(s),wl=worldLook(),key=id+'|'+b+(wl?'|'+wl:'');let c=SPR.get(key);if(c)return c;const w=B[id].w,pad=Math.ceil(b*0.35);
- c=document.createElement('canvas');c.width=c.height=Math.ceil(w*b+pad*2);const g=c.getContext('2d');g.translate(pad,pad);paintB(g,id,w*b,b);if(wl)moonCanvas(c,lookTint(wl));c.pad=pad;c.b=b;SPR.set(key,c);if(SPR.size>500)SPR.delete(SPR.keys().next().value);return c;}
+ c=document.createElement('canvas');c.width=c.height=Math.ceil(w*b+pad*2);const g=c.getContext('2d',wl?{willReadFrequently:true}:undefined);g.translate(pad,pad);paintB(g,id,w*b,b);if(wl)moonCanvas(c,lookTint(wl));if(wl==='r'&&!/^(belt|pipe|rail|pole|pswitch|sign|junction)/.test(id)&&B[id].k!=='belt'&&B[id].k!=='pipe')snowPass(c,[...id].reduce((h,ch)=>h*31+ch.charCodeAt(0)|0,7));c.pad=pad;c.b=b;SPR.set(key,c);if(SPR.size>500)SPR.delete(SPR.keys().next().value);return c;}
 function blit(id,X,Y,s,alpha){if(B[id]&&B[id].k==='bpst'){const P=B[id].w*s,a=ctx.globalAlpha;ctx.globalAlpha=alpha==null?a:alpha;ctx.fillStyle='#163d6b';ctx.fillRect(X,Y,P,P);ctx.strokeStyle='#8fc6ff';ctx.lineWidth=2;ctx.strokeRect(X+1,Y+1,P-2,P-2);ctx.globalAlpha=a;return;}const c=getSprite(id,s),k=s/c.b;if(alpha!==undefined)ctx.globalAlpha=alpha;ctx.drawImage(c,X-c.pad*k,Y-c.pad*k,c.width*k,c.height*k);ctx.globalAlpha=1;}
 function paintB(g,id,P,u){
  const d=B[id],col=d.col,lw=Math.max(1,u*0.045);

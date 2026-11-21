@@ -401,6 +401,9 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
   Buildings look frosted pale blue. **Geyser Turbine** (3×3, 200 MW, no fuel) sits on a geyser; one geyser and the basic ores are next to the
   landing site. **Ice Sleds** (Markus's wish: like the rovers but different): Sled Depot / Tanker Sled Depot, sleds carry 150 items or 300 m³,
   run about 9 tiles/s (35% faster over frozen seas), cannot climb glacier cliffs (they go around), long skids, snow spray, ski grooves (2D + 3D).
+  **Rime look (Session 64e, Markus chose it from previews):** crisp colours with a cold shift (not faded) plus heavy wind-blown snow on
+  2D sprites: drifts on every upward ledge, deeper toward the east end (wind from the west), smaller caps on raised parts, a crust on the
+  west face. In 3D every surface facing up is snow-white.
   **Step 2 (built, Session 64):** **Gas Extractor** (pump on a steam geyser → Rare Gas, 60 m³/min normal) and **Cryo Plant** (Rime only,
   up to 3 inputs: Thawed Water from cryo ice, **Frost Steel** = iron ore + cryo ice → steel ingots, so Rime needs no coal, and
   **Superconductor Coils** = wire + cryo ice + Rare Gas). Habitats are allowed on the Moon and Rime; on Rime they draw 3× power (heating).
