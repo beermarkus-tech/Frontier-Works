@@ -131,7 +131,7 @@ function boxBlur(a,w,h,rad){const t=new Float32Array(a.length),o=new Float32Arra
 const biomeAt=(x,y)=>bio&&x>=0&&y>=0&&x<MW&&y<MH?BIOMES[bio[(y|0)*MW+(x|0)]]:BIOMES[0];
 function newGame(seed){
  MW=MH=MAP_NEW;
- S={pw2:1,gen:2,mw:MAP_NEW,ext:MAP_EXT,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1};if(typeof dysonApply==='function')dysonApply();
+ S={pw2:1,gen:2,mw:MAP_NEW,ext:MAP_EXT,seed:seed||((Math.random()*1e9)|0),inv:Object.assign({},START_INV),ms:0,oc:false,ub:[...START_B],ur:[...START_R],t:0,won:false,cam:{x:MW/2,y:MH/2,z:1.2},spd:1,mg65:1};if(typeof dysonApply==='function')dysonApply();
  ents=new Map();grid=new Int32Array(MW*MH);nextId=1;
  genMap(S.seed);grid=new Int32Array(MW*MH);S.cam={x:MW/2,y:MH/2,z:1.2};   /* the map is bigger after genMap (coast ring) */
  placeEnt('core',MW/2-2,MH/2-2,0,true);

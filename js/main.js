@@ -14,6 +14,7 @@ function serialize(){syncPipes();const es=[];
  return JSON.stringify({v:2,S,es});}
 function parseSave(str){str=String(str).trim();return JSON.parse(str[0]==='{'?str:decodeURIComponent(escape(atob(str))));}
 /* Older saves store the unlock lists from when they were made; new buildings/recipes (signs, Drone Pad, …) are added on load */
+function goalMigrate(){if(!S.mg65){S.mg65=1;if(S.wms&&(S.wms.moon||0)>=6){S.wms.moon=4;if(S.wgh)S.wgh.moon=0;}}}
 function grantUnlocks(){S.ub=S.ub||[];S.ur=S.ur||[];const b=[...START_B],r=[...START_R];for(let i=0;i<Math.min(S.ms||0,MS.length);i++){b.push(...MS[i].b);r.push(...MS[i].r);}
  for(const w in WGOALS){const n=(S.wms&&S.wms[w])||0;for(let i=0;i<Math.min(n,WGOALS[w].length);i++){b.push(...WGOALS[w][i].b);r.push(...WGOALS[w][i].r);}}   /* world goals (Session 58) */
  for(const x of b)if(!S.ub.includes(x))S.ub.push(x);for(const x of r)if(!S.ur.includes(x))S.ur.push(x);if((S.ms||0)>=4)S.oc=true;}
@@ -42,7 +43,10 @@ function load(str){const data=typeof str==='string'?parseSave(str):str;CORE={b:[
   if(o.d==='sorter'){o.d='lsplit';o.lr=o.filter?{l:['rest'],f:[o.filter],r:['rest']}:{l:['any'],f:['any'],r:['any']};delete o.filter;}
   const d=B[o.d];if(!d)continue;
   const e=Object.assign({},o,{id:nextId++,k:d.k,w:d.w,h:d.w});initEnt(e,d);ents.set(e.id,e);for(let j=0;j<e.w;j++)for(let i=0;i<e.w;i++)grid[(e.y+j)*MW+e.x+i]=e.id;}
- if(S.ub)S.ub=S.ub.filter(id=>B[id]);growIncin();if(!S.pw2)pnMigrate();zoneInit();grantUnlocks();
+ if(S.ub)S.ub=S.ub.filter(id=>B[id]);growIncin();if(!S.pw2)pnMigrate();zoneInit();
+ /* Session 65b (Markus): saves that finished the old 6 Moon goals reopen the new goals 5–6 (40 and 50 colonists, helium stock): the delta
+    to the new colony targets. Unlocks already granted stay. Runs once (S.mg65; new games start with it set). */
+ goalMigrate();grantUnlocks();
  S.cam=S.cam||{x:MW/2,y:MH/2,z:1.2};setCam(S.cam);if(mig)setTimeout(()=>{if(typeof toast==='function')toast(`The map grew: ${E} tiles of new coast on every side`);},1500);lastBio=null;topoDirty=true;stat.hist=[];buildCats();
 }
 /* Switching worlds (Session 49): pack the current world (its part of S + entities) into S.worlds, unpack (or create) the other and load it.

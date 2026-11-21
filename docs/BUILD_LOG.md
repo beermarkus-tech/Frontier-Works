@@ -3852,3 +3852,18 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Next up:** colony step 2: Mirror Film, Deep Helium Drill, Cryo Conduit, Moon goals 7–9, Rime 6–7, Dyson stage 3 Sphere Shell.
 
 **Open questions:** Is 4 lander crew right? Should idle machines count toward crew?
+
+## Session 65b — 2026-11-21 (Claude Code, cloud session) · Build 193
+**Asked:** Markus had finished the old 6 Moon goals and was counted as done with the new list too, so the colony targets (40 and 50 colonists, helium stock) were skipped. Shouldn't he do the delta? Also: his Moon habitats still hold only 10. Is that planned?
+
+**Answers and changes:**
+- Yes, he should do the delta. `goalMigrate()` (main.js) runs once per save (`S.mg65`, set on new games). A save at Moon goal 6 or more goes back to 4 done, so goals 5 (Self-Sufficient, 40 colonists + rates) and 6 (Export Ready, 50 colonists + helium/wafers/lattice) are open again. All unlocks stay.
+- Habitats holding 10 is planned: with Rations (Hydroponics Bay, unlocked by Moon goal 3) they hold 20.
+- The Rime rocket destination now needs Moon goal 5 (was 6, the goal that unlocks the Rime gear in the new list). A world already visited always stays open, so Markus can still fly to Rime.
+
+**Verified:**
+- New smoke check: reopen once, unlocks kept, Rime still open after a visit.
+- The save-size check's limit is raised from 40 to 45 bytes per object. With only ~26 test objects the fixed game-state part dominates; it had crept from 33 to about 40 as worlds, goals and the Dyson state were added. Entity encoding is unchanged.
+- `npm test` all PASS.
+
+**Next up:** colony step 2 (unchanged).

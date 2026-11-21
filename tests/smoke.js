@@ -513,6 +513,11 @@ const server=require('./serve.js');
   const gy=nodes.find(n=>n.t==='geyser'&&canPlace('hexch',n.x,n.y)==='');out.hexOnly=canPlace('hexch',A.x,A.y+5)==='Needs a steam geyser underneath'||canPlace('hexch',A.x,A.y+5)==='Blocked';
   out.hex=!!gy&&P('hexch',gy.x,gy.y,0)==='';const X=gy&&entAt(gy.x,gy.y);for(let k=0;k<5;k++){if(X)X.pw=1;X&&updBuilding(X,0.05);}out.steam=!!X&&X.item==='steam';
   fw.switchWorld('home');crewUpd();out.homeNoCrew=CREW.f===1;delete S.worlds.rime;S.ub=keep.ub;S.ur=keep.ur;return out;});
+ // Session 65b: a save that finished the old 6 Moon goals reopens goals 5–6 once (keeps unlocks); Rime stays reachable after a visit
+ const mg65=await p.evaluate(async()=>{const out={},keep={wms:S.wms,mg:S.mg65,w:S.worlds};S.wms={moon:6};delete S.mg65;S.worlds=Object.assign({},S.worlds||{},{rime:{WS:{inv:{}},es:[]}});
+  goalMigrate();grantUnlocks();out.reopen=S.wms.moon===4&&S.mg65===1&&ub('habitat');S.wms.moon=6;goalMigrate();out.once=S.wms.moon===6;
+  S.wms.moon=4;out.rimeOpen=/Rime opens/.test(lpadHtml({store:{},dest:'rime',k:'lpad'})||'')===false;S.wms=keep.wms;S.mg65=keep.mg;S.worlds=keep.w;return out;});
+ check(`Moon goals reopen once for old saves: ${Object.entries(mg65).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mg65).every(v=>v===true));
  check(`Colony crew/food/warmth: ${Object.entries(cl).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(cl).every(v=>v===true));
  // Dyson Sphere stage 1 (Session 62): the launcher takes only frame segments, fires one per DYSON.fire s when powered, completing the stage unlocks the receiver
  const dys=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),dy:S.dyson};S.ub.push('slaunch');S.dyson={f:DYSON.stages[0].need-2};
@@ -1156,7 +1161,7 @@ const server=require('./serve.js');
   const t=await exportText();await importText(t);const back=ents.size;
   const v1=btoa(unescape(encodeURIComponent(JSON.stringify({v:1,S:Object.assign({},S),es:[...ents.values()].map(e=>({d:e.d,x:e.x,y:e.y,dir:e.dir}))}))));await importText(v1);const v1n=ents.size;
   await importText(t);await fw.save();return{ok,where:fw.SAVE.where,n,per:+per.toFixed(1),fw2:t.startsWith('FW2:'),back,v1n};});
- check(`save goes to the ${sv2.where}, ${sv2.per} bytes per object; FW2 export/import and old text import keep all ${sv2.n} objects`,sv2.ok&&sv2.where==='browser database'&&sv2.fw2&&sv2.back===sv2.n&&sv2.v1n===sv2.n&&sv2.per<40);
+ check(`save goes to the ${sv2.where}, ${sv2.per} bytes per object; FW2 export/import and old text import keep all ${sv2.n} objects`,sv2.ok&&sv2.where==='browser database'&&sv2.fw2&&sv2.back===sv2.n&&sv2.v1n===sv2.n&&sv2.per<45);   /* Session 65b: 40 → 45; with only ~26 objects the fixed game-state part (worlds, goals, dyson…) dominates */
  const before=await p.evaluate(()=>{OPT.zCol=[4242];saveOpt();return ents.size;});   // a collapsed factory card must survive a reload
  await p.waitForTimeout(500);await ctx.setOffline(true);await p.reload();await p.waitForTimeout(2000);
  check('works offline',await p.evaluate(()=>!!window.__fw&&document.getElementById('cv').width>0));

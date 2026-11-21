@@ -197,8 +197,8 @@ function effHtml(e){
 /* Launch Pad panel (Session 51): what is loaded, what is missing, load from stock, launch */
 function lpadHtml(e){const need=rocketNeed(e),f=lpadFrac(e),dest=rocketDest(e),D0=ROCKET_TO[dest];let h='';
  if(e.lt>0)return`<h4>Launch</h4><div class="row"><span>Rocket</span><span><b>climbing… ${Math.round(e.lt/ROCKET.lt*100)}%</b></span></div><div class="bar"><i style="width:${e.lt/ROCKET.lt*100}%"></i></div><div class="muted">Its cargo lands in the ${WORLDS[e.ld||dest].n}'s stock.</div>`;
- const dOk=d=>{const nd=ROCKET_TO[d].need;return!nd||Object.keys(nd).every(w=>((S.wms&&S.wms[w])||0)>=nd[w]);};   /* destination switch (Session 63) */
- h+=`<h4>Destination</h4><div class="chips">${Object.keys(ROCKET_TO).map(d=>`<button class="btn chip ${d===dest?'on':''}" data-act="lpDest" data-v="${d}" ${dOk(d)?'':'disabled'}>${WORLDS[d].ic} ${WORLDS[d].n}${dOk(d)?'':' 🔒'}</button>`).join('')}</div>${dOk('rime')?'':'<div class="muted">Rime opens after Moon goal 6 (Self-Sufficient).</div>'}`;
+ const dOk=d=>{const nd=ROCKET_TO[d].need;return!nd||!!(S.worlds&&S.worlds[d])||Object.keys(nd).every(w=>((S.wms&&S.wms[w])||0)>=nd[w]);};   /* destination switch (Session 63) */
+ h+=`<h4>Destination</h4><div class="chips">${Object.keys(ROCKET_TO).map(d=>`<button class="btn chip ${d===dest?'on':''}" data-act="lpDest" data-v="${d}" ${dOk(d)?'':'disabled'}>${WORLDS[d].ic} ${WORLDS[d].n}${dOk(d)?'':' 🔒'}</button>`).join('')}</div>${dOk('rime')?'':'<div class="muted">Rime opens after Moon goal 5 (Self-Sufficient).</div>'}`;
  h+=`<h4>Colony rocket</h4><div class="row"><span>Loaded</span><span><b>${Math.round(f*100)}%</b></span></div><div class="bar"><i style="width:${f*100}%"></i></div>`;
  const rows=(o,title)=>`<h4>${title}</h4>`+Object.keys(o).map(k=>{const have=Math.min(need[k],e.store[k]||0),want=k in D0.parts&&k in D0.kit?need[k]:o[k];return`<div class="row"><span>${nm(k)}</span><span class="${have>=need[k]?'plok':''}">${fmt(have)} / ${want}${(S.inv[k]||0)>0&&have<need[k]?` <small class="muted">(${fmt(S.inv[k])} in stock)</small>`:''}</span></div>`;}).join('');
  h+=rows(D0.parts,'Rocket parts')+rows(D0.kit,'Starter kit (cargo)');
