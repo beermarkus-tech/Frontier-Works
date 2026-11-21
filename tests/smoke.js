@@ -427,7 +427,7 @@ const server=require('./serve.js');
  const rim=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};const keep={ub:S.ub.slice(),wms:S.wms};if(S.worlds&&(S.worlds.rime||S.worlds.moon))return{had:false};
   out.homeClean=!nodes.some(n=>n.t==='cryo'||n.t==='geyser');
   out.go=fw.switchWorld('rime')&&S.w==='rime'&&S.gen===4&&MW===256;out.map=bio.every(b=>b>=EARTH_NB+2)&&terr.some(t=>t===2)&&terr.some(t=>t===3)&&!terr.some(t=>t===1)&&nodes.some(n=>n.t==='geyser')&&nodes.some(n=>n.t==='cryo');
-  out.look=worldLook()==='r';S.ub.push('geoturb','sdepot','drill1');const gy=nodes.find(n=>n.t==='geyser'&&Math.hypot(n.x-MW/2,n.y-MH/2)<12);
+  out.look=worldLook()==='r';out.geysers=nodes.filter(n=>n.t==='geyser').length>=17&&nodes.filter(n=>n.t==='geyser'&&Math.hypot(n.x-MW/2,n.y-MH/2)<=46).length>=5;S.ub.push('geoturb','sdepot','drill1');const gy=nodes.find(n=>n.t==='geyser'&&Math.hypot(n.x-MW/2,n.y-MH/2)<12);
   out.turb=canPlace('geoturb',MW/2-12,MH/2-12)==='Needs a steam geyser underneath'&&!!gy&&P('geoturb',gy.x-1,gy.y-1,0)==='';tick(0.05);const T=entAt(gy.x,gy.y);out.power=!!T&&T.grid&&T.grid.cap===200;
   const free=(x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)!==''||terr[(y+j)*MW+x+i]===3)return false;return true;};
   let A=null,Bq=null;for(let r=18;r<110&&!A;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(free(x,y,7,3)){A={x,y};break;}}

@@ -51,7 +51,11 @@ function genRime(seed){const r=rng((seed^0x52696d65)>>>0),n1=mkNoise(r,40),n2=mk
  add('iron',cx-8,cy-4,1);add('copper',cx+7,cy-6,1);add('limestone',cx-5,cy+8,1);add('geyser',cx+6,cy+6,1);add('cryo',cx-10,cy+3,1);
  const odds={iron:[4,2],copper:[3,1.5],limestone:[2.5,1],quartz:[1,3],bauxite:[1,1.5],sulfur:[0.8,0.8],uranium:[0.3,1],cryo:[1.2,3],geyser:[0.8,0.8]},keys=Object.keys(odds),target=Math.round(MW*MH/900);
  for(let a=0,k=0;a<target*30&&k<target;a++){const x=3+Math.floor(r()*(MW-6)),y=3+Math.floor(r()*(MH-6));if(Math.hypot(x-cx,y-cy)<16||near(x,y,4))continue;const hi=bio[y*MW+x]===EARTH_NB+3?1:0;
-  let s=0;for(const t of keys)s+=odds[t][hi];let q=r()*s,t=keys[0];for(const k2 of keys){q-=odds[k2][hi];if(q<=0){t=k2;break;}}const p=r();if(add(t,x,y,p<0.3?0:p<0.8?1:2))k++;}}
+  let s=0;for(const t of keys)s+=odds[t][hi];let q=r()*s,t=keys[0];for(const k2 of keys){q-=odds[k2][hi];if(q<=0){t=k2;break;}}const p=r();if(add(t,x,y,p<0.3?0:p<0.8?1:2))k++;}
+ /* Session 65e (Markus: too few geysers for turbines, Rare Gas and warmth): extra geysers in their own pass with their own random
+    numbers, so every node placed above stays where it was in existing saves. Four within reach of the landing site, more across the map. */
+ {const r2=rng((seed^0x47657973)>>>0);let placed=0,near2=0;for(let a=0;a<4000&&placed<16;a++){const want=near2<4,ang=r2()*Math.PI*2,d=want?20+r2()*25:16+r2()*MW*0.48;
+   const x=Math.round(cx+Math.cos(ang)*d),y=Math.round(cy+Math.sin(ang)*d);if(x<3||y<3||x>=MW-3||y>=MH-3||near(x,y,3)||terr[y*MW+x]===3)continue;const p=r2();if(add('geyser',x,y,p<0.25?0:p<0.8?1:2)){placed++;if(want)near2++;}}}}
 function expandMap(E){const oW=MW,oH=MH,nW=oW+2*E,nH=oH+2*E,oT=terr,oB=bio,k=((S.seed>>>0)%1000)+7,land=(x,y)=>oT[y*oW+x]!==1?1:0;
  const lf=(get,n)=>{const a=new Float32Array(n);for(let i=0;i<n;i++){let s=0,c=0;for(let j=-5;j<=5;j++){const q=i+j;if(q<0||q>=n)continue;s+=get(q);c++;}a[i]=s/c;}return a;};
  const T=lf(x=>land(x,0),oW),Bo=lf(x=>land(x,oH-1),oW),L=lf(y=>land(0,y),oH),Ri=lf(y=>land(oW-1,y),oH);

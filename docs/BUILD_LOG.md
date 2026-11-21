@@ -3893,3 +3893,12 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Verified:** smoke check (recipe + unlock). `npm test` all PASS.
 
 **Note for Markus:** each Cryo Plant needs 2 crew. With 4 lander crew, a water plant and an oxygen plant use it all; colonists add crew as they move in.
+
+## Session 65e — 2026-11-21 (Claude Code, cloud session) · Build 196
+**Asked:** Too few geysers on Rime: three have turbines, one is left, and Rare Gas (and warmth) need more.
+
+**Changed:**
+- `genRime` gets an extra final pass with its own random numbers (seed ^ 'Geys'): 16 more geysers, 4 of them 20–45 tiles from the landing site, the rest across the map, not on cliffs or next to other nodes.
+- Because it runs after everything else with separate random numbers, every existing node stays where it was. Checked on three seeds: all old nodes identical, geysers 6–12 → 22–28.
+
+**Verified:** Rime smoke check now also requires at least 17 geysers and at least 5 within 46 tiles. `npm test` all PASS.
