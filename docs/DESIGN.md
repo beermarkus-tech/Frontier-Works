@@ -514,6 +514,11 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 - **Rime step 1 is built (Session 63).**
 - **Rime step 2 is built (Session 64):** Rime goals, Gas Extractor, Cryo Plant, freighters to Rime, Dyson stage 2.
 - **Colony step 1 is built (Session 65):** crew, Rations, warmth, new Moon and Rime goal lists. **Next:** colony step 2 (section 12b).
+- **Noted for later (Session 65f, Markus):** the sun in the 3D sky should match each world's distance from it. On **Rime** (ice planet,
+  far out) the sun must look much smaller and further away; on the **fire planet** (later) larger and closer. Today `v3Dyson` draws the
+  same sun (and sphere) on every world.
+- **Open, not decided yet:** the Dyson Sphere as 4 stages, with stage 4 (Collectors, closing the sphere) needing the fire planet; stage 3
+  (Sphere Shell) then reads "stage 3 of 4", not "complete". Suggested to Markus in Session 65; he hasn't confirmed yet.
 - **Parked idea (Session 64c, Markus: "keep this idea for later"):** a public release. Plan if revived: polish the first 30 minutes
   (tutorial), make cloud save work without a GitHub token, check performance and that nothing resembles commercial games, then publish on
   itch.io (free / pay what you want, playable in the browser) to test interest; Google Play and a Steam wishlist page only if the response is good.

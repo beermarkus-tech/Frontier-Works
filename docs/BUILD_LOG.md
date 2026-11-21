@@ -3902,3 +3902,18 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Because it runs after everything else with separate random numbers, every existing node stays where it was. Checked on three seeds: all old nodes identical, geysers 6–12 → 22–28.
 
 **Verified:** Rime smoke check now also requires at least 17 geysers and at least 5 within 46 tiles. `npm test` all PASS.
+
+## Session 65f — 2026-11-21 (Claude Code, cloud session) · Build 197
+**Asked:** Note for later: on Rime the sun should look further away (ice planet, far out); on the fire planet larger and closer. Markus also didn't know about 🔍 Find resources (geysers are listed as "Rare Gas" there).
+
+**Done:** docs only.
+- The sun-size note is added to DESIGN.md section 15.
+- The still-open question there: 4 Dyson stages, with the fire planet closing the sphere.
+- Build number bumped (no game change).
+
+**Next up:**
+- Colony step 2 (Mirror Film, Deep Helium Drill, Cryo Conduit, Moon 7–9, Rime 6–7, Dyson stage 3).
+- Sun size per world.
+- Maybe rename the geyser entry in Find resources ("Steam Geyser").
+
+**Open questions:** Confirm the 4-stage sphere with the fire planet as stage 4.
