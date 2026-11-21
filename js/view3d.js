@@ -240,7 +240,7 @@ function v3Decor(){
 function v3WorldTint(){const mn=worldLook(),tf=lookTint(mn);if(!V3.M||V3.tint===mn)return;V3.tint=mn;
  for(const id in V3.M){const m=V3.M[id];const geos=[m.geo,...(m.parts||[]).filter(p=>!p.glow).map(p=>p.pool.geo)];
   for(const g of geos){const at=g&&g.getAttribute('color');if(!at)continue;if(!g.userData.c0)g.userData.c0=at.array.slice();const o=g.userData.c0,a=at.array;
-   const nr=mn==='r'&&g.getAttribute('normal'),ps=g.getAttribute('position');   /* Rime (Session 64e): surfaces facing up are snow-covered */
+   const nr=mn==='r'&&id!=='hothouse'&&g.getAttribute('normal'),ps=g.getAttribute('position');   /* Rime (Session 64e): surfaces facing up are snow-covered */
    for(let i=0;i<a.length;i+=3){if(tf){const t=tf(o[i],o[i+1],o[i+2]);a[i]=t[0];a[i+1]=t[1];a[i+2]=t[2];}else{a[i]=o[i];a[i+1]=o[i+1];a[i+2]=o[i+2];}
     if(nr){const ny=nr.array[i+1];if(ny>0.35){const f=Math.min(1,(ny-0.35)/0.3),p=ps.array,h=Math.sin(p[i]*12.9+p[i+2]*78.2)*0.5+0.5,v=0.9+0.1*h;a[i]=a[i]*(1-f)+0.9*v*f;a[i+1]=a[i+1]*(1-f)+0.95*v*f;a[i+2]=a[i+2]*(1-f)+1.0*f;}}}at.needsUpdate=true;}}}
 function v3Models(){
@@ -324,6 +324,12 @@ function v3Models(){
   [['tor','#7fd6ff',[0,2.0,-0.4],[1.4,1.4,1.4],{rot:[0.45,0,0],glow:1}],['tor','#7fd6ff',[0,2.9,-2.2],[1.4,1.4,1.4],{rot:[0.45,0,0],glow:1}],['tor','#7fd6ff',[0,1.2,1.4],[1.4,1.4,1.4],{rot:[0.45,0,0],glow:1}]],{h:4});   /* Sphere Launcher (Session 62) */
  def('srecv',[...base(4),['cyl','#8a939c',[0,0.8,0],[0.4,1.2,0.4]],['sph','#e9eef2',[0,1.5,0],[3.4,0.9,3.4]],['cyl','#8a939c',[0,2.0,0],[0.1,1.0,0.1]]],[['sph','#ffd27a',[0,2.55,0],[0.35,0.35,0.35],{glow:1}]],{h:2.6});   /* Sphere Receiver (Session 62) */
  def('geoturb',[...base(3),['cyl','#bfe3f7',[0,0.7,0],[2.4,0.9,2.4]],['tor','#9aa3ab',[0,1.15,0],[2.2,2.2,2.2],{rot:[Math.PI/2,0,0]}],['cyl','#9aa3ab',[0.9,1.4,-0.9],[0.35,1.6,0.35]]],[['box','#e9f5fc',[0,1.3,0],[1.8,0.06,0.25],{an:(e,ph)=>({ry:ph*6})}],['box','#e9f5fc',[0,1.3,0],[0.25,0.06,1.8],{an:(e,ph)=>({ry:ph*6})}]],{smoke:[[0.9,2.3,-0.9,1]],h:2.2,wire:1.5});   /* Geyser Turbine (Session 63) */
+ for(const id of ['hydro','hothouse']){const hot=id==='hothouse',P=[...base(3),['box','#4a525b',[0,0.4,0],[2.7,0.35,2.7]]];   /* Hydroponics Bay / Hothouse (Session 65) */
+  for(let r=-1;r<=1;r++){P.push(['box','#4a3a2a',[0,0.68,r*0.8],[2.3,0.2,0.55]]);for(let k=-2;k<=2;k++)P.push(['sph',k%2?'#5fbf4a':'#7fd65a',[k*0.45,0.85,r*0.8],[0.34,0.3,0.34]]);}
+  if(hot){P.push(['box','#c8e6ff',[0,1.65,0],[2.7,0.06,2.7]]);for(const a of [-1,1])for(const b of [-1,1])P.push(['box','#d0d6dc',[a*1.3,1.15,b*1.3],[0.1,1.0,0.1]]);}
+  else for(const a of [-0.8,0,0.8])P.push(['box','#d0d6dc',[0,1.45,a],[2.3,0.08,0.12]]);
+  def(id,P,hot?[]:[['box','#ff8ae0',[0,1.38,0],[2.2,0.03,2.0],{glow:1}]],{h:hot?1.8:1.6});}
+ def('hexch',[...base(2),['cyl','#e8a87c',[-0.1,0.7,0],[1.2,0.8,1.2]],['tor','#c96a3a',[-0.1,0.9,0],[1.3,1.3,1.3],{rot:[Math.PI/2,0,0]}],['cyl','#d0d6dc',[0.65,0.9,-0.6],[0.25,1.2,0.25]]],[],{smoke:[[-0.1,1.3,0,1]],h:1.4});   /* Heat Exchanger (Session 65) */
  def('gasx',[...base(2),['cyl','#d9cbf2',[-0.2,0.6,0],[1.3,0.6,1.3]],['cyl','#9aa3ab',[-0.2,1.1,0],[0.4,0.6,0.4]],['cyl','#b89ae8',[0.6,0.8,-0.5],[0.45,1.1,0.45]],['sph','#b89ae8',[0.6,1.35,-0.5],[0.45,0.3,0.45]]],[['sph','#c9a6ff',[-0.2,1.45,0],[0.2,0.2,0.2],{glow:1}]],{smoke:[[-0.2,1.5,0,1]],h:1.6});   /* Gas Extractor (Session 64) */
  {const c=B.cryoplant.col;def('cryoplant',[...base(3),['box',c,[0,0.38,0],[2.65,0.3,2.65]],['cyl','#e9f5fc',[-0.7,1.3,-0.6],[0.9,1.8,0.9]],['sph','#e9f5fc',[-0.7,2.2,-0.6],[0.9,0.4,0.9]],['cyl','#e9f5fc',[-0.7,1.1,0.65],[0.8,1.4,0.8]],['box','#4a525b',[0.65,0.9,0],[1.1,0.9,1.6]]],
   [['tor','#e8a23a',[0.65,1.6,0],[0.7,0.7,0.7],{an:(e,ph)=>({rz:ph*4})}],['sph','#7fe0ff',[0.65,1.6,0],[0.25,0.25,0.25],{glow:1}]],{smoke:[[-0.7,2.5,-0.6,1]],h:2.5});}   /* Cryo Plant (Session 64) */

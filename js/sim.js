@@ -155,9 +155,9 @@ function canPlace(id,x,y){
  if(d.k==='drill'&&!d.reg&&(!node||node.t==='oil'))return 'Needs an ore node underneath';
  if(d.k==='pump'&&d.oil&&(!node||node.t!=='oil'))return 'Needs an oil well underneath';
  if(d.k==='pump'&&d.ice&&(!node||node.t!=='ice'))return 'Needs an ice deposit underneath';
- if(d.k==='pump'&&d.gas&&(!node||node.t!=='geyser'))return 'Needs a steam geyser underneath';
+ if(d.k==='pump'&&(d.gas||d.steam)&&(!node||node.t!=='geyser'))return 'Needs a steam geyser underneath';
  if(d.geyser){let g=false;for(let j=0;j<w;j++)for(let i=0;i<w;i++){const n=nodeAt[(y+j)*MW+x+i];if(n&&n.t==='geyser')g=true;}if(!g)return 'Needs a steam geyser underneath';}
- if(d.k==='drill'&&node&&node.t==='geyser')return 'A geyser: use a Geyser Turbine, or a Gas Extractor for Rare Gas';
+ if(d.k==='drill'&&node&&node.t==='geyser')return 'A geyser: use a Geyser Turbine, a Gas Extractor (Rare Gas) or a Heat Exchanger (Steam)';
  if(d.k==='drill'&&node&&node.t==='ice')return 'Ice is melted where it lies: use an Ice Melter';
  return '';
 }
@@ -202,7 +202,7 @@ function initEnt(e,d){
   case 'fport':break;
   case 'soutlet':e.rr=0;break;   /* Stock Outlet: e.oi = item (Session 62c) */
   case 'slaunch':e.store=e.store||{};e.ch=e.ch||0;break;   /* Sphere Launcher (js/dyson.js) */
-  case 'hab':e.inb=e.inb||{};e.pop=e.pop||0;e.gt=e.gt||0;e.wa=0;e.oa=0;break;   /* Habitat (Session 60) */
+  case 'hab':e.inb=e.inb||{};e.pop=e.pop||0;e.gt=e.gt||0;e.wa=0;e.oa=0;e.sa=0;e.ra=0;break;   /* Habitat (Session 60) */
   case 'rail':if(d.sub==='stop'&&!e.tx)e.tx=stopNewName();if(d.sub==='switch')e.bs=e.bs||((typeof UI!=='undefined'&&UI.swSide)||1);break;   /* trains (js/train.js) */
   case 'cbay':e.store=e.store||{};e.bm=e.bm||0;e.rr=0;break;   /* Cargo Bay: bm 0 = Load, 1 = Unload */
   case 'tank':e.ft=e.ft||null;e.amt=e.amt||0;e.rr=0;break;
@@ -332,7 +332,7 @@ function accept(e,item,dir,carry){
   case 'storage':case 'dpad':case 'rdepot':{if(fl)return false;let t=0;for(const k in e.store)t+=e.store[k];if(t>=B[e.d].cap)return false;e.store[item]=(e.store[item]||0)+1;if(e.k==='storage')zStat('s',e,item,1);return true;}
   case 'tank':if(!fl||(e.ft&&e.ft!==item&&e.amt>0)||e.amt>=B[e.d].cap)return false;e.ft=item;e.amt++;return true;
   case 'slaunch':{const it=dysonItem();if(item!==it||(e.store[it]||0)>=DYSON.store)return false;e.store[it]=(e.store[it]||0)+1;return true;}   /* only the current stage's item (Session 64) */
-  case 'hab':{if(!fl||(item!=='water'&&item!=='oxygen'))return false;if((e.inb[item]||0)>=60)return false;e.inb[item]=(e.inb[item]||0)+1;return true;}
+  case 'hab':{if(fl?(item!=='water'&&item!=='oxygen'&&item!=='steam'):item!=='rations')return false;if((e.inb[item]||0)>=(fl?60:30))return false;e.inb[item]=(e.inb[item]||0)+1;return true;}   /* Session 65: Rations by belt, Steam for warmth */
   case 'lpad':{if(fl||e.lt>0)return false;const need=rocketNeed(e)[item];if(!need||(e.store[item]||0)>=need)return false;e.store[item]=(e.store[item]||0)+1;return true;}
   case 'core':if(fl)return false;S.inv[item]=(S.inv[item]||0)+1;CORE.cur[item]=(CORE.cur[item]||0)+1;zStat('k',e,item,1);return true;
   case 'incin':e.burnT=S.t;stat.c[item]=(stat.c[item]||0)+1;zStat('b',e,item,1);return true;
@@ -596,14 +596,14 @@ function updBuilding(e,dt){
    const r=e.r&&RC[e.r];e.want=false;if(!r){effTrack(e,dt,'recipe');return;}
    if(e.off){for(const k in e.outb)if(e.outb[k]>0){if(pushOut(e,k))e.outb[k]--;}break;}   // switched off (Session 37e): no new cycles, no power; finished items still leave
    if(!e.run&&canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=e.ovT===tickNo-1?e.ov:0;}   /* a batch that starts straight after the last one keeps that batch's leftover step (Session 41h) */
-   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t;if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];zStat('p',e,k,r.o[k]);}e.run=false;e.ov=Math.min(0.999,e.prog-1);e.ovT=tickNo;e.prog=0;
+   if(e.run){e.want=true;if(e.pw>0){e.prog+=dt*e.clock/r.t*(B[e.d].crew?CREW.f:1);if(e.prog>=1){for(const k in r.o){e.outb[k]=(e.outb[k]||0)+r.o[k];stat.p[k]=(stat.p[k]||0)+r.o[k];zStat('p',e,k,r.o[k]);}e.run=false;e.ov=Math.min(0.999,e.prog-1);e.ovT=tickNo;e.prog=0;
      if(canStart(e,r)){for(const k in r.i){e.inb[k]-=r.i[k];stat.c[k]=(stat.c[k]||0)+r.i[k];zStat('c',e,k,r.i[k]);}e.run=true;e.prog=e.ov;}}}}
    for(const k in e.outb)if(e.outb[k]>0){for(let a=0;a<2&&e.outb[k]>0;a++){if(pushOut(e,k))e.outb[k]--;else break;}}
    effTrack(e,dt,machState(e,r));
    break;}
   case 'drill':case 'pump':{
    const d=B[e.d];let item=null,rate=0;
-   if(d.water){item='water';rate=d.rate;}else if(d.reg){item='regolith';rate=d.rate;}else if(d.ice&&e.node){item='water';rate=d.rate*PUR[e.node.p][0];}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
+   if(d.water){item='water';rate=d.rate;}else if(d.reg){item='regolith';rate=d.rate;}else if(d.ice&&e.node){item='water';rate=d.rate*PUR[e.node.p][0];}else if(d.steam&&e.node){item='steam';rate=d.rate*PUR[e.node.p][0];}else if(e.node){item=NODE_T[e.node.t][0];rate=d.rate*PUR[e.node.p][0];}
    e.item=item;e.want=!!item&&e.buf<10&&!e.off;
    if(e.off){if(item&&e.buf>0&&pushOut(e,item))e.buf--;break;}
    if(e.want&&e.pw>0){e.prog+=rate*e.clock*dt;while(e.prog>=1&&e.buf<10){e.buf++;e.prog--;stat.p[item]=(stat.p[item]||0)+1;zStat('p',e,item,1);}}
@@ -621,9 +621,13 @@ function updBuilding(e,dt){
   case 'soutlet':if(e.oi&&IT[e.oi]&&!IT[e.oi].f)for(let a=0;a<2&&(S.inv[e.oi]||0)>=1;a++){if(pushOut(e,e.oi))S.inv[e.oi]--;else break;}break;
   case 'slaunch':if(typeof updLauncher==='function')updLauncher(e,dt);break;
   case 'fport':e.want=(S.fr||[]).some(f=>f.home===(S.w||'home')&&f.st===0);break;   /* draws power while a freighter waits to launch */
-  case 'hab':{e.want=true;const people=Math.max(1,e.pop),need=people*HAB.per/60*dt;let short=!(e.pw>0);e.wa+=need;e.oa+=need;   /* colonists drink and breathe; growth every HAB.grow s */
+  case 'hab':{e.want=true;const people=Math.max(1,e.pop),need=people*HAB.per/60*dt,cold=(S.w||'home')==='rime';let short=!(e.pw>0);e.wa+=need;e.oa+=need;   /* colonists drink and breathe; growth every HAB.grow s */
    while(e.wa>=1){if((e.inb.water||0)>0){e.inb.water--;e.wa--;}else{short=true;e.wa=1;break;}}while(e.oa>=1){if((e.inb.oxygen||0)>0){e.inb.oxygen--;e.oa--;}else{short=true;e.oa=1;break;}}
-   e.ok=!short;e.gt+=dt;if(e.gt>=HAB.grow){e.gt=0;e.pop=short?Math.max(0,e.pop-1):Math.min(HAB.cap,e.pop+1);}break;}
+   e.why=!(e.pw>0)?'power':short?'air':'';
+   if(cold){e.sa=(e.sa||0)+people*HAB.warm/60*dt;while(e.sa>=1){if((e.inb.steam||0)>0){e.inb.steam--;e.sa--;}else{short=true;e.sa=1;if(!e.why)e.why='warm';break;}}}   /* Session 65: warmth on Rime */
+   e.ra=(e.ra||0)+(e.pop||0)*HAB.food/60*dt;if(e.ra>=1){if((e.inb.rations||0)>0){e.inb.rations--;e.ra--;e.fd=1;}else{e.fd=0;e.ra=1;}}else if(!(e.inb.rations>0)&&!e.pop)e.fd=0;   /* fed: Rations eaten when due */
+   const cap=e.fd?HAB.fed:HAB.cap;e.ok=!short;e.gt+=dt;
+   if(e.gt>=HAB.grow){e.gt=0;e.pop=short||e.pop>cap?Math.max(0,e.pop-1):Math.min(cap,e.pop+1);}break;}
   case 'rdepot':case 'tdepot':if(typeof updRover==='function')updRover(e,dt);break;
  }
 }
@@ -639,16 +643,20 @@ let HABC={ver:-1,list:[]};
 function habClusters(){if(HABC.ver===topoVer)return HABC.list;const hs=[...ents.values()].filter(e=>e.k==='hab'),seen=new Set(),out=[];
  for(const h of hs){if(seen.has(h))continue;const c=[h],q=[h];seen.add(h);while(q.length){const a=q.pop();for(const p of perim(a)){const o=entAt(p.x,p.y);if(o&&o.k==='hab'&&!seen.has(o)){seen.add(o);c.push(o);q.push(o);}}}for(const m of c)m._hc=c.length;out.push(c);}
  HABC={ver:topoVer,list:out};return out;}
-function habShare(){for(const c of habClusters()){if(c.length<2)continue;for(const k of ['water','oxygen']){let t=0;for(const h of c)t+=h.inb[k]||0;const each=Math.floor(t/c.length);let rest=t-each*c.length;for(const h of c){h.inb[k]=each+(rest>0?1:0);if(rest>0)rest--;}}}}
+function habShare(){for(const c of habClusters()){if(c.length<2)continue;for(const k of ['water','oxygen','steam','rations']){let t=0;for(const h of c)t+=h.inb[k]||0;const each=Math.floor(t/c.length);let rest=t-each*c.length;for(const h of c){h.inb[k]=each+(rest>0?1:0);if(rest>0)rest--;}}}}
 function wgCur(){const L=WGOALS[S.w||'home'];return L?L[(S.wms&&S.wms[S.w])||0]:null;}
 function wgRateTick(){const g=wgCur();S.wgh=S.wgh||{};const w=S.w||'home';if(!g||!g.rate){S.wgh[w]=0;return;}const r=coreRate60(),ok=CORE.b.length>=6&&Object.keys(g.rate).every(k=>(r[k]||0)>=g.rate[k]*WG_TOL);S.wgh[w]=ok?(S.wgh[w]||0)+10:0;}
 function wgReady(g){if(!g)return false;const w=S.w||'home';if(!afford(g.req))return false;if(g.pop&&colonyPop()<g.pop)return false;if(g.rate&&((S.wgh&&S.wgh[w])||0)<WG_HOLD)return false;return true;}
 function coreRates(){if(CORE.b.length<6)return null;const r={},T=CORE.b.length*10;for(const b of CORE.b)for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)r[k]/=T;return r;}
 function bgLeave(){const r=coreRates(),dy=typeof dyLaunchRate==='function'?dyLaunchRate():0;S.bg={r:r||(S.bg&&S.bg.r)||{},t:S.t,m:r?CORE.b.length*10:(S.bg&&S.bg.m)||0,dy:r?dy:((S.bg&&S.bg.dy)||dy)};}   /* dy: Sphere launches per s (Session 64b) */
 function bgArrive(){const B0=S.bg;if(!B0||B0.t==null)return null;const el=Math.max(0,S.t-B0.t),got={};for(const k in B0.r){const n=Math.floor(B0.r[k]*el);if(n>0){give(k,n);got[k]=n;}}const dy=B0.dy&&typeof dyCatchUp==='function'?dyCatchUp(B0.dy,el):0;B0.t=null;return{el,got,dy};}
+/* Crew (Session 65): off Home, specialist machines (B.crew) need colonists or lander crew; short crew slows all of them alike */
+const CREW={need:0,have:0,f:1};
+function crewUpd(){if((S.w||'home')==='home'){CREW.need=0;CREW.have=0;CREW.f=1;return;}let n=0;for(const e of ents.values()){const c=B[e.d].crew;if(c&&!e.off)n+=c;}
+ CREW.need=n;CREW.have=CREW_LANDER+colonyPop();CREW.f=n?Math.min(1,CREW.have/n):1;}
 function tick(dt){
  if(topoDirty)rebuildTopo();
- tickNo++;S.t+=dt;
+ tickNo++;S.t+=dt;if(tickNo%10===0||CREW._v!==topoVer){CREW._v=topoVer;crewUpd();}
  if(tickNo%20===0)for(const e of meters){const a=e.fa;if(!a)continue;while(a.length&&(S.t-a[0]>600||(a.length>60&&S.t-a[0]>60)))a.shift();let g=0;for(let i=1;i<a.length;i++)g=Math.max(g,a[i]-a[i-1]);e.fg=g;
   const raw=fmRaw(e);e.fr=e.fr==null?raw:e.fr+(raw-e.fr)*0.12;}   // shown value glides (~8 s) instead of stepping when items enter/leave the window   // Flow Meters: at least the last 60 s; slow belts: the last 30 items, at most 5 min
  powerStep(dt);

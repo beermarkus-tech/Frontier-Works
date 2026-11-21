@@ -449,6 +449,20 @@ with **no contracts, rewards or endless upgrade scaling**. Order of work: 1 Blue
     for good, so worlds keep trading and travel keeps its point.
   - Optional later: ilmenite reduction (iron ore + hydrogen from Earth → water + iron) in the Vacuum Furnace.
 
+## 12b. Colony arc: crew, food, warmth, sphere materials (agreed with Markus, Session 65; step 1 built)
+Markus: the colony should matter early (settle, sustain), grow later, then mine and refine each world's special material for the sphere.
+- **Crew:** off Home, specialist machines need crew (Vacuum Furnace 2, Cryo Plant 2, Hydroponics Bay 1, Hothouse 1). Crew = colonists +
+  4 lander crew. If a world's machines need more crew than it has, they all run slower in proportion. Automated buildings (drills,
+  smelters, belts, turbines) need none.
+- **Needs:** water, oxygen and power keep colonists alive; on Rime also **Steam** for warmth (1 m³/min per colonist, from a Heat Exchanger on a
+  geyser; replaces the earlier 3× power). **Rations** (0.5 per colonist per min, by belt) let a Habitat hold 20 instead of 10; without
+  them it shrinks back to 10 (nobody starves). Food: Hydroponics Bay on the Moon (water + regolith), Hothouse on Rime (water + steam), both
+  also give oxygen; one farm feeds about 20 colonists. Rations can be traded by freighter.
+- **Goals:** Moon 6 (Landing Camp, Water & Air 10, Lunar Power 15, Hydroponics 30, Self-Sufficient 40, Export Ready 50; saves keep their
+  count), Rime 5 (Landfall, Warm Hearth 10, Rare Gas 20, Hothouse 35, Cold Lab 50).
+- **Step 2 (next):** Moon 7–9 (Mirror Works: Mirror Film; Deep Helium: Deep Helium Drill, 6 crew; Lunar City 120), Rime 6–7 (Cryo Conduit;
+  Frozen City 100), Dyson stage 3 Sphere Shell: Shell Tiles (Earth: Mirror Film + Cryo Conduits + Heat Sinks), 300 → receivers 15000 MW.
+
 ## 13. Trains (agreed with Markus, Session 55; Phase 1 built in Session 56)
 A train is a big drone on rails: large, steady flows over long distances inside one world. Belts = short, drones = medium (40 per trip),
 **trains = long distance, about 1,000 items per wagon**, freighters = between worlds.
@@ -499,6 +513,7 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 - **Moon Colony and Orbital Freighters are built (Sessions 60, 60b).**
 - **Rime step 1 is built (Session 63).**
 - **Rime step 2 is built (Session 64):** Rime goals, Gas Extractor, Cryo Plant, freighters to Rime, Dyson stage 2.
+- **Colony step 1 is built (Session 65):** crew, Rations, warmth, new Moon and Rime goal lists. **Next:** colony step 2 (section 12b).
 - **Parked idea (Session 64c, Markus: "keep this idea for later"):** a public release. Plan if revived: polish the first 30 minutes
   (tutorial), make cloud save work without a GitHub token, check performance and that nothing resembles commercial games, then publish on
   itch.io (free / pay what you want, playable in the browser) to test interest; Google Play and a Steam wishlist page only if the response is good.

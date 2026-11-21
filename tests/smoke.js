@@ -451,7 +451,7 @@ const server=require('./serve.js');
  for(let r=40;r<120&&!Bq;r+=2)for(let a=0;a<40;a++){const x=Math.round(A.x+r*Math.cos(a/6.4+1)),y=Math.round(A.y+r*Math.sin(a/6.4+1));if(x>3&&y>3&&x<MW-6&&y<MH-6&&free(x,y,3,3)){Bq={x,y};break;}}
  out.pl=P('rdepot',A.x,A.y,0)===''&&P('rdepot',Bq.x,Bq.y,0)==='';P('solar',A.x+3,A.y,0);P('solar',A.x+5,A.y,0);
  const da=entAt(A.x,A.y),db=entAt(Bq.x,Bq.y);da.lx=db.x;da.ly=db.y;da.store={iron_plate:400};tick(0.05);window.__R={da,db,A,Bq};
-  out.home=out0;out.unlock=WGOALS.moon[1].b.includes('rdepot');for(let k=0;k<20*90;k++)tick(0.05);
+  out.home=out0;out.unlock=WGOALS.moon[0].b.includes('rdepot');for(let k=0;k<20*90;k++)tick(0.05);
   out.route=!!(da._rp&&da._rp.L>10);out.tracks3d=typeof v3Tracks==='function';
   {const P0=da._rp,mid=P0.pts[Math.floor(P0.pts.length/2)],mx=Math.floor(mid[0]),my=Math.floor(mid[1]);let n=0;for(let k=-2;k<=2;k++)if(!entAt(mx+k,my)&&terr[my*MW+mx+k]!==1&&!fw.placeEnt('belt1',mx+k,my,1,true))n++;topoDirty=true;tick(0.05);const P1=rvPath(da,db);   /* a short belt across the route: the rover drives around it (Session 61c) */
    out.avoid=n>0&&!!P1&&P1.pts.every(q=>!rvLine(Math.floor(q[0]),Math.floor(q[1])));for(let k=-2;k<=2;k++){const e=entAt(mx+k,my);if(e&&e.k==='belt')removeEnt(e,false,true);}topoDirty=true;tick(0.05);}out.delivered=rvCount(db)>=380;out.tracks=RVTR.length>20;openPanel('ent',da.id);out.panel=/rover route/i.test(document.getElementById('pbody').innerText);
@@ -468,7 +468,7 @@ const server=require('./serve.js');
  out.pl=P('tdepot',A.x,A.y,0)===''&&P('junction',A.x+3,A.y+1,0)===''&&P('tdepot',A.x+4,A.y,0)===''&&P('tdepot',Bq.x,Bq.y,0)===''&&P('junction',Bq.x+3,Bq.y+1,0)===''&&P('pipe1',Bq.x+4,Bq.y+1,0)==='';
  P('solar',A.x+4,A.y+3,0);P('solar',A.x+6,A.y+3,0);
  const src=entAt(A.x,A.y),da=entAt(A.x+4,A.y),db=entAt(Bq.x,Bq.y);src.store={water:800};da.lx=db.x;da.ly=db.y;tick(0.05);window.__K={src,da,db,A,Bq};
-  out.unlock=WGOALS.moon[1].b.includes('tdepot');for(let k=0;k<20*90;k++)tick(0.05);const pj=entAt(Bq.x+4,Bq.y+1);
+  out.unlock=WGOALS.moon[0].b.includes('tdepot');for(let k=0;k<20*90;k++)tick(0.05);const pj=entAt(Bq.x+4,Bq.y+1);
   out.drained=rvCount(src)<700;out.carried=(db.store.water||0)>50;out.piped=!!(pj&&pj.net&&pj.net.fluid==='water'&&pj.net.amt>0);out.noItems=!accept(da,'iron_plate',0);
   window.__fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;return out;});
  check(`tanker rovers: ${Object.entries(tkr).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(tkr).every(v=>v===true));
@@ -494,6 +494,26 @@ const server=require('./serve.js');
   for(let k=0;k<20*(DYSON.fire+1);k++){L.pw=1;updLauncher(L,0.05);}out.stage2=S.dyson.f===st[0].need+st[1].need&&B.srecv.cap===st[1].cap;closeDlg();
   out.label=/stage 3/i.test(dysonLabel());removeEnt(L,false,true);S.dyson=keep.dy;dysonApply();out.reset=B.srecv.cap===st[0].cap;S.ub=keep.ub;return out;});
  check(`Rime step 2: ${Object.entries(rm2).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(rm2).every(v=>v===true));
+ // Colony (Session 65): crew slows specialist machines when short, Rations let a Habitat grow past 10, Rime Habitats need Steam (Heat Exchanger on a geyser), farms make Rations + oxygen
+ const cl=await p.evaluate(()=>{const fw=window.__fw,P=(...a)=>fw.placeEnt(...a,true),out={};const keep={ub:S.ub.slice(),ur:S.ur.slice()};if(S.worlds&&(S.worlds.rime||S.worlds.moon))return{had:false};
+  out.recipes=RC.r_hydro.m==='hydro'&&RC.r_hothouse.o.rations===2&&RC.r_hothouse.o.oxygen===2&&PL_MACH.includes('hothouse')&&B.vfurnace.crew===2;
+  fw.switchWorld('rime');S.ub.push('habitat','cryoplant','hexch','hothouse','solar');
+  const free=(x,y,w,h)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(canPlace('incin',x+i,y+j)!==''||terr[(y+j)*MW+x+i]===3)return false;return true;};
+  let A=null;for(let r=16;r<110&&!A;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));if(free(x,y,16,4)){A={x,y};break;}}
+  P('habitat',A.x,A.y,0);const h=entAt(A.x,A.y);for(let k=0;k<4;k++)P('cryoplant',A.x+4+k*3,A.y,0);tick(0.05);crewUpd();
+  out.crewShort=CREW.need===8&&CREW.have===CREW_LANDER&&Math.abs(CREW.f-0.5)<1e-9;
+  h.pop=4;crewUpd();out.crewFull=CREW.f===1;
+  const run=(n,f)=>{for(let k=0;k<n;k++){h.pw=1;f&&f();updBuilding(h,0.05);}};
+  h.pop=10;h.inb={};run(20*25,()=>{h.inb.water=50;h.inb.oxygen=50;});out.cold=h.pop<10&&h.why==='warm';
+  h.pop=10;run(20*45,()=>{h.inb.water=50;h.inb.oxygen=50;h.inb.steam=50;});out.cap10=h.pop===10&&h.ok;
+  run(20*85,()=>{h.inb.water=50;h.inb.oxygen=50;h.inb.steam=50;h.inb.rations=20;});out.fedGrow=h.pop>=12&&h.fd===1;
+  const p1=h.pop;run(20*70,()=>{h.inb.water=50;h.inb.oxygen=50;h.inb.steam=50;h.inb.rations=0;});out.hungryShrink=h.pop<p1&&h.fd===0;
+  out.belt=accept(h,'rations',0)&&!accept(h,'iron_plate',0);
+  openPanel('ent',h.id);out.panel=/steam/i.test(document.getElementById('pbody').innerText)&&/rations/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
+  const gy=nodes.find(n=>n.t==='geyser'&&canPlace('hexch',n.x,n.y)==='');out.hexOnly=canPlace('hexch',A.x,A.y+5)==='Needs a steam geyser underneath'||canPlace('hexch',A.x,A.y+5)==='Blocked';
+  out.hex=!!gy&&P('hexch',gy.x,gy.y,0)==='';const X=gy&&entAt(gy.x,gy.y);for(let k=0;k<5;k++){if(X)X.pw=1;X&&updBuilding(X,0.05);}out.steam=!!X&&X.item==='steam';
+  fw.switchWorld('home');crewUpd();out.homeNoCrew=CREW.f===1;delete S.worlds.rime;S.ub=keep.ub;S.ur=keep.ur;return out;});
+ check(`Colony crew/food/warmth: ${Object.entries(cl).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(cl).every(v=>v===true));
  // Dyson Sphere stage 1 (Session 62): the launcher takes only frame segments, fires one per DYSON.fire s when powered, completing the stage unlocks the receiver
  const dys=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),dy:S.dyson};S.ub.push('slaunch');S.dyson={f:DYSON.stages[0].need-2};
   const spot=(w,h)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};
@@ -519,7 +539,7 @@ const server=require('./serve.js');
   const f=S.fr[0];f.out=[{i:'plastic',n:300}];f.back=[{i:'helium',n:500}];ACT.closePanel();
   for(let k=0;k<20*(2*FREIGHT.fly+2*FREIGHT.dock+6);k++){for(const b of [entAt(h.x+6,h.y),entAt(h.x+6,h.y+2)])b.fuel={coal:50};tick(0.05);}
   out.trip=f.trips===1||f.trips===2;out.home=(S.inv.helium||0)===500&&!S.inv.plastic;out.moon=S.worlds.moon.WS.inv.plastic===300&&S.worlds.moon.WS.inv.helium===100;out.fuel=(S.inv.rocket_fuel||0)===0;
-  ACT.openWorlds();out.worlds=/freighter/i.test(document.getElementById('pbody').innerText);ACT.closePanel();out.uses=!!RC.r_cryo_rod&&!!RC.r_lattice_qc&&WGOALS.moon[5].b.includes('fport');
+  ACT.openWorlds();out.worlds=/freighter/i.test(document.getElementById('pbody').innerText);ACT.closePanel();out.uses=!!RC.r_cryo_rod&&!!RC.r_lattice_qc&&WGOALS.moon.some(m=>m.b.includes('fport'));
   for(const e of [...ents.values()])if(e.k==='fport'||e.d==='burner')removeEnt(e,false,true);delete S.worlds.moon;S.ub=keep.ub;S.inv=JSON.parse(keep.inv);S.fr=keep.fr;return out;});
  check(`Orbital Freighters: ${Object.entries(frt).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(frt).every(v=>v===true));
  // Moon power (Session 60d): a Solar Array gives 60 MW; the Helium Fusion Reactor gives 1500 MW from helium + water and burns helium under load
@@ -537,9 +557,9 @@ const server=require('./serve.js');
   for(let k=0;k<20*65;k++){h.inb.water=50;h.inb.oxygen=50;tick(0.05);}out.grow=h.pop>=3&&h.ok;const p0=h.pop;for(let k=0;k<20*45;k++){h.inb.water=0;h.inb.oxygen=50;tick(0.05);}out.shrink=h.pop<p0;
   openPanel('ent',h.id);out.panel=/colonists/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
   {const h2ok=fw.placeEnt('habitat',X,Y+4,0,true)==='';const h2=entAt(X,Y+4);if(h2ok){h2.inb={};for(let k=0;k<20;k++){h.inb.water=60;h.inb.oxygen=60;tick(0.05);}out.share=(h2.inb.water||0)>10&&(h2.inb.oxygen||0)>10&&h2._hc===2;removeEnt(h2,false,true);tick(0.05);}else out.share='nospace';}   /* touching habitats share (Session 61d) */
-  S.wms=Object.assign({},S.wms||{},{moon:4});S.wgh={};h.pop=WGOALS.moon[4].pop;CORE.b=[...Array(18)].map((_,k)=>k%3?{}:{steel_pipe:11,concrete:16});   /* batches every 30 s average out (Session 61f); ~90% of target is within tolerance (61h) */   /* batches every 30 s average out (Session 61f) */for(let k=0;k<17;k++)wgRateTick();out.notYet=!wgReady(WGOALS.moon[4]);wgRateTick();
+  S.wms=Object.assign({},S.wms||{},{moon:3});S.wgh={};h.pop=WGOALS.moon[3].pop;CORE.b=[...Array(18)].map((_,k)=>k%3?{}:{steel_pipe:11,concrete:16});   /* batches every 30 s average out (Session 61f); ~90% of target is within tolerance (61h) */   /* batches every 30 s average out (Session 61f) */for(let k=0;k<17;k++)wgRateTick();out.notYet=!wgReady(WGOALS.moon[3]);wgRateTick();
   {const sv=CORE.b;CORE.b=[...Array(18)].map(()=>({steel_pipe:1,concrete:1}));const h0=S.wgh.moon;wgRateTick();out.lowResets=S.wgh.moon===0;S.wgh.moon=h0;CORE.b=sv;}
-  out.ready=wgReady(WGOALS.moon[4]);openPanel('ms');out.goalPanel=/held steadily/i.test(document.getElementById('pbody').innerText);ACT.submitWg();ACT.closeDlg();ACT.closePanel();out.done=S.wms.moon===5;
+  out.ready=wgReady(WGOALS.moon[3]);openPanel('ms');out.goalPanel=/held steadily/i.test(document.getElementById('pbody').innerText);ACT.submitWg();ACT.closeDlg();ACT.closePanel();out.done=S.wms.moon===4;
   fw.switchWorld('home');delete S.worlds.moon;S.ub=keep.ub;S.wms=keep.wms;S.wgh=keep.wgh;return out;});
  check(`Moon colony: ${Object.entries(col).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(col).every(v=>v===true));
  // Moon goals (Session 58): every Moon goal can be made from Moon resources with what is unlocked by then; ice on far crater floors;
@@ -556,7 +576,7 @@ const server=require('./serve.js');
   S.ub.push('rexc','imelt');for(let k=0;k<5;k++)fw.placeEnt('solar',X+k*2,Y+3,0,true);out.rexc=fw.placeEnt('rexc',X,Y,0,true)==='';fw.placeEnt('vfurnace',X+2,Y,0,true);out.offIce=canPlace('imelt',X+5,Y)==='Needs an ice deposit underneath';const ic=ice[0];out.drillIce=canPlace('drill1',ic.x,ic.y)!=='';out.onIce=fw.placeEnt('imelt',ic.x,ic.y,0,true)==='';
   const ex=entAt(X,Y),vf=entAt(X+2,Y),im=entAt(ic.x,ic.y);vf.r='r_sinter';vf.inb={regolith:20};for(let k=0;k<20*6;k++)tick(0.05);
   out.dig=ex.item==='regolith'&&ex.buf>0;openPanel('ent',ex.id);out.rexRate=/Output rate\s*60\/min/.test(document.getElementById('pbody').innerText);ACT.closePanel();out.sinter=(vf.outb.concrete||0)>=1;for(let k=0;k<40;k++){im.pw=1;updBuilding(im,0.05);}out.melt=im.item==='water'&&im.buf>0;
-  S.wms=Object.assign({},S.wms||{});S.wms.moon=0;S.inv=Object.assign({},WGOALS.moon[0].req);openPanel('ms');const tx=document.getElementById('pbody').innerText;out.panel=/Foothold/.test(tx)&&!!document.querySelector('#pbody [data-act="submitWg"]:not([disabled])');
+  S.wms=Object.assign({},S.wms||{});S.wms.moon=0;S.inv=Object.assign({},WGOALS.moon[0].req);openPanel('ms');const tx=document.getElementById('pbody').innerText;out.panel=/Landing Camp/.test(tx)&&!!document.querySelector('#pbody [data-act="submitWg"]:not([disabled])');
   ACT.submitWg();ACT.closeDlg();out.handIn=S.wms.moon===1&&ub('rexc')&&ur('r_sinter')&&/Goal 2/.test(document.getElementById('msTxt').textContent);ACT.closePanel();
   S.ur.push('r_lunarcrete');out.plan=plProducers('concrete')[0].id==='r_sinter'&&PL_RAW.has('regolith')&&plResItem('ice')==='water';
   fw.switchWorld('home');out.planHome=plProducers('concrete')[0].id==='r_concrete';delete S.worlds.moon;S.ub=keep.ub;S.ur=keep.ur;S.wms=keep.wms;return out;});

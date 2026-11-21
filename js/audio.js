@@ -55,7 +55,7 @@ document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset&&el.dat
    One continuous voice per kind (furnace, press, assembler, refinery, drill, generator, belt) on the 'mach' bus. Every 150 ms the working
    buildings near the screen centre are summed per kind (closer = more), scaled by zoom (far out = soft), and each voice glides to that level.
    Idle, blocked and switched-off buildings are silent. Rhythmic parts (press thumps, crackle, bubbles, servo ticks) are scheduled ahead. */
-const MKIND={smelter:'furnace',foundry:'furnace',press:'press',assembler:'assembler',fabricator:'assembler',refinery:'refinery',blender:'refinery',cryoplant:'refinery'};
+const MKIND={smelter:'furnace',foundry:'furnace',press:'press',assembler:'assembler',fabricator:'assembler',refinery:'refinery',blender:'refinery',cryoplant:'refinery',hydro:'refinery',hothouse:'refinery'};
 const MV={on:false,v:{},lvl:{},next:{}};
 function mvKind(e){if(e.k==='mach')return MKIND[B[e.d].mt]||'assembler';if(e.k==='drill')return'drill';if(e.k==='pump')return'refinery';if(e.k==='gen')return'gen';return null;}
 function mvActive(e){if(e.off)return false;if(e.k==='mach')return !!(e.run&&e.pw>0);if(e.k==='drill'||e.k==='pump')return !!(e.want&&e.pw>0);if(e.k==='gen')return (e.load||0)>0.01;return false;}

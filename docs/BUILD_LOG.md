@@ -3815,3 +3815,40 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Snow strength is fixed. Very small sprites at far zoom get little snow, which is fine.
 
 **Next up:** unchanged.
+
+## Session 65 — 2026-11-21 (Claude Code, cloud session) · Build 192
+**Asked:** The story is good but the goals are incomplete. Building and sustaining a colony should matter more early, growing it later, then mining and refining the special sphere materials. Markus asked for a proposal for the Moon and Rime and asked about food. He is now on Rime ("don't worry" about it). Then: "go" for step 1.
+
+**Agreed design:** DESIGN.md section 12b (crew, food, warmth, sphere materials; step 2 still to build).
+
+**Built (step 1):**
+- **Crew:**
+  - Off Home, the Vacuum Furnace and Cryo Plant need 2 crew each; the Hydroponics Bay and Hothouse need 1 each.
+  - Crew = colonists + 4 lander crew. If the machines need more, they all slow down in proportion (`CREW.f`).
+  - A crew row shows on those machines' panels and on the current goal card.
+- **Food:**
+  - Rations (solid) go into Habitats by belt and are shared between touching habitats.
+  - 0.5 per colonist per minute. Fed habitats hold 20; unfed ones shrink back to 10 (nobody starves).
+  - **Hydroponics Bay** (Moon): 6 water + 1 regolith → 2 Rations + 2 oxygen, every 12 s.
+  - **Hothouse** (Rime): 6 water + 4 steam → 2 Rations + 2 oxygen.
+- **Warmth on Rime:**
+  - Habitats need Steam, 1 m³/min per colonist; without it colonists leave ("Too cold").
+  - New **Heat Exchanger**: a pump on a steam geyser, 120 m³/min Steam.
+  - The 3× power for heating is removed (`HAB.heat` 1).
+- **Goals:**
+  - Moon, still 6: Landing Camp (unlocks Habitat, Ice Melter, rovers, oxygen and Lunar Steel early), Water & Air (10 colonists), Lunar Power (15; unlocks Hydroponics), Hydroponics (30), Self-Sufficient (40), Export Ready (50). Saves keep their count; Markus's Moon stays complete.
+  - Rime, still 5: Landfall (Heat Exchanger, Cryo Plant), Warm Hearth (10), Rare Gas (20; Hothouse), Hothouse (35; Sphere Panel), Cold Lab (50). Unlocks of goals already counted are granted on load.
+- Sprites and 3D models for the Hydroponics Bay, the Hothouse (no snow on it: it's heated) and the Heat Exchanger. Planner and codex lists updated.
+
+**Verified:**
+- New smoke check: crew short gives 50% speed and is full with colonists; cold habitat shrinks; holds 10 unfed and grows past 10 fed; shrinks when hungry; rations by belt only; panel; Heat Exchanger only on geysers and makes steam; no crew rule on Home.
+- Existing Moon tests adapted to the new list (the audit still finds no dead ends).
+- `npm test` all PASS (144).
+
+**Known issues:**
+- Rime Habitats without steam now lose colonists. On Markus's save, a Heat Exchanger on a second geyser is needed (the landing geyser has the turbine).
+- Crew is per world and counts all crewed machines that aren't switched off, also idle ones.
+
+**Next up:** colony step 2: Mirror Film, Deep Helium Drill, Cryo Conduit, Moon goals 7–9, Rime 6–7, Dyson stage 3 Sphere Shell.
+
+**Open questions:** Is 4 lander crew right? Should idle machines count toward crew?
