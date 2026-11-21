@@ -3938,3 +3938,10 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Verified:**
 - Sled smoke check: no departure into a nearly full depot; a full 150 load once there is room.
 - `npm test` all PASS.
+
+## Session 65i — 2026-11-21 (Claude Code, cloud session) · Build 200
+**Asked:** Markus: undo Build 199. It was his mistake: the receiving depot wasn't unloading fast enough. Vehicles shouldn't wait until a whole load fits into the destination.
+
+**Changed:** `js/rover.js` and `tests/smoke.js` are restored to Build 198. Vehicles again take what fits into the destination, and the 45 s wait from Build 198 stays.
+
+**Verified:** `npm test` all PASS.

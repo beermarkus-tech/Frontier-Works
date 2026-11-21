@@ -436,9 +436,6 @@ const server=require('./serve.js');
   da.lx=db.x;da.ly=db.y;da.store={iron_plate:300};tick(0.05);for(let k=0;k<20*60;k++){da.pw=1;updRover(da,0.05);}   /* powered directly: the sled run itself is what's tested */
   const Pp=da._rp;out.sledRoute=!!(Pp&&Pp.L>10);out.cliffs=!rvPass(...(()=>{const i=terr.findIndex(t=>t===3);return[i%MW,(i/MW)|0];})(),da,db);
   out.delivered=rvCount(db)>0;out.sledParams=VP(da)===SLED;
-  {for(const r of da.rv){r.st=0;r.p=0;r.c={};r.w=0;}db.store={iron_plate:B[db.d].cap-10};da.store={iron_plate:300};for(let k=0;k<20*60;k++){da.pw=1;updRover(da,0.05);}
-   out.waitRoom=da.rv.every(r=>r.st===0)&&/nearly full/.test(da._msg);db.store={};for(let k=0;k<20*3;k++){da.pw=1;updRover(da,0.05);}
-   out.fullLoad=da.rv.some(r=>r.st===1&&Object.values(r.c).reduce((a,b)=>a+b,0)===SLED.cap);}   /* Session 65g: no tiny loads into a nearly full depot */
   S.wms=Object.assign({},S.wms||{},{moon:6});fw.switchWorld('home');delete S.worlds.rime;
   let L=null;for(let r=12;r<150&&!L;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<6&&ok;j++)for(let i=0;i<6&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok){L={x,y};break;}}
   S.ub.push('lpad');P('lpad',L.x,L.y,0);const pad=entAt(L.x,L.y);openPanel('ent',pad.id);ACT.lpDest('rime');out.dest=rocketDest(pad)==='rime'&&rocketNeed(pad).rocket_fuel===200;

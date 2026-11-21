@@ -46,10 +46,7 @@ function updRover(e,dt){const tg=rvTarget(e);while(e.rv.length<e.rn)e.rv.push({s
  const P=rvPath(e,tg);if(!P){e._msg='No route: buildings or crater rims are in the way';return;}
  let loading=false;
  for(const r of e.rv){
-  if(r.st===0){if(loading)continue;const fl=e.k==='tdepot',ek=Object.keys(e.store).find(k=>e.store[k]>0),clash=fl&&ek&&Object.keys(tg.store).some(k=>k!==ek&&tg.store[k]>0),room=clash?0:B[tg.d].cap-rvCount(tg)-e.rv.reduce((a,q)=>a+(q.st===1?Object.values(q.c).reduce((x,y)=>x+y,0):0),0),n=rvCount(e);if(clash)e._msg='The destination holds a different fluid';
-    /* Session 65g: leave only when the destination has room for the whole load (before, a nearly full destination made vehicles leave with ~10 items) */
-    if(e.pw>0&&n>0&&room>0){loading=true;r.w+=dt;const cap=fl?VP(e).fcap:VP(e).cap,full=Math.min(cap,n);if(room<full)e._msg=`The destination is nearly full (room for ${Math.max(0,Math.floor(room))}): waiting until it can take a whole load. Make sure its goods are carried away.`;
-     if(r.w>=VP(e).load&&room>=full&&(n>=cap||r.w>=VP(e).wait)){let take=full;r.c={};
+  if(r.st===0){if(loading)continue;const fl=e.k==='tdepot',ek=Object.keys(e.store).find(k=>e.store[k]>0),clash=fl&&ek&&Object.keys(tg.store).some(k=>k!==ek&&tg.store[k]>0),room=clash?0:B[tg.d].cap-rvCount(tg),n=rvCount(e);if(clash)e._msg='The destination holds a different fluid';if(e.pw>0&&n>0&&room>0){loading=true;r.w+=dt;const cap=fl?VP(e).fcap:VP(e).cap;if(r.w>=VP(e).load&&(n>=cap||r.w>=VP(e).wait)){let take=Math.min(cap,room);r.c={};
      for(const k of Object.keys(e.store)){const m=Math.min(take,e.store[k]);if(m>0){r.c[k]=m;e.store[k]-=m;if(!e.store[k])delete e.store[k];take-=m;}if(take<=0)break;}r.st=1;r.p=0;r.w=0;}}else r.w=0;continue;}
   const at=rvAt(P,r.p),sp=VP(e).spd*Math.max(0.35,at.f)*dt,p0=r.p;
   if(r.st===1){if(r.p<P.L)r.p=Math.min(P.L,r.p+sp);else{r.w+=dt;if(r.w>=VP(e).unload){let n=0;for(const k of Object.keys(r.c)){const m=Math.min(B[tg.d].cap-rvCount(tg),r.c[k]);if(m>0){tg.store[k]=(tg.store[k]||0)+m;r.c[k]-=m;n+=m;}if(!r.c[k])delete r.c[k];}e.del=(e.del||0)+n;r.st=2;r.w=0;}}}
