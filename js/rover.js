@@ -67,7 +67,7 @@ function roverDyn(e){if(e.k!=='rdepot'&&e.k!=='tdepot')return'';const tg=rvTarge
  let h=`<div class="row"><span>Stored</span><span>${n}/${B[e.d].cap}${u}</span></div><div class="bar"><i style="width:${n/B[e.d].cap*100}%"></i></div>${bufList(e.store)}`;
  if(e._msg)h+=`<div class="plbad" style="margin:4px 0">⚠ ${e._msg}</div>`;
  if(tg&&P){const trip=2*P.L/(VP(e).spd*0.85)+VP(e).load+VP(e).unload;h+=`<div class="row"><span>Route</span><span>${Math.round(P.L)} tiles · ≈ ${Math.round(trip)} s round trip</span></div><div class="row"><span>Throughput</span><span>≈ ${fmt(e.rn*(fl?VP(e).fcap:VP(e).cap)*60/trip)}${fl?' m³':' items'}/min</span></div><div class="row"><span>Delivered so far</span><span>${fmt(e.del||0)}</span></div>`;
-  e.rv.slice(0,e.rn).forEach((r,k)=>{const c=Object.keys(r.c).reduce((a,q)=>a+r.c[q],0);h+=`<div class="row"><span>Rover ${k+1}</span><span>${r.st===1?`driving out (${Math.round(r.p/P.L*100)}%) · ${c} items`:r.st===2?`returning (${Math.round((1-r.p/P.L)*100)}%)`:e.pw>0?(r.w>0?'loading':'waiting for goods'):'charging: no power'}</span></div>`;});}
+  e.rv.slice(0,e.rn).forEach((r,k)=>{const c=Object.keys(r.c).reduce((a,q)=>a+r.c[q],0);h+=`<div class="row"><span>Rover ${k+1}</span><span>${r.st===1?`driving out (${Math.round(r.p/P.L*100)}%) · ${c} items`:r.st===2?`returning (${Math.round((1-r.p/P.L)*100)}%)`:e.pw>0?(r.w>0?`loading ${fmt(Math.min(rvCount(e),fl?VP(e).fcap:VP(e).cap))}/${fl?VP(e).fcap:VP(e).cap} · leaves when full or in ${Math.max(0,Math.ceil(VP(e).wait-r.w))} s`:'waiting for goods'):'charging: no power'}</span></div>`;});}
  return h;}
 Object.assign(ACT,{
  rvLink:()=>{const e=ents.get(UI.panel.arg);if(!e)return;UI.linkFrom=e.id;setTool(null);toast('Tap the Rover Depot the rovers should drive to');updInfo();},

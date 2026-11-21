@@ -3917,3 +3917,14 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Maybe rename the geyser entry in Find resources ("Steam Geyser").
 
 **Open questions:** Confirm the 4-stage sphere with the fire planet as stage 4.
+
+## Session 65g — 2026-11-21 (Claude Code, cloud session) · Build 198
+**Asked:** Rovers and sleds don't seem to load long enough: they stop briefly, take a few items and drive off.
+
+**Found:** a vehicle left when full or after `wait` = 10 s of loading, whatever it had. On slow lines that is a handful of items, and with 2–3 vehicles each one leaves half empty.
+
+**Changed:**
+- `ROVER.wait` and `SLED.wait` go from 10 to 45 s. A full load still leaves at once, after the 2 s minimum.
+- The depot panel shows a loading vehicle as "loading 63/200 · leaves when full or in 28 s".
+
+**Verified:** `npm test` all PASS (rover, tanker and sled tests use full loads).
