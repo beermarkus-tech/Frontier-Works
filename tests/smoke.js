@@ -520,6 +520,13 @@ const server=require('./serve.js');
   S.wms.moon=4;out.rimeOpen=/Rime opens/.test(lpadHtml({store:{},dest:'rime',k:'lpad'})||'')===false;S.wms=keep.wms;S.mg65=keep.mg;S.worlds=keep.w;return out;});
  check(`Moon goals reopen once for old saves: ${Object.entries(mg65).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(mg65).every(v=>v===true));
  check(`Colony crew/food/warmth: ${Object.entries(cl).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(cl).every(v=>v===true));
+ // Session 65j: a generator that isn't wired to anything doesn't count in the power totals; once something is connected it does
+ const gl=await p.evaluate(()=>{const fw=window.__fw,out={},keep=S.ub.slice();S.ub.push('srecv');
+  const spot=(w)=>{for(let r=30;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=-8;j<w+8&&ok;j++)for(let i=-8;i<w+8&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};
+  const a=spot(6);fw.placeEnt('srecv',a.x,a.y,0,true);tick(0.05);const R=entAt(a.x,a.y);out.alone=!!R.grid&&!gridLive(R.grid);openPanel('ent',R.id);out.warn=/not wired/i.test(document.getElementById('pbody').innerText);ACT.closePanel();
+  fw.placeEnt('smelter',a.x+5,a.y,0,true);tick(0.05);out.live=gridLive(entAt(a.x,a.y).grid);
+  removeEnt(entAt(a.x+5,a.y),false,true);removeEnt(entAt(a.x,a.y),false,true);tick(0.05);S.ub=keep;return out;});
+ check(`unwired generators don't count: ${Object.entries(gl).map(([k,v])=>k+'='+v).join(' ')}`,Object.values(gl).every(v=>v===true));
  // Dyson Sphere stage 1 (Session 62): the launcher takes only frame segments, fires one per DYSON.fire s when powered, completing the stage unlocks the receiver
  const dys=await p.evaluate(()=>{const fw=window.__fw,out={};const keep={ub:S.ub.slice(),dy:S.dyson};S.ub.push('slaunch');S.dyson={f:DYSON.stages[0].need-2};
   const spot=(w,h)=>{for(let r=12;r<150;r+=2)for(let a=0;a<40;a++){const x=Math.round(MW/2+r*Math.cos(a/6.4)),y=Math.round(MH/2+r*Math.sin(a/6.4));let ok=true;for(let j=0;j<h&&ok;j++)for(let i=0;i<w&&ok;i++)if(canPlace('incin',x+i,y+j)!=='')ok=false;if(ok)return{x,y};}return null;};

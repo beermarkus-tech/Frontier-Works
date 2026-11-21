@@ -501,6 +501,9 @@ function pipeSide(e){const n=e.net;if(!n)return null;const seen=new Set([e]),sid
 /* a building's rated power; Habitats on Rime need extra for heating (Session 64) */
 const bPw=e=>B[e.d].pw*(e.k==='hab'&&(S.w||'home')==='rime'?HAB.heat:1);
 function drawMW(e){return e.want?bPw(e)*Math.pow(e.clock||1,1.6):0;}
+/* a grid counts in the totals only once its generators are wired to something: a pole, switch or consumer (Session 65j, Markus: a
+   generator standing alone, or only touching other generators, isn't on the network yet) */
+const gridLive=g=>g.gens.length>0&&(g.cons.length>0||g.nodes.some(n=>n.k!=='gen'));
 function genCan(g){const d=B[g.d];if(g.off)return false;if(d.solar)return true;if(d.water&&g.water<1)return false;if(g.d==='reactor'&&(g.outb.waste||0)>=50)return false;if(g.energy>0)return true;for(const f of d.fuels)if((g.fuel[f]||0)>0)return true;return false;}
 function powerStep(dt){
  for(const g of grids){

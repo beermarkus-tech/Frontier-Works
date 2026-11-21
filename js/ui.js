@@ -259,7 +259,7 @@ function entDyn(e){
 function gridHtml(g){if(!g)return'<div class="muted">Not connected to a grid.</div>';
  const sws=pnodes.filter(x=>x.d==='pswitch'&&(x.grid===g||pnPeers(x).some(p=>p.grid===g)));
  const swl=sws.length?`<h4>Switches</h4>`+sws.map(x=>`<div class="row"><span>${x.off?'🔴':'🟢'} ${x.tx||'Power Switch'}</span><span>${x.off?'off':fmt(swLoad(x))+' MW'} <button class="btn chip" data-act="swToggle" data-v="${x.id}">${x.off?'Turn on':'Turn off'}</button></span></div>`).join(''):'';
- return swl+`<h4>Power grid</h4><div class="row"><span>Consumption</span><span>${fmt(g.dem)} MW</span></div><div class="row"><span>Capacity</span><span>${fmt(g.cap)} MW</span></div><div class="row"><span>Generators / consumers</span><span>${g.gens.length} / ${g.cons.length}</span></div>${g.trip?'<button class="btn warn" data-act="resetFuse">⚠ Reset fuse</button>':''}`;}
+ return swl+(gridLive(g)||!g.gens.length?'':`<div class="plbad" style="margin:4px 0">⚠ Not wired to anything yet: its ${fmt(g.cap)} MW don't count until a power line connects it to a pole or the grid (tap it with a pole tool, then tap a pole).</div>`)+`<h4>Power grid</h4><div class="row"><span>Consumption</span><span>${fmt(g.dem)} MW</span></div><div class="row"><span>Capacity</span><span>${fmt(g.cap)} MW</span></div><div class="row"><span>Generators / consumers</span><span>${g.gens.length} / ${g.cons.length}</span></div>${g.trip?'<button class="btn warn" data-act="resetFuse">⚠ Reset fuse</button>':''}`;}
 function invHtml(){
  const ks=Object.keys(S.inv).filter(k=>S.inv[k]>0).sort((a,b)=>IT[a].n.localeCompare(IT[b].n));
  const crates=[...ents.values()].filter(e=>e.k==='storage');let inCrates=0;for(const c of crates)for(const k in c.store)inCrates+=c.store[k];
@@ -307,7 +307,7 @@ function factoryHtml(){let b=0,l=0,po=0,it=0,m=0;for(const e of ents.values()){i
  return`<h4>Factory size</h4><div class="row"><span>Objects</span><span><b>${ents.size.toLocaleString()}</b></span></div><div class="row"><span>Buildings (machines)</span><span>${b.toLocaleString()} (${m.toLocaleString()})</span></div><div class="row"><span>Belts & pipes</span><span>${l.toLocaleString()}</span></div><div class="row"><span>Power poles</span><span>${po.toLocaleString()}</span></div><div class="row"><span>Items moving on belts & pipes</span><span>${it.toLocaleString()}</span></div><div class="row"><span>Save size</span><span>${SAVE.bytes?fmtKB(SAVE.bytes):'—'}</span></div>`;}
 /* Stats = factories only (Session 38f): zone cards, then factory size and power at the bottom */
 function statsHtml(){
- let tot=0,cap=0;for(const g of grids){if(!g.gens.length)continue;tot+=g.dem;cap+=g.cap;}
+ let tot=0,cap=0;for(const g of grids){if(!gridLive(g))continue;tot+=g.dem;cap+=g.cap;}
  return zoneDashHtml()+factoryHtml()+`<h4>Power</h4><div class="row"><span>Grids</span><span>${grids.length}</span></div><div class="row"><span>Consumption / capacity</span><span>${fmt(tot)} / ${fmt(cap)} MW</span></div>`;
 }
 const fmtSec=s=>s>=120?Math.round(s/60)+' min':(s<10?s.toFixed(1).replace('.0',''):Math.round(s))+' s';

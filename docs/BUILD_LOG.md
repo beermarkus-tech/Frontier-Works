@@ -3945,3 +3945,13 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Changed:** `js/rover.js` and `tests/smoke.js` are restored to Build 198. Vehicles again take what fits into the destination, and the 45 s wait from Build 198 stays.
 
 **Verified:** `npm test` all PASS.
+
+## Session 65k — 2026-11-21 (Claude Code, cloud session) · Build 201
+**Asked:** On Rime the top bar showed 1400 MW, but the fuse tripped at about 900. Markus found the cause himself: turbines without a power line were already counted as installed power. He wants a generator to count only once it is physically connected.
+
+**Changed:**
+- `gridLive(g)` (sim.js): a grid counts in the top-bar and Stats totals only if its generators are connected to something, meaning a pole, switch or consumer. A generator alone, or only touching other generators, doesn't count.
+- The generator panel shows "⚠ Not wired to anything yet: its N MW don't count until a power line connects it…".
+- Fuse logic unchanged: each grid always had its own capacity. Only the totals were misleading.
+
+**Verified:** new smoke check (alone: not counted, warning shown; with a consumer: counted). `npm test` all PASS. One run had a one-off FAIL in the older "blocked drill says Output full" check (random map); the rerun passed.
