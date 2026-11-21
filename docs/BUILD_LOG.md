@@ -3928,3 +3928,13 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - The depot panel shows a loading vehicle as "loading 63/200 · leaves when full or in 28 s".
 
 **Verified:** `npm test` all PASS (rover, tanker and sled tests use full loads).
+
+## Session 65h — 2026-11-21 (Claude Code, cloud session) · Build 199
+**Asked:** Sleds leave with 10 items at most, even though the source depot is full and its input belt backs up.
+
+**Found and changed:**
+- Cause: a vehicle took only what fitted into the destination depot (room = its free space), and a nearly full destination left room for ~10. Now vehicles leave only when the destination has room for the whole load (also counting loads already on the way). Otherwise they keep waiting, and the panel says "The destination is nearly full… make sure its goods are carried away".
+
+**Verified:**
+- Sled smoke check: no departure into a nearly full depot; a full 150 load once there is room.
+- `npm test` all PASS.
