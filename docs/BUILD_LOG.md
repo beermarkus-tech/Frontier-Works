@@ -3980,3 +3980,17 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 **Open questions still unanswered by Markus:** Is 4 lander crew right? Should idle crewed machines count towards crew? Is the 120 s freighter flight to Rime right?
 
 **Working rules for the next chat** (see CLAUDE.md): commit and push straight to `main`. `BUILD` (js/pwa.js) = commit count after the commit, and `VERSION` in sw.js = 'fw-build-N'. Run `npm test` (all PASS, no FAIL) before each commit. Append a BUILD_LOG entry per change and never edit old ones. Markus's standing preference: use Claude's recommendation; show previews before visual changes when he asks. Reply in plain language and state the build number.
+
+## Session 65m — 2026-11-22 (Claude Code, cloud session) · Build 203
+**Asked:** Markus can't build a Freighter Port on Rime: the Port needs Alloy Panels (and Circuit Boards), and Rime had no way to make either (aluminium needs oil-based petroleum coke or the Moon's Vacuum Furnace; circuit boards need plastic or Moon wafers). He chose option 1, Rime recipes, over a bigger rocket kit. Only this was built; colony step 2 was deliberately not started.
+
+**Built:**
+- New Cryo Plant recipes, unlocked by Rime goal 3 (Rare Gas). Saves past it get them on load via `grantUnlocks`:
+  - **Cryo Aluminum** (`r_cryo_alu`): 4 bauxite + 4 Rare Gas → 2 aluminium ingots, 6 s (Rime has bauxite nodes). The ingots go into Alloy Panels in the normal Assembler (`r_alloy_panel`: 3 aluminium ingots + 1 copper ingot → 4 panels).
+  - **Coil Circuit Board** (`r_coil_cb`): 2 copper sheets + 1 Superconductor Coil → 3 circuit boards, 8 s.
+- The Cryo Plant description mentions both.
+- So the Freighter Port (60 steel beams, 40 alloy panels, 100 concrete, 20 circuit boards) can now be built entirely from Rime resources.
+
+**Verified:** smoke check (recipes exist and are unlocked by Rime goal 3). `npm test` all PASS.
+
+**Next up:** unchanged. See the handover entry Session 65l: Markus plays Dyson stage 2; then colony step 2 + sun size per world; then the geyser label in Find; then plan the fire planet with Markus.

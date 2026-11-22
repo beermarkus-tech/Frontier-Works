@@ -115,7 +115,10 @@ R('r_sphere_frame','Sphere Frame Segment','fabricator',40,'lattice:2,hull_plate:
 // Rime (Session 64, DESIGN.md section 15): the Cryo Plant works with deep cold; no coal on Rime, so steel is quenched in cryo ice
 R('r_thaw','Thawed Water','cryoplant',2,'cryo_ice:2','water:4');
 R('r_frost_steel','Frost Steel','cryoplant',6,'iron_ore:3,cryo_ice:2','steel_ingot:3');
-R('r_cryo_o2','Frozen Air','cryoplant',4,'cryo_ice:2','oxygen:3');   /* Session 65d: cryo ice holds frozen air; Rime's first oxygen (45 m³/min per plant) */
+R('r_cryo_o2','Frozen Air','cryoplant',4,'cryo_ice:2','oxygen:3');
+/* Session 65m: Rime can build its own Freighter Port (no oil, no Vacuum Furnace there): Rare Gas shields refined aluminium, coils make circuit boards */
+R('r_cryo_alu','Cryo Aluminum','cryoplant',6,'bauxite:4,rare_gas:4','alu_ingot:2');
+R('r_coil_cb','Coil Circuit Board','cryoplant',8,'copper_sheet:2,sc_coil:1','circuit_board:3');   /* Session 65d: cryo ice holds frozen air; Rime's first oxygen (45 m³/min per plant) */
 R('r_sc_coil','Superconductor Coil','cryoplant',15,'wire:20,cryo_ice:4,rare_gas:10','sc_coil:1');
 R('r_coil_motor','Coil Motor (alt)','fabricator',20,'sc_coil:1,steel_beam:2,wire:10','motor:2',1);
 // Colony food (Session 65): plants also make oxygen
@@ -177,7 +180,7 @@ D('geoturb',{n:'Geyser Turbine',k:'gen',w:3,cap:200,fuels:[],solar:1,geyser:1,on
 D('sdepot',{n:'Sled Depot',k:'rdepot',veh:'sled',w:3,pw:10,cap:450,only:'rime',cat:'trans',col:'#d6e8f5',cost:{iron_plate:30,copper_sheet:20,wire:30,concrete:10},desc:'Ice Sleds: link it to another Sled Depot; its sleds race the goods there (150 per trip), fastest over frozen seas, around buildings and glacier cliffs. Comes with one sled, up to 3. Needs power. Only on Rime.'});
 D('stdepot',{n:'Tanker Sled Depot',k:'tdepot',veh:'sled',fl:1,w:3,pw:10,cap:900,only:'rime',cat:'trans',col:'#cfe3f0',cost:{iron_plate:30,copper_sheet:40,wire:30,concrete:10},desc:'Fluid version of the Sled Depot: holds 900 m³ of one fluid; tanker sleds carry 300 m³ per trip. Fills from (linked) or feeds into (unlinked) its pipes through a Pipe Junction. Only on Rime.'});
 D('gasx',{n:'Gas Extractor',k:'pump',w:2,rate:1,pw:25,gas:1,only:'rime',cat:'ext',col:'#b89ae8',cost:{iron_plate:20,copper_sheet:20,steel_pipe:10},desc:'Sits on a steam geyser and catches the Rare Gas in its plume: 60 m³/min on a normal geyser (out through a Pipe Junction). Only on Rime.'});
-D('cryoplant',{n:'Cryo Plant',k:'mach',mt:'cryoplant',w:3,pw:40,crew:2,only:'rime',cat:'prod',col:'#8fd0f0',cost:{iron_plate:40,copper_sheet:30,cable:30,concrete:40},desc:'Uses Rime\u2019s deep cold: thaws cryo ice into water, releases its frozen air as oxygen, quenches Frost Steel from iron ore (no coal needed) and winds Superconductor Coils. Up to 3 inputs, solids and fluids. Needs 2 crew. Only on Rime.'});
+D('cryoplant',{n:'Cryo Plant',k:'mach',mt:'cryoplant',w:3,pw:40,crew:2,only:'rime',cat:'prod',col:'#8fd0f0',cost:{iron_plate:40,copper_sheet:30,cable:30,concrete:40},desc:'Uses Rime\u2019s deep cold: thaws cryo ice into water, releases its frozen air as oxygen, quenches Frost Steel from iron ore (no coal needed), winds Superconductor Coils, and later refines aluminium (shielded by Rare Gas) and makes circuit boards from coils. Up to 3 inputs, solids and fluids. Needs 2 crew. Only on Rime.'});
 const SLED={cap:150,fcap:300,spd:9,load:2,unload:2,wait:45,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
 /* wait: the longest a vehicle waits for a full load before leaving with what it has (Session 65g: 10 → 45 s, Markus: they left almost empty) */
 const ROVER={fcap:400,cap:200,spd:6,load:2,unload:2,wait:45,max:3,cost:{iron_plate:20,copper_sheet:10,wire:20}};
@@ -263,7 +266,7 @@ const WGOALS={moon:[
 WGOALS.rime=[   /* Session 64, reworked in Session 65: warmth and food first, then coils */
  {n:'Landfall',req:{iron_plate:200,copper_sheet:100,concrete:100},b:['hexch','cryoplant'],r:['r_thaw','r_frost_steel','r_cryo_o2'],why:'Settle on the ice: thaw cryo ice for water and frozen air for oxygen, quench Frost Steel without coal, and tap a steam geyser with a Heat Exchanger: Habitats on Rime need steam for warmth.'},
  {n:'Warm Hearth',req:{steel_beam:50},pop:10,b:['gasx'],r:['r_sc_coil'],why:'Keep 10 colonists warm and alive: water, oxygen, steam and power to every Habitat. They crew the Cryo Plants.'},
- {n:'Rare Gas',req:{steel_pipe:200,cable:200},pop:20,rate:{sc_coil:2},b:['hothouse'],r:['r_hothouse'],why:'Catch Rare Gas and wind the first Superconductor Coils. Unlocks the Hothouse: Rations from water and steam.'},
+ {n:'Rare Gas',req:{steel_pipe:200,cable:200},pop:20,rate:{sc_coil:2},b:['hothouse'],r:['r_hothouse','r_cryo_alu','r_coil_cb'],why:'Catch Rare Gas and wind the first Superconductor Coils. Unlocks the Hothouse (Rations from water and steam), plus aluminium and circuit boards made on Rime.'},
  {n:'Hothouse',req:{},pop:35,rate:{sc_coil:4,steel_pipe:15},b:[],r:['r_sphere_panel','r_coil_motor'],why:'Feed the colony so it can grow. Steady coils unlock Sphere Panels on Earth: the Dyson Sphere’s second stage.'},
  {n:'Cold Lab',req:{},pop:50,rate:{sc_coil:8},b:[],r:[],why:'A growing colony and a steady coil line: enough to ship coils to Earth for the Sphere Panels.',next:'Fly the coils to Home with Orbital Freighters (set a freighter’s destination to Rime) and clad the Dyson Sphere with Sphere Panels. Next on Rime: Cryo Conduits for the shell, coming in the next update.'}];
 const onWorld=(d,w)=>!d.only||(Array.isArray(d.only)?d.only.includes(w):d.only===w);   /* d.only: a world id or a list of them (Session 64) */
