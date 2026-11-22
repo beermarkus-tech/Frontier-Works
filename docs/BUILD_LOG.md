@@ -3955,3 +3955,28 @@ Markus chose **B, with whiter whites and stronger colour accents**.
 - Fuse logic unchanged: each grid always had its own capacity. Only the totals were misleading.
 
 **Verified:** new smoke check (alone: not counted, warning shown; with a consumer: counted). `npm test` all PASS. One run had a one-off FAIL in the older "blocked drill says Output full" check (random map); the rerun passed.
+
+## Session 65l — 2026-11-22 (Claude Code, cloud session) · Build 202 · HANDOVER (Markus may continue in a new chat or account)
+**Where Markus is in his game:**
+- **Home:** all tiers done. He is launching Sphere Frame Segments (Dyson stage 1, 300 needed; launches now continue while he is away, Build 188).
+- **Moon:** goals 1–4 done. Goals 5–6 (40 and 50 colonists, rates and stockpile) were reopened in Build 193; their status is unknown. Hydroponics Bays release oxygen when it can't leave (Build 194).
+- **Rime:** **all 5 goals done** (Session 65l). Power from Geyser Turbines (wire each one in: unwired generators no longer count, Build 201). There are 16 extra geysers (Build 196). He couldn't build a Freighter Port on Rime: no Alloy Panels or Circuit Boards possible there. Fixed in Build 203 (next entry).
+
+**Agreed with Markus (Session 65l), in this order:**
+1. **Markus plays:** fly coils Rime → Home by freighter, make Sphere Panels (Fabricator: 2 coils + 4 vacuum wafers + 4 alloy panels), launch 300 for Dyson stage 2 (receivers 2500 → 6000 MW).
+2. **Next development, colony step 2** (details in DESIGN.md section 12b; Moon ends at 6 goals today, Rime at 5):
+   - **Moon 7 Mirror Works:** unlocks Mirror Film (Vacuum Furnace: aluminium + vacuum wafers + helium).
+   - **Moon 8 Deep Helium:** Deep Helium Drill, 6 crew, high output.
+   - **Moon 9 Lunar City:** 120 colonists + Mirror Film/min held.
+   - **Rime 6 Cryo Conduit:** Cryo Plant: coils + Rare Gas + Frost Steel.
+   - **Rime 7 Frozen City:** 100 colonists + conduits/min held.
+   - **Dyson stage 3, Sphere Shell:** 300 Shell Tiles (Earth Fabricator: Mirror Film + Cryo Conduits + Heat Sinks). Receivers then 15000 MW; the card reads "stage 3 of 4". Replace the placeholder stage 3 in `DYSON.stages` and add the placeholder stage 4.
+   - Replace the `next:` texts of the last Moon and Rime goals, which say "coming in the next update".
+   - Goal count mapping: the lists only grow, so `S.wms` stays valid (no migration needed).
+3. **Sun size per world** (with step 2): in `v3Dyson` (dyson.js) the sun sprite (scale 70) and the sphere should look smaller and further away on Rime, larger and closer on the fire planet later. Today they are the same everywhere.
+4. **Small:** in Find resources (`findHtml`, ui.js) the geyser entry shows "Rare Gas" because it is named after `NODE_T.geyser[0]`. Label it "Steam Geyser (Rare Gas, Steam)".
+5. **Then plan the fire planet with Markus before building** (DESIGN section 12 table: lava, red sky, volcanic glass, heavy metals, heat + radiation, Radiation Lab; a colony need like cooling or radiation shielding; its materials make stage 4, the Collectors, which close the sphere).
+
+**Open questions still unanswered by Markus:** Is 4 lander crew right? Should idle crewed machines count towards crew? Is the 120 s freighter flight to Rime right?
+
+**Working rules for the next chat** (see CLAUDE.md): commit and push straight to `main`. `BUILD` (js/pwa.js) = commit count after the commit, and `VERSION` in sw.js = 'fw-build-N'. Run `npm test` (all PASS, no FAIL) before each commit. Append a BUILD_LOG entry per change and never edit old ones. Markus's standing preference: use Claude's recommendation; show previews before visual changes when he asks. Reply in plain language and state the build number.

@@ -517,8 +517,11 @@ Balance as we go, against these rules, measured with the planner/playtest tool; 
 - **Noted for later (Session 65f, Markus):** the sun in the 3D sky should match each world's distance from it. On **Rime** (ice planet,
   far out) the sun must look much smaller and further away; on the **fire planet** (later) larger and closer. Today `v3Dyson` draws the
   same sun (and sphere) on every world.
-- **Open, not decided yet:** the Dyson Sphere as 4 stages, with stage 4 (Collectors, closing the sphere) needing the fire planet; stage 3
-  (Sphere Shell) then reads "stage 3 of 4", not "complete". Suggested to Markus in Session 65; he hasn't confirmed yet.
+- **Agreed (Session 65l, Markus):** the Dyson Sphere has **4 stages**: 1 Frame (built), 2 Panels (built), 3 Shell (colony step 2: Moon
+  Mirror Film + Rime Cryo Conduits), 4 **Collectors, closing the sphere**, which needs the **fire planet** (a later chapter, designed together
+  with Markus first). Stage 3 must read "stage 3 of 4", never "complete".
+- **Agreed order of work (Session 65l):** 1) colony step 2 (section 12b) together with the sun size per world; 2) rename the geyser entry in
+  Find resources; 3) plan the fire planet with Markus.
 - **Parked idea (Session 64c, Markus: "keep this idea for later"):** a public release. Plan if revived: polish the first 30 minutes
   (tutorial), make cloud save work without a GitHub token, check performance and that nothing resembles commercial games, then publish on
   itch.io (free / pay what you want, playable in the browser) to test interest; Google Play and a Steam wishlist page only if the response is good.
